@@ -8,7 +8,8 @@
     "profile": "Profil",
     "settings": "Beállítások",
     "activeProject": "Aktív projekt",
-    "signOut": "Kijelentkezés"
+    "signOut": "Kijelentkezés",
+    "matriceStatus": "Matrice Status"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -121,6 +122,8 @@
       "conexiuni": "Inverter kapcsolatok",
       "post_transformare": "Transzformátor állomás",
       "verificari": "Átadás előtti ellenőrzések",
+      "pregatire_teren_bess": "BESS helyszín-előkészítés",
+      "constructii_bess": "BESS építési munkák",
       "montaj_bess": "BESS szerelés",
       "conectare_bess": "BESS csatlakoztatás",
       "verificari_bess": "BESS ellenőrzések"
@@ -167,6 +170,28 @@
     "deltaCapacity": "+2.5 MWp folyamatban",
     "deltaActive": "2 határidő közeledik",
     "deltaCompleted": "100% határidőn belül"
+  },
+  "matrice": {
+    "eyebrow": "MUNKA · MATRICE STATUS",
+    "title": "Matrice Status",
+    "subtitle": "Tevékenységek × projektek állapotmátrix",
+    "picker": {
+      "label": "PROJEKTEK",
+      "empty": "Nincsenek projektek."
+    },
+    "grid": {
+      "activity": "Tevékenység",
+      "noProjects": "Válasszon ki legalább egy projektet.",
+      "loading": "Frissítés..."
+    },
+    "status": {
+      "finalizat": "Befejezett",
+      "in_progres": "Folyamatban",
+      "in_asteptare": "Várakozás",
+      "blocat": "Blokkolt",
+      "neinceput": "Nem kezdett",
+      "na": "N/A"
+    }
   },
   "languageSwitcher": {
     "label": "Nyelv"

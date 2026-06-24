@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/supabase/server";
 import { getProject, getChecklistRecords } from "./actions";
-import { mergeChecklistRows, computeSectionSummaries } from "@/lib/checklist-template";
-import { ChecklistTable } from "./ChecklistTable";
-import { Badge } from "@/components/ui/badge";
+import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
+import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
+import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
-import { phaseVariant, projectStatusVariant } from "@/lib/status-variant";
+import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -19,9 +19,7 @@ export default async function ProjectChecklistPage({ params }: Props) {
   if (isNaN(projectId)) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     const locale = await getLocale();
@@ -62,10 +60,7 @@ export default async function ProjectChecklistPage({ params }: Props) {
     <div className="space-y-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 font-mono text-[11px] text-veltol-fgMute">
-        <Link
-          href="/projects"
-          className="transition-colors hover:text-veltol-fgDim"
-        >
+        <Link href="/projects" className="transition-colors hover:text-veltol-fgDim">
           {t("breadcrumbProjects")}
         </Link>
         <span>/</span>
@@ -98,7 +93,6 @@ export default async function ProjectChecklistPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Overall completion number */}
         <div className="shrink-0 text-right">
           <div className="font-mono text-[42px] font-bold leading-none tabular-nums text-veltol-aqua">
             {overallPct}
@@ -130,12 +124,7 @@ export default async function ProjectChecklistPage({ params }: Props) {
         ))}
       </div>
 
-      {/* Checklist table */}
-      <ChecklistTable
-        rows={rows}
-        projectId={project.id}
-        canMutate={canMutate}
-      />
+      <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} />
     </div>
   );
 }

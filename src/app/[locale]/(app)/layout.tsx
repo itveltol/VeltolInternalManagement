@@ -1,6 +1,6 @@
-import { Sidebar } from "@/components/layout/sidebar";
-import { Topbar } from "@/components/layout/topbar";
-import { createClient } from "@/lib/supabase/server";
+import { Sidebar } from "@/shared/components/layout/sidebar";
+import { Topbar } from "@/shared/components/layout/topbar";
+import { createClient } from "@/core/supabase/server";
 
 export default async function AppLayout({
   children,

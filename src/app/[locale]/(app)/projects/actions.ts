@@ -1,9 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/core/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
-import type { Project, ProjectManager } from "@/lib/types/project";
+import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
+import * as projectService from "@/features/projects/services/projectService";
+import type { Project, ProjectManager } from "@/features/projects/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -14,9 +16,7 @@ async function getProjectsPath() {
 
 async function requireAuth() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
@@ -70,25 +70,14 @@ function extractProjectPayload(formData: FormData) {
 
 export async function getProjects(): Promise<Project[]> {
   const { supabase } = await requireAuth();
-  const { data, error } = await supabase
-    .from("projects")
-    .select("*, manager:profiles!manager_id(first_name, last_name)")
-    .order("id");
-
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as Project[];
+  const client = createSupabaseProjectsClient(supabase);
+  return projectService.getProjects(client);
 }
 
 export async function getProjectManagers(): Promise<ProjectManager[]> {
   const { supabase } = await requireAuth();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name")
-    .in("role", ["admin", "project_manager"])
-    .order("last_name");
-
-  if (error) throw new Error(error.message);
-  return (data ?? []) as ProjectManager[];
+  const client = createSupabaseProjectsClient(supabase);
+  return projectService.getProjectManagers(client);
 }
 
 export async function createProject(
@@ -97,16 +86,12 @@ export async function createProject(
 ): Promise<ActionState> {
   try {
     const { supabase } = await requireMutator();
-    const payload = extractProjectPayload(formData);
-
-    const { error } = await supabase.from("projects").insert(payload);
-    if (error) return { error: error.message };
-
+    const client = createSupabaseProjectsClient(supabase);
+    await projectService.createProject(client, extractProjectPayload(formData));
     revalidatePath(await getProjectsPath());
     return { success: "projectCreated" };
   } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden")
-      return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
 }
@@ -117,21 +102,13 @@ export async function updateProject(
 ): Promise<ActionState> {
   try {
     const { supabase } = await requireMutator();
+    const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
-    const payload = extractProjectPayload(formData);
-
-    const { error } = await supabase
-      .from("projects")
-      .update(payload)
-      .eq("id", projectId);
-
-    if (error) return { error: error.message };
-
+    await projectService.updateProject(client, projectId, extractProjectPayload(formData));
     revalidatePath(await getProjectsPath());
     return { success: "projectSaved" };
   } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden")
-      return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
 }
@@ -144,16 +121,9 @@ export async function deleteProject(projectId: number): Promise<ActionState> {
       .select("role")
       .eq("id", (await supabase.auth.getUser()).data.user!.id)
       .single();
-
     if (profile?.role !== "admin") return { error: "errorNotAllowed" };
-
-    const { error } = await supabase
-      .from("projects")
-      .delete()
-      .eq("id", projectId);
-
-    if (error) return { error: error.message };
-
+    const client = createSupabaseProjectsClient(supabase);
+    await projectService.deleteProject(client, projectId);
     revalidatePath(await getProjectsPath());
     return { success: "projectDeleted" };
   } catch {

@@ -8,7 +8,8 @@
     "profile": "Profil",
     "settings": "Setări",
     "activeProject": "Proiect activ",
-    "signOut": "Deconectare"
+    "signOut": "Deconectare",
+    "matriceStatus": "Matrice Status"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -121,6 +122,8 @@
       "conexiuni": "Conexiuni invertoare",
       "post_transformare": "Post de transformare",
       "verificari": "Verificări înaintea recepției",
+      "pregatire_teren_bess": "Pregătire teren BESS",
+      "constructii_bess": "Construcții BESS",
       "montaj_bess": "Montaj BESS",
       "conectare_bess": "Conectare BESS",
       "verificari_bess": "Verificări BESS"
@@ -167,6 +170,28 @@
     "deltaCapacity": "+2.5 MWp în progres",
     "deltaActive": "2 termene se apropie",
     "deltaCompleted": "100% la timp"
+  },
+  "matrice": {
+    "eyebrow": "MUNCĂ · MATRICE STATUS",
+    "title": "Matrice Status",
+    "subtitle": "Matrice de stare activități × proiecte",
+    "picker": {
+      "label": "PROIECTE",
+      "empty": "Nu există proiecte disponibile."
+    },
+    "grid": {
+      "activity": "Activitate",
+      "noProjects": "Selectați cel puțin un proiect.",
+      "loading": "Se actualizează..."
+    },
+    "status": {
+      "finalizat": "Finalizat",
+      "in_progres": "În progres",
+      "in_asteptare": "În așteptare",
+      "blocat": "Blocat",
+      "neinceput": "Neînceput",
+      "na": "N/A"
+    }
   },
   "languageSwitcher": {
     "label": "Limbă"

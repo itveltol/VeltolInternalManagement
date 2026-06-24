@@ -8,7 +8,8 @@
     "profile": "Profile",
     "settings": "Settings",
     "activeProject": "Active project",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "matriceStatus": "Matrice Status"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -121,6 +122,8 @@
       "conexiuni": "Inverter connections",
       "post_transformare": "Transformer station",
       "verificari": "Pre-handover checks",
+      "pregatire_teren_bess": "BESS site preparation",
+      "constructii_bess": "BESS construction",
       "montaj_bess": "BESS installation",
       "conectare_bess": "BESS connection",
       "verificari_bess": "BESS verification"
@@ -167,6 +170,28 @@
     "deltaCapacity": "+2.5 MWp in progress",
     "deltaActive": "2 deadlines approaching",
     "deltaCompleted": "100% on time"
+  },
+  "matrice": {
+    "eyebrow": "WORK · MATRICE STATUS",
+    "title": "Matrice Status",
+    "subtitle": "Activities × projects status matrix",
+    "picker": {
+      "label": "PROJECTS",
+      "empty": "No projects available."
+    },
+    "grid": {
+      "activity": "Activity",
+      "noProjects": "Select at least one project.",
+      "loading": "Refreshing..."
+    },
+    "status": {
+      "finalizat": "Done",
+      "in_progres": "In progress",
+      "in_asteptare": "Waiting",
+      "blocat": "Blocked",
+      "neinceput": "Not started",
+      "na": "N/A"
+    }
   },
   "languageSwitcher": {
     "label": "Language"
