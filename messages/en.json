@@ -12,7 +12,10 @@
     "signOut": "Sign out",
     "matriceStatus": "Matrice Status",
     "vacation": "Vacation",
-    "documents": "Documents"
+    "documents": "Documents",
+    "delivery": "Delivery",
+    "site": "Construction · Site",
+    "pontaj": "Personnel · Pontaj"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -352,14 +355,23 @@
       "namePlaceholder": "e.g. Tender documentation v2",
       "url": "OneDrive / SharePoint URL",
       "isRenewable": "This document needs to be renewed periodically",
-      "expiresAt": "Expiry date"
+      "expiresAt": "Expiry date",
+      "category": "Category",
+      "status": "Status",
+      "submittedAt": "Submitted date",
+      "obtainedAt": "Obtained date",
+      "responsible": "Responsible person",
+      "version": "Version"
     },
     "columns": {
       "name": "Name",
       "linkedTo": "Linked to",
       "date": "Added",
       "expiry": "Expiry",
-      "actions": ""
+      "actions": "",
+      "category": "Category",
+      "status": "Status",
+      "responsible": "Responsible"
     },
     "linkedType": {
       "project": "Project",
@@ -371,7 +383,32 @@
       "checklist": "Checklist",
       "documents": "Documents"
     },
-    "breadcrumb": "Documents"
+    "breadcrumb": "Documents",
+    "editDocument": "Edit document",
+    "documentUpdated": "Document updated.",
+    "edit": "Edit",
+    "globalContext": "All projects",
+    "filterAll": "All categories",
+    "filterAllStatuses": "All statuses",
+    "category": {
+      "atr": "ATR",
+      "cu": "CU",
+      "dtac": "DTAC",
+      "ac": "AC",
+      "aviz_mediu": "Aviz de mediu",
+      "aviz_isc": "Aviz ISC",
+      "aviz_anre": "Aviz ANRE",
+      "contract_racordare": "Contract racordare",
+      "receptie_terminare": "Recepție terminare",
+      "other": "Other"
+    },
+    "status": {
+      "pending": "Pending",
+      "submitted": "Submitted",
+      "obtained": "Obtained",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    }
   },
   "languageSwitcher": {
     "label": "Language"

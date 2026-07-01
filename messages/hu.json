@@ -12,7 +12,10 @@
     "matriceStatus": "Matrice Status",
     "vacation": "Szabadság",
     "clients": "Ügyfelek",
-    "documents": "Dokumentumok"
+    "documents": "Dokumentumok",
+    "delivery": "Szállítás",
+    "site": "Építési helyszín",
+    "pontaj": "Személyzet · Jelenlét"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -352,14 +355,23 @@
       "namePlaceholder": "pl. Ajánlati dokumentáció v2",
       "url": "OneDrive / SharePoint URL",
       "isRenewable": "Ezt a dokumentumot rendszeresen meg kell újítani",
-      "expiresAt": "Lejárat dátuma"
+      "expiresAt": "Lejárat dátuma",
+      "category": "Kategória",
+      "status": "Státusz",
+      "submittedAt": "Benyújtás dátuma",
+      "obtainedAt": "Megszerzés dátuma",
+      "responsible": "Felelős személy",
+      "version": "Verzió"
     },
     "columns": {
       "name": "Név",
       "linkedTo": "Csatolva",
       "date": "Hozzáadva",
       "expiry": "Lejárat",
-      "actions": ""
+      "actions": "",
+      "category": "Kategória",
+      "status": "Státusz",
+      "responsible": "Felelős"
     },
     "linkedType": {
       "project": "Projekt",
@@ -371,7 +383,32 @@
       "checklist": "Ellenőrzőlista",
       "documents": "Dokumentumok"
     },
-    "breadcrumb": "Dokumentumok"
+    "breadcrumb": "Dokumentumok",
+    "editDocument": "Dokumentum szerkesztése",
+    "documentUpdated": "Dokumentum frissítve.",
+    "edit": "Szerkesztés",
+    "globalContext": "Összes projekt",
+    "filterAll": "Minden kategória",
+    "filterAllStatuses": "Minden státusz",
+    "category": {
+      "atr": "ATR",
+      "cu": "CU",
+      "dtac": "DTAC",
+      "ac": "AC",
+      "aviz_mediu": "Környezeti engedély",
+      "aviz_isc": "ISC engedély",
+      "aviz_anre": "ANRE engedély",
+      "contract_racordare": "Csatlakozási szerződés",
+      "receptie_terminare": "Befejezési átvétel",
+      "other": "Egyéb"
+    },
+    "status": {
+      "pending": "Függőben",
+      "submitted": "Benyújtva",
+      "obtained": "Megszerezve",
+      "rejected": "Elutasítva",
+      "expired": "Lejárt"
+    }
   },
   "languageSwitcher": {
     "label": "Nyelv"

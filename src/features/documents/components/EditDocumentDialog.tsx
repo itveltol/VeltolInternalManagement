@@ -4,53 +4,47 @@ import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { createDocumentAction } from "@/app/[locale]/(app)/documents/actions";
+import { updateDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import { useDocumentsStore } from "../hooks/useDocumentsStore";
 import { DocumentFormFields } from "./DocumentFormFields";
 import type { DocumentStatus } from "../types";
 
-export function AddDocumentDialog() {
+export function EditDocumentDialog() {
   const t = useTranslations("documents");
-  const { addContext, closeAddDialog, responsibleProfiles } = useDocumentsStore();
-  const [state, formAction, pending] = useActionState(createDocumentAction, null);
+  const { editingDocument, closeEditDialog, responsibleProfiles } = useDocumentsStore();
+  const [state, formAction, pending] = useActionState(updateDocumentAction, null);
+
   const [isRenewable, setIsRenewable] = useState(false);
   const [status, setStatus] = useState<DocumentStatus | "">("");
 
   useEffect(() => {
-    if (state?.success) {
-      closeAddDialog();
-      setIsRenewable(false);
-      setStatus("");
+    if (editingDocument) {
+      setIsRenewable(editingDocument.is_renewable);
+      setStatus(editingDocument.status ?? "");
     }
-  }, [state?.success]);
+  }, [editingDocument]);
 
   useEffect(() => {
-    if (!addContext) {
-      setIsRenewable(false);
-      setStatus("");
-    }
-  }, [addContext]);
+    if (state?.success) closeEditDialog();
+  }, [state?.success]);
 
-  const open = !!addContext;
+  const open = !!editingDocument;
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && closeAddDialog()}>
+    <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && closeEditDialog()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
           <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
-            {t("addDocument")}
+            {t("editDocument")}
           </Dialog.Title>
-          {addContext && (
-            <p className="mt-1 font-mono text-[11px] text-veltol-fgMute">{addContext.contextLabel}</p>
-          )}
 
           <form action={formAction} className="mt-6 space-y-4">
-            <input type="hidden" name="linked_type" value={addContext?.linkedType ?? ""} />
-            <input type="hidden" name="linked_id"   value={addContext?.linkedId ?? ""} />
-            <input type="hidden" name="project_id"  value={addContext?.projectId ?? ""} />
+            <input type="hidden" name="id" value={editingDocument?.id ?? ""} />
+            <input type="hidden" name="project_id" value={editingDocument?.project_id ?? ""} />
 
             <DocumentFormFields
+              defaults={editingDocument ?? undefined}
               responsibleProfiles={responsibleProfiles}
               isRenewable={isRenewable}
               onIsRenewableChange={setIsRenewable}

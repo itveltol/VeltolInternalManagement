@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseDocumentsClient } from "@/features/documents/api/supabaseDocumentsClient";
 import * as documentService from "@/features/documents/services/documentService";
-import type { Document } from "@/features/documents/types";
+import type { Document, DocumentCategory, DocumentStatus } from "@/features/documents/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -29,10 +29,27 @@ async function requireMutator() {
   return { supabase, user };
 }
 
+function strOrNull(raw: FormDataEntryValue | null): string | null {
+  const s = (raw as string | null)?.trim() ?? "";
+  return s === "" ? null : s;
+}
+
+function intOrDefault(raw: FormDataEntryValue | null, fallback: number): number {
+  if (raw === null || raw === "") return fallback;
+  const n = parseInt(raw as string, 10);
+  return isNaN(n) ? fallback : n;
+}
+
 export async function getDocuments(search?: string): Promise<Document[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseDocumentsClient(supabase);
   return documentService.getDocuments(api, search ? { search } : undefined);
+}
+
+export async function getResponsibleProfilesAction() {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseDocumentsClient(supabase);
+  return documentService.getResponsibleProfiles(api);
 }
 
 export async function createDocumentAction(
@@ -43,15 +60,20 @@ export async function createDocumentAction(
     const { supabase, user } = await requireMutator();
     const api = createSupabaseDocumentsClient(supabase);
 
-    const name = ((formData.get("name") as string) ?? "").trim();
-    const url  = ((formData.get("url") as string) ?? "").trim();
-    const linkedType = (formData.get("linked_type") as string) ?? "";
-    const linkedId   = (formData.get("linked_id") as string) ?? "";
+    const name      = strOrNull(formData.get("name"));
+    const url       = strOrNull(formData.get("url"));
+    const linkedType = strOrNull(formData.get("linked_type"));
+    const linkedId   = strOrNull(formData.get("linked_id"));
     const projectIdRaw = formData.get("project_id");
     const projectId = projectIdRaw && String(projectIdRaw).trim() !== "" ? Number(projectIdRaw) : null;
     const isRenewable = formData.get("is_renewable") === "on";
-    const expiresAtRaw = ((formData.get("expires_at") as string) ?? "").trim();
-    const expiresAt = isRenewable && expiresAtRaw ? expiresAtRaw : null;
+    const expiresAt = isRenewable ? strOrNull(formData.get("expires_at")) : null;
+    const category  = strOrNull(formData.get("category")) as DocumentCategory | null;
+    const status    = strOrNull(formData.get("status")) as DocumentStatus | null;
+    const submittedAt = strOrNull(formData.get("submitted_at"));
+    const obtainedAt  = strOrNull(formData.get("obtained_at"));
+    const responsibleId = strOrNull(formData.get("responsible_id"));
+    const version   = intOrDefault(formData.get("version"), 1);
 
     if (!name || !url || !linkedType || !linkedId) return { error: "errorGeneric" };
 
@@ -63,6 +85,12 @@ export async function createDocumentAction(
       project_id: projectId,
       is_renewable: isRenewable,
       expires_at: expiresAt,
+      category,
+      status,
+      submitted_at: submittedAt,
+      obtained_at: obtainedAt,
+      responsible_id: responsibleId,
+      version,
       created_by: user.id,
     });
 
@@ -71,6 +99,48 @@ export async function createDocumentAction(
     if (projectId) revalidatePath(`/${locale}/projects/${projectId}`);
 
     return { success: "documentCreated" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function updateDocumentAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const api = createSupabaseDocumentsClient(supabase);
+
+    const id = Number(formData.get("id"));
+    if (!id) return { error: "errorGeneric" };
+
+    const projectIdRaw = formData.get("project_id");
+    const projectId = projectIdRaw && String(projectIdRaw).trim() !== "" ? Number(projectIdRaw) : null;
+    const isRenewable = formData.get("is_renewable") === "on";
+    const expiresAt = isRenewable ? strOrNull(formData.get("expires_at")) : null;
+    const category  = strOrNull(formData.get("category")) as DocumentCategory | null;
+    const status    = strOrNull(formData.get("status")) as DocumentStatus | null;
+
+    await documentService.updateDocument(api, id, {
+      name:           strOrNull(formData.get("name")) ?? undefined,
+      url:            strOrNull(formData.get("url")) ?? undefined,
+      is_renewable:   isRenewable,
+      expires_at:     expiresAt,
+      category,
+      status,
+      submitted_at:   strOrNull(formData.get("submitted_at")),
+      obtained_at:    strOrNull(formData.get("obtained_at")),
+      responsible_id: strOrNull(formData.get("responsible_id")),
+      version:        intOrDefault(formData.get("version"), 1),
+    });
+
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/documents`);
+    if (projectId) revalidatePath(`/${locale}/projects/${projectId}`);
+
+    return { success: "documentUpdated" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };

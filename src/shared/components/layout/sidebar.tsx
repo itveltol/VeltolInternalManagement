@@ -14,6 +14,8 @@ import {
   CalendarDays,
   Building2,
   FileText,
+  HardHat,
+  Users,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
@@ -48,9 +50,16 @@ export function Sidebar({
       items: [
         { href: `/${locale}/projects`, label: t("projects"), icon: FolderKanban },
         { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
-        { href: `/${locale}/documents`, label: t("documents"), icon: FileText },
         { href: `/${locale}/matrice-status`, label: t("matriceStatus"), icon: Grid2X2 },
         { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
+      ],
+    },
+    {
+      label: t("delivery"),
+      items: [
+        { href: `/${locale}/documents`, label: t("documents"), icon: FileText },
+        { href: `/${locale}/site`, label: t("site"), icon: HardHat },
+        { href: `/${locale}/pontaj`, label: t("pontaj"), icon: Users },
       ],
     },
     {

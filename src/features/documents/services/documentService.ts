@@ -1,5 +1,5 @@
 import type { DocumentsApiClient, GetDocumentsFilter } from '../api/types';
-import type { Document, CreateDocumentPayload } from '../types';
+import type { Document, CreateDocumentPayload, UpdateDocumentPayload } from '../types';
 
 export async function getDocuments(api: DocumentsApiClient, filter?: GetDocumentsFilter): Promise<Document[]> {
   return api.getDocuments(filter);
@@ -17,11 +17,23 @@ export async function getDocumentsByLinkedId(
   return api.getDocumentsByLinkedId(linkedType, linkedId);
 }
 
+export async function getResponsibleProfiles(api: DocumentsApiClient) {
+  return api.getResponsibleProfiles();
+}
+
 export async function createDocument(
   api: DocumentsApiClient,
   payload: CreateDocumentPayload & { created_by: string },
 ): Promise<{ id: number }> {
   return api.createDocument(payload);
+}
+
+export async function updateDocument(
+  api: DocumentsApiClient,
+  id: number,
+  payload: UpdateDocumentPayload,
+): Promise<void> {
+  return api.updateDocument(id, payload);
 }
 
 export async function deleteDocument(api: DocumentsApiClient, id: number): Promise<void> {

@@ -12,7 +12,10 @@
     "matriceStatus": "Matrice Status",
     "vacation": "Concediu",
     "clients": "Clienți",
-    "documents": "Documente"
+    "documents": "Documente",
+    "delivery": "Livrare",
+    "site": "Construcție · Șantier",
+    "pontaj": "Personal · Pontaj"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -352,14 +355,23 @@
       "namePlaceholder": "ex. Documentație ofertă v2",
       "url": "URL OneDrive / SharePoint",
       "isRenewable": "Acest document trebuie reînnoit periodic",
-      "expiresAt": "Data expirării"
+      "expiresAt": "Data expirării",
+      "category": "Categorie",
+      "status": "Status",
+      "submittedAt": "Data depunerii",
+      "obtainedAt": "Data obținerii",
+      "responsible": "Responsabil",
+      "version": "Versiune"
     },
     "columns": {
       "name": "Nume",
       "linkedTo": "Legat de",
       "date": "Adăugat",
       "expiry": "Expirare",
-      "actions": ""
+      "actions": "",
+      "category": "Categorie",
+      "status": "Status",
+      "responsible": "Responsabil"
     },
     "linkedType": {
       "project": "Proiect",
@@ -371,7 +383,32 @@
       "checklist": "Checklist",
       "documents": "Documente"
     },
-    "breadcrumb": "Documente"
+    "breadcrumb": "Documente",
+    "editDocument": "Editează document",
+    "documentUpdated": "Document actualizat.",
+    "edit": "Editează",
+    "globalContext": "Toate proiectele",
+    "filterAll": "Toate categoriile",
+    "filterAllStatuses": "Toate statusurile",
+    "category": {
+      "atr": "ATR",
+      "cu": "CU",
+      "dtac": "DTAC",
+      "ac": "AC",
+      "aviz_mediu": "Aviz de mediu",
+      "aviz_isc": "Aviz ISC",
+      "aviz_anre": "Aviz ANRE",
+      "contract_racordare": "Contract racordare",
+      "receptie_terminare": "Recepție la terminare",
+      "other": "Altele"
+    },
+    "status": {
+      "pending": "În așteptare",
+      "submitted": "Depus",
+      "obtained": "Obținut",
+      "rejected": "Respins",
+      "expired": "Expirat"
+    }
   },
   "languageSwitcher": {
     "label": "Limbă"
