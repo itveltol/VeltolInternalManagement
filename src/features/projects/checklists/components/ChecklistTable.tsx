@@ -2,9 +2,12 @@
 
 import React, { useTransition, useCallback, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { upsertChecklistItem, logTodayRealizat, getDailyLog } from "@/app/[locale]/(app)/projects/[id]/actions";
+import { Paperclip } from "lucide-react";
+import { upsertChecklistItem, logTodayRealizat, getDailyLog, getLinkedDocuments } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { useChecklistStore } from "../hooks/useChecklistStore";
+import { DocumentList } from "@/features/documents/components/DocumentList";
+import { AddDocumentDialog } from "@/features/documents/components/AddDocumentDialog";
 import type { ChecklistRow, ChecklistPhase } from "@/features/projects/checklists/types";
 
 interface Props {
@@ -69,7 +72,10 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
     setRowStatus, updateTodayValue, setTodayStatus,
     toggleHistoryOpen, setHistoryLoading, setHistoryRecords,
     closeAllHistory,
+    toggleDocsOpen, setDocsLoading, setDocsRecords,
   } = useChecklistStore();
+
+  const tDocs = useTranslations("documents");
 
   // Init store on mount
   useEffect(() => {
@@ -133,6 +139,29 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
       }
     });
   }, [rowState, projectId, setTodayStatus, updateTodayValue]);
+
+  const toggleDocs = useCallback((itemNumber: number, row: ChecklistRow) => {
+    const current = rowState[itemNumber];
+    if (!current) return;
+
+    if (current.docsOpen) {
+      toggleDocsOpen(itemNumber, false);
+      return;
+    }
+
+    toggleDocsOpen(itemNumber, true);
+
+    if (!row.record?.id) {
+      setDocsRecords(itemNumber, []);
+      return;
+    }
+
+    setDocsLoading(itemNumber, true);
+    startTransition(async () => {
+      const docs = await getLinkedDocuments("checklist_item", String(row.record!.id));
+      setDocsRecords(itemNumber, docs);
+    });
+  }, [rowState, toggleDocsOpen, setDocsLoading, setDocsRecords]);
 
   const toggleHistory = useCallback((itemNumber: number, row: ChecklistRow) => {
     const current = rowState[itemNumber];
@@ -325,19 +354,57 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
                     <td className="px-3 py-2.5 text-right"><PctCell pct={livePct} /></td>
 
                     <td className="px-3 py-2.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => toggleHistory(row.number, row)}
-                        title={t("history.title")}
-                        className="rounded p-1 text-veltol-fgMute transition-colors hover:bg-white/[0.06] hover:text-veltol-fgDim"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => toggleHistory(row.number, row)}
+                          title={t("history.title")}
+                          className="rounded p-1 text-veltol-fgMute transition-colors hover:bg-white/[0.06] hover:text-veltol-fgDim"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleDocs(row.number, row)}
+                          title={tDocs("attachDocuments")}
+                          className={[
+                            "rounded p-1 transition-colors hover:bg-white/[0.06]",
+                            state?.docsOpen ? "text-veltol-aqua" : "text-veltol-fgMute hover:text-veltol-fgDim",
+                          ].join(" ")}
+                        >
+                          <Paperclip className="h-3 w-3" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
+
+                  {state?.docsOpen && (
+                    <tr className="bg-veltol-surface/20">
+                      <td colSpan={canMutate ? 10 : 9} className="px-8 py-3">
+                        <div className="inline-block min-w-[320px] rounded-lg border border-white/[0.08] bg-veltol-bg p-4 shadow-xl">
+                          <div className="mb-3 font-mono text-[9px] uppercase tracking-[0.16em] text-veltol-fgMute">
+                            {tDocs("attachDocuments")} — {row.activitate}
+                          </div>
+                          {state.docsLoading ? (
+                            <p className="font-mono text-[11px] text-veltol-fgMute">{tDocs("loadingDocuments")}</p>
+                          ) : (
+                            <DocumentList
+                              documents={state.docsRecords ?? []}
+                              linkedType="checklist_item"
+                              linkedId={row.record?.id ? String(row.record.id) : ""}
+                              projectId={projectId}
+                              contextLabel={row.activitate}
+                              canMutate={canMutate && !!row.record?.id}
+                              compact
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
 
                   {state?.historyOpen && (
                     <tr className="bg-veltol-surface/20">
@@ -378,6 +445,7 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
           </tbody>
         </table>
       </div>
+      <AddDocumentDialog />
     </div>
   );
 }

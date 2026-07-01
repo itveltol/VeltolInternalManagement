@@ -8,6 +8,7 @@ export interface CreateProjectPayload {
   mw_bess: number | null;
   project_type: string | null;
   manager_id: string | null;
+  client_id: number | null;
   current_phase: string;
   progress_pct: number;
   contract_number: string | null;
@@ -25,7 +26,8 @@ export interface ProjectsApiClient {
   getProjects(): Promise<Project[]>;
   getProjectById(id: number): Promise<Project | null>;
   getProjectManagers(): Promise<ProjectManager[]>;
-  createProject(payload: CreateProjectPayload): Promise<void>;
+  createProject(payload: CreateProjectPayload): Promise<{ id: number }>;
   updateProject(id: number, payload: CreateProjectPayload): Promise<void>;
   deleteProject(id: number): Promise<void>;
+  linkOneDriveFolder(id: number, folderId: string, folderUrl: string): Promise<void>;
 }

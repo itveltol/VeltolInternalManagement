@@ -26,6 +26,8 @@ export interface Project {
   project_type: string | null;
   manager_id: string | null;
   manager?: { first_name: string | null; last_name: string | null } | null;
+  client_id: number | null;
+  client?: { id: number; name: string } | null;
   current_phase: ProjectPhase;
   progress_pct: number;
   contract_number: string | null;
@@ -37,6 +39,8 @@ export interface Project {
   cu_issued: boolean;
   atr_issued: boolean;
   notes: string | null;
+  onedrive_folder_id: string | null;
+  onedrive_folder_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,3 +70,24 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
 ];
 
 export const PROJECT_PRIORITIES: ProjectPriority[] = ["low", "medium", "high"];
+
+export type ProjectType =
+  | "CEF"
+  | "CEF+BESS"
+  | "BESS"
+  | "BESS_CEF"
+  | "PV_CI"
+  | "EMS"
+  | "SCADA"
+  | "OM";
+
+export const PROJECT_TYPES: ProjectType[] = [
+  "CEF",
+  "CEF+BESS",
+  "BESS",
+  "BESS_CEF",
+  "PV_CI",
+  "EMS",
+  "SCADA",
+  "OM",
+];

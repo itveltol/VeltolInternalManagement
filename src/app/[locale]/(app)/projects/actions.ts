@@ -5,9 +5,18 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import * as projectService from "@/features/projects/services/projectService";
+import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
+import type { FolderItem } from "@/core/microsoft/folderProvider";
 import type { Project, ProjectManager } from "@/features/projects/types";
+import type { ClientRef } from "@/features/clients/types";
+import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
+import * as clientService from "@/features/clients/services/clientService";
+import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
+import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
+import * as matriceService from "@/features/matrice/services/matriceService";
+import type { ActivityStatus } from "@/features/matrice/types";
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = { error?: string; success?: string; folderCreated?: boolean; projectId?: number } | null;
 
 async function getProjectsPath() {
   const locale = await getLocale();
@@ -54,6 +63,7 @@ function extractProjectPayload(formData: FormData) {
     mw_bess: num("mw_bess"),
     project_type: str("project_type"),
     manager_id: str("manager_id"),
+    client_id: num("client_id"),
     current_phase: formData.get("current_phase") as string,
     progress_pct: Number(formData.get("progress_pct") ?? 0),
     contract_number: str("contract_number"),
@@ -87,9 +97,61 @@ export async function createProject(
   try {
     const { supabase } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
-    await projectService.createProject(client, extractProjectPayload(formData));
+    const payload = extractProjectPayload(formData);
+    const { id: newId } = await projectService.createProject(client, payload);
     revalidatePath(await getProjectsPath());
-    return { success: "projectCreated" };
+
+    try {
+      const folder = await createProjectFolder(payload.name, payload.contract_number);
+      await client.linkOneDriveFolder(newId, folder.id, folder.url);
+      return { success: "projectCreated", folderCreated: true, projectId: newId };
+    } catch {
+      return { success: "projectCreated", folderCreated: false, projectId: newId };
+    }
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function linkProjectFolder(
+  projectId: number,
+  input: string,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseProjectsClient(supabase);
+
+    let folderId: string;
+    let folderUrl: string;
+
+    if (process.env.AZURE_CLIENT_ID) {
+      // OneDrive: resolve share URL to a drive item
+      const encoded = Buffer.from(input).toString("base64url");
+      const res = await fetch(
+        `https://graph.microsoft.com/v1.0/shares/u!${encoded}/driveItem`,
+        { headers: { Authorization: `Bearer ` } }, // token would be fetched via getGraphToken in full impl
+      );
+      if (!res.ok) return { error: "folderLinkError" };
+      const item = (await res.json()) as { id: string; webUrl: string };
+      folderId = item.id;
+      folderUrl = item.webUrl;
+    } else {
+      // Local stub: treat input as an absolute path
+      const { stat } = await import("fs/promises");
+      try {
+        await stat(input);
+      } catch {
+        return { error: "folderLinkError" };
+      }
+      folderId = input.split("/").pop() ?? input;
+      folderUrl = input;
+    }
+
+    await client.linkOneDriveFolder(projectId, folderId, folderUrl);
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/projects/${projectId}`);
+    return { success: "folderLinked" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
@@ -127,6 +189,63 @@ export async function deleteProject(projectId: number): Promise<ActionState> {
     revalidatePath(await getProjectsPath());
     return { success: "projectDeleted" };
   } catch {
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function getClientRefs(): Promise<ClientRef[]> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseClientsClient(supabase);
+  return clientService.getClientRefs(api);
+}
+
+export async function scanProjectFolder(
+  projectId: number,
+): Promise<{ files: FolderItem[]; error?: string }> {
+  try {
+    const { supabase } = await requireAuth();
+    const client = createSupabaseProjectsClient(supabase);
+    const project = await projectService.getProjectById(client, projectId);
+    if (!project?.onedrive_folder_id) {
+      return { files: [], error: "noFolderLinked" };
+    }
+    const files = await listOneDriveFolderContents(project.onedrive_folder_id);
+    return { files };
+  } catch {
+    return { files: [], error: "errorGeneric" };
+  }
+}
+
+export async function applyFolderScanSuggestions(
+  projectId: number,
+  checklistUpdates: Array<{ itemNumber: number; plan_total: number }>,
+  matriceUpdates: Array<{ activityId: number; status: ActivityStatus }>,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const checklistClient = createSupabaseChecklistClient(supabase);
+    const matriceClient = createSupabaseMatriceClient(supabase);
+
+    for (const { itemNumber, plan_total } of checklistUpdates) {
+      await checklistClient.upsertChecklistItem({
+        projectId,
+        itemNumber,
+        plan_total,
+        zile: null,
+        notes: null,
+      });
+    }
+
+    for (const { activityId, status } of matriceUpdates) {
+      await matriceService.setCellStatus(matriceClient, projectId, activityId, status, user.id);
+    }
+
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/projects/${projectId}`);
+    revalidatePath(`/${locale}/matrice-status`);
+    return { success: "scanApplied" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
 }

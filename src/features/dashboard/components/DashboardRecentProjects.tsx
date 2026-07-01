@@ -1,9 +1,9 @@
 import { Badge } from "@/shared/components/ui/badge";
 import { statusVariant } from "@/shared/utils/status-variant";
-import type { MockProject } from "../mock-data";
+import { DashboardProject } from "@/app/[locale]/(app)/dashboard/action";
 
 interface Props {
-  projects: MockProject[];
+  projects: DashboardProject[];
   liveLabel: string;
   eyebrow: string;
   title: string;
@@ -38,20 +38,20 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
                 <span className="font-mono text-[10px] text-veltol-fgMute">{project.id}</span>
                 <span className="truncate text-[13px] font-medium text-veltol-fg">{project.name}</span>
               </div>
-              <div className="mt-0.5 text-xs text-veltol-fgDim">{project.location}</div>
+              <div className="mt-0.5 text-xs text-veltol-fgDim">{project.site_location}</div>
             </div>
             <div className="shrink-0 text-right">
               <div className="font-mono tabular-nums text-[13px] text-veltol-fg">
-                {project.capacityMWp.toFixed(1)}{" "}
+                {project.mw_solar?.toFixed(1) ?? "0.0"}{" "}
                 <span className="text-veltol-fgMute">MWp</span>
               </div>
               <div className="mt-0.5 font-mono tabular-nums text-[11px] text-veltol-fgDim">
-                {project.valueEur.toLocaleString("hu-HU")}{" "}
+                {project.value_eur?.toLocaleString("hu-HU") ?? "0"}{" "}
                 <span className="text-veltol-fgMute">EUR</span>
               </div>
             </div>
             <div className="shrink-0">
-              <Badge variant={statusVariant(project.status)}>{tPhase(project.status)}</Badge>
+              <Badge variant={statusVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
             </div>
           </div>
         ))}

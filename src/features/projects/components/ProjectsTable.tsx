@@ -12,14 +12,16 @@ import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { projectStatusVariant, priorityVariant, phaseVariant } from "@/shared/utils/status-variant";
 import type { Project, ProjectManager } from "../types";
+import type { ClientRef } from "@/features/clients/types";
 
 interface Props {
   projects: Project[];
   canMutate: boolean;
   managers: ProjectManager[];
+  clientRefs: ClientRef[];
 }
 
-export function ProjectsTable({ projects, canMutate, managers }: Props) {
+export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -41,6 +43,12 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
       locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
       { year: "numeric", month: "2-digit", day: "2-digit" },
     );
+  }
+
+  function daysLeft(iso: string | null): number | null {
+    if (!iso) return null;
+    const diff = new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
+    return Math.round(diff / 86_400_000);
   }
 
   function managerName(project: Project) {
@@ -84,7 +92,7 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
                   t("columns.id"), t("columns.project"), t("columns.county"),
                   t("columns.phase"), t("columns.progress"), t("columns.generalStatus"),
                   t("columns.priority"), t("columns.deadline"), t("columns.value"),
-                  t("columns.manager"), "",
+                  t("columns.manager"), t("columns.client"), "",
                 ].map((col, i) => (
                   <th key={i} className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[0.16em] text-veltol-fgMute">
                     {col}
@@ -95,7 +103,7 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
             <tbody className="divide-y divide-white/[0.03]">
               {projects.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={12} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
                   </td>
                 </tr>
@@ -137,14 +145,27 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
                       <Badge variant={priorityVariant(project.priority)}>{tPriority(project.priority)}</Badge>
                     </td>
 
-                    <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">{formatDate(project.deadline)}</td>
+                    <td className="px-5 py-3.5">
+                      <span className="font-mono tabular-nums text-[12px] text-veltol-fgDim">{formatDate(project.deadline)}</span>
+                      {project.deadline && (() => {
+                        const d = daysLeft(project.deadline);
+                        if (d === null) return null;
+                        const color = d < 0 ? "text-red-400" : d <= 7 ? "text-amber-400" : "text-veltol-fgMute";
+                        const label = d < 0 ? `${Math.abs(d)}d overdue` : d === 0 ? "today" : `${d}d left`;
+                        return <span className={`block font-mono tabular-nums text-[11px] ${color}`}>{label}</span>;
+                      })()}
+                    </td>
 
                     <td className="px-5 py-3.5 font-mono tabular-nums text-veltol-fg">
-                      {project.value_eur != null ? project.value_eur.toLocaleString("hu-HU") : "—"}
+                      {project.value_eur != null ? new Intl.NumberFormat("hu-HU").format(project.value_eur) : "—"}
                       {project.value_eur != null && <span className="ml-1 text-[11px] text-veltol-fgMute">€</span>}
                     </td>
 
                     <td className="px-5 py-3.5 text-[12px] text-veltol-fgDim">{managerName(project)}</td>
+
+                    <td className="px-5 py-3.5 text-[12px] text-veltol-fgDim">
+                      {project.client?.name ?? "—"}
+                    </td>
 
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
@@ -179,6 +200,7 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
       <AddProjectDialog
         open={isAddDialogOpen}
         managers={managers}
+        clientRefs={clientRefs}
         onClose={() => {
           closeAddDialog();
           router.refresh();
@@ -190,6 +212,7 @@ export function ProjectsTable({ projects, canMutate, managers }: Props) {
           project={editingProject}
           open={!!editingProject}
           managers={managers}
+          clientRefs={clientRefs}
           onClose={() => {
             closeEditDialog();
             router.refresh();

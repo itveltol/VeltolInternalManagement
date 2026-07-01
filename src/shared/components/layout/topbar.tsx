@@ -1,11 +1,14 @@
+"use client";
+
 import { Bell } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { LanguageSwitcher } from "@/shared/components/language-switcher";
+import { InlineSearchBar } from "@/features/search/components/InlineSearchBar";
 
 export function Topbar() {
   return (
     <header
-      className="flex h-[62px] shrink-0 items-center justify-between border-b border-white/[0.07] px-6"
+      className="relative flex h-[62px] shrink-0 items-center border-b border-white/[0.07] px-6"
       style={{ background: "rgba(6, 15, 26, 0.75)", backdropFilter: "blur(20px)" }}
     >
       {/* Live pill */}
@@ -16,7 +19,13 @@ export function Topbar() {
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Centered search */}
+      <div className="absolute left-1/2 -translate-x-1/2">
+        <InlineSearchBar />
+      </div>
+
+      {/* Right actions */}
+      <div className="ml-auto flex items-center gap-2">
         <LanguageSwitcher />
         <Button
           variant="ghost"

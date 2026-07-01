@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
 import * as matriceService from "@/features/matrice/services/matriceService";
-import type { MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
+import type { Activity, MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -26,6 +26,12 @@ export async function getAvailableProjects(): Promise<MatrixProject[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseMatriceClient(supabase);
   return matriceService.getAllProjects(client);
+}
+
+export async function getActivities(): Promise<Activity[]> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseMatriceClient(supabase);
+  return client.getActivities();
 }
 
 export async function setCellStatus(

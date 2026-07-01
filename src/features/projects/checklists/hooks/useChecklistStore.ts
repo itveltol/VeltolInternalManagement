@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { DailyLogRecord, ChecklistRow } from "@/features/projects/checklists/types";
+import type { Document } from "@/features/documents/types";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -12,6 +13,9 @@ export interface RowUIState {
   historyOpen: boolean;
   historyRecords: DailyLogRecord[] | null;
   historyLoading: boolean;
+  docsOpen: boolean;
+  docsRecords: Document[] | null;
+  docsLoading: boolean;
 }
 
 interface ChecklistStore {
@@ -28,6 +32,9 @@ interface ChecklistStore {
   setHistoryLoading: (itemNumber: number, loading: boolean) => void;
   setHistoryRecords: (itemNumber: number, records: DailyLogRecord[]) => void;
   closeAllHistory: () => void;
+  toggleDocsOpen: (itemNumber: number, open: boolean) => void;
+  setDocsLoading: (itemNumber: number, loading: boolean) => void;
+  setDocsRecords: (itemNumber: number, records: Document[]) => void;
 }
 
 export const useChecklistStore = create<ChecklistStore>()((set) => ({
@@ -47,6 +54,9 @@ export const useChecklistStore = create<ChecklistStore>()((set) => ({
           historyOpen: false,
           historyRecords: null,
           historyLoading: false,
+          docsOpen: false,
+          docsRecords: null,
+          docsLoading: false,
         };
       }
     }
@@ -108,4 +118,19 @@ export const useChecklistStore = create<ChecklistStore>()((set) => ({
       }
       return { rowState: next };
     }),
+
+  toggleDocsOpen: (itemNumber, open) =>
+    set((s) => ({
+      rowState: { ...s.rowState, [itemNumber]: { ...s.rowState[itemNumber], docsOpen: open, docsRecords: open ? s.rowState[itemNumber]?.docsRecords : null } },
+    })),
+
+  setDocsLoading: (itemNumber, docsLoading) =>
+    set((s) => ({
+      rowState: { ...s.rowState, [itemNumber]: { ...s.rowState[itemNumber], docsLoading } },
+    })),
+
+  setDocsRecords: (itemNumber, docsRecords) =>
+    set((s) => ({
+      rowState: { ...s.rowState, [itemNumber]: { ...s.rowState[itemNumber], docsRecords, docsLoading: false } },
+    })),
 }));

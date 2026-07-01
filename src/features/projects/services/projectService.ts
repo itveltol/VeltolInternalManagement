@@ -13,7 +13,7 @@ export async function getProjectManagers(client: ProjectsApiClient): Promise<Pro
   return client.getProjectManagers();
 }
 
-export async function createProject(client: ProjectsApiClient, payload: CreateProjectPayload): Promise<void> {
+export async function createProject(client: ProjectsApiClient, payload: CreateProjectPayload): Promise<{ id: number }> {
   return client.createProject(payload);
 }
 

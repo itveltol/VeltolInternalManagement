@@ -15,4 +15,5 @@ export interface Profile {
   role: AppRole;
   created_at: string;
   updated_at: string;
+  medical_exam_expires_at: string | null;
 }

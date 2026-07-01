@@ -11,6 +11,9 @@ import {
   LogOut,
   ChevronRight,
   User,
+  CalendarDays,
+  Building2,
+  FileText,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
@@ -44,7 +47,10 @@ export function Sidebar({
       label: t("work"),
       items: [
         { href: `/${locale}/projects`, label: t("projects"), icon: FolderKanban },
+        { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
+        { href: `/${locale}/documents`, label: t("documents"), icon: FileText },
         { href: `/${locale}/matrice-status`, label: t("matriceStatus"), icon: Grid2X2 },
+        { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
       ],
     },
     {
@@ -83,21 +89,6 @@ export function Sidebar({
           <span className="font-brand text-[15px] text-veltol-fg">Veltol</span>
           <span className="v-text-gradient font-brand text-[15px]">.io</span>
         </div>
-      </div>
-
-      {/* Project switcher */}
-      <div className="shrink-0 border-b border-white/[0.07] p-3">
-        <button className="flex w-full items-center justify-between rounded-lg bg-veltol-surface/60 px-3 py-2 text-left hover:bg-veltol-surface/80 transition-colors">
-          <div>
-            <span className="mono-label block text-[9px] text-veltol-fgMute">
-              {t("activeProject")}
-            </span>
-            <span className="mt-0.5 block text-[13px] font-semibold text-veltol-fg">
-              Győr Ipari Park
-            </span>
-          </div>
-          <ChevronRight className="h-3.5 w-3.5 text-veltol-fgMute" />
-        </button>
       </div>
 
       {/* Nav */}

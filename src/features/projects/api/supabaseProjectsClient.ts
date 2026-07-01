@@ -6,7 +6,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjects() {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name)")
       .order("id");
     if (error) throw new Error(error.message);
     return (data ?? []) as unknown as Project[];
@@ -15,7 +15,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name)")
       .eq("id", id)
       .single();
     if (error) return null;
@@ -33,8 +33,9 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   },
 
   async createProject(payload: CreateProjectPayload) {
-    const { error } = await supabase.from("projects").insert(payload);
+    const { data, error } = await supabase.from("projects").insert(payload).select("id").single();
     if (error) throw new Error(error.message);
+    return { id: (data as { id: number }).id };
   },
 
   async updateProject(id, payload: CreateProjectPayload) {
@@ -44,6 +45,14 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
 
   async deleteProject(id) {
     const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
+  async linkOneDriveFolder(id, folderId, folderUrl) {
+    const { error } = await supabase
+      .from("projects")
+      .update({ onedrive_folder_id: folderId, onedrive_folder_url: folderUrl })
+      .eq("id", id);
     if (error) throw new Error(error.message);
   },
 });

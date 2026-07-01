@@ -17,9 +17,11 @@ interface Props {
   cells: MatrixCell[];
   projects: MatrixProject[];
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
+  onOpenDocuments: (projectId: number, activityId: number) => void;
+  docCounts?: Map<string, number>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, docCounts = new Map() }: Props) {
   const t = useTranslations("matrice");
 
   const phases = Array.from(
@@ -152,6 +154,8 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus }: Pro
                                 projectId={p.id}
                                 activityId={activity.id}
                                 onChangeStatus={onChangeStatus}
+                                onOpenDocuments={() => onOpenDocuments(p.id, activity.id)}
+                                documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
                               />
                             </td>
                           );

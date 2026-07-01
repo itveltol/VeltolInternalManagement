@@ -11,6 +11,7 @@ export interface UpdateUserPayload {
   last_name: string;
   phone: string;
   role: AppRole;
+  medical_exam_expires_at: string | null;
 }
 
 export interface InviteUserPayload {

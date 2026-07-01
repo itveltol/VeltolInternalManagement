@@ -110,3 +110,19 @@ export async function getDailyLog(itemId: number): Promise<DailyLogRecord[]> {
   const client = createSupabaseChecklistClient(supabase);
   return checklistService.getDailyLog(client, itemId);
 }
+
+export async function getProjectDocuments(projectId: number) {
+  const { supabase } = await requireAuth();
+  const { createSupabaseDocumentsClient } = await import("@/features/documents/api/supabaseDocumentsClient");
+  const { getDocumentsByProject } = await import("@/features/documents/services/documentService");
+  const api = createSupabaseDocumentsClient(supabase);
+  return getDocumentsByProject(api, projectId);
+}
+
+export async function getLinkedDocuments(linkedType: string, linkedId: string) {
+  const { supabase } = await requireAuth();
+  const { createSupabaseDocumentsClient } = await import("@/features/documents/api/supabaseDocumentsClient");
+  const { getDocumentsByLinkedId } = await import("@/features/documents/services/documentService");
+  const api = createSupabaseDocumentsClient(supabase);
+  return getDocumentsByLinkedId(api, linkedType, linkedId);
+}

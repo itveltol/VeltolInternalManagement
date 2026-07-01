@@ -85,11 +85,13 @@ export async function updateUser(
   try {
     const { supabase } = await requireAdmin();
     const client = createSupabaseProfileClient(supabase);
+    const medicalRaw = ((formData.get("medical_exam_expires_at") as string) ?? "").trim();
     await profileService.updateUser(client, formData.get("userId") as string, {
       first_name: formData.get("first_name") as string,
       last_name: formData.get("last_name") as string,
       phone: formData.get("phone") as string,
       role: formData.get("role") as AppRole,
+      medical_exam_expires_at: medicalRaw || null,
     });
     revalidatePath(await getProfilePath());
     return { success: "profileSaved" };
@@ -120,10 +122,10 @@ export async function inviteUser(
     revalidatePath(await getProfilePath());
     return { success: "inviteSent" };
   } catch (e: unknown) {
+    console.error("[inviteUser]", e);
     if (e instanceof Error) {
       if (e.message === "Forbidden") return { error: "errorNotAdmin" };
       if (e.message.toLowerCase().includes("already")) return { error: "errorEmailExists" };
-      return { error: e.message };
     }
     return { error: "errorGeneric" };
   }

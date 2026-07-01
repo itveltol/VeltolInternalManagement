@@ -20,6 +20,18 @@ const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary"
   viewer: "secondary",
 };
 
+function medicalExpiryState(date: string | null): "expired" | "soon" | "ok" | null {
+  if (!date) return null;
+  const diff = new Date(date).getTime() - Date.now();
+  if (diff < 0) return "expired";
+  if (diff < 30 * 24 * 60 * 60 * 1000) return "soon";
+  return "ok";
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
 function initials(p: Profile) {
   const f = p.first_name?.[0] ?? "";
   const l = p.last_name?.[0] ?? "";
@@ -83,6 +95,7 @@ export function UserTable({
                   t("colUser"),
                   t("colPhone"),
                   t("colRole"),
+                  t("colMedicalExam"),
                   t("colJoined"),
                   t("colActions"),
                 ].map((col) => (
@@ -142,6 +155,34 @@ export function UserTable({
                       <Badge variant={ROLE_VARIANT[user.role]}>
                         {t(`role_${user.role}`)}
                       </Badge>
+                    </td>
+
+                    <td className="px-6 py-3">
+                      {(() => {
+                        const state = medicalExpiryState(user.medical_exam_expires_at);
+                        if (!user.medical_exam_expires_at) {
+                          return <span className="font-mono text-[11px] text-veltol-fgMute">—</span>;
+                        }
+                        return (
+                          <span className={
+                            state === "expired" ? "font-mono text-[11px] font-semibold text-veltol-red" :
+                            state === "soon"    ? "font-mono text-[11px] font-semibold text-amber-400" :
+                                                  "font-mono text-[11px] text-veltol-fgDim"
+                          }>
+                            {formatDate(user.medical_exam_expires_at)}
+                            {state === "expired" && (
+                              <span className="ml-1.5 rounded bg-veltol-red/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-veltol-red">
+                                {t("medicalExpired")}
+                              </span>
+                            )}
+                            {state === "soon" && (
+                              <span className="ml-1.5 rounded bg-amber-400/10 px-1 py-0.5 text-[9px] uppercase tracking-wide text-amber-400">
+                                {t("medicalExpiringSoon")}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     <td className="px-6 py-3 font-mono text-[12px] text-veltol-fgDim">

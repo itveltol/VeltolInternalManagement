@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/core/supabase/server";
-import { getProjects, getProjectManagers } from "./actions";
+import { getProjects, getProjectManagers, getClientRefs } from "./actions";
 import { ProjectsShell } from "@/features/projects/components/ProjectsShell";
 
 export default async function ProjectsPage() {
@@ -20,9 +20,10 @@ export default async function ProjectsPage() {
     .single();
 
   const canMutate = ["admin", "project_manager"].includes(profile?.role ?? "");
-  const [projects, managers] = await Promise.all([
+  const [projects, managers, clientRefs] = await Promise.all([
     getProjects(),
     canMutate ? getProjectManagers() : Promise.resolve([]),
+    canMutate ? getClientRefs() : Promise.resolve([]),
   ]);
 
   const t = await getTranslations("projects");
@@ -37,7 +38,7 @@ export default async function ProjectsPage() {
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
       </div>
 
-      <ProjectsShell projects={projects} canMutate={canMutate} managers={managers} />
+      <ProjectsShell projects={projects} canMutate={canMutate} managers={managers} clientRefs={clientRefs} />
     </div>
   );
 }

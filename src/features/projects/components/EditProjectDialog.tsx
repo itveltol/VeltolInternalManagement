@@ -7,8 +7,9 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { updateProject } from "@/app/[locale]/(app)/projects/actions";
-import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES } from "../types";
+import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES } from "../types";
 import type { Project, ProjectManager } from "../types";
+import type { ClientRef } from "@/features/clients/types";
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20";
@@ -20,14 +21,16 @@ interface Props {
   project: Project;
   open: boolean;
   managers: ProjectManager[];
+  clientRefs: ClientRef[];
   onClose: () => void;
 }
 
-export function EditProjectDialog({ project, open, managers, onClose }: Props) {
+export function EditProjectDialog({ project, open, managers, clientRefs, onClose }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
   const tPriority = useTranslations("projectPriority");
+  const tType = useTranslations("projectType");
 
   const [state, action, pending] = useActionState(updateProject, null);
 
@@ -77,7 +80,12 @@ export function EditProjectDialog({ project, open, managers, onClose }: Props) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.projectType")}</Label>
-                <Input name="project_type" defaultValue={project.project_type ?? ""} />
+                <select name="project_type" defaultValue={project.project_type ?? ""} className={SELECT_CLASS}>
+                  <option value="" className="bg-veltol-deep">—</option>
+                  {PROJECT_TYPES.map((pt) => (
+                    <option key={pt} value={pt} className="bg-veltol-deep">{tType(pt)}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.manager")}</Label>
@@ -90,6 +98,16 @@ export function EditProjectDialog({ project, open, managers, onClose }: Props) {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.client")}</Label>
+              <select name="client_id" defaultValue={project.client_id ?? ""} className={SELECT_CLASS}>
+                <option value="" className="bg-veltol-deep">—</option>
+                {clientRefs.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-veltol-deep">{c.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

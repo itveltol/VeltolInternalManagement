@@ -90,6 +90,18 @@ export function EditUserDialog({ user, open, onClose }: Props) {
               </select>
             </div>
 
+            <div className="space-y-1.5">
+              <Label className="mono-label text-[9px] text-veltol-fgMute">
+                {t("medicalExamExpiry")}
+              </Label>
+              <input
+                name="medical_exam_expires_at"
+                type="date"
+                defaultValue={user.medical_exam_expires_at ?? ""}
+                className="h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20"
+              />
+            </div>
+
             {state?.error && (
               <p className="text-sm text-veltol-red">
                 {t(state.error as Parameters<typeof t>[0])}

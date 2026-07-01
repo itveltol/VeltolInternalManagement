@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Paperclip } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,13 +16,17 @@ interface Props {
   projectId: number;
   activityId: number;
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
+  onOpenDocuments: () => void;
+  documentCount?: number;
   disabled?: boolean;
 }
 
-export function MatriceCell({ status, projectId, activityId, onChangeStatus, disabled }: Props) {
+export function MatriceCell({ status, projectId, activityId, onChangeStatus, onOpenDocuments, documentCount = 0, disabled }: Props) {
   const t = useTranslations("matrice");
+  const tDocs = useTranslations("documents");
 
   return (
+    <div className="flex items-center gap-0.5">
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={disabled}
@@ -57,5 +62,17 @@ export function MatriceCell({ status, projectId, activityId, onChangeStatus, dis
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onOpenDocuments(); }}
+      title={tDocs("attachDocuments")}
+      className="flex items-center gap-0.5 rounded p-0.5 text-veltol-fgMute/60 transition-colors hover:text-veltol-fgMute"
+    >
+      <Paperclip className="h-3 w-3" />
+      {documentCount > 0 && (
+        <span className="font-mono text-[9px] text-veltol-aqua">{documentCount}</span>
+      )}
+    </button>
+    </div>
   );
 }
