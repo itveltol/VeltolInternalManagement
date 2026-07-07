@@ -1,5 +1,4 @@
-import { Sidebar } from "@/shared/components/layout/sidebar";
-import { Topbar } from "@/shared/components/layout/topbar";
+import { AppShellClient } from "@/shared/components/layout/AppShellClient";
 import { createClient } from "@/core/supabase/server";
 
 export default async function AppLayout({
@@ -40,12 +39,8 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-veltol-void">
-      <Sidebar displayName={displayName} initials={initials} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
-      </div>
-    </div>
+    <AppShellClient displayName={displayName} initials={initials}>
+      {children}
+    </AppShellClient>
   );
 }

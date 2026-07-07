@@ -104,9 +104,9 @@ export function InlineSearchBar() {
   const showDropdown = open && (hasResults || showEmpty || showMinChars || isPending);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full">
       {/* Input */}
-      <div className="flex items-center gap-3 rounded-lg border border-white/[0.08] bg-veltol-surface/40 px-4 py-3 transition-colors focus-within:border-veltol-aqua/40 focus-within:bg-veltol-surface/70 w-[48rem]">
+      <div className="flex w-full items-center gap-3 rounded-lg border border-white/[0.08] bg-veltol-surface/40 px-4 py-3 transition-colors focus-within:border-veltol-aqua/40 focus-within:bg-veltol-surface/70">
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-veltol-fgMute" />
         ) : (

@@ -15,6 +15,7 @@ const ROLES: AppRole[] = [
   "site_engineer",
   "finance",
   "viewer",
+  "outfield_worker",
 ];
 
 interface Props {
@@ -31,7 +32,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
           <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
             {t("editTitle")}
           </Dialog.Title>
@@ -39,7 +40,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
           <form action={action} className="mt-6 space-y-4">
             <input type="hidden" name="userId" value={user.id} />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">
                   {t("firstName")}

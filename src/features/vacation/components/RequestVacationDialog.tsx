@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { createVacationRequest, updateVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
-import type { VacationRequest } from "../types";
+import { VACATION_LEAVE_TYPES, workingDaysCount } from "../types";
+import type { VacationRequest, VacationBalance } from "../types";
+import type { Profile } from "@/features/profile/types";
+import type { Holiday } from "@/features/holidays/types";
 
 const INPUT_CLASS =
   "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20";
@@ -17,15 +20,38 @@ const TEXTAREA_CLASS =
 interface Props {
   open: boolean;
   request?: VacationRequest;
+  balance?: VacationBalance | null;
+  isAdmin?: boolean;
+  currentUserId?: string;
+  employees?: Profile[];
+  holidays?: Holiday[];
   onClose: () => void;
 }
 
-export function RequestVacationDialog({ open, request, onClose }: Props) {
+export function RequestVacationDialog({
+  open,
+  request,
+  balance,
+  isAdmin,
+  currentUserId,
+  employees,
+  holidays = [],
+  onClose,
+}: Props) {
   const t = useTranslations("vacation");
   const isEdit = !!request;
   const action = isEdit ? updateVacationRequest : createVacationRequest;
 
   const [state, formAction, pending] = useActionState(action, null);
+  const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
+  const [startDate, setStartDate] = useState(request?.start_date ?? "");
+  const [endDate, setEndDate] = useState(request?.end_date ?? "");
+
+  const days =
+    startDate && endDate && endDate >= startDate
+      ? workingDaysCount(startDate, endDate, holidaySet)
+      : null;
+  const hasNoWorkingDays = days === 0;
 
   useEffect(() => {
     if (state?.success) onClose();
@@ -35,22 +61,46 @@ export function RequestVacationDialog({ open, request, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
           <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
             {isEdit ? t("editRequest") : t("requestVacation")}
           </Dialog.Title>
 
+          {balance && (
+            <p className="mt-3 font-mono text-[12px] text-veltol-fgMute">
+              {t("yourBalance")}: {balance.remainingDays} / {balance.baseDays + balance.carriedOverDays}
+            </p>
+          )}
+
           <form action={formAction} className="mt-6 space-y-4">
             {isEdit && <input type="hidden" name="id" value={request.id} />}
 
-            <div className="grid grid-cols-2 gap-4">
+            {!isEdit && isAdmin && employees && (
+              <div className="space-y-1.5">
+                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("assignTo")}</Label>
+                <select
+                  name="user_id"
+                  defaultValue={currentUserId}
+                  className={INPUT_CLASS}
+                >
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {[employee.first_name, employee.last_name].filter(Boolean).join(" ") || employee.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("startDate")} *</Label>
                 <input
                   name="start_date"
                   type="date"
                   required
-                  defaultValue={request?.start_date}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
                   className={INPUT_CLASS}
                 />
               </div>
@@ -60,10 +110,41 @@ export function RequestVacationDialog({ open, request, onClose }: Props) {
                   name="end_date"
                   type="date"
                   required
-                  defaultValue={request?.end_date}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
                   className={INPUT_CLASS}
                 />
               </div>
+            </div>
+
+            {days !== null && (
+              <p
+                className={
+                  hasNoWorkingDays
+                    ? "text-sm text-veltol-red"
+                    : "font-mono text-[12px] text-veltol-fgMute"
+                }
+              >
+                {hasNoWorkingDays
+                  ? t("errorNoWorkingDays")
+                  : t("workingDaysCount", { count: days })}
+              </p>
+            )}
+
+            <div className="space-y-1.5">
+              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("leaveType")} *</Label>
+              <select
+                name="leave_type"
+                required
+                defaultValue={request?.leave_type ?? "rest"}
+                className={INPUT_CLASS}
+              >
+                {VACATION_LEAVE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`leaveType_${type}` as Parameters<typeof t>[0])}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">
@@ -76,6 +157,37 @@ export function RequestVacationDialog({ open, request, onClose }: Props) {
               />
             </div>
 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("jobTitle")}</Label>
+                <input
+                  name="job_title"
+                  type="text"
+                  defaultValue={request?.job_title ?? ""}
+                  className={INPUT_CLASS}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("superiorName")}</Label>
+                <input
+                  name="superior_name"
+                  type="text"
+                  defaultValue={request?.superior_name ?? ""}
+                  className={INPUT_CLASS}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("substituteName")}</Label>
+              <input
+                name="substitute_name"
+                type="text"
+                defaultValue={request?.substitute_name ?? ""}
+                className={INPUT_CLASS}
+              />
+            </div>
+
             {state?.error && (
               <p className="text-sm text-veltol-red">
                 {t(state.error as Parameters<typeof t>[0])}
@@ -84,7 +196,7 @@ export function RequestVacationDialog({ open, request, onClose }: Props) {
 
             <div className="flex justify-end gap-3 pt-2">
               <Dialog.Close render={<Button type="button" variant="outline">{t("dismiss")}</Button>} />
-              <Button type="submit" disabled={pending}>
+              <Button type="submit" disabled={pending || hasNoWorkingDays}>
                 {pending ? t("saving") : t("save")}
               </Button>
             </div>

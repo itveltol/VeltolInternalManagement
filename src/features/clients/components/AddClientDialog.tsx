@@ -120,7 +120,7 @@ export function AddClientDialog({ open, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
           <div className="flex items-center justify-between">
             <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
               {t("addClient")}
@@ -136,7 +136,7 @@ export function AddClientDialog({ open, onClose }: Props) {
           </div>
 
           <form action={action} className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.type")} *</Label>
                 <select
@@ -165,7 +165,7 @@ export function AddClientDialog({ open, onClose }: Props) {
             </div>
 
             {clientType === "company" && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.cui")}</Label>
                   <Input name="cui" value={fields.cui} onChange={setField("cui")} placeholder="RO12345678" className={aiClass("cui")} />
@@ -185,7 +185,7 @@ export function AddClientDialog({ open, onClose }: Props) {
             )}
 
             {clientType === "person" && (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.cnp")}</Label>
                   <Input name="cnp" value={fields.cnp} onChange={setField("cnp")} placeholder="1234567890123" maxLength={13} className={aiClass("cnp")} />
@@ -212,7 +212,7 @@ export function AddClientDialog({ open, onClose }: Props) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.contactPerson")}</Label>
                 <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} placeholder="Maria Ionescu" className={aiClass("contact_person")} />

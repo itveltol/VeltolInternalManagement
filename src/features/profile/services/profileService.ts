@@ -1,4 +1,10 @@
-import type { ProfileApiClient, UpdateProfilePayload, UpdateUserPayload, InviteUserPayload } from "../api/types";
+import type {
+  ProfileApiClient,
+  UpdateProfilePayload,
+  UpdateUserPayload,
+  InviteUserPayload,
+  CompleteRegistrationPayload,
+} from "../api/types";
 import type { Profile, AppRole } from "../types";
 
 export async function getProfile(client: ProfileApiClient, userId: string): Promise<Profile | null> {
@@ -30,9 +36,22 @@ export async function changePassword(
 export async function inviteUser(
   client: ProfileApiClient,
   payload: InviteUserPayload
-): Promise<void> {
-  const { userId } = await client.inviteUser(payload);
+): Promise<{ actionLink: string }> {
+  const { userId, actionLink } = await client.inviteUser(payload);
   await client.upsertProfileRow(userId, payload.email, payload.role);
+  return { actionLink };
+}
+
+export async function completeRegistration(
+  client: ProfileApiClient,
+  payload: CompleteRegistrationPayload,
+  confirmPassword: string
+): Promise<void> {
+  if (payload.password !== confirmPassword) throw new Error("passwordMismatch");
+  if (payload.password.length < 8) throw new Error("passwordTooShort");
+  const existing = await client.getProfile(payload.userId);
+  if (existing?.registered_at) throw new Error("alreadyRegistered");
+  return client.completeRegistration(payload);
 }
 
 export async function updateUser(

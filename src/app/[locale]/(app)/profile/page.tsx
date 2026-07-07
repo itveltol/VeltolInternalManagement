@@ -2,6 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/core/supabase/server";
 import { getAllUsers } from "./actions";
+import { getVacationBalance } from "../vacation/actions";
 import { ProfileShell } from "@/features/profile/components/ProfileShell";
 import type { Profile } from "@/features/profile/types";
 
@@ -22,6 +23,7 @@ export default async function ProfilePage() {
 
   const isAdmin = profile?.role === "admin";
   const allUsers = isAdmin ? await getAllUsers() : [];
+  const balance = await getVacationBalance();
   const t = await getTranslations("profile");
 
   return (
@@ -39,6 +41,7 @@ export default async function ProfilePage() {
         allUsers={allUsers}
         currentUserId={user.id}
         isAdmin={isAdmin}
+        balance={balance}
       />
     </div>
   );

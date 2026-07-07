@@ -1,30 +1,36 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { cancelVacationRequest, generateVacationDocument } from "@/app/[locale]/(app)/vacation/actions";
+import { cancelVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
 import { useVacationStore } from "../hooks/useVacationStore";
 import { vacationDays } from "../types";
 import { canEdit } from "../services/vacationService";
 import { RequestVacationDialog } from "./RequestVacationDialog";
 import { ApprovalDialog } from "./ApprovalDialog";
 import { vacationStatusVariant } from "@/shared/utils/status-variant";
-import type { VacationRequest, VacationStatus } from "../types";
+import type { VacationRequest, VacationStatus, VacationBalance } from "../types";
+import type { Profile } from "@/features/profile/types";
+import type { Holiday } from "@/features/holidays/types";
 
 interface Props {
   requests: VacationRequest[];
   isAdmin: boolean;
   currentUserId: string;
+  balance: VacationBalance | null;
+  employees: Profile[];
+  holidays: Holiday[];
 }
 
-export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
+export function VacationTable({ requests, isAdmin, currentUserId, balance, employees, holidays }: Props) {
   const t = useTranslations("vacation");
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   const {
     isAddDialogOpen, editingRequest, approvingRequest,
@@ -56,9 +62,7 @@ export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
   }
 
   function handleGenerate(id: number) {
-    startTransition(async () => {
-      await generateVacationDocument(id);
-    });
+    window.open(`/api/vacation/${id}/document`, "_blank");
   }
 
   return (
@@ -116,7 +120,7 @@ export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
                       {formatDate(req.end_date)}
                     </td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
-                      {vacationDays(req.start_date, req.end_date)}
+                      {vacationDays(req.start_date, req.end_date, holidaySet)}
                     </td>
                     <td className="px-5 py-3.5">
                       <Badge variant={vacationStatusVariant(req.status)}>
@@ -174,6 +178,11 @@ export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
 
       <RequestVacationDialog
         open={isAddDialogOpen}
+        balance={balance}
+        isAdmin={isAdmin}
+        currentUserId={currentUserId}
+        employees={employees}
+        holidays={holidays}
         onClose={() => {
           closeAddDialog();
           router.refresh();
@@ -184,6 +193,11 @@ export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
         <RequestVacationDialog
           open={!!editingRequest}
           request={editingRequest}
+          balance={balance}
+          isAdmin={isAdmin}
+          currentUserId={currentUserId}
+          employees={employees}
+          holidays={holidays}
           onClose={() => {
             closeEditDialog();
             router.refresh();
@@ -195,6 +209,7 @@ export function VacationTable({ requests, isAdmin, currentUserId }: Props) {
         <ApprovalDialog
           open={!!approvingRequest}
           request={approvingRequest}
+          holidays={holidays}
           onClose={() => {
             closeApprovalDialog();
             router.refresh();
