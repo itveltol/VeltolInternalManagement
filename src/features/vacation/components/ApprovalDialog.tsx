@@ -1,25 +1,37 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { approveVacationRequest, rejectVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
+import {
+  approveVacationRequest,
+  rejectVacationRequest,
+  getVacationBalance,
+} from "@/app/[locale]/(app)/vacation/actions";
 import { vacationStatusVariant } from "@/shared/utils/status-variant";
 import { vacationDays } from "../types";
-import type { VacationRequest } from "../types";
+import type { VacationRequest, VacationBalance } from "../types";
+import type { Holiday } from "@/features/holidays/types";
 
 interface Props {
   open: boolean;
   request: VacationRequest;
+  holidays: Holiday[];
   onClose: () => void;
 }
 
-export function ApprovalDialog({ open, request, onClose }: Props) {
+export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   const t = useTranslations("vacation");
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
+  const [balance, setBalance] = useState<VacationBalance | null>(null);
+  const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
+
+  useEffect(() => {
+    getVacationBalance(request.user_id).then(setBalance);
+  }, [request.user_id]);
 
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString(
@@ -51,7 +63,7 @@ export function ApprovalDialog({ open, request, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
           <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
             {t("reviewRequest")}
           </Dialog.Title>
@@ -70,7 +82,7 @@ export function ApprovalDialog({ open, request, onClose }: Props) {
             <div className="flex items-center justify-between">
               <span className="mono-label text-[9px] text-veltol-fgMute">{t("columns.days")}</span>
               <span className="font-mono tabular-nums text-sm text-veltol-fg">
-                {vacationDays(request.start_date, request.end_date)}
+                {vacationDays(request.start_date, request.end_date, holidaySet)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -83,6 +95,14 @@ export function ApprovalDialog({ open, request, onClose }: Props) {
               <div className="space-y-1">
                 <span className="mono-label text-[9px] text-veltol-fgMute">{t("reason")}</span>
                 <p className="text-sm text-veltol-fgDim">{request.reason}</p>
+              </div>
+            )}
+            {balance && (
+              <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
+                <span className="mono-label text-[9px] text-veltol-fgMute">{t("requesterBalance")}</span>
+                <span className="font-mono tabular-nums text-sm text-veltol-fg">
+                  {balance.remainingDays} / {balance.baseDays + balance.carriedOverDays}
+                </span>
               </div>
             )}
           </div>

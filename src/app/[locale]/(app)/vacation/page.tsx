@@ -1,7 +1,8 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/core/supabase/server";
-import { getVacationRequests } from "./actions";
+import { getVacationRequests, getVacationBalance, getHolidays } from "./actions";
+import { getAllUsers } from "@/app/[locale]/(app)/profile/actions";
 import { VacationShell } from "@/features/vacation/components/VacationShell";
 
 export default async function VacationPage() {
@@ -21,6 +22,9 @@ export default async function VacationPage() {
 
   const isAdmin = profile?.role === "admin";
   const requests = await getVacationRequests();
+  const balance = await getVacationBalance();
+  const employees = isAdmin ? await getAllUsers() : [];
+  const holidays = await getHolidays();
 
   const t = await getTranslations("vacation");
 
@@ -34,7 +38,14 @@ export default async function VacationPage() {
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
       </div>
 
-      <VacationShell requests={requests} isAdmin={isAdmin} currentUserId={user.id} />
+      <VacationShell
+        requests={requests}
+        isAdmin={isAdmin}
+        currentUserId={user.id}
+        balance={balance}
+        employees={employees}
+        holidays={holidays}
+      />
     </div>
   );
 }

@@ -42,6 +42,7 @@ export async function proxy(request: NextRequest) {
 
   const pathnameWithoutLocale = pathname.replace(`/${locale}`, "") || "/";
   const isLoginPage = pathnameWithoutLocale === "/login";
+  const isRegisterPage = pathnameWithoutLocale === "/register";
   const isRoot = pathnameWithoutLocale === "/";
 
   // Start from the intl response so its headers (x-intl-locale etc.) are kept
@@ -69,13 +70,41 @@ export async function proxy(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    let needsRegistration = false;
+    if (user) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("registered_at")
+        .eq("id", user.id)
+        .single();
+      // Fail open: if the lookup errors (e.g. stale PostgREST schema cache),
+      // don't lock existing users out of the whole app.
+      needsRegistration = !profileError && !profile?.registered_at;
+    }
+
     if (isRoot) {
       const url = request.nextUrl.clone();
-      url.pathname = user ? `/${locale}/dashboard` : `/${locale}/login`;
+      url.pathname = !user
+        ? `/${locale}/login`
+        : needsRegistration
+          ? `/${locale}/register`
+          : `/${locale}/dashboard`;
       return NextResponse.redirect(url);
     }
 
     if (user && isLoginPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = needsRegistration ? `/${locale}/register` : `/${locale}/dashboard`;
+      return NextResponse.redirect(url);
+    }
+
+    if (user && needsRegistration && !isRegisterPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/register`;
+      return NextResponse.redirect(url);
+    }
+
+    if (user && !needsRegistration && isRegisterPage) {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/dashboard`;
       return NextResponse.redirect(url);

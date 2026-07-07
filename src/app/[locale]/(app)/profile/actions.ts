@@ -9,7 +9,7 @@ import * as profileService from "@/features/profile/services/profileService";
 import type { AppRole } from "@/features/profile/types";
 import type { Profile } from "@/features/profile/types";
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = { error?: string; success?: string; actionLink?: string } | null;
 
 async function getProfilePath() {
   const locale = await getLocale();
@@ -114,13 +114,13 @@ export async function inviteUser(
       process.env.NEXT_PUBLIC_SITE_URL ??
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-    await profileService.inviteUser(client, {
+    const { actionLink } = await profileService.inviteUser(client, {
       email: formData.get("email") as string,
       role: (formData.get("role") as AppRole) ?? "viewer",
       redirectTo: `${siteUrl}/auth/confirm`,
     });
     revalidatePath(await getProfilePath());
-    return { success: "inviteSent" };
+    return { success: "inviteLinkTitle", actionLink };
   } catch (e: unknown) {
     console.error("[inviteUser]", e);
     if (e instanceof Error) {

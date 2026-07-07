@@ -20,12 +20,21 @@ export interface InviteUserPayload {
   redirectTo: string;
 }
 
+export interface CompleteRegistrationPayload {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  password: string;
+}
+
 export interface ProfileApiClient {
   getProfile(userId: string): Promise<Profile | null>;
   getAllUsers(): Promise<Profile[]>;
   updateProfile(userId: string, payload: UpdateProfilePayload): Promise<void>;
   changePassword(newPassword: string): Promise<void>;
-  inviteUser(payload: InviteUserPayload): Promise<{ userId: string }>;
+  inviteUser(payload: InviteUserPayload): Promise<{ userId: string; actionLink: string }>;
   upsertProfileRow(userId: string, email: string, role: AppRole): Promise<void>;
+  completeRegistration(payload: CompleteRegistrationPayload): Promise<void>;
   deleteUser(userId: string): Promise<void>;
 }

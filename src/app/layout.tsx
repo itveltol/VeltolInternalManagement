@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Audiowide, Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,11 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Veltol Project Cloud",
   description: "Veltol Holding S.R.L. belső projektmenedzsment platform",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

@@ -3,7 +3,8 @@ export type AppRole =
   | "project_manager"
   | "site_engineer"
   | "finance"
-  | "viewer";
+  | "viewer"
+  | "outfield_worker";
 
 export interface Profile {
   id: string;
@@ -16,4 +17,5 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   medical_exam_expires_at: string | null;
+  registered_at: string | null;
 }

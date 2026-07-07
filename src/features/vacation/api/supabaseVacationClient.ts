@@ -21,6 +21,16 @@ export const createSupabaseVacationClient = (supabase: SupabaseClient): Vacation
     return (data ?? []) as unknown as VacationRequest[];
   },
 
+  async getRequestsForUser(userId) {
+    const { data, error } = await supabase
+      .from("vacation_requests")
+      .select(SELECT)
+      .eq("user_id", userId)
+      .order("start_date", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as VacationRequest[];
+  },
+
   async createRequest(payload: CreateVacationPayload) {
     const { data, error } = await supabase
       .from("vacation_requests")

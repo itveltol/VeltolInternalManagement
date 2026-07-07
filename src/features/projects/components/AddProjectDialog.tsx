@@ -140,7 +140,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-white/[0.08] bg-veltol-deep p-8 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
           {step === "scan" && createdProjectId !== null ? (
             <>
               <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
@@ -182,7 +182,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.county")}</Label>
                     <Input
@@ -205,7 +205,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.mwSolar")}</Label>
                     <Input
@@ -234,7 +234,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.projectType")}</Label>
                     <select
@@ -272,7 +272,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.phase")}</Label>
                     <select name="current_phase" defaultValue="proposal" className={SELECT_CLASS}>
@@ -287,7 +287,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.contractNumber")}</Label>
                     <Input
@@ -304,7 +304,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.deadline")}</Label>
                     <input name="deadline" type="date" className={SELECT_CLASS} />
@@ -315,7 +315,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.status")}</Label>
                     <select name="status" defaultValue="on_schedule" className={SELECT_CLASS}>

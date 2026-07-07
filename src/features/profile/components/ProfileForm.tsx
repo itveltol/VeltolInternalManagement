@@ -10,12 +10,13 @@ import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { updateProfile } from "@/app/[locale]/(app)/profile/actions";
 import type { Profile, AppRole } from "../types";
 
-const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success"> = {
+const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success" | "outline"> = {
   admin: "default",
   project_manager: "info",
   site_engineer: "warning",
   finance: "success",
   viewer: "secondary",
+  outfield_worker: "outline",
 };
 
 function initials(profile: Profile | null): string {

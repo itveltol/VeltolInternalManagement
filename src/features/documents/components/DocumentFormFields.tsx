@@ -67,7 +67,7 @@ export function DocumentFormFields({
       </div>
 
       {/* Category + Status row */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.category")}</Label>
           <select name="category" defaultValue={defaults?.category ?? ""} className={SELECT_CLASS}>

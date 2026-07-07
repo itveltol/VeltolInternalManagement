@@ -12,12 +12,13 @@ import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
 import { useProfileStore } from "../hooks/useProfileStore";
 import type { Profile, AppRole } from "../types";
 
-const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success"> = {
+const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success" | "outline"> = {
   admin: "default",
   project_manager: "info",
   site_engineer: "warning",
   finance: "success",
   viewer: "secondary",
+  outfield_worker: "outline",
 };
 
 function medicalExpiryState(date: string | null): "expired" | "soon" | "ok" | null {

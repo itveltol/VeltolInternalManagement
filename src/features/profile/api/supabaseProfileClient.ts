@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ProfileApiClient, UpdateProfilePayload, UpdateUserPayload, InviteUserPayload } from "./types";
+import type {
+  ProfileApiClient,
+  UpdateProfilePayload,
+  UpdateUserPayload,
+  InviteUserPayload,
+  CompleteRegistrationPayload,
+} from "./types";
 import type { Profile, AppRole } from "../types";
 
 export const createSupabaseProfileClient = (
@@ -40,14 +46,37 @@ export const createSupabaseProfileClient = (
 
   async inviteUser({ email, role, redirectTo }: InviteUserPayload) {
     if (!adminClient) throw new Error("Admin client required for inviteUser");
-    const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, { redirectTo });
+    const { data, error } = await adminClient.auth.admin.generateLink({
+      type: "invite",
+      email,
+      options: { redirectTo },
+    });
     if (error) throw error;
-    return { userId: data.user.id };
+    return { userId: data.user.id, actionLink: data.properties.action_link };
   },
 
   async upsertProfileRow(userId, email, role: AppRole) {
     if (!adminClient) throw new Error("Admin client required for upsertProfileRow");
-    await adminClient.from("profiles").upsert({ id: userId, email, role });
+    const { error } = await adminClient.from("profiles").upsert({ id: userId, email, role });
+    if (error) throw new Error(error.message);
+  },
+
+  async completeRegistration({ userId, firstName, lastName, phone, password }: CompleteRegistrationPayload) {
+    const { error: pwError } = await supabase.auth.updateUser({ password });
+    if (pwError) throw pwError;
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        registered_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .is("registered_at", null)
+      .select("id");
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) throw new Error("profileNotFound");
   },
 
   async deleteUser(userId) {

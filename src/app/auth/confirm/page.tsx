@@ -33,9 +33,9 @@ export default function ConfirmPage() {
           router.replace(`/${defaultLocale}/login?error=invalid_token`);
           return;
         }
-        // Invite → user needs to set a password on their profile
+        // Invite → user needs to complete registration (name, phone, password)
         if (type === "invite") {
-          router.replace(`/${defaultLocale}/profile`);
+          router.replace(`/${defaultLocale}/register`);
         } else {
           router.replace(`/${defaultLocale}/dashboard`);
         }
