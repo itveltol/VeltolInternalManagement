@@ -34,9 +34,9 @@ export function DashboardKpiRow({ cards }: Props) {
                 </span>
                 <span className="font-mono text-[11px] text-white/75">{card.unit}</span>
               </div>
-              <span className="mt-3 block font-mono text-[10px] tracking-wider text-white/80">
+              {/* <span className="mt-3 block font-mono text-[10px] tracking-wider text-white/80">
                 {card.delta}
-              </span>
+              </span> */}
             </div>
           </div>
         ) : (
@@ -55,13 +55,13 @@ export function DashboardKpiRow({ cards }: Props) {
                 </span>
                 <span className="font-mono text-[11px] text-veltol-fgDim">{card.unit}</span>
               </div>
-              <span
+              {/* <span
                 className={`mt-3 block font-mono text-[10px] tracking-wider ${
                   card.deltaPositive ? "text-veltol-green" : "text-veltol-amber"
                 }`}
               >
                 {card.delta}
-              </span>
+              </span> */}
             </div>
           </div>
         )
