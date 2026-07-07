@@ -22,14 +22,6 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
           <Menu className="h-4 w-4" />
         </Button>
 
-        {/* Live pill */}
-        <div className="hidden shrink-0 items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/[0.08] px-2.5 py-1 sm:inline-flex">
-          <div className="v-live-dot" />
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-veltol-green">
-            Élő
-          </span>
-        </div>
-
         {/* Search - desktop, fills available space */}
         <div className="hidden min-w-0 lg:flex lg:flex-1 lg:px-4">
           <InlineSearchBar />
