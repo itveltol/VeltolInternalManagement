@@ -19,12 +19,12 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
             <span className="mono-label text-[10px] text-veltol-fgMute">{eyebrow}</span>
             <h2 className="mt-0.5 font-display text-base font-semibold text-veltol-fg">{title}</h2>
           </div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/[0.08] px-2.5 py-1">
+          {/* <div className="inline-flex items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/[0.08] px-2.5 py-1">
             <div className="v-live-dot" />
             <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-veltol-green">
               {liveLabel}
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
 
