@@ -36,8 +36,13 @@ export function InviteUserDialog({ open, onClose }: Props) {
   }
 
   function handleCopy() {
-    if (!state?.actionLink) return;
-    navigator.clipboard.writeText(state.actionLink);
+    if (!state?.tempPassword || !state?.invitedEmail) return;
+    navigator.clipboard.writeText(
+      t("inviteCredentialsClipboard", {
+        email: state.invitedEmail,
+        password: state.tempPassword,
+      }),
+    );
     setCopied(true);
   }
 
@@ -46,15 +51,28 @@ export function InviteUserDialog({ open, onClose }: Props) {
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
-          {state?.actionLink ? (
+          {state?.tempPassword ? (
             <>
               <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
                 {t("inviteLinkTitle")}
               </Dialog.Title>
-              <p className="mt-1 text-sm text-veltol-fgDim">{t("inviteLinkDesc")}</p>
+              <p className="mt-1 text-sm text-veltol-fgDim">
+                {state.emailSent ? t("inviteEmailSentDesc") : t("inviteLinkDesc")}
+              </p>
 
-              <div className="mt-6 space-y-1.5">
-                <Input value={state.actionLink} readOnly onFocus={(e) => e.currentTarget.select()} />
+              <div className="mt-6 space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="mono-label text-[9px] text-veltol-fgMute">
+                    {t("inviteEmail")}
+                  </Label>
+                  <Input value={state.invitedEmail} readOnly onFocus={(e) => e.currentTarget.select()} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="mono-label text-[9px] text-veltol-fgMute">
+                    {t("tempPasswordLabel")}
+                  </Label>
+                  <Input value={state.tempPassword} readOnly onFocus={(e) => e.currentTarget.select()} />
+                </div>
                 <Button type="button" variant="outline" className="w-full" onClick={handleCopy}>
                   {copied ? t("linkCopied") : t("copyLink")}
                 </Button>

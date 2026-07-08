@@ -2,14 +2,24 @@
 
 import { createClient } from "@/core/supabase/server";
 import { createAdminClient } from "@/core/supabase/admin";
+import { isEmailConfigured, sendEmail } from "@/core/email/emailProvider";
 import { revalidatePath } from "next/cache";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createSupabaseProfileClient } from "@/features/profile/api/supabaseProfileClient";
 import * as profileService from "@/features/profile/services/profileService";
 import type { AppRole } from "@/features/profile/types";
 import type { Profile } from "@/features/profile/types";
 
-export type ActionState = { error?: string; success?: string; actionLink?: string } | null;
+export type ActionState =
+  | { error?: string; success?: string; tempPassword?: string; invitedEmail?: string; emailSent?: boolean }
+  | null;
+
+function siteUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  ).replace(/\/+$/, "");
+}
 
 async function getProfilePath() {
   const locale = await getLocale();
@@ -110,18 +120,35 @@ export async function inviteUser(
     const supabase = await createClient();
     const adminClient = createAdminClient();
     const client = createSupabaseProfileClient(supabase, adminClient as Parameters<typeof createSupabaseProfileClient>[1]);
-    const siteUrl = (
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
-    ).replace(/\/+$/, "");
+    const email = formData.get("email") as string;
 
-    const { actionLink } = await profileService.inviteUser(client, {
-      email: formData.get("email") as string,
+    const { tempPassword } = await profileService.inviteUser(client, {
+      email,
       role: (formData.get("role") as AppRole) ?? "viewer",
-      redirectTo: `${siteUrl}/auth/confirm`,
     });
     revalidatePath(await getProfilePath());
-    return { success: "inviteLinkTitle", actionLink };
+
+    let emailSent = false;
+    if (isEmailConfigured()) {
+      const t = await getTranslations("profile");
+      try {
+        await sendEmail({
+          to: email,
+          subject: t("inviteEmailSubject"),
+          html: `
+            <p>${t("inviteEmailIntro")}</p>
+            <p>${t("inviteEmail")}: <strong>${email}</strong><br/>
+            ${t("tempPasswordLabel")}: <strong>${tempPassword}</strong></p>
+            <p><a href="${siteUrl()}/login">${t("inviteEmailCta")}</a></p>
+          `,
+        });
+        emailSent = true;
+      } catch (emailError) {
+        console.error("[inviteUser] email send failed", emailError);
+      }
+    }
+
+    return { success: "inviteLinkTitle", tempPassword, invitedEmail: email, emailSent };
   } catch (e: unknown) {
     console.error("[inviteUser]", e);
     if (e instanceof Error) {

@@ -8,6 +8,15 @@ import type {
 } from "./types";
 import type { Profile, AppRole } from "../types";
 
+// Unambiguous charset (no 0/O, 1/l/I) so a temp password can be read aloud or
+// retyped without confusion.
+const TEMP_PASSWORD_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+
+function generateTempPassword(length = 12): string {
+  const bytes = crypto.getRandomValues(new Uint32Array(length));
+  return Array.from(bytes, (byte) => TEMP_PASSWORD_CHARS[byte % TEMP_PASSWORD_CHARS.length]).join("");
+}
+
 export const createSupabaseProfileClient = (
   supabase: SupabaseClient,
   adminClient?: SupabaseClient
@@ -44,25 +53,21 @@ export const createSupabaseProfileClient = (
     if (error) throw new Error(error.message);
   },
 
-  async inviteUser({ email, role, redirectTo }: InviteUserPayload) {
+  async inviteUser({ email }: InviteUserPayload) {
     if (!adminClient) throw new Error("Admin client required for inviteUser");
-    const { data, error } = await adminClient.auth.admin.generateLink({
-      type: "invite",
+    // Create the account with a temp password instead of emailing a one-time
+    // link: invite links are single-use tokens that get silently consumed by
+    // chat-app link previews (WhatsApp/Slack/Teams prefetch URLs to build a
+    // preview card), so the real recipient's click fails with an already-used
+    // token. A temp password has nothing for a prefetch to consume.
+    const tempPassword = generateTempPassword();
+    const { data, error } = await adminClient.auth.admin.createUser({
       email,
-      options: { redirectTo },
+      password: tempPassword,
+      email_confirm: true,
     });
     if (error) throw error;
-    // Build the link from token_hash rather than using data.properties.action_link:
-    // action_link points at Supabase's own /auth/v1/verify endpoint, which then
-    // redirects back with the session as a URL hash fragment. Fragments don't
-    // survive copy-paste or cross-device delivery, which broke invites sent to
-    // a different browser/network than the inviter's. token_hash + type as query
-    // params to our own /auth/confirm route lets the session be established
-    // server-side instead.
-    const confirmUrl = new URL(redirectTo);
-    confirmUrl.searchParams.set("token_hash", data.properties.hashed_token);
-    confirmUrl.searchParams.set("type", "invite");
-    return { userId: data.user.id, actionLink: confirmUrl.toString() };
+    return { userId: data.user.id, tempPassword };
   },
 
   async upsertProfileRow(userId, email, role: AppRole) {

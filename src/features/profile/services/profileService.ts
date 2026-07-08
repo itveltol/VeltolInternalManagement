@@ -36,10 +36,10 @@ export async function changePassword(
 export async function inviteUser(
   client: ProfileApiClient,
   payload: InviteUserPayload
-): Promise<{ actionLink: string }> {
-  const { userId, actionLink } = await client.inviteUser(payload);
+): Promise<{ tempPassword: string }> {
+  const { userId, tempPassword } = await client.inviteUser(payload);
   await client.upsertProfileRow(userId, payload.email, payload.role);
-  return { actionLink };
+  return { tempPassword };
 }
 
 export async function completeRegistration(

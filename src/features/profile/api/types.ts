@@ -17,7 +17,6 @@ export interface UpdateUserPayload {
 export interface InviteUserPayload {
   email: string;
   role: AppRole;
-  redirectTo: string;
 }
 
 export interface CompleteRegistrationPayload {
@@ -33,7 +32,7 @@ export interface ProfileApiClient {
   getAllUsers(): Promise<Profile[]>;
   updateProfile(userId: string, payload: UpdateProfilePayload): Promise<void>;
   changePassword(newPassword: string): Promise<void>;
-  inviteUser(payload: InviteUserPayload): Promise<{ userId: string; actionLink: string }>;
+  inviteUser(payload: InviteUserPayload): Promise<{ userId: string; tempPassword: string }>;
   upsertProfileRow(userId: string, email: string, role: AppRole): Promise<void>;
   completeRegistration(payload: CompleteRegistrationPayload): Promise<void>;
   deleteUser(userId: string): Promise<void>;
