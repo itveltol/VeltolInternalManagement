@@ -70,6 +70,8 @@ function extractProjectPayload(formData: FormData) {
     contract_date: str("contract_date"),
     deadline: str("deadline"),
     value_eur: num("value_eur"),
+    value_eur_solar: num("value_eur_solar"),
+    value_eur_bess: num("value_eur_bess"),
     status: formData.get("status") as string,
     priority: formData.get("priority") as string,
     cu_issued: formData.get("cu_issued") === "true",

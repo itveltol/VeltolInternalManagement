@@ -52,7 +52,17 @@ export const createSupabaseProfileClient = (
       options: { redirectTo },
     });
     if (error) throw error;
-    return { userId: data.user.id, actionLink: data.properties.action_link };
+    // Build the link from token_hash rather than using data.properties.action_link:
+    // action_link points at Supabase's own /auth/v1/verify endpoint, which then
+    // redirects back with the session as a URL hash fragment. Fragments don't
+    // survive copy-paste or cross-device delivery, which broke invites sent to
+    // a different browser/network than the inviter's. token_hash + type as query
+    // params to our own /auth/confirm route lets the session be established
+    // server-side instead.
+    const confirmUrl = new URL(redirectTo);
+    confirmUrl.searchParams.set("token_hash", data.properties.hashed_token);
+    confirmUrl.searchParams.set("type", "invite");
+    return { userId: data.user.id, actionLink: confirmUrl.toString() };
   },
 
   async upsertProfileRow(userId, email, role: AppRole) {

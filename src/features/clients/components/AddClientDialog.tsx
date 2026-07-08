@@ -10,7 +10,7 @@ import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
 import { createClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { CLIENT_TYPES } from "../types";
-import type { ClientType } from "../types";
+import type { ClientType, ClientRef } from "../types";
 import { cn } from "@/shared/utils/cn";
 
 const SELECT_CLASS =
@@ -46,9 +46,10 @@ const PERSON_TARGET = ["cnp", "id_series", "id_number", "reg_address", "contact_
 interface Props {
   open: boolean;
   onClose: () => void;
+  onCreated?: (client: ClientRef) => void;
 }
 
-export function AddClientDialog({ open, onClose }: Props) {
+export function AddClientDialog({ open, onClose, onCreated }: Props) {
   const t = useTranslations("clients");
   const [clientType, setClientType] = useState<ClientType>("company");
   const [fields, setFields] = useState<ClientFields>(EMPTY);
@@ -77,7 +78,10 @@ export function AddClientDialog({ open, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    if (state?.success) onClose();
+    if (state?.success) {
+      if (state.clientId) onCreated?.({ id: state.clientId, name: fields.name.trim() });
+      onClose();
+    }
   }, [state?.success]);
 
   const setField = useCallback(

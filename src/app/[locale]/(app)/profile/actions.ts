@@ -110,9 +110,10 @@ export async function inviteUser(
     const supabase = await createClient();
     const adminClient = createAdminClient();
     const client = createSupabaseProfileClient(supabase, adminClient as Parameters<typeof createSupabaseProfileClient>[1]);
-    const siteUrl =
+    const siteUrl = (
       process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+    ).replace(/\/+$/, "");
 
     const { actionLink } = await profileService.inviteUser(client, {
       email: formData.get("email") as string,

@@ -34,6 +34,8 @@ export interface Project {
   contract_date: string | null;
   deadline: string | null;
   value_eur: number | null;
+  value_eur_solar: number | null;
+  value_eur_bess: number | null;
   status: ProjectStatus;
   priority: ProjectPriority;
   cu_issued: boolean;
@@ -91,3 +93,7 @@ export const PROJECT_TYPES: ProjectType[] = [
   "SCADA",
   "OM",
 ];
+
+export function isHybridProjectType(type: string | null | undefined): boolean {
+  return type === "CEF+BESS" || type === "BESS_CEF";
+}

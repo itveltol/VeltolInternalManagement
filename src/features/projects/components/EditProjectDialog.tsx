@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { updateProject } from "@/app/[locale]/(app)/projects/actions";
-import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES } from "../types";
+import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES, isHybridProjectType } from "../types";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 
@@ -33,6 +33,13 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
   const tType = useTranslations("projectType");
 
   const [state, action, pending] = useActionState(updateProject, null);
+
+  const [projectType, setProjectType] = useState(project.project_type ?? "");
+  const [valueEurSolar, setValueEurSolar] = useState(String(project.value_eur_solar ?? ""));
+  const [valueEurBess, setValueEurBess] = useState(String(project.value_eur_bess ?? ""));
+  const [valueEurManual, setValueEurManual] = useState(String(project.value_eur ?? ""));
+  const hybrid = isHybridProjectType(projectType);
+  const valueEurTotal = (Number(valueEurSolar) || 0) + (Number(valueEurBess) || 0);
 
   useEffect(() => {
     if (state?.success) onClose();
@@ -80,7 +87,12 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.projectType")}</Label>
-                <select name="project_type" defaultValue={project.project_type ?? ""} className={SELECT_CLASS}>
+                <select
+                  name="project_type"
+                  value={projectType}
+                  onChange={(e) => setProjectType(e.target.value)}
+                  className={SELECT_CLASS}
+                >
                   <option value="" className="bg-veltol-deep">—</option>
                   {PROJECT_TYPES.map((pt) => (
                     <option key={pt} value={pt} className="bg-veltol-deep">{tType(pt)}</option>
@@ -142,10 +154,42 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
                 <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={SELECT_CLASS} />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEur")}</Label>
-                <Input name="value_eur" type="number" min="0" defaultValue={project.value_eur ?? ""} />
+                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                  {hybrid ? t("fields.valueEurSolar") : t("fields.valueEur")}
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={hybrid ? valueEurSolar : valueEurManual}
+                  onChange={(e) =>
+                    hybrid ? setValueEurSolar(e.target.value) : setValueEurManual(e.target.value)
+                  }
+                />
               </div>
             </div>
+
+            <input type="hidden" name="value_eur" value={hybrid ? valueEurTotal : valueEurManual} />
+
+            {hybrid && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
+                  <Input
+                    name="value_eur_bess"
+                    type="number"
+                    min="0"
+                    value={valueEurBess}
+                    onChange={(e) => setValueEurBess(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
+                  <p className="flex h-8 items-center font-mono text-sm text-veltol-fg">
+                    {new Intl.NumberFormat("hu-HU").format(valueEurTotal)} €
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">

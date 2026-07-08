@@ -15,6 +15,8 @@ export interface CreateProjectPayload {
   contract_date: string | null;
   deadline: string | null;
   value_eur: number | null;
+  value_eur_solar: number | null;
+  value_eur_bess: number | null;
   status: string;
   priority: string;
   cu_issued: boolean;

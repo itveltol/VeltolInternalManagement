@@ -9,11 +9,14 @@ import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
 import { createProject } from "@/app/[locale]/(app)/projects/actions";
-import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES } from "../types";
+import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES, isHybridProjectType } from "../types";
 import type { ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
 import { FolderScanStep } from "./FolderScanStep";
 import { cn } from "@/shared/utils/cn";
+
+const ADD_NEW_CLIENT = "__add_new__";
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20";
@@ -76,6 +79,16 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
   const [fields, setFields] = useState<ProjectFields>(EMPTY);
   const [snapshot, setSnapshot] = useState<ProjectFields | null>(null);
 
+  const [localClientRefs, setLocalClientRefs] = useState<ClientRef[]>(clientRefs);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [addClientOpen, setAddClientOpen] = useState(false);
+
+  const [valueEurSolar, setValueEurSolar] = useState("");
+  const [valueEurBess, setValueEurBess] = useState("");
+  const [valueEurManual, setValueEurManual] = useState("");
+  const hybrid = isHybridProjectType(fields.project_type);
+  const valueEurTotal = (Number(valueEurSolar) || 0) + (Number(valueEurBess) || 0);
+
   const getContext = useCallback(() => ({ name: fields.name }), [fields.name]);
 
   const { fillWithAi, loading, hasSuggestions, reset } = useAiFormFill({
@@ -98,9 +111,29 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
       setSnapshot(null);
       setStep("form");
       setCreatedProjectId(null);
+      setLocalClientRefs(clientRefs);
+      setSelectedClientId("");
+      setAddClientOpen(false);
+      setValueEurSolar("");
+      setValueEurBess("");
+      setValueEurManual("");
       reset();
     }
   }, [open]);
+
+  const handleClientSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === ADD_NEW_CLIENT) {
+      setAddClientOpen(true);
+      return;
+    }
+    setSelectedClientId(e.target.value);
+  };
+
+  const handleClientCreated = (client: ClientRef) => {
+    setLocalClientRefs((refs) => [...refs, client]);
+    setSelectedClientId(String(client.id));
+    setAddClientOpen(false);
+  };
 
   const setField = useCallback(
     (key: keyof ProjectFields) =>
@@ -264,11 +297,17 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
 
                 <div className="space-y-1.5">
                   <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.client")}</Label>
-                  <select name="client_id" className={SELECT_CLASS}>
+                  <select
+                    name="client_id"
+                    value={selectedClientId}
+                    onChange={handleClientSelectChange}
+                    className={SELECT_CLASS}
+                  >
                     <option value="" className="bg-veltol-deep">—</option>
-                    {clientRefs.map((c) => (
+                    {localClientRefs.map((c) => (
                       <option key={c.id} value={c.id} className="bg-veltol-deep">{c.name}</option>
                     ))}
+                    <option value={ADD_NEW_CLIENT} className="bg-veltol-deep">{t("fields.addNewClient")}</option>
                   </select>
                 </div>
 
@@ -310,10 +349,44 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                     <input name="deadline" type="date" className={SELECT_CLASS} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEur")}</Label>
-                    <Input name="value_eur" type="number" min="0" placeholder="2195000" />
+                    <Label className="mono-label text-[9px] text-veltol-fgMute">
+                      {hybrid ? t("fields.valueEurSolar") : t("fields.valueEur")}
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder={hybrid ? "1500000" : "2195000"}
+                      value={hybrid ? valueEurSolar : valueEurManual}
+                      onChange={(e) =>
+                        hybrid ? setValueEurSolar(e.target.value) : setValueEurManual(e.target.value)
+                      }
+                    />
                   </div>
                 </div>
+
+                <input type="hidden" name="value_eur" value={hybrid ? valueEurTotal : valueEurManual} />
+
+                {hybrid && (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
+                      <Input
+                        name="value_eur_bess"
+                        type="number"
+                        min="0"
+                        placeholder="695000"
+                        value={valueEurBess}
+                        onChange={(e) => setValueEurBess(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
+                      <p className="flex h-8 items-center font-mono text-sm text-veltol-fg">
+                        {new Intl.NumberFormat("hu-HU").format(valueEurTotal)} €
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
@@ -366,6 +439,12 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   <Button type="submit" disabled={pending}>{pending ? t("saving") : t("save")}</Button>
                 </div>
               </form>
+
+              <AddClientDialog
+                open={addClientOpen}
+                onClose={() => setAddClientOpen(false)}
+                onCreated={handleClientCreated}
+              />
             </>
           )}
         </Dialog.Popup>
