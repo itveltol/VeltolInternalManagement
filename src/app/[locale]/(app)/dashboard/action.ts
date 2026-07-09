@@ -14,6 +14,8 @@ export type DashboardProject = {
   site_location: string;
   current_phase: ProjectPhase;
   value_eur: number | null;
+  contract_date: string | null;
+  deadline: string | null;
   created_at: string;
 };
 
@@ -34,9 +36,8 @@ export async function getProjects(): Promise<DashboardProject[]> {
   const { supabase } = await requireAuth();
   const { data: projects } = await supabase
     .from("projects")
-    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, deadline, value_eur, created_at")
-    .order("created_at", { ascending: true })
-    .limit(5);
+    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, deadline, value_eur, contract_date, created_at")
+    .order("created_at", { ascending: true });
   return projects ?? [];
 }
 

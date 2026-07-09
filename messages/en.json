@@ -28,7 +28,17 @@
     "percentageChange": "% vs previous quarter",
     "totalCapacity": "Total capacity",
     "totalProjects": "Total projects",
-    "totalFinishedProjects": "Completed projects"
+    "totalFinishedProjects": "Completed projects",
+    "incomeByMonthEyebrow": "INCOME",
+    "incomeByMonthTitle": "Monthly income",
+    "incomeCompareEyebrow": "COMPARISON",
+    "incomeCompareTitle": "Compare months",
+    "incomeYearLabel": "Year",
+    "incomeSelectMonths": "Select months",
+    "incomeClearSelection": "Clear",
+    "incomeNoData": "No income data for this selection",
+    "incomeLabel": "Income",
+    "incomeExcludedNote": "{count} project(s) without a deadline date excluded"
   },
   "projects": {
     "eyebrow": "PROJECTS · ALL",

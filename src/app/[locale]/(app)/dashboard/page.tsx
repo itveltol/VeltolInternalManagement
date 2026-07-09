@@ -1,7 +1,9 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { projects } from "@/features/dashboard/mock-data";
 import { DashboardKpiRow } from "@/features/dashboard/components/DashboardKpiRow";
 import { DashboardRecentProjects } from "@/features/dashboard/components/DashboardRecentProjects";
+import { IncomeByMonthChart } from "@/features/dashboard/components/IncomeByMonthChart";
+import { IncomeCompareChart } from "@/features/dashboard/components/IncomeCompareChart";
+import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
 import { requireAuth, getProjects, getDashboardStats } from "@/app/[locale]/(app)/dashboard/action";
 
@@ -28,6 +30,10 @@ export default async function DashboardPage() {
 
   const recentProjects = projectsData.slice(0, 5);
 
+  const availableYears = getAvailableYears(projectsData);
+  const excludedCount = countProjectsWithoutDeadline(projectsData);
+  const excludedNote = excludedCount > 0 ? t("incomeExcludedNote", { count: excludedCount }) : null;
+
   return (
     <div className="space-y-8">
       <div>
@@ -39,6 +45,34 @@ export default async function DashboardPage() {
       </div>
 
       <DashboardKpiRow cards={kpiCardsReal} />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <IncomeByMonthChart
+          projects={projectsData}
+          availableYears={availableYears}
+          labels={{
+            eyebrow: t("incomeByMonthEyebrow"),
+            title: t("incomeByMonthTitle"),
+            yearLabel: t("incomeYearLabel"),
+            noData: t("incomeNoData"),
+            incomeLabel: t("incomeLabel"),
+            excludedNote,
+          }}
+        />
+        <IncomeCompareChart
+          projects={projectsData}
+          availableYears={availableYears}
+          labels={{
+            eyebrow: t("incomeCompareEyebrow"),
+            title: t("incomeCompareTitle"),
+            selectMonths: t("incomeSelectMonths"),
+            clearSelection: t("incomeClearSelection"),
+            noData: t("incomeNoData"),
+            incomeLabel: t("incomeLabel"),
+            excludedNote,
+          }}
+        />
+      </div>
 
       <DashboardRecentProjects
         projects={recentProjects}
