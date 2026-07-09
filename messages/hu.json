@@ -28,7 +28,17 @@
     "percentageChange": "% az előző negyedévhez képest",
     "totalCapacity": "Teljes kapacitás",
     "totalProjects": "Összes projekt",
-    "totalFinishedProjects": "Befejezett projektek"
+    "totalFinishedProjects": "Befejezett projektek",
+    "incomeByMonthEyebrow": "BEVÉTEL",
+    "incomeByMonthTitle": "Havi bevétel",
+    "incomeCompareEyebrow": "ÖSSZEHASONLÍTÁS",
+    "incomeCompareTitle": "Hónapok összehasonlítása",
+    "incomeYearLabel": "Év",
+    "incomeSelectMonths": "Hónapok kiválasztása",
+    "incomeClearSelection": "Törlés",
+    "incomeNoData": "Nincs bevételi adat a kiválasztáshoz",
+    "incomeLabel": "Bevétel",
+    "incomeExcludedNote": "{count} projekt határidő dátum nélkül, ezért nem szerepel"
   },
   "projects": {
     "eyebrow": "PROJEKTEK · ÖSSZES",

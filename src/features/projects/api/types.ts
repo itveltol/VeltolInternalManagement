@@ -20,6 +20,7 @@ export interface CreateProjectPayload {
   cu_issued: boolean;
   atr_issued: boolean;
   notes: string | null;
+  paid_by: string | null;
 }
 
 export interface ProjectsApiClient {

@@ -28,7 +28,17 @@
     "percentageChange": "% față de trimestrul anterior",
     "totalCapacity": "Capacitate totală",
     "totalProjects": "Proiecte totale",
-    "totalFinishedProjects": "Proiecte finalizate"
+    "totalFinishedProjects": "Proiecte finalizate",
+    "incomeByMonthEyebrow": "VENITURI",
+    "incomeByMonthTitle": "Venituri lunare",
+    "incomeCompareEyebrow": "COMPARAȚIE",
+    "incomeCompareTitle": "Compară luni",
+    "incomeYearLabel": "An",
+    "incomeSelectMonths": "Selectează luni",
+    "incomeClearSelection": "Șterge",
+    "incomeNoData": "Nu există date de venit pentru această selecție",
+    "incomeLabel": "Venit",
+    "incomeExcludedNote": "{count} proiect(e) fără dată limită excluse"
   },
   "projects": {
     "eyebrow": "PROIECTE · TOATE",

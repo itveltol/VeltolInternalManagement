@@ -75,6 +75,7 @@ function extractProjectPayload(formData: FormData) {
     cu_issued: formData.get("cu_issued") === "true",
     atr_issued: formData.get("atr_issued") === "true",
     notes: str("notes"),
+    paid_by: str("paid_by"),
   };
 }
 

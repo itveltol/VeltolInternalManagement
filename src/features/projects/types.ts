@@ -39,6 +39,7 @@ export interface Project {
   cu_issued: boolean;
   atr_issued: boolean;
   notes: string | null;
+  paid_by: string | null;
   onedrive_folder_id: string | null;
   onedrive_folder_url: string | null;
   created_at: string;
