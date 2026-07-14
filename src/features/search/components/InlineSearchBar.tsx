@@ -106,7 +106,7 @@ export function InlineSearchBar() {
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input */}
-      <div className="flex w-full items-center gap-3 rounded-lg border border-white/[0.08] bg-veltol-surface/40 px-4 py-3 transition-colors focus-within:border-veltol-aqua/40 focus-within:bg-veltol-surface/70">
+      <div className="flex w-full items-center gap-3 rounded-lg border border-border bg-veltol-surface/40 px-4 py-3 transition-colors focus-within:border-veltol-accent/40 focus-within:bg-veltol-surface/70">
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-veltol-fgMute" />
         ) : (
@@ -133,7 +133,7 @@ export function InlineSearchBar() {
             <X className="h-3 w-3" />
           </button>
         ) : (
-          <kbd className="shrink-0 rounded border border-white/10 bg-veltol-surface/60 px-1.5 py-0.5 font-mono text-[10px] text-veltol-fgMute">
+          <kbd className="shrink-0 rounded border border-border bg-veltol-surface/60 px-1.5 py-0.5 font-mono text-[10px] text-veltol-fgMute">
             ⌘K
           </kbd>
         )}
@@ -141,7 +141,7 @@ export function InlineSearchBar() {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute left-1/2 top-full z-50 mt-2 w-full -translate-x-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep shadow-2xl">
+        <div className="absolute left-1/2 top-full z-50 mt-2 w-full -translate-x-1/2 rounded-xl border border-border bg-card shadow-2xl">
           <div className="max-h-[60vh] overflow-y-auto py-2">
             {isPending && !hasResults && (
               <p className="px-4 py-6 text-center font-mono text-xs text-veltol-fgMute">
@@ -164,7 +164,7 @@ export function InlineSearchBar() {
                 {results.projects.map((p, i) => (
                   <ResultItem
                     key={p.id}
-                    icon={<FolderKanban className="h-3.5 w-3.5 text-veltol-aqua" />}
+                    icon={<FolderKanban className="h-3.5 w-3.5 text-veltol-accent" />}
                     title={p.name}
                     subtitle={[p.county, p.contract_number].filter(Boolean).join(" · ")}
                     badge={p.current_phase}
@@ -181,7 +181,7 @@ export function InlineSearchBar() {
                 {results.clients.map((c, i) => (
                   <ResultItem
                     key={c.id}
-                    icon={<Building2 className="h-3.5 w-3.5 text-veltol-teal" />}
+                    icon={<Building2 className="h-3.5 w-3.5 text-veltol-primary" />}
                     title={c.name}
                     subtitle={c.contact_person ?? c.cui ?? ""}
                     badge={c.client_type}
@@ -245,7 +245,7 @@ function ResultItem({
       className={cn(
         "flex w-full items-center gap-3 border-l-2 px-4 py-2 text-left transition-colors",
         active
-          ? "border-veltol-aqua bg-veltol-surface/80"
+          ? "border-veltol-accent bg-veltol-surface/80"
           : "border-transparent hover:bg-veltol-surface/40",
       )}
     >

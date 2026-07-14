@@ -1,14 +1,13 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser } from "@/core/supabase/session";
 import { getAllUsers } from "./actions";
 import { getVacationBalance } from "../vacation/actions";
 import { ProfileShell } from "@/features/profile/components/ProfileShell";
 import type { Profile } from "@/features/profile/types";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   if (!user) {
     const locale = await getLocale();
@@ -22,15 +21,17 @@ export default async function ProfilePage() {
     .single();
 
   const isAdmin = profile?.role === "admin";
-  const allUsers = isAdmin ? await getAllUsers() : [];
-  const balance = await getVacationBalance();
+  const [allUsers, balance] = await Promise.all([
+    isAdmin ? getAllUsers() : Promise.resolve([]),
+    getVacationBalance(),
+  ]);
   const t = await getTranslations("profile");
 
   return (
     <div className="space-y-8">
       <div>
-        <div className="mono-label text-[10px] text-veltol-fgMute">{t("eyebrow")}</div>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-veltol-fg">
+        <div className="text-xs font-medium text-veltol-fgMute">{t("eyebrow")}</div>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
           {t("title")}
         </h1>
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>

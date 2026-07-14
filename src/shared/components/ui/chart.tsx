@@ -33,9 +33,9 @@ function ChartTooltipContent({
   return (
     <div
       data-slot="chart-tooltip"
-      className="rounded-lg border border-veltol-aqua/15 bg-veltol-deep/95 px-3 py-2 shadow-v-glow backdrop-blur-xl"
+      className="rounded-lg border border-border bg-popover px-3 py-2 shadow-sm"
     >
-      <div className="mono-label text-[9px] text-veltol-fgMute">{label}</div>
+      <div className="text-[11px] font-medium text-veltol-fgMute">{label}</div>
       {payload.map((entry) => (
         <div
           key={String(entry.dataKey)}

@@ -80,17 +80,17 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
   const fullNumberFormatter = new Intl.NumberFormat(tag);
 
   return (
-    <div className="v-panel v-hairline relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div className="p-5 pb-0">
-        <span className="mono-label text-[10px] text-veltol-fgMute">{labels.eyebrow}</span>
-        <h2 className="mt-0.5 font-display text-base font-semibold text-veltol-fg">{labels.title}</h2>
+        <span className="text-xs font-medium text-veltol-fgMute">{labels.eyebrow}</span>
+        <h2 className="mt-0.5 text-base font-semibold text-veltol-fg">{labels.title}</h2>
       </div>
 
-      <div className="mt-4 h-px bg-gradient-to-r from-transparent via-veltol-aqua/20 to-transparent" />
+      <div className="mt-4 h-px bg-border" />
 
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mono-label mr-1 text-[9px] text-veltol-fgMute">{labels.selectMonths}</span>
+          <span className="mr-1 text-xs font-medium text-veltol-fgMute">{labels.selectMonths}</span>
           {availableMonths.map((point) => {
             const active = selectedSet.has(keyOf(point));
             return (
@@ -99,10 +99,10 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
                 type="button"
                 onClick={() => toggle(point)}
                 className={cn(
-                  "rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors",
+                  "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
                   active
-                    ? "border-veltol-aqua/40 bg-veltol-aqua/15 text-veltol-aqua"
-                    : "border-veltol-aqua/10 bg-veltol-surface/30 text-veltol-fgMute hover:text-veltol-fg",
+                    ? "border-veltol-accent/40 bg-veltol-accent/15 text-veltol-accent"
+                    : "border-border bg-veltol-surface/30 text-veltol-fgMute hover:text-veltol-fg",
                 )}
               >
                 {monthNames[point.month]} {point.year}
@@ -145,7 +145,7 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
                 <Bar
                   dataKey="totalEur"
                   name={labels.incomeLabel}
-                  fill="var(--color-veltol-aqua)"
+                  fill="var(--color-veltol-primary)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

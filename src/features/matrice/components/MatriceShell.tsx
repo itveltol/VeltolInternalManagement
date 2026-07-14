@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import type { MatrixData, MatrixProject, MatrixCell, ActivityStatus } from "../types";
 import { MatriceProjectPicker } from "./MatriceProjectPicker";
@@ -26,6 +26,7 @@ export function MatriceShell({ initialData, allProjects }: Props) {
   const [data, setData] = useState<MatrixData>(initialData);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
   const [docsPopover, setDocsPopover] = useState<{ projectId: number; activityId: number } | null>(null);
+  const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
 
   // Restore selection from localStorage after hydration
   useEffect(() => {
@@ -46,8 +47,14 @@ export function MatriceShell({ initialData, allProjects }: Props) {
     try { localStorage.setItem(LS_KEY, JSON.stringify(selectedIds)); } catch { /* ignore */ }
   }, [selectedIds]);
 
-  // Reload matrix when selection changes
+  // Reload matrix when selection changes (skip the very first run — the
+  // server already fetched `initialData` for the default selection).
+  const isFirstDataLoad = useRef(true);
   useEffect(() => {
+    if (isFirstDataLoad.current) {
+      isFirstDataLoad.current = false;
+      return;
+    }
     startTransition(async () => {
       const fresh = await getMatrixData(selectedIds);
       setData(fresh);
@@ -59,10 +66,9 @@ export function MatriceShell({ initialData, allProjects }: Props) {
   useEffect(() => {
     if (selectedIds.length === 0) { setDocCounts(new Map()); return; }
     startTransition(async () => {
-      const docs = await getDocuments();
-      const matriceDocs = docs.filter((d) => d.linked_type === "matrice_cell");
+      const docs = await getDocuments({ linked_type: "matrice_cell" });
       const counts = new Map<string, number>();
-      for (const doc of matriceDocs) {
+      for (const doc of docs) {
         const [pIdStr] = doc.linked_id.split(":");
         if (selectedIds.includes(Number(pIdStr))) {
           counts.set(doc.linked_id, (counts.get(doc.linked_id) ?? 0) + 1);
@@ -78,6 +84,8 @@ export function MatriceShell({ initialData, allProjects }: Props) {
   }
 
   function handleChangeStatus(projectId: number, activityId: number, status: ActivityStatus) {
+    const cellKey = `${projectId}:${activityId}`;
+
     // Optimistic update
     setData((prev) => {
       const cells: MatrixCell[] = prev.cells.filter(
@@ -87,12 +95,21 @@ export function MatriceShell({ initialData, allProjects }: Props) {
       return { ...prev, cells };
     });
 
+    setPendingCells((prev) => new Set(prev).add(cellKey));
     startTransition(async () => {
-      const result = await setCellStatus(projectId, activityId, status);
-      if (result?.error) {
-        // Rollback: refetch
-        const fresh = await getMatrixData(selectedIds);
-        setData(fresh);
+      try {
+        const result = await setCellStatus(projectId, activityId, status);
+        if (result?.error) {
+          // Rollback: refetch
+          const fresh = await getMatrixData(selectedIds);
+          setData(fresh);
+        }
+      } finally {
+        setPendingCells((prev) => {
+          const next = new Set(prev);
+          next.delete(cellKey);
+          return next;
+        });
       }
     });
   }
@@ -100,7 +117,7 @@ export function MatriceShell({ initialData, allProjects }: Props) {
   return (
     <div className="space-y-6">
       {/* Project picker */}
-      <div className="rounded-xl border border-white/[0.07] bg-veltol-surface/30 p-4">
+      <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
         <MatriceProjectPicker
           allProjects={allProjects}
           selectedIds={selectedIds}
@@ -117,7 +134,7 @@ export function MatriceShell({ initialData, allProjects }: Props) {
       </div>
 
       {/* Matrix */}
-      <div className="rounded-xl border border-t-2 border-t-veltol-aqua/60 border-white/[0.07] bg-veltol-surface/20 p-0 overflow-hidden">
+      <div className="rounded-xl border border-t-2 border-t-veltol-accent/60 border-border bg-veltol-surface/20 p-0 overflow-hidden">
         <MatriceGrid
           activities={data.activities}
           cells={data.cells}
@@ -125,6 +142,7 @@ export function MatriceShell({ initialData, allProjects }: Props) {
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
           docCounts={docCounts}
+          pendingCells={pendingCells}
         />
       </div>
 

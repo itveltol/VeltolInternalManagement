@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { ClipboardCheck, FileCheck2, Pencil, X } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { cancelVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
 import { useVacationStore } from "../hooks/useVacationStore";
 import { vacationDays } from "../types";
@@ -15,6 +17,8 @@ import { vacationStatusVariant } from "@/shared/utils/status-variant";
 import type { VacationRequest, VacationStatus, VacationBalance } from "../types";
 import type { Profile } from "@/features/profile/types";
 import type { Holiday } from "@/features/holidays/types";
+
+const PAGE_SIZE = 20;
 
 interface Props {
   requests: VacationRequest[];
@@ -38,6 +42,12 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
     openEditDialog, closeEditDialog,
     openApprovalDialog, closeApprovalDialog,
   } = useVacationStore();
+
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(requests.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  if (currentPage !== page) setPage(currentPage);
+  const pagedRequests = requests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   function formatDate(iso: string | null) {
     if (!iso) return "—";
@@ -67,10 +77,10 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
 
   return (
     <>
-      <div className="v-panel v-hairline overflow-hidden rounded-xl">
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <span className="mono-label text-[10px] text-veltol-fgMute">
+            <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: requests.length })}
             </span>
           </div>
@@ -82,7 +92,7 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-white/[0.04]">
+              <tr className="border-b border-border">
                 {[
                   t("columns.employee"),
                   t("columns.startDate"),
@@ -95,14 +105,14 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
                 ].map((col, i) => (
                   <th
                     key={i}
-                    className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[0.16em] text-veltol-fgMute"
+                    className="px-5 py-3 text-left text-[11px] font-medium text-veltol-fgMute"
                   >
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-border">
               {requests.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
@@ -110,8 +120,8 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
                   </td>
                 </tr>
               ) : (
-                requests.map((req) => (
-                  <tr key={req.id} className="group transition-colors hover:bg-veltol-surface/30">
+                pagedRequests.map((req) => (
+                  <tr key={req.id} className="group transition-colors hover:bg-veltol-surface/50">
                     <td className="px-5 py-3.5 text-veltol-fg">{personName(req.requester)}</td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
                       {formatDate(req.start_date)}
@@ -134,36 +144,48 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
                       {personName(req.approver)}
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-center gap-1">
                         {canEdit(req, currentUserId) && (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => openEditDialog(req)}>
-                              {t("edit")}
+                            <Button
+                              size="icon-sm"
+                              variant="outline"
+                              title={t("edit")}
+                              onClick={() => openEditDialog(req)}
+                            >
+                              <Pencil />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon-sm"
                               variant="destructive"
+                              title={t("cancel")}
                               disabled={isPending}
                               onClick={() => handleCancel(req.id)}
                             >
-                              {t("cancel")}
+                              <X />
                             </Button>
                           </>
                         )}
                         {isAdmin && req.status === "pending" && (
-                          <Button size="sm" variant="outline" onClick={() => openApprovalDialog(req)}>
-                            {t("review")}
+                          <Button
+                            size="icon-sm"
+                            variant="outline"
+                            title={t("review")}
+                            onClick={() => openApprovalDialog(req)}
+                          >
+                            <ClipboardCheck />
                           </Button>
                         )}
                         {req.status === "approved" &&
                           (isAdmin || req.user_id === currentUserId) && (
                             <Button
-                              size="sm"
+                              size="icon-sm"
                               variant="ghost"
+                              title={t("generateDocument")}
                               disabled={isPending}
                               onClick={() => handleGenerate(req.id)}
                             >
-                              {t("generateDocument")}
+                              <FileCheck2 />
                             </Button>
                           )}
                       </div>
@@ -174,6 +196,15 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          prevLabel={t("pagination.prev")}
+          nextLabel={t("pagination.next")}
+          pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+        />
       </div>
 
       <RequestVacationDialog

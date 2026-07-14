@@ -3,6 +3,7 @@
 import { useTransition, useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
+import { Loader2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -26,6 +27,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   const t = useTranslations("vacation");
   const locale = useLocale();
   const [isPending, startTransition] = useTransition();
+  const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [balance, setBalance] = useState<VacationBalance | null>(null);
   const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
@@ -46,6 +48,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   }
 
   function handleApprove() {
+    setAction("approve");
     startTransition(async () => {
       await approveVacationRequest(request.id);
       onClose();
@@ -53,6 +56,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   }
 
   function handleReject() {
+    setAction("reject");
     startTransition(async () => {
       await rejectVacationRequest(request.id);
       onClose();
@@ -63,43 +67,43 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
-          <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-5 shadow-2xl sm:p-8">
+          <Dialog.Title className="text-xl font-semibold text-veltol-fg">
             {t("reviewRequest")}
           </Dialog.Title>
 
-          <div className="mt-6 space-y-3 rounded-lg border border-white/[0.06] bg-veltol-surface/30 p-4">
+          <div className="mt-6 space-y-3 rounded-lg border border-border bg-veltol-surface/30 p-4">
             <div className="flex items-center justify-between">
-              <span className="mono-label text-[9px] text-veltol-fgMute">{t("columns.employee")}</span>
+              <span className="text-[11px] font-medium text-veltol-fgMute">{t("columns.employee")}</span>
               <span className="text-sm text-veltol-fg">{personName(request.requester)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="mono-label text-[9px] text-veltol-fgMute">{t("period")}</span>
+              <span className="text-[11px] font-medium text-veltol-fgMute">{t("period")}</span>
               <span className="font-mono text-[12px] text-veltol-fgDim">
                 {formatDate(request.start_date)} → {formatDate(request.end_date)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="mono-label text-[9px] text-veltol-fgMute">{t("columns.days")}</span>
+              <span className="text-[11px] font-medium text-veltol-fgMute">{t("columns.days")}</span>
               <span className="font-mono tabular-nums text-sm text-veltol-fg">
                 {vacationDays(request.start_date, request.end_date, holidaySet)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="mono-label text-[9px] text-veltol-fgMute">{t("columns.status")}</span>
+              <span className="text-[11px] font-medium text-veltol-fgMute">{t("columns.status")}</span>
               <Badge variant={vacationStatusVariant(request.status)}>
                 {t(`status_${request.status}` as Parameters<typeof t>[0])}
               </Badge>
             </div>
             {request.reason && (
               <div className="space-y-1">
-                <span className="mono-label text-[9px] text-veltol-fgMute">{t("reason")}</span>
+                <span className="text-[11px] font-medium text-veltol-fgMute">{t("reason")}</span>
                 <p className="text-sm text-veltol-fgDim">{request.reason}</p>
               </div>
             )}
             {balance && (
-              <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
-                <span className="mono-label text-[9px] text-veltol-fgMute">{t("requesterBalance")}</span>
+              <div className="flex items-center justify-between border-t border-border pt-3">
+                <span className="text-[11px] font-medium text-veltol-fgMute">{t("requesterBalance")}</span>
                 <span className="font-mono tabular-nums text-sm text-veltol-fg">
                   {balance.remainingDays} / {balance.baseDays + balance.carriedOverDays}
                 </span>
@@ -108,12 +112,14 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
           </div>
 
           <div className="mt-6 flex justify-end gap-3">
-            <Dialog.Close render={<Button type="button" variant="outline">{t("dismiss")}</Button>} />
+            <Dialog.Close render={<Button type="button" variant="outline" disabled={isPending}>{t("dismiss")}</Button>} />
             <Button variant="destructive" disabled={isPending} onClick={handleReject}>
-              {t("reject")}
+              {action === "reject" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {action === "reject" ? t("rejecting") : t("reject")}
             </Button>
             <Button disabled={isPending} onClick={handleApprove}>
-              {t("approve")}
+              {action === "approve" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              {action === "approve" ? t("approving") : t("approve")}
             </Button>
           </div>
         </Dialog.Popup>

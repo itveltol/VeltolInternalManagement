@@ -31,7 +31,7 @@ export function AiFillButton({
         type="button"
         onClick={onUndo}
         className={cn(
-          "inline-flex items-center gap-1 font-mono text-[10px] text-veltol-fgMute hover:text-veltol-aqua transition-colors",
+          "inline-flex items-center gap-1 font-mono text-[10px] text-veltol-fgMute hover:text-veltol-accent transition-colors",
           className,
         )}
       >
@@ -49,7 +49,7 @@ export function AiFillButton({
         disabled={disabled || loading}
         className={cn(
           "inline-flex items-center gap-1 font-mono text-[10px] transition-colors",
-          "text-veltol-aqua/70 hover:text-veltol-aqua",
+          "text-veltol-accent/70 hover:text-veltol-accent",
           (disabled || loading) && "opacity-40 pointer-events-none",
         )}
       >
@@ -69,7 +69,7 @@ export function AiFillButton({
         onClick={() => fileInputRef.current?.click()}
         className={cn(
           "inline-flex items-center gap-1 font-mono text-[10px] transition-colors",
-          "text-veltol-aqua/70 hover:text-veltol-aqua",
+          "text-veltol-accent/70 hover:text-veltol-accent",
           loading && "opacity-40 pointer-events-none",
         )}
       >

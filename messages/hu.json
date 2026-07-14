@@ -9,9 +9,11 @@
     "settings": "Beállítások",
     "activeProject": "Aktív projekt",
     "signOut": "Kijelentkezés",
+    "signingOut": "Kijelentkezés folyamatban…",
     "matriceStatus": "Matrice Status",
     "vacation": "Szabadság",
     "clients": "Ügyfelek",
+    "teams": "Csapatok",
     "documents": "Dokumentumok",
     "delivery": "Szállítás",
     "site": "Építési helyszín",
@@ -67,6 +69,11 @@
     "saving": "Mentés...",
     "emptyState": "Még nincsenek projektek. Adja hozzá az elsőt.",
     "viewChecklist": "Ellenőrzőlista",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "columns": {
       "id": "Azonosító",
       "project": "Projekt",
@@ -153,6 +160,7 @@
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Nincs jogosultsága szerkeszteni.",
     "errorInvalidNumber": "Érvényes számot adjon meg.",
+    "errorCustomTaskLimit": "Elérte az egyedi feladatok maximális számát ennél a projektnél.",
     "columns": {
       "cod": "Kód",
       "number": "#",
@@ -185,6 +193,36 @@
       "montaj_bess": "BESS szerelés",
       "conectare_bess": "BESS csatlakoztatás",
       "verificari_bess": "BESS ellenőrzések"
+    },
+    "gantt": {
+      "tabLabel": "Ütemterv",
+      "breadcrumb": "Ütemterv",
+      "unscheduled": "{count} beütemezetlen feladat",
+      "customBadge": "Egyedi",
+      "emptyState": "Még nincsenek beütemezett feladatok. Kattintson egy fenti feladatra dátumok megadásához.",
+      "taskColumn": "Feladat",
+      "today": "Ma",
+      "addCustomTask": "Egyedi feladat hozzáadása",
+      "scheduleTask": "Feladat ütemezése",
+      "taskName": "Feladat neve",
+      "taskPhase": "Fázis",
+      "planTotal": "Tervezett összesen",
+      "plannedDays": "Tervezett napok",
+      "startDate": "Kezdő dátum",
+      "endDate": "Befejező dátum",
+      "team": "Csapat",
+      "noTeam": "Nincs csapat",
+      "cancel": "Mégse",
+      "save": "Mentés",
+      "saving": "Mentés...",
+      "taskScheduled": "Feladat ütemezve.",
+      "taskCreated": "Feladat létrehozva.",
+      "deleteTask": "Feladat törlése",
+      "confirmDeleteTask": "Törli ezt az egyedi feladatot? Ez nem vonható vissza.",
+      "taskDeleted": "Feladat törölve.",
+      "unscheduleTask": "Eltávolítás az ütemtervből",
+      "confirmUnscheduleTask": "Eltávolítja ennek a feladatnak a dátumait és csapatát az ütemtervből?",
+      "taskUnscheduled": "Feladat eltávolítva az ütemtervből."
     }
   },
   "login": {
@@ -253,7 +291,10 @@
     "subtitle": "Tevékenységek × projektek állapotmátrix",
     "picker": {
       "label": "PROJEKTEK",
-      "empty": "Nincsenek projektek."
+      "empty": "Nincsenek projektek.",
+      "placeholder": "Projekt keresése és hozzáadása...",
+      "noResults": "Nincs egyező projekt.",
+      "remove": "{name} eltávolítása"
     },
     "grid": {
       "activity": "Tevékenység",
@@ -275,6 +316,11 @@
     "subtitle": "Szabadságkérelmek benyújtása és kezelése",
     "yourBalance": "Az Ön egyenlege",
     "requesterBalance": "Kérelmező egyenlege",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "requestVacation": "Szabadság kérése",
     "assignTo": "Kinek szól",
     "editRequest": "Kérelem szerkesztése",
@@ -296,7 +342,9 @@
     "cancel": "Mégse",
     "edit": "Szerkesztés",
     "approve": "Jóváhagyás",
+    "approving": "Jóváhagyás...",
     "reject": "Elutasítás",
+    "rejecting": "Elutasítás...",
     "review": "Áttekintés",
     "generateDocument": "Dokumentum generálása",
     "confirmCancel": "Visszavonja ezt a szabadságkérelmet?",
@@ -332,6 +380,11 @@
     "title": "Beállítások",
     "subtitle": "Rendszerszintű beállítások kezelése",
     "officialHolidays": "Hivatalos munkaszüneti napok",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "date": "Dátum",
     "name": "Megnevezés",
     "addHoliday": "Munkaszüneti nap hozzáadása",
@@ -356,6 +409,11 @@
     "title": "Ügyfelek",
     "subtitle": "Projektekhez kapcsolódó cégek és személyek",
     "totalCount": "{count} ügyfél összesen",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "addClient": "Ügyfél hozzáadása",
     "editClient": "Szerkesztés",
     "deleteClient": "Törlés",
@@ -396,11 +454,69 @@
       "notes": "Megjegyzés"
     }
   },
+  "teams": {
+    "eyebrow": "CSAPATOK · ÖSSZES",
+    "detailEyebrow": "CSAPAT · TAGOK",
+    "title": "Csapatok",
+    "subtitle": "Tagok csoportjai, projektekhez és feladatokhoz rendelhetők",
+    "totalCount": "{count} csapat összesen",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
+    "memberCount": "{count} tag",
+    "addTeam": "Csapat hozzáadása",
+    "editTeam": "Csapat szerkesztése",
+    "deleteTeam": "Csapat törlése",
+    "confirmDelete": "Törli ezt a csapatot? A tagsági adatok is törlődnek.",
+    "teamSaved": "Csapat mentve.",
+    "teamCreated": "Csapat létrehozva.",
+    "teamDeleted": "Csapat törölve.",
+    "removeMember": "Eltávolítás",
+    "confirmRemoveMember": "Eltávolítja ezt a tagot a csapatból?",
+    "memberAdded": "Tag hozzáadva.",
+    "memberRemoved": "Tag eltávolítva.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "emptyState": "Még nincsenek csapatok. Adja hozzá az elsőt.",
+    "emptyMembers": "Még nincsenek tagok. Adjon hozzá valakit alább.",
+    "columns": {
+      "name": "Név",
+      "lead": "Vezető",
+      "members": "Tagok",
+      "created": "Létrehozva",
+      "member": "Tag",
+      "email": "Email",
+      "role": "Szerepkör"
+    },
+    "fields": {
+      "name": "Név",
+      "description": "Leírás",
+      "lead": "Csapatvezető",
+      "noLead": "Nincs vezető"
+    },
+    "memberPicker": {
+      "label": "Tagok hozzáadása",
+      "placeholder": "Keresés...",
+      "empty": "Nincs elérhető profil.",
+      "noResults": "Nincs találat.",
+      "remove": "{name} eltávolítása"
+    }
+  },
   "documents": {
     "eyebrow": "DOKUMENTUMOK · ÖSSZES",
     "title": "Dokumentumok",
     "subtitle": "OneDrive / SharePoint hivatkozások projektekhez, ügyfelekhez, tevékenységekhez és ellenőrzőlista-elemekhez csatolva",
     "totalCount": "{count} dokumentum összesen",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "addDocument": "Dokumentum hozzáadása",
     "delete": "Törlés",
     "cancel": "Mégse",
@@ -486,6 +602,11 @@
     "eyebrow": "PROFIL · FIÓKBEÁLLÍTÁSOK",
     "title": "Profil és fiókbeállítások",
     "subtitle": "Személyes adatok, jelszócsere és csapatkezelés",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
     "personalTitle": "Személyes adatok",
     "personalDesc": "Nevét és telefonszámát bármikor módosíthatja.",
     "firstName": "Keresztnév",

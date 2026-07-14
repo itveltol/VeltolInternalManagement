@@ -12,10 +12,10 @@ import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 
 const SELECT_CLASS =
-  "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20";
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
 
 const TEXTAREA_CLASS =
-  "w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20 resize-none";
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
 
 interface Props {
   project: Project;
@@ -49,8 +49,8 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
-          <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-border bg-card p-5 shadow-2xl sm:p-8">
+          <Dialog.Title className="text-xl font-semibold text-veltol-fg">
             {t("editProject")}
           </Dialog.Title>
 
@@ -58,53 +58,53 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
             <input type="hidden" name="projectId" value={project.id} />
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.name")} *</Label>
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
               <Input name="name" required defaultValue={project.name} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.county")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.county")}</Label>
                 <Input name="county" defaultValue={project.county ?? ""} />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.siteLocation")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.siteLocation")}</Label>
                 <Input name="site_location" defaultValue={project.site_location ?? ""} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.mwSolar")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.mwSolar")}</Label>
                 <Input name="mw_solar" type="number" step="0.001" min="0" defaultValue={project.mw_solar ?? ""} />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.mwBess")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.mwBess")}</Label>
                 <Input name="mw_bess" type="number" step="0.001" min="0" defaultValue={project.mw_bess ?? ""} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.projectType")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectType")}</Label>
                 <select
                   name="project_type"
                   value={projectType}
                   onChange={(e) => setProjectType(e.target.value)}
                   className={SELECT_CLASS}
                 >
-                  <option value="" className="bg-veltol-deep">—</option>
+                  <option value="" className="bg-card">—</option>
                   {PROJECT_TYPES.map((pt) => (
-                    <option key={pt} value={pt} className="bg-veltol-deep">{tType(pt)}</option>
+                    <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.manager")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.manager")}</Label>
                 <select name="manager_id" defaultValue={project.manager_id ?? ""} className={SELECT_CLASS}>
-                  <option value="" className="bg-veltol-deep">—</option>
+                  <option value="" className="bg-card">—</option>
                   {managers.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-veltol-deep">
+                    <option key={m.id} value={m.id} className="bg-card">
                       {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
                     </option>
                   ))}
@@ -113,48 +113,48 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.client")}</Label>
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.client")}</Label>
               <select name="client_id" defaultValue={project.client_id ?? ""} className={SELECT_CLASS}>
-                <option value="" className="bg-veltol-deep">—</option>
+                <option value="" className="bg-card">—</option>
                 {clientRefs.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-veltol-deep">{c.name}</option>
+                  <option key={c.id} value={c.id} className="bg-card">{c.name}</option>
                 ))}
               </select>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.phase")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
                 <select name="current_phase" defaultValue={project.current_phase} className={SELECT_CLASS}>
                   {PROJECT_PHASES.map((p) => (
-                    <option key={p} value={p} className="bg-veltol-deep">{tPhase(p)}</option>
+                    <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.progress")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
                 <Input name="progress_pct" type="number" min="0" max="100" defaultValue={project.progress_pct} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.contractNumber")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
                 <Input name="contract_number" defaultValue={project.contract_number ?? ""} />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.contractDate")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
                 <input name="contract_date" type="date" defaultValue={project.contract_date ?? ""} className={SELECT_CLASS} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.deadline")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
                 <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={SELECT_CLASS} />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">
                   {hybrid ? t("fields.valueEurSolar") : t("fields.valueEur")}
                 </Label>
                 <Input
@@ -173,7 +173,7 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
             {hybrid && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
                   <Input
                     name="value_eur_bess"
                     type="number"
@@ -183,7 +183,7 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
                   <p className="flex h-8 items-center font-mono text-sm text-veltol-fg">
                     {new Intl.NumberFormat("hu-HU").format(valueEurTotal)} €
                   </p>
@@ -193,18 +193,18 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.status")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
                 <select name="status" defaultValue={project.status} className={SELECT_CLASS}>
                   {PROJECT_STATUSES.map((s) => (
-                    <option key={s} value={s} className="bg-veltol-deep">{tStatus(s)}</option>
+                    <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.priority")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.priority")}</Label>
                 <select name="priority" defaultValue={project.priority} className={SELECT_CLASS}>
                   {PROJECT_PRIORITIES.map((p) => (
-                    <option key={p} value={p} className="bg-veltol-deep">{tPriority(p)}</option>
+                    <option key={p} value={p} className="bg-card">{tPriority(p)}</option>
                   ))}
                 </select>
               </div>
@@ -212,17 +212,17 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
 
             <div className="flex gap-6">
               <label className="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" name="cu_issued" value="true" defaultChecked={project.cu_issued} className="h-4 w-4 rounded border border-white/20 bg-veltol-surface accent-veltol-aqua" />
+                <input type="checkbox" name="cu_issued" value="true" defaultChecked={project.cu_issued} className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
                 <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.cuIssued")}</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" name="atr_issued" value="true" defaultChecked={project.atr_issued} className="h-4 w-4 rounded border border-white/20 bg-veltol-surface accent-veltol-aqua" />
+                <input type="checkbox" name="atr_issued" value="true" defaultChecked={project.atr_issued} className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
                 <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.atrIssued")}</span>
               </label>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.notes")}</Label>
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</Label>
               <textarea name="notes" rows={3} defaultValue={project.notes ?? ""} className={TEXTAREA_CLASS} />
             </div>
 

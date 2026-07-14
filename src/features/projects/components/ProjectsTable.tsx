@@ -1,18 +1,22 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Eye, Loader2, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { Link } from "@/i18n/navigation";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { EditProjectDialog } from "./EditProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { useProjectsStore } from "../hooks/useProjectsStore";
-import { projectStatusVariant, priorityVariant, phaseVariant } from "@/shared/utils/status-variant";
+import { priorityVariant, phaseVariant } from "@/shared/utils/status-variant";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+
+const PAGE_SIZE = 20;
 
 interface Props {
   projects: Project[];
@@ -24,7 +28,6 @@ interface Props {
 export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
-  const tStatus = useTranslations("projectStatus");
   const tPriority = useTranslations("projectPriority");
   const locale = useLocale();
   const router = useRouter();
@@ -36,6 +39,13 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
     openEditDialog, closeEditDialog,
     setDeletingId,
   } = useProjectsStore();
+
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
+  // Clamp during render (not an effect) if the underlying list shrank below the current page.
+  const currentPage = Math.min(page, pageCount);
+  if (currentPage !== page) setPage(currentPage);
+  const pagedProjects = projects.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   function formatDate(iso: string | null) {
     if (!iso) return "—";
@@ -70,10 +80,10 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
 
   return (
     <>
-      <div className="v-panel v-hairline overflow-hidden rounded-xl">
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <span className="mono-label text-[10px] text-veltol-fgMute">
+            <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: projects.length })}
             </span>
           </div>
@@ -87,29 +97,29 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-white/[0.04]">
+              <tr className="border-b border-border">
                 {[
                   t("columns.id"), t("columns.project"), t("columns.county"),
-                  t("columns.phase"), t("columns.progress"), t("columns.generalStatus"),
+                  t("columns.phase"), t("columns.progress"),
                   t("columns.priority"), t("columns.deadline"), t("columns.value"),
                   t("columns.manager"), t("columns.client"), "",
                 ].map((col, i) => (
-                  <th key={i} className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[0.16em] text-veltol-fgMute">
+                  <th key={i} className="px-5 py-3 text-left text-[11px] font-medium text-veltol-fgMute">
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-border">
               {projects.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={11} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
                   </td>
                 </tr>
               ) : (
-                projects.map((project) => (
-                  <tr key={project.id} className="group transition-colors hover:bg-veltol-surface/30">
+                pagedProjects.map((project) => (
+                  <tr key={project.id} className="group transition-colors hover:bg-veltol-surface/50">
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[11px] text-veltol-fgMute">{project.id}</td>
 
                     <td className="px-5 py-3.5">
@@ -127,18 +137,14 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
 
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-white/[0.06]">
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-veltol-surface">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-veltol-teal to-veltol-aqua transition-all"
+                            className="h-full rounded-full bg-veltol-accent transition-all"
                             style={{ width: `${project.progress_pct}%` }}
                           />
                         </div>
                         <span className="font-mono tabular-nums text-[11px] text-veltol-fgMute">{project.progress_pct}%</span>
                       </div>
-                    </td>
-
-                    <td className="px-5 py-3.5">
-                      <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
                     </td>
 
                     <td className="px-5 py-3.5">
@@ -150,7 +156,7 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
                       {project.deadline && (() => {
                         const d = daysLeft(project.deadline);
                         if (d === null) return null;
-                        const color = d < 0 ? "text-red-400" : d <= 7 ? "text-amber-400" : "text-veltol-fgMute";
+                        const color = d < 0 ? "text-veltol-red" : d <= 7 ? "text-veltol-orange" : "text-veltol-fgMute";
                         const label = d < 0 ? `${Math.abs(d)}d overdue` : d === 0 ? "today" : `${d}d left`;
                         return <span className={`block font-mono tabular-nums text-[11px] ${color}`}>{label}</span>;
                       })()}
@@ -168,22 +174,34 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
                     </td>
 
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost" nativeButton={false} render={<Link href={`/projects/${project.id}`} />}>
-                          {t("viewChecklist")}
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          title={t("viewChecklist")}
+                          nativeButton={false}
+                          render={<Link href={`/projects/${project.id}`} />}
+                        >
+                          <Eye />
                         </Button>
                         {canMutate && (
                           <>
-                            <Button size="sm" variant="outline" onClick={() => openEditDialog(project)}>
-                              {t("editProject")}
+                            <Button
+                              size="icon-sm"
+                              variant="outline"
+                              title={t("editProject")}
+                              onClick={() => openEditDialog(project)}
+                            >
+                              <Pencil />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon-sm"
                               variant="destructive"
+                              title={t("deleteProject")}
                               disabled={isPending && deletingId === project.id}
                               onClick={() => handleDelete(project.id)}
                             >
-                              {isPending && deletingId === project.id ? "..." : t("deleteProject")}
+                              {isPending && deletingId === project.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
                             </Button>
                           </>
                         )}
@@ -195,6 +213,15 @@ export function ProjectsTable({ projects, canMutate, managers, clientRefs }: Pro
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          prevLabel={t("pagination.prev")}
+          nextLabel={t("pagination.next")}
+          pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+        />
       </div>
 
       <AddProjectDialog

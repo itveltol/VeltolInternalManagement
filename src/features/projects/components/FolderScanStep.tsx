@@ -17,7 +17,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Stage = "idle" | "scanning" | "analyzed" | "reviewing" | "applying" | "done";
+type Stage = "idle" | "scanning" | "analyzed" | "analyzing" | "reviewing" | "applying" | "done";
 
 interface ChecklistProposal {
   itemNumber: number;
@@ -86,6 +86,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
 
   async function handleAnalyze() {
     setAiError(null);
+    setStage("analyzing");
     const selected = files.filter((f) => selectedNames.has(f.name));
     const fileNames = selected.map((f) => f.path || f.name);
 
@@ -109,6 +110,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
 
       if (!res.ok) {
         setAiError(t("folderScan.analyzing"));
+        setStage("analyzed");
         return;
       }
 
@@ -143,6 +145,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
       setStage("reviewing");
     } catch {
       setAiError(t("folderScan.applyError"));
+      setStage("analyzed");
     }
   }
 
@@ -187,18 +190,18 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
   if (stage === "idle") {
     return (
       <div className="flex flex-col items-center gap-6 py-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-veltol-surface/60">
-          <FolderOpen className="size-7 text-veltol-aqua" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-veltol-surface/60">
+          <FolderOpen className="size-7 text-veltol-accent" />
         </div>
         <div>
-          <p className="font-display text-base font-semibold text-veltol-fg">
+          <p className="text-base font-semibold text-veltol-fg">
             {t("folderScan.stepTitle")}
           </p>
           <p className="mt-1 text-sm text-veltol-fgMute">{t("folderScan.stepSubtitle")}</p>
         </div>
 
         {!folderLinked && (
-          <p className="rounded-lg border border-veltol-amber/30 bg-veltol-amber/10 px-4 py-2 text-sm text-veltol-amber">
+          <p className="rounded-lg border border-veltol-orange/30 bg-veltol-orange/10 px-4 py-2 text-sm text-veltol-orange">
             {t("folderScan.noFolder")}
           </p>
         )}
@@ -225,7 +228,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
   if (stage === "scanning") {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <Loader2 className="size-8 animate-spin text-veltol-aqua" />
+        <Loader2 className="size-8 animate-spin text-veltol-accent" />
         <p className="text-sm text-veltol-fgMute">{t("folderScan.scanning")}</p>
       </div>
     );
@@ -260,28 +263,28 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
           <button
             type="button"
             onClick={toggleAll}
-            className="font-mono text-[11px] text-veltol-aqua hover:underline"
+            className="font-mono text-[11px] text-veltol-accent hover:underline"
           >
             {allSelected ? t("folderScan.deselectAll") : t("folderScan.selectAll")}
           </button>
         </div>
 
-        <div className="max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-veltol-surface/40">
+        <div className="max-h-60 overflow-y-auto rounded-lg border border-border bg-veltol-surface/40">
           {files.map((f) => (
             <label
               key={f.path}
-              className="flex cursor-pointer items-center gap-2.5 border-b border-white/[0.05] px-3 py-1.5 last:border-0 hover:bg-white/[0.03]"
+              className="flex cursor-pointer items-center gap-2.5 border-b border-border px-3 py-1.5 last:border-0 hover:bg-veltol-surface/50"
             >
               <input
                 type="checkbox"
                 checked={selectedNames.has(f.name)}
                 onChange={() => toggleFile(f.name)}
-                className="h-3.5 w-3.5 rounded border border-white/20 bg-veltol-surface accent-veltol-aqua"
+                className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
               />
               <span
                 className={[
                   "font-mono text-[11px] truncate",
-                  f.type === "folder" ? "text-veltol-amber" : "text-veltol-fg",
+                  f.type === "folder" ? "text-veltol-orange" : "text-veltol-fg",
                 ].join(" ")}
               >
                 {f.path || f.name}
@@ -304,8 +307,15 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
     );
   }
 
-  // ── Analyzing spinner (brief, while fetch is in flight) ───────────────────
-  // Handled inline via the fetch in handleAnalyze; stage stays "analyzed" until complete.
+  // ── Analyzing (AI suggestion fetch in flight) ─────────────────────────────
+  if (stage === "analyzing") {
+    return (
+      <div className="flex flex-col items-center gap-4 py-12">
+        <Loader2 className="size-8 animate-spin text-veltol-accent" />
+        <p className="text-sm text-veltol-fgMute">{t("folderScan.analyzing")}</p>
+      </div>
+    );
+  }
 
   // ── Reviewing ─────────────────────────────────────────────────────────────
   if (stage === "reviewing") {
@@ -314,7 +324,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
     return (
       <div className="flex flex-col gap-4">
         {!hasAny && (
-          <p className="rounded-lg border border-white/10 bg-veltol-surface/40 px-4 py-3 text-sm text-veltol-fgMute">
+          <p className="rounded-lg border border-border bg-veltol-surface/40 px-4 py-3 text-sm text-veltol-fgMute">
             {t("folderScan.noSuggestions")}
           </p>
         )}
@@ -324,11 +334,11 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
             <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-veltol-fgMute">
               {t("folderScan.checklistTitle")}
             </p>
-            <div className="rounded-lg border border-white/10 bg-veltol-surface/40">
+            <div className="rounded-lg border border-border bg-veltol-surface/40">
               {checklistProposals.map((p, idx) => (
                 <div
                   key={p.itemNumber}
-                  className="flex items-center gap-3 border-b border-white/[0.05] px-3 py-1.5 last:border-0"
+                  className="flex items-center gap-3 border-b border-border px-3 py-1.5 last:border-0"
                 >
                   <button
                     type="button"
@@ -357,11 +367,11 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
             <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.15em] text-veltol-fgMute">
               {t("folderScan.matriceTitle")}
             </p>
-            <div className="rounded-lg border border-white/10 bg-veltol-surface/40">
+            <div className="rounded-lg border border-border bg-veltol-surface/40">
               {matriceProposals.map((p, idx) => (
                 <div
                   key={p.activityId}
-                  className="flex items-center gap-3 border-b border-white/[0.05] px-3 py-1.5 last:border-0"
+                  className="flex items-center gap-3 border-b border-border px-3 py-1.5 last:border-0"
                 >
                   <button
                     type="button"
@@ -415,7 +425,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
   if (stage === "applying") {
     return (
       <div className="flex flex-col items-center gap-4 py-12">
-        <Loader2 className="size-8 animate-spin text-veltol-aqua" />
+        <Loader2 className="size-8 animate-spin text-veltol-accent" />
         <p className="text-sm text-veltol-fgMute">{t("folderScan.analyzing")}</p>
       </div>
     );

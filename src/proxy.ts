@@ -16,6 +16,15 @@ function getLocaleFromPathname(pathname: string): string | null {
   return (locales as readonly string[]).includes(segment) ? segment : null;
 }
 
+// Redirects must carry over any Set-Cookie already accumulated on `base`
+// (next-intl's NEXT_LOCALE sync, Supabase's refreshed session cookies) —
+// NextResponse.redirect() on its own creates a fresh response with none of them.
+function redirectPreservingCookies(base: NextResponse, url: URL) {
+  const redirect = NextResponse.redirect(url);
+  base.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  return redirect;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -89,37 +98,37 @@ export async function proxy(request: NextRequest) {
         : needsRegistration
           ? `/${locale}/register`
           : `/${locale}/dashboard`;
-      return NextResponse.redirect(url);
+      return redirectPreservingCookies(response, url);
     }
 
     if (user && isLoginPage) {
       const url = request.nextUrl.clone();
       url.pathname = needsRegistration ? `/${locale}/register` : `/${locale}/dashboard`;
-      return NextResponse.redirect(url);
+      return redirectPreservingCookies(response, url);
     }
 
     if (user && needsRegistration && !isRegisterPage) {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/register`;
-      return NextResponse.redirect(url);
+      return redirectPreservingCookies(response, url);
     }
 
     if (user && !needsRegistration && isRegisterPage) {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/dashboard`;
-      return NextResponse.redirect(url);
+      return redirectPreservingCookies(response, url);
     }
 
     const isPublic = isLoginPage;
     if (!user && !isPublic) {
       const url = request.nextUrl.clone();
       url.pathname = `/${locale}/login`;
-      return NextResponse.redirect(url);
+      return redirectPreservingCookies(response, url);
     }
   } else if (isRoot) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/login`;
-    return NextResponse.redirect(url);
+    return redirectPreservingCookies(response, url);
   }
 
   return response;

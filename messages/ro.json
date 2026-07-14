@@ -9,9 +9,11 @@
     "settings": "Setări",
     "activeProject": "Proiect activ",
     "signOut": "Deconectare",
+    "signingOut": "Se deconectează…",
     "matriceStatus": "Matrice Status",
     "vacation": "Concediu",
     "clients": "Clienți",
+    "teams": "Echipe",
     "documents": "Documente",
     "delivery": "Livrare",
     "site": "Construcție · Șantier",
@@ -67,6 +69,11 @@
     "saving": "Salvare...",
     "emptyState": "Nu există proiecte. Adăugați primul proiect.",
     "viewChecklist": "Listă verificare",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "columns": {
       "id": "ID",
       "project": "Proiect",
@@ -153,6 +160,7 @@
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea de a edita.",
     "errorInvalidNumber": "Introduceți un număr valid.",
+    "errorCustomTaskLimit": "S-a atins numărul maxim de sarcini personalizate pentru acest proiect.",
     "columns": {
       "cod": "Cod",
       "number": "#",
@@ -185,6 +193,36 @@
       "montaj_bess": "Montaj BESS",
       "conectare_bess": "Conectare BESS",
       "verificari_bess": "Verificări BESS"
+    },
+    "gantt": {
+      "tabLabel": "Gantt",
+      "breadcrumb": "Gantt",
+      "unscheduled": "{count} sarcini neprogramate",
+      "customBadge": "Personalizat",
+      "emptyState": "Nu există sarcini programate încă. Faceți clic pe o sarcină de mai sus pentru a-i seta datele.",
+      "taskColumn": "Sarcină",
+      "today": "Azi",
+      "addCustomTask": "Adaugă sarcină personalizată",
+      "scheduleTask": "Programează sarcina",
+      "taskName": "Numele sarcinii",
+      "taskPhase": "Fază",
+      "planTotal": "Plan total",
+      "plannedDays": "Zile planificate",
+      "startDate": "Data de început",
+      "endDate": "Data de sfârșit",
+      "team": "Echipă",
+      "noTeam": "Fără echipă",
+      "cancel": "Anulează",
+      "save": "Salvează",
+      "saving": "Salvare...",
+      "taskScheduled": "Sarcină programată.",
+      "taskCreated": "Sarcină creată.",
+      "deleteTask": "Șterge sarcina",
+      "confirmDeleteTask": "Ștergeți această sarcină personalizată? Această acțiune nu poate fi anulată.",
+      "taskDeleted": "Sarcină ștearsă.",
+      "unscheduleTask": "Elimină din Gantt",
+      "confirmUnscheduleTask": "Elimină datele și echipa acestei sarcini din diagrama Gantt?",
+      "taskUnscheduled": "Sarcină eliminată din Gantt."
     }
   },
   "login": {
@@ -253,7 +291,10 @@
     "subtitle": "Matrice de stare activități × proiecte",
     "picker": {
       "label": "PROIECTE",
-      "empty": "Nu există proiecte disponibile."
+      "empty": "Nu există proiecte disponibile.",
+      "placeholder": "Căutați proiecte de adăugat...",
+      "noResults": "Niciun proiect corespunzător.",
+      "remove": "Elimină {name}"
     },
     "grid": {
       "activity": "Activitate",
@@ -275,6 +316,11 @@
     "subtitle": "Depuneți și gestionați cererile de concediu ale echipei",
     "yourBalance": "Soldul dvs.",
     "requesterBalance": "Soldul solicitantului",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "requestVacation": "Solicită concediu",
     "assignTo": "Alocă lui",
     "editRequest": "Editează cererea",
@@ -296,7 +342,9 @@
     "cancel": "Anulează",
     "edit": "Editează",
     "approve": "Aprobă",
+    "approving": "Se aprobă...",
     "reject": "Respinge",
+    "rejecting": "Se respinge...",
     "review": "Revizuiește",
     "generateDocument": "Generează document",
     "confirmCancel": "Anulați această cerere de concediu?",
@@ -332,6 +380,11 @@
     "title": "Setări",
     "subtitle": "Gestionați configurația la nivel de sistem",
     "officialHolidays": "Sărbători oficiale",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "date": "Data",
     "name": "Denumire",
     "addHoliday": "Adaugă sărbătoare",
@@ -356,6 +409,11 @@
     "title": "Clienți",
     "subtitle": "Companii și persoane asociate proiectelor",
     "totalCount": "{count} clienți total",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "addClient": "Adaugă client",
     "editClient": "Editează",
     "deleteClient": "Șterge",
@@ -396,11 +454,69 @@
       "notes": "Note"
     }
   },
+  "teams": {
+    "eyebrow": "ECHIPE · TOATE",
+    "detailEyebrow": "ECHIPĂ · MEMBRI",
+    "title": "Echipe",
+    "subtitle": "Grupuri de membri, gata de asociere cu proiecte și sarcini",
+    "totalCount": "{count} echipe total",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
+    "memberCount": "{count} membri",
+    "addTeam": "Adaugă echipă",
+    "editTeam": "Editează echipa",
+    "deleteTeam": "Șterge echipa",
+    "confirmDelete": "Ștergeți această echipă? Înregistrările de apartenență vor fi eliminate.",
+    "teamSaved": "Echipă salvată.",
+    "teamCreated": "Echipă creată.",
+    "teamDeleted": "Echipă ștearsă.",
+    "removeMember": "Elimină",
+    "confirmRemoveMember": "Eliminați acest membru din echipă?",
+    "memberAdded": "Membru adăugat.",
+    "memberRemoved": "Membru eliminat.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Salvare...",
+    "emptyState": "Nu există echipe. Adăugați prima echipă.",
+    "emptyMembers": "Nu există membri. Adăugați pe cineva mai jos.",
+    "columns": {
+      "name": "Nume",
+      "lead": "Lider",
+      "members": "Membri",
+      "created": "Creat",
+      "member": "Membru",
+      "email": "Email",
+      "role": "Rol"
+    },
+    "fields": {
+      "name": "Nume",
+      "description": "Descriere",
+      "lead": "Lider echipă",
+      "noLead": "Fără lider"
+    },
+    "memberPicker": {
+      "label": "Adaugă membri",
+      "placeholder": "Caută persoane...",
+      "empty": "Niciun profil disponibil.",
+      "noResults": "Niciun rezultat.",
+      "remove": "Elimină {name}"
+    }
+  },
   "documents": {
     "eyebrow": "DOCUMENTE · TOATE",
     "title": "Documente",
     "subtitle": "Linkuri OneDrive / SharePoint atașate la proiecte, clienți, activități și puncte din checklist",
     "totalCount": "{count} documente total",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "addDocument": "Adaugă document",
     "delete": "Șterge",
     "cancel": "Anulează",
@@ -486,6 +602,11 @@
     "eyebrow": "PROFIL · SETĂRI CONT",
     "title": "Profil și setări cont",
     "subtitle": "Informații personale, schimbare parolă și gestionare echipă",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
     "personalTitle": "Informații personale",
     "personalDesc": "Puteți actualiza numele și numărul de telefon oricând.",
     "firstName": "Prenume",

@@ -44,10 +44,10 @@ export function DocumentsPopover({
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-6 shadow-2xl">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-2xl">
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
-              <Dialog.Title className="font-display text-base font-semibold text-veltol-fg">
+              <Dialog.Title className="text-base font-semibold text-veltol-fg">
                 {t("attachDocuments")}
               </Dialog.Title>
               <p className="mt-0.5 font-mono text-[11px] text-veltol-fgMute">{contextLabel}</p>

@@ -1,15 +1,19 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { AddClientDialog } from "./AddClientDialog";
 import { EditClientDialog } from "./EditClientDialog";
 import { deleteClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { useClientsStore } from "../hooks/useClientsStore";
 import type { Client } from "../types";
+
+const PAGE_SIZE = 20;
 
 interface Props {
   clients: Client[];
@@ -28,6 +32,12 @@ export function ClientsTable({ clients, canMutate }: Props) {
     setDeletingId,
   } = useClientsStore();
 
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(clients.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  if (currentPage !== page) setPage(currentPage);
+  const pagedClients = clients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   function handleDelete(clientId: number) {
     if (!confirm(t("confirmDelete"))) return;
     setDeletingId(clientId);
@@ -40,10 +50,10 @@ export function ClientsTable({ clients, canMutate }: Props) {
 
   return (
     <>
-      <div className="v-panel v-hairline overflow-hidden rounded-xl">
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <span className="mono-label text-[10px] text-veltol-fgMute">
+            <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: clients.length })}
             </span>
           </div>
@@ -57,18 +67,18 @@ export function ClientsTable({ clients, canMutate }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-white/[0.04]">
+              <tr className="border-b border-border">
                 {[
                   t("columns.name"), t("columns.type"), t("columns.taxId"),
                   t("columns.address"), t("columns.contact"), t("columns.email"), t("columns.phone"), "",
                 ].map((col, i) => (
-                  <th key={i} className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[0.16em] text-veltol-fgMute">
+                  <th key={i} className="px-5 py-3 text-left text-[11px] font-medium text-veltol-fgMute">
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.03]">
+            <tbody className="divide-y divide-border">
               {clients.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
@@ -76,8 +86,8 @@ export function ClientsTable({ clients, canMutate }: Props) {
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
-                  <tr key={client.id} className="group transition-colors hover:bg-veltol-surface/30">
+                pagedClients.map((client) => (
+                  <tr key={client.id} className="group transition-colors hover:bg-veltol-surface/50">
                     <td className="px-5 py-3.5">
                       <div className="font-medium text-veltol-fg">{client.name}</div>
                     </td>
@@ -112,17 +122,23 @@ export function ClientsTable({ clients, canMutate }: Props) {
 
                     <td className="px-5 py-3.5">
                       {canMutate && (
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openEditDialog(client)}>
-                            {t("editClient")}
+                        <div className="flex flex-col items-center gap-1">
+                          <Button
+                            size="icon-sm"
+                            variant="outline"
+                            title={t("editClient")}
+                            onClick={() => openEditDialog(client)}
+                          >
+                            <Pencil />
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon-sm"
                             variant="destructive"
+                            title={t("deleteClient")}
                             disabled={isPending && deletingId === client.id}
                             onClick={() => handleDelete(client.id)}
                           >
-                            {isPending && deletingId === client.id ? "..." : t("deleteClient")}
+                            {isPending && deletingId === client.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
                           </Button>
                         </div>
                       )}
@@ -133,6 +149,15 @@ export function ClientsTable({ clients, canMutate }: Props) {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          prevLabel={t("pagination.prev")}
+          nextLabel={t("pagination.next")}
+          pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+        />
       </div>
 
       <AddClientDialog

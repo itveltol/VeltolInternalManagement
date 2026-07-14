@@ -1,11 +1,10 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser } from "@/core/supabase/session";
 import type { SearchResults } from "@/features/search/types";
 
 export async function searchAll(query: string): Promise<SearchResults> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
 
   const q = `%${query}%`;

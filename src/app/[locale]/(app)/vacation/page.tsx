@@ -1,38 +1,33 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { createClient } from "@/core/supabase/server";
+import { getUserProfileRole } from "@/core/supabase/session";
 import { getVacationRequests, getVacationBalance, getHolidays } from "./actions";
 import { getAllUsers } from "@/app/[locale]/(app)/profile/actions";
 import { VacationShell } from "@/features/vacation/components/VacationShell";
 
 export default async function VacationPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, role } = await getUserProfileRole();
 
   if (!user) {
     const locale = await getLocale();
     redirect(`/${locale}/login`);
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  const isAdmin = profile?.role === "admin";
-  const requests = await getVacationRequests();
-  const balance = await getVacationBalance();
-  const employees = isAdmin ? await getAllUsers() : [];
-  const holidays = await getHolidays();
+  const isAdmin = role === "admin";
+  const [requests, balance, employees, holidays] = await Promise.all([
+    getVacationRequests(),
+    getVacationBalance(),
+    isAdmin ? getAllUsers() : Promise.resolve([]),
+    getHolidays(),
+  ]);
 
   const t = await getTranslations("vacation");
 
   return (
     <div className="space-y-8">
       <div>
-        <div className="mono-label text-[10px] text-veltol-fgMute">{t("eyebrow")}</div>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-veltol-fg">
+        <div className="text-xs font-medium text-veltol-fgMute">{t("eyebrow")}</div>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
           {t("title")}
         </h1>
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>

@@ -68,30 +68,34 @@ export const PV_TEMPLATE: ChecklistTemplateRow[] = [
   row("pv", "7.1", 29, "Verificări electrice + măsurători + probe",    null, 3,    null, "verificari"),
 ];
 
+// NOTE: numbers continue from PV_TEMPLATE's last number (29) — item_number
+// must be globally unique across the whole CHECKLIST_TEMPLATE since rows are
+// looked up and saved by number alone. Restarting at 1 here previously made
+// PV and BESS rows collide (e.g. scheduling one silently scheduled both).
 export const BESS_TEMPLATE: ChecklistTemplateRow[] = [
   // ── Section I: PREGĂTIRE TEREN ───────────────────────────────────────
-  row("bess", "VIII",   1,  "PREGĂTIRE TEREN",                              null, null, null, "pregatire_teren_bess"),
-  row("bess", "8.1", 2,  "Împrejmuire BESS",                             null, 3,    null, "pregatire_teren_bess"),
-  row("bess", "8.2", 3,  "Iluminat",                                     null, 2,    null, "pregatire_teren_bess"),
-  row("bess", "8.3", 4,  "Sistem de camere",                             null, 2,    null, "pregatire_teren_bess"),
+  row("bess", "VIII",   30, "PREGĂTIRE TEREN",                              null, null, null, "pregatire_teren_bess"),
+  row("bess", "8.1", 31, "Împrejmuire BESS",                             null, 3,    null, "pregatire_teren_bess"),
+  row("bess", "8.2", 32, "Iluminat",                                     null, 2,    null, "pregatire_teren_bess"),
+  row("bess", "8.3", 33, "Sistem de camere",                             null, 2,    null, "pregatire_teren_bess"),
 
   // ── Section II: CONSTRUCȚII ──────────────────────────────────────────
-  row("bess", "IX",  5,  "CONSTRUCȚII",                                  null, null, null, "constructii_bess"),
-  row("bess", "9.1", 6,  "Fundație BESS",                                null, 5,    null, "constructii_bess"),
+  row("bess", "IX",  34, "CONSTRUCȚII",                                  null, null, null, "constructii_bess"),
+  row("bess", "9.1", 35, "Fundație BESS",                                null, 5,    null, "constructii_bess"),
 
   // ── Section III: MONTAJ ──────────────────────────────────────────────
-  row("bess", "X", 7,  "MONTAJ",                                       null, null, null, "montaj_bess"),
-  row("bess", "10.1", 8,  "Închiriere macara + amplasare containere BESS",null, 2,    null, "montaj_bess"),
-  row("bess", "10.2", 9,  "Cablare interioară BESS",                      null, 4,    null, "montaj_bess"),
+  row("bess", "X", 36,  "MONTAJ",                                       null, null, null, "montaj_bess"),
+  row("bess", "10.1", 37,  "Închiriere macara + amplasare containere BESS",null, 2,    null, "montaj_bess"),
+  row("bess", "10.2", 38,  "Cablare interioară BESS",                      null, 4,    null, "montaj_bess"),
 
   // ── Section IV: CONECTARE ────────────────────────────────────────────
-  row("bess", "XI",  10, "CONECTARE",                                    null, null, null, "conectare_bess"),
-  row("bess", "11.1", 11, "Racord BESS la rețea",                         null, 2,    null, "conectare_bess"),
-  row("bess", "11.2", 12, "Conexiuni date / SCADA",                       null, 2,    null, "conectare_bess"),
+  row("bess", "XI",  39, "CONECTARE",                                    null, null, null, "conectare_bess"),
+  row("bess", "11.1", 40, "Racord BESS la rețea",                         null, 2,    null, "conectare_bess"),
+  row("bess", "11.2", 41, "Conexiuni date / SCADA",                       null, 2,    null, "conectare_bess"),
 
   // ── Section V: VERIFICĂRI ────────────────────────────────────────────
-  row("bess", "XII",   13, "VERIFICĂRI",                                   null, null, null, "verificari_bess"),
-  row("bess", "12.1", 14, "Verificări electrice + probe",                 null, 3,    null, "verificari_bess"),
+  row("bess", "XII",   42, "VERIFICĂRI",                                   null, null, null, "verificari_bess"),
+  row("bess", "12.1", 43, "Verificări electrice + probe",                 null, 3,    null, "verificari_bess"),
 ];
 
 // ── Composed checklist: PV Park A + BESS + PV Park B ─────────────────
@@ -101,12 +105,18 @@ export const CHECKLIST_TEMPLATE: ChecklistTemplateRow[] = [
   ...BESS_TEMPLATE,
 ];
 
+function computePct(planTotal: number | null, realizat: number | null, isSection: boolean): number | null {
+  if (isSection || planTotal == null || realizat == null) return null;
+  return Math.min(100, Math.max(0, (realizat / planTotal) * 100));
+}
+
 export function mergeChecklistRows(
   records: ChecklistItemRecord[],
 ): ChecklistRow[] {
   const recordMap = new Map(records.map((r) => [r.item_number, r]));
+  const templateNumbers = new Set(CHECKLIST_TEMPLATE.map((tmpl) => tmpl.number));
 
-  return CHECKLIST_TEMPLATE.map((tmpl) => {
+  const templateRows = CHECKLIST_TEMPLATE.map((tmpl) => {
     const record = recordMap.get(tmpl.number) ?? null;
 
     // DB values take precedence over static template defaults
@@ -114,14 +124,32 @@ export function mergeChecklistRows(
     const zile       = record?.zile       ?? tmpl.zile;
     const target_zi  = record?.target_zi  ?? tmpl.target_zi;
     const realizat   = record?.realizat   ?? null;
+    const pct = computePct(plan_total, realizat, tmpl.isSection);
 
-    let pct: number | null = null;
-    if (!tmpl.isSection && plan_total != null && realizat != null) {
-      pct = Math.min(100, Math.max(0, (realizat / plan_total) * 100));
-    }
-
-    return { ...tmpl, plan_total, zile, target_zi, record, pct };
+    return { ...tmpl, plan_total, zile, target_zi, record, pct, isCustom: false };
   });
+
+  // Custom tasks (item_number 44-100) have no CHECKLIST_TEMPLATE entry —
+  // build a synthetic row from the DB record's own name/phase.
+  const customRows = records
+    .filter((r) => !templateNumbers.has(r.item_number))
+    .sort((a, b) => a.item_number - b.item_number)
+    .map((record): ChecklistRow => ({
+      rowKey: `custom-${record.item_number}`,
+      cod: "",
+      number: record.item_number,
+      activitate: record.name ?? "",
+      plan_total: record.plan_total,
+      zile: record.zile,
+      target_zi: record.target_zi,
+      isSection: false,
+      phase: record.phase ?? "",
+      record,
+      pct: computePct(record.plan_total, record.realizat, false),
+      isCustom: true,
+    }));
+
+  return [...templateRows, ...customRows];
 }
 
 export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] {
@@ -161,14 +189,15 @@ export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] 
   >();
 
   for (const row of rows) {
-    if (row.isSection) continue;
-    const entry = map.get(row.phase) ?? { total: 0, pctSum: 0, completed: 0 };
+    if (row.isSection || row.isCustom) continue;
+    const phase = row.phase as ChecklistPhase;
+    const entry = map.get(phase) ?? { total: 0, pctSum: 0, completed: 0 };
     entry.total++;
     if (row.pct !== null) {
       entry.pctSum += row.pct;
       if (row.pct >= 100) entry.completed++;
     }
-    map.set(row.phase, entry);
+    map.set(phase, entry);
   }
 
   return ordered

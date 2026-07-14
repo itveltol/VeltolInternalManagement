@@ -59,15 +59,15 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
   const fullNumberFormatter = new Intl.NumberFormat(tag);
 
   return (
-    <div className="v-panel v-hairline relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between p-5 pb-0">
         <div>
-          <span className="mono-label text-[10px] text-veltol-fgMute">{labels.eyebrow}</span>
-          <h2 className="mt-0.5 font-display text-base font-semibold text-veltol-fg">{labels.title}</h2>
+          <span className="text-xs font-medium text-veltol-fgMute">{labels.eyebrow}</span>
+          <h2 className="mt-0.5 text-base font-semibold text-veltol-fg">{labels.title}</h2>
         </div>
         {availableYears.length > 0 && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-lg border border-veltol-aqua/15 bg-veltol-surface/40 px-2.5 py-1.5 font-mono text-[11px] text-veltol-fg transition-colors hover:bg-veltol-surface/70">
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-veltol-surface/40 px-2.5 py-1.5 text-[13px] text-veltol-fg transition-colors hover:bg-veltol-surface/70">
               {labels.yearLabel}: {selectedYear}
               <ChevronDownIcon className="size-3.5" />
             </DropdownMenuTrigger>
@@ -82,18 +82,12 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
         )}
       </div>
 
-      <div className="mt-4 h-px bg-gradient-to-r from-transparent via-veltol-aqua/20 to-transparent" />
+      <div className="mt-4 h-px bg-border" />
 
       <div className="p-5">
         {hasData ? (
           <ChartContainer>
             <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="incomeByMonthGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-veltol-aqua)" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="var(--color-veltol-teal)" stopOpacity={0.6} />
-                </linearGradient>
-              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis
                 dataKey="monthLabel"
@@ -116,7 +110,7 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
                   />
                 )}
               />
-              <Bar dataKey="totalEur" name={labels.incomeLabel} fill="url(#incomeByMonthGradient)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="totalEur" name={labels.incomeLabel} fill="var(--color-veltol-primary)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ChartContainer>
         ) : (
