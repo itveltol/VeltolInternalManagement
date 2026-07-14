@@ -1,29 +1,25 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseDocumentsClient } from "@/features/documents/api/supabaseDocumentsClient";
 import * as documentService from "@/features/documents/services/documentService";
 import type { Document, DocumentCategory, DocumentStatus } from "@/features/documents/types";
+import type { GetDocumentsFilter } from "@/features/documents/api/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
 
 async function requireMutator() {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!["admin", "project_manager"].includes(profile?.role ?? "")) {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (!["admin", "project_manager"].includes(role ?? "")) {
     throw new Error("Forbidden");
   }
   return { supabase, user };
@@ -40,10 +36,10 @@ function intOrDefault(raw: FormDataEntryValue | null, fallback: number): number 
   return isNaN(n) ? fallback : n;
 }
 
-export async function getDocuments(search?: string): Promise<Document[]> {
+export async function getDocuments(filter?: GetDocumentsFilter): Promise<Document[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseDocumentsClient(supabase);
-  return documentService.getDocuments(api, search ? { search } : undefined);
+  return documentService.getDocuments(api, filter);
 }
 
 export async function getResponsibleProfilesAction() {

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser } from "@/core/supabase/session";
 import type { ProjectPhase } from "@/features/projects/types";
 
 export type ActionState = { error?: string; success?: string } | null;
@@ -27,8 +27,7 @@ export type DashboardStats = {
 };
 
 export async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   return { supabase, user };
 }
 

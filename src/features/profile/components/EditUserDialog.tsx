@@ -32,8 +32,8 @@ export function EditUserDialog({ user, open, onClose }: Props) {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl sm:p-8">
-          <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-5 shadow-2xl sm:p-8">
+          <Dialog.Title className="text-xl font-semibold text-veltol-fg">
             {t("editTitle")}
           </Dialog.Title>
 
@@ -42,7 +42,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">
                   {t("firstName")}
                 </Label>
                 <Input
@@ -52,7 +52,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">
                   {t("lastName")}
                 </Label>
                 <Input
@@ -64,7 +64,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">
                 {t("phone")}
               </Label>
               <Input
@@ -75,16 +75,16 @@ export function EditUserDialog({ user, open, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">
                 {t("colRole")}
               </Label>
               <select
                 name="role"
                 defaultValue={user.role}
-                className="h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20"
+                className="h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20"
               >
                 {ROLES.map((r) => (
-                  <option key={r} value={r} className="bg-veltol-deep">
+                  <option key={r} value={r} className="bg-card">
                     {t(`role_${r}`)}
                   </option>
                 ))}
@@ -92,14 +92,14 @@ export function EditUserDialog({ user, open, onClose }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">
                 {t("medicalExamExpiry")}
               </Label>
               <input
                 name="medical_exam_expires_at"
                 type="date"
                 defaultValue={user.medical_exam_expires_at ?? ""}
-                className="h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20"
+                className="h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20"
               />
             </div>
 

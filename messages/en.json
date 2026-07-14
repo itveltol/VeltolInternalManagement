@@ -5,11 +5,13 @@
     "work": "Work",
     "projects": "Projects",
     "clients": "Clients",
+    "teams": "Teams",
     "system": "System",
     "profile": "Profile",
     "settings": "Settings",
     "activeProject": "Active project",
     "signOut": "Sign out",
+    "signingOut": "Signing out…",
     "matriceStatus": "Matrice Status",
     "vacation": "Vacation",
     "documents": "Documents",
@@ -67,6 +69,11 @@
     "saving": "Saving...",
     "emptyState": "No projects yet. Add your first project.",
     "viewChecklist": "Checklist",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "columns": {
       "id": "ID",
       "project": "Project",
@@ -149,6 +156,7 @@
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to edit this checklist.",
     "errorInvalidNumber": "Please enter a valid number.",
+    "errorCustomTaskLimit": "Maximum number of custom tasks reached for this project.",
     "columns": {
       "cod": "Code",
       "number": "#",
@@ -181,6 +189,36 @@
       "montaj_bess": "BESS installation",
       "conectare_bess": "BESS connection",
       "verificari_bess": "BESS verification"
+    },
+    "gantt": {
+      "tabLabel": "Gantt",
+      "breadcrumb": "Gantt",
+      "unscheduled": "{count} unscheduled tasks",
+      "customBadge": "Custom",
+      "emptyState": "No scheduled tasks yet. Click an unscheduled task above to give it dates.",
+      "taskColumn": "Task",
+      "today": "Today",
+      "addCustomTask": "Add custom task",
+      "scheduleTask": "Schedule task",
+      "taskName": "Task name",
+      "taskPhase": "Phase",
+      "planTotal": "Plan total",
+      "plannedDays": "Planned days",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "team": "Team",
+      "noTeam": "No team",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "taskScheduled": "Task scheduled.",
+      "taskCreated": "Task created.",
+      "deleteTask": "Delete task",
+      "confirmDeleteTask": "Delete this custom task? This cannot be undone.",
+      "taskDeleted": "Task deleted.",
+      "unscheduleTask": "Remove from Gantt",
+      "confirmUnscheduleTask": "Remove this task's dates and team from the Gantt chart?",
+      "taskUnscheduled": "Task removed from Gantt."
     }
   },
   "login": {
@@ -249,7 +287,10 @@
     "subtitle": "Activities × projects status matrix",
     "picker": {
       "label": "PROJECTS",
-      "empty": "No projects available."
+      "empty": "No projects available.",
+      "placeholder": "Search projects to add...",
+      "noResults": "No matching projects.",
+      "remove": "Remove {name}"
     },
     "grid": {
       "activity": "Activity",
@@ -271,6 +312,11 @@
     "subtitle": "Submit and manage team vacation requests",
     "yourBalance": "Your balance",
     "requesterBalance": "Requester's balance",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "requestVacation": "Request Vacation",
     "assignTo": "Assign to",
     "editRequest": "Edit Request",
@@ -292,7 +338,9 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "approve": "Approve",
+    "approving": "Approving...",
     "reject": "Reject",
+    "rejecting": "Rejecting...",
     "review": "Review",
     "generateDocument": "Generate document",
     "confirmCancel": "Cancel this vacation request?",
@@ -328,6 +376,11 @@
     "title": "Settings",
     "subtitle": "Manage system-wide configuration",
     "officialHolidays": "Official Holidays",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "date": "Date",
     "name": "Name",
     "addHoliday": "Add holiday",
@@ -352,6 +405,11 @@
     "title": "Clients",
     "subtitle": "Companies and persons associated with projects",
     "totalCount": "{count} clients total",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "addClient": "Add client",
     "editClient": "Edit",
     "deleteClient": "Delete",
@@ -392,11 +450,69 @@
       "notes": "Notes"
     }
   },
+  "teams": {
+    "eyebrow": "TEAMS · ALL",
+    "detailEyebrow": "TEAM · MEMBERS",
+    "title": "Teams",
+    "subtitle": "Groups of members, ready to be assigned to projects and tasks",
+    "totalCount": "{count} teams total",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "memberCount": "{count} members",
+    "addTeam": "Add team",
+    "editTeam": "Edit team",
+    "deleteTeam": "Delete team",
+    "confirmDelete": "Delete this team? Membership records will be removed.",
+    "teamSaved": "Team saved.",
+    "teamCreated": "Team created.",
+    "teamDeleted": "Team deleted.",
+    "removeMember": "Remove",
+    "confirmRemoveMember": "Remove this member from the team?",
+    "memberAdded": "Member added.",
+    "memberRemoved": "Member removed.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "emptyState": "No teams yet. Add your first team.",
+    "emptyMembers": "No members yet. Add someone below.",
+    "columns": {
+      "name": "Name",
+      "lead": "Lead",
+      "members": "Members",
+      "created": "Created",
+      "member": "Member",
+      "email": "Email",
+      "role": "Role"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "lead": "Team lead",
+      "noLead": "No lead"
+    },
+    "memberPicker": {
+      "label": "Add members",
+      "placeholder": "Search people...",
+      "empty": "No profiles available.",
+      "noResults": "No matches.",
+      "remove": "Remove {name}"
+    }
+  },
   "documents": {
     "eyebrow": "DOCUMENTS · ALL",
     "title": "Documents",
     "subtitle": "OneDrive / SharePoint links attached to projects, clients, activities and checklist items",
     "totalCount": "{count} documents total",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "addDocument": "Add document",
     "delete": "Delete",
     "cancel": "Cancel",
@@ -482,6 +598,11 @@
     "eyebrow": "PROFILE · ACCOUNT SETTINGS",
     "title": "Profile & account settings",
     "subtitle": "Personal information, password change and team management",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
     "personalTitle": "Personal information",
     "personalDesc": "You can update your name and phone number at any time.",
     "firstName": "First name",

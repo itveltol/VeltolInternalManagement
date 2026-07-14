@@ -22,7 +22,7 @@ export function ProjectDocumentsTab({ documents, project, canMutate }: Props) {
           href={project.onedrive_folder_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 font-mono text-[11px] text-veltol-aqua transition-opacity hover:opacity-75"
+          className="inline-flex items-center gap-1.5 font-mono text-[11px] text-veltol-accent transition-opacity hover:opacity-75"
         >
           <svg
             width="12"
@@ -41,9 +41,9 @@ export function ProjectDocumentsTab({ documents, project, canMutate }: Props) {
         </a>
       )}
 
-      <div className="v-panel v-hairline overflow-hidden rounded-xl">
-        <div className="border-b border-white/[0.06] px-6 py-4">
-          <span className="mono-label text-[10px] text-veltol-fgMute">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-b border-border px-6 py-4">
+          <span className="text-xs font-medium text-veltol-fgMute">
             {t("totalCount", { count: documents.length })}
           </span>
         </div>

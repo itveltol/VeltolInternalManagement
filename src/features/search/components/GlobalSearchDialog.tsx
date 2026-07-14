@@ -90,13 +90,13 @@ export function GlobalSearchDialog() {
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <Dialog.Popup
-          className="fixed left-1/2 top-[15%] z-50 w-full max-w-xl -translate-x-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep shadow-2xl"
+          className="fixed left-1/2 top-[15%] z-50 w-full max-w-xl -translate-x-1/2 rounded-xl border border-border bg-card shadow-2xl"
           onKeyDown={handleKeyDown}
         >
           <Dialog.Title className="sr-only">{t("title")}</Dialog.Title>
 
           {/* Input row */}
-          <div className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3">
+          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             {isPending ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-veltol-fgMute" />
             ) : (
@@ -110,7 +110,7 @@ export function GlobalSearchDialog() {
               placeholder={t("placeholder")}
               className="flex-1 bg-transparent font-mono text-sm text-veltol-fg placeholder:text-veltol-fgMute outline-none"
             />
-            <kbd className="rounded border border-white/10 bg-veltol-surface/60 px-1.5 py-0.5 font-mono text-[10px] text-veltol-fgMute">
+            <kbd className="rounded border border-border bg-veltol-surface/60 px-1.5 py-0.5 font-mono text-[10px] text-veltol-fgMute">
               ESC
             </kbd>
           </div>
@@ -134,7 +134,7 @@ export function GlobalSearchDialog() {
                   {results.projects.map((p, i) => (
                     <ResultItem
                       key={p.id}
-                      icon={<FolderKanban className="h-3.5 w-3.5 text-veltol-aqua" />}
+                      icon={<FolderKanban className="h-3.5 w-3.5 text-veltol-accent" />}
                       title={p.name}
                       subtitle={[p.county, p.contract_number].filter(Boolean).join(" · ")}
                       badge={p.current_phase}
@@ -151,7 +151,7 @@ export function GlobalSearchDialog() {
                   {results.clients.map((c, i) => (
                     <ResultItem
                       key={c.id}
-                      icon={<Building2 className="h-3.5 w-3.5 text-veltol-teal" />}
+                      icon={<Building2 className="h-3.5 w-3.5 text-veltol-primary" />}
                       title={c.name}
                       subtitle={c.contact_person ?? c.cui ?? ""}
                       badge={c.client_type}
@@ -216,7 +216,7 @@ function ResultItem({
       className={cn(
         "flex w-full items-center gap-3 border-l-2 px-4 py-2 text-left transition-colors",
         active
-          ? "border-veltol-aqua bg-veltol-surface/80"
+          ? "border-veltol-accent bg-veltol-surface/80"
           : "border-transparent hover:bg-veltol-surface/40",
       )}
     >

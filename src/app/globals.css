@@ -7,140 +7,101 @@
 /* ─── Veltol brand tokens ─── */
 @theme inline {
   /* shadcn semantic tokens wired to Veltol surfaces */
-  --color-background: var(--void);
-  --color-foreground: var(--fg);
-  --color-card: var(--deep);
-  --color-card-foreground: var(--fg);
-  --color-popover: var(--bg);
-  --color-popover-foreground: var(--fg);
-  --color-primary: var(--teal);
-  --color-primary-foreground: var(--fg);
-  --color-secondary: var(--surface);
-  --color-secondary-foreground: var(--fg);
-  --color-muted: var(--surface);
-  --color-muted-foreground: var(--fg-dim);
-  --color-accent: var(--surface);
-  --color-accent-foreground: var(--fg);
-  --color-destructive: var(--red);
-  --color-border: color-mix(in srgb, var(--aqua) 12%, transparent);
-  --color-input: color-mix(in srgb, var(--aqua) 10%, transparent);
-  --color-ring: var(--aqua);
+  --color-background: var(--v-bg);
+  --color-foreground: var(--v-fg);
+  --color-card: var(--v-card);
+  --color-card-foreground: var(--v-fg);
+  --color-popover: var(--v-popover);
+  --color-popover-foreground: var(--v-fg);
+  --color-primary: var(--v-primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--v-surface);
+  --color-secondary-foreground: var(--v-fg);
+  --color-muted: var(--v-surface);
+  --color-muted-foreground: var(--v-fg-dim);
+  --color-accent: var(--v-surface);
+  --color-accent-foreground: var(--v-accent);
+  --color-destructive: var(--v-red);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--v-border);
+  --color-input: var(--v-surface);
+  --color-ring: var(--v-accent);
 
   /* Veltol color palette */
-  --color-veltol-void: #020B12;
-  --color-veltol-deep: #041620;
-  --color-veltol-bg: #061F2C;
-  --color-veltol-surface: #0A2C3C;
-  --color-veltol-navy: #0B1E3E;
-  --color-veltol-bluedp: #163D64;
-  --color-veltol-blue: #1A5F88;
-  --color-veltol-teal: #1E8FA2;
-  --color-veltol-aqua: #2BC4C8;
-  --color-veltol-aquaHi: #4DD9DB;
-  --color-veltol-magenta: #C042FF;
-  --color-veltol-green: #2FE8A6;
-  --color-veltol-amber: #FFC043;
-  --color-veltol-red: #FF6B7A;
-  --color-veltol-fg: #E8F5F6;
-  --color-veltol-fgDim: #8FB5BC;
-  --color-veltol-fgMute: #4A6872;
-
-  /* Named gradients */
-  --background-image-v-gradient: linear-gradient(135deg, #0B1E3E 0%, #163D64 25%, #1A5F88 45%, #1E8FA2 70%, #2BC4C8 100%);
-  --background-image-v-gradient-soft: linear-gradient(135deg, rgba(11,30,62,0.4) 0%, rgba(22,61,100,0.35) 30%, rgba(30,143,162,0.35) 70%, rgba(43,196,200,0.35) 100%);
-  --background-image-v-gradient-line: linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8);
-  --background-image-v-gradient-aurora: linear-gradient(120deg, #0B1E3E 0%, #163D64 20%, rgba(192,66,255,0.25) 45%, #1E8FA2 70%, #2BC4C8 100%);
-
-  /* Shadows */
-  --shadow-v-glow: 0 8px 28px -6px rgba(30,143,162,0.5), inset 0 0 0 1px rgba(255,255,255,0.08);
-  --shadow-v-glow-lg: 0 16px 40px -10px rgba(30,143,162,0.45);
-  --shadow-v-aqua-sm: 0 0 8px rgba(43,196,200,0.6);
+  --color-veltol-bg: #0d1b2b;
+  --color-veltol-card: #122236;
+  --color-veltol-popover: #182c43;
+  --color-veltol-surface: #1f3651;
+  --color-veltol-border: #2b4769;
+  --color-veltol-primary: #225ba0;
+  --color-veltol-primaryHi: #2e70c2;
+  --color-veltol-bright: #42adfa;
+  --color-veltol-accent: #2bace3;
+  --color-veltol-accentHi: #58c1ea;
+  --color-veltol-green: #5fba6a;
+  --color-veltol-orange: #f5882a;
+  --color-veltol-red: #e0525f;
+  --color-veltol-fg: #EDF0F7;
+  --color-veltol-fgDim: #9AA3C0;
+  --color-veltol-fgMute: #616D93;
 
   /* Fonts */
-  --font-brand: var(--font-audiowide), sans-serif;
-  --font-display: var(--font-space-grotesk), sans-serif;
-  --font-sans: var(--font-inter), sans-serif;
+  --font-sans: var(--font-exo2), sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.25);
+  --radius-xl: calc(var(--radius) * 1.75);
+  --radius-2xl: calc(var(--radius) * 2.25);
 }
 
 /* ─── CSS custom properties ─── */
 :root {
-  --void:    #020B12;
-  --deep:    #041620;
-  --bg:      #061F2C;
-  --surface: #0A2C3C;
-  --navy:    #0B1E3E;
-  --bluedp:  #163D64;
-  --blue:    #1A5F88;
-  --teal:    #1E8FA2;
-  --aqua:    #2BC4C8;
-  --aqua-hi: #4DD9DB;
-  --magenta: #C042FF;
-  --green:   #2FE8A6;
-  --amber:   #FFC043;
-  --red:     #FF6B7A;
-  --fg:      #E8F5F6;
-  --fg-dim:  #8FB5BC;
-  --fg-mute: #4A6872;
-  --radius:  0.625rem;
+  /* Background tiers — clean blue ramp (hue 213°, shifted from the original
+     225-228° which sat too close to the blue/violet boundary and read as purple) */
+  --v-bg:      #0d1b2b;
+  --v-card:    #122236;
+  --v-popover: #182c43;
+  --v-surface: #1f3651;
+  --v-border:  #2b4769;
+
+  /* Brand hues */
+  --v-primary:    #225ba0;
+  --v-primary-hi: #2e70c2;
+  --v-bright:     #42adfa;  /* vivid azure highlight — distinct from --v-accent, for CTAs/highlights */
+  --v-accent:     #2bace3;
+  --v-accent-hi:  #58c1ea;
+  --v-green:      #5fba6a;
+  --v-orange:     #f5882a;
+  --v-red:        #e0525f;
+
+  /* Foreground tiers — white ramp with a hint of navy hue */
+  --v-fg:      #EDF0F7;
+  --v-fg-dim:  #9AA3C0;
+  --v-fg-mute: #616D93;
+
+  --radius: 0.5rem;
 }
 
-/* ─── Dark aurora canvas ─── */
+/* ─── Flat dark background ─── */
 .dark body {
-  background-color: #020B12;
-  background-image:
-    radial-gradient(circle at 15% 12%, rgba(30, 143, 162, 0.12), transparent 45%),
-    radial-gradient(circle at 85% 88%, rgba(43, 196, 200, 0.08), transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(192, 66, 255, 0.03), transparent 70%);
-  background-attachment: fixed;
+  background-color: var(--v-bg);
 }
 
 /* ─── Utility classes ─── */
 .mono-label {
   font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-}
-
-.v-panel {
-  background: rgba(10, 44, 60, 0.55);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(90, 200, 210, 0.08);
-}
-
-.v-hairline {
-  position: relative;
-}
-.v-hairline::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 16px;
-  right: 16px;
-  height: 1px;
-  background: linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8);
-  opacity: 0.4;
-}
-
-.v-text-gradient {
-  background: linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.08em;
 }
 
 .v-live-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #2FE8A6;
-  box-shadow: 0 0 10px #2FE8A6;
+  background: var(--v-green);
+  box-shadow: 0 0 6px var(--v-green);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 

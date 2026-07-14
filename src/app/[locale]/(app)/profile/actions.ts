@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
@@ -17,20 +17,15 @@ async function getProfilePath() {
 }
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
 
 async function requireAdmin() {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") throw new Error("Forbidden");
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (role !== "admin") throw new Error("Forbidden");
   return { supabase, user };
 }
 
@@ -106,8 +101,7 @@ export async function inviteUser(
   formData: FormData,
 ): Promise<ActionState> {
   try {
-    await requireAdmin();
-    const supabase = await createClient();
+    const { supabase } = await requireAdmin();
     const adminClient = createAdminClient();
     const client = createSupabaseProfileClient(supabase, adminClient as Parameters<typeof createSupabaseProfileClient>[1]);
     const siteUrl =
@@ -133,9 +127,8 @@ export async function inviteUser(
 
 export async function deleteUser(userId: string): Promise<ActionState> {
   try {
-    const { user } = await requireAdmin();
+    const { supabase, user } = await requireAdmin();
     if (userId === user.id) return { error: "errorSelfDelete" };
-    const supabase = await createClient();
     const adminClient = createAdminClient();
     const client = createSupabaseProfileClient(supabase, adminClient as Parameters<typeof createSupabaseProfileClient>[1]);
     await profileService.deleteUser(client, userId);

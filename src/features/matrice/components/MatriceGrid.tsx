@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from "../types";
 import {
-  resolveStatus,
   projectCompletionPct,
   phaseCompletionPct,
   activityRowPct,
@@ -19,26 +18,80 @@ interface Props {
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   docCounts?: Map<string, number>;
+  pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, docCounts = new Map() }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, docCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
-  const phases = Array.from(
-    new Map(activities.map((a) => [a.phase_no, a.phase_name])).entries(),
-  ).sort((a, b) => a[0] - b[0]);
+  const phases = useMemo(
+    () =>
+      Array.from(
+        new Map(activities.map((a) => [a.phase_no, a.phase_name])).entries(),
+      ).sort((a, b) => a[0] - b[0]),
+    [activities],
+  );
 
   const [collapsedPhases, setCollapsedPhases] = useState<Set<number>>(new Set());
 
-  function togglePhase(phaseNo: number) {
+  const togglePhase = useCallback((phaseNo: number) => {
     setCollapsedPhases((prev) => {
       const next = new Set(prev);
       next.has(phaseNo) ? next.delete(phaseNo) : next.add(phaseNo);
       return next;
     });
-  }
+  }, []);
 
-  const projectIds = projects.map((p) => p.id);
+  const projectIds = useMemo(() => projects.map((p) => p.id), [projects]);
+
+  // Precompute per-cell status and all completion percentages once per data
+  // change instead of re-scanning `cells`/`activities` inline during render.
+  const statusByKey = useMemo(() => {
+    const map = new Map<string, ActivityStatus>();
+    for (const c of cells) map.set(`${c.project_id}:${c.activity_id}`, c.status);
+    return map;
+  }, [cells]);
+
+  const getStatus = useCallback(
+    (projectId: number, activityId: number) =>
+      statusByKey.get(`${projectId}:${activityId}`) ?? "neinceput",
+    [statusByKey],
+  );
+
+  const projectPctById = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const p of projects) map.set(p.id, projectCompletionPct(activities, cells, p.id));
+    return map;
+  }, [activities, cells, projects]);
+
+  const phasePctByKey = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [phaseNo] of phases) {
+      for (const p of projects) {
+        map.set(`${phaseNo}:${p.id}`, phaseCompletionPct(activities, cells, p.id, phaseNo));
+      }
+    }
+    return map;
+  }, [activities, cells, projects, phases]);
+
+  const activityRowPctById = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const a of activities) {
+      if (a.is_section_header) continue;
+      map.set(a.id, activityRowPct(cells, a.id, projectIds));
+    }
+    return map;
+  }, [activities, cells, projectIds]);
+
+  const activitiesByPhase = useMemo(() => {
+    const map = new Map<number, Activity[]>();
+    for (const a of activities) {
+      const list = map.get(a.phase_no);
+      if (list) list.push(a);
+      else map.set(a.phase_no, [a]);
+    }
+    return map;
+  }, [activities]);
 
   if (projects.length === 0) {
     return (
@@ -52,7 +105,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-white/[0.07]">
+          <tr className="border-b border-border">
             {/* Sticky: phase col */}
             <th className="sticky left-0 z-20 w-6 bg-veltol-bg px-1" />
             {/* Sticky: activity col */}
@@ -73,8 +126,8 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                 {p.project_type && (
                   <div className="mt-0.5 font-mono text-[9px] text-veltol-fgMute">{p.project_type}</div>
                 )}
-                <div className="mt-1 font-mono text-[11px] tabular-nums text-veltol-aqua">
-                  {projectCompletionPct(activities, cells, p.id)}%
+                <div className="mt-1 font-mono text-[11px] tabular-nums text-veltol-accent">
+                  {projectPctById.get(p.id) ?? 0}%
                 </div>
               </th>
             ))}
@@ -82,14 +135,14 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
         </thead>
         <tbody>
           {phases.map(([phaseNo, phaseName]) => {
-            const phaseActivities = activities.filter((a) => a.phase_no === phaseNo);
+            const phaseActivities = activitiesByPhase.get(phaseNo) ?? [];
             const isCollapsed = collapsedPhases.has(phaseNo);
 
             return [
               // Phase header row
               <tr
                 key={`phase-${phaseNo}`}
-                className="cursor-pointer select-none border-b border-white/[0.04] bg-veltol-surface/30 hover:bg-veltol-surface/50"
+                className="cursor-pointer select-none border-b border-border bg-veltol-surface/30 hover:bg-veltol-surface/50"
                 onClick={() => togglePhase(phaseNo)}
               >
                 {/* collapse arrow */}
@@ -106,7 +159,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                 </td>
                 {projects.map((p) => (
                   <td key={p.id} className="px-2 py-2 text-center font-mono text-[11px] tabular-nums text-veltol-fgDim">
-                    {phaseCompletionPct(activities, cells, p.id, phaseNo)}%
+                    {phasePctByKey.get(`${phaseNo}:${p.id}`) ?? 0}%
                   </td>
                 ))}
               </tr>,
@@ -118,7 +171,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                       return (
                         <tr
                           key={`activity-${activity.id}`}
-                          className="border-b border-white/[0.04] bg-veltol-surface/10"
+                          className="border-b border-border bg-veltol-surface/10"
                         >
                           <td className="sticky left-0 z-10 bg-veltol-surface/10" />
                           <td
@@ -131,12 +184,12 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                       );
                     }
 
-                    const rowPct = activityRowPct(cells, activity.id, projectIds);
+                    const rowPct = activityRowPctById.get(activity.id) ?? 0;
 
                     return (
                       <tr
                         key={`activity-${activity.id}`}
-                        className="border-b border-white/[0.04] hover:bg-veltol-surface/20"
+                        className="border-b border-border hover:bg-veltol-surface/20"
                       >
                         <td className="sticky left-0 z-10 bg-veltol-bg" />
                         <td className="sticky left-6 z-10 bg-veltol-bg px-3 py-1.5 text-[12px] text-veltol-fg/80">
@@ -146,7 +199,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                           {rowPct}%
                         </td>
                         {projects.map((p) => {
-                          const status = resolveStatus(cells, p.id, activity.id);
+                          const status = getStatus(p.id, activity.id);
                           return (
                             <td key={p.id} className="px-1.5 py-1">
                               <MatriceCell
@@ -154,8 +207,9 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                 projectId={p.id}
                                 activityId={activity.id}
                                 onChangeStatus={onChangeStatus}
-                                onOpenDocuments={() => onOpenDocuments(p.id, activity.id)}
+                                onOpenDocuments={onOpenDocuments}
                                 documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
+                                pending={pendingCells?.has(`${p.id}:${activity.id}`)}
                               />
                             </td>
                           );

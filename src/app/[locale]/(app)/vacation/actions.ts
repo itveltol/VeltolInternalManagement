@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseVacationClient } from "@/features/vacation/api/supabaseVacationClient";
@@ -20,31 +20,22 @@ async function getVacationPath() {
 }
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
 
 async function requireAdmin() {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (profile?.role !== "admin") throw new Error("Forbidden");
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (role !== "admin") throw new Error("Forbidden");
   return { supabase, user };
 }
 
 export async function getVacationRequests(): Promise<VacationRequest[]> {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  const isAdmin = profile?.role === "admin";
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  const isAdmin = role === "admin";
   const client = createSupabaseVacationClient(supabase);
   return vacationService.getRequests(client, user.id, isAdmin);
 }

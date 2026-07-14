@@ -7,10 +7,7 @@ import { InlineSearchBar } from "@/features/search/components/InlineSearchBar";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
-    <header
-      className="relative flex shrink-0 flex-col gap-2 border-b border-white/[0.07] px-3 py-2 sm:px-6 lg:h-[62px] lg:flex-row lg:items-center lg:py-0"
-      style={{ background: "rgba(6, 15, 26, 0.75)", backdropFilter: "blur(20px)" }}
-    >
+    <header className="relative flex shrink-0 flex-col gap-2 border-b border-border bg-card px-3 py-2 sm:px-6 lg:h-[62px] lg:flex-row lg:items-center lg:py-0">
       <div className="flex items-center gap-2 lg:min-w-0 lg:flex-1">
         {/* Mobile/tablet nav trigger */}
         <Button

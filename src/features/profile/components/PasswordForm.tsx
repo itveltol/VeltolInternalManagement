@@ -13,17 +13,17 @@ export function PasswordForm() {
 
   return (
     <div
-      className="v-panel v-hairline overflow-hidden rounded-xl px-8 py-8"
+      className="overflow-hidden rounded-xl border border-border bg-card px-8 py-8"
       style={{ background: "rgba(6, 10, 18, 0.6)" }}
     >
-      <div className="mono-label mb-1 text-[9px] text-veltol-fgMute">
+      <div className="mb-1 text-[11px] font-medium text-veltol-fgMute">
         {t("passwordTitle")}
       </div>
       <p className="mb-6 text-sm text-veltol-fgDim">{t("passwordDesc")}</p>
 
       <form action={action} className="max-w-sm space-y-4">
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">
+          <Label className="text-[11px] font-medium text-veltol-fgMute">
             {t("newPassword")}
           </Label>
           <Input
@@ -35,7 +35,7 @@ export function PasswordForm() {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">
+          <Label className="text-[11px] font-medium text-veltol-fgMute">
             {t("confirmPassword")}
           </Label>
           <Input

@@ -35,18 +35,12 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
   const [phone, setPhone] = useState(profile?.phone ?? "");
 
   return (
-    <div className="v-panel v-hairline overflow-hidden rounded-xl">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex flex-col gap-0 md:flex-row">
         {/* Identity column */}
-        <div className="flex flex-col items-center gap-4 border-b border-white/[0.06] px-8 py-8 md:w-56 md:shrink-0 md:border-b-0 md:border-r">
+        <div className="flex flex-col items-center gap-4 border-b border-border px-8 py-8 md:w-56 md:shrink-0 md:border-b-0 md:border-r">
           <Avatar className="h-20 w-20">
-            <AvatarFallback
-              className="font-brand text-2xl font-bold text-white"
-              style={{
-                background:
-                  "linear-gradient(135deg, #0B1E3E 0%, #163D64 25%, #1A5F88 45%, #1E8FA2 70%, #2BC4C8 100%)",
-              }}
-            >
+            <AvatarFallback className="bg-veltol-primary text-2xl font-bold text-white">
               {initials(profile)}
             </AvatarFallback>
           </Avatar>
@@ -71,7 +65,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
           <div className="w-full space-y-1 text-left">
             {profile?.phone && (
               <div>
-                <div className="mono-label text-[9px] text-veltol-fgMute">
+                <div className="text-[11px] font-medium text-veltol-fgMute">
                   {t("phone")}
                 </div>
                 <div className="font-mono text-[12px] text-veltol-fgDim">
@@ -81,7 +75,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
             )}
             {profile?.created_at && (
               <div>
-                <div className="mono-label text-[9px] text-veltol-fgMute">
+                <div className="text-[11px] font-medium text-veltol-fgMute">
                   {t("joined")}
                 </div>
                 <div className="font-mono text-[12px] text-veltol-fgDim">
@@ -94,7 +88,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
 
         {/* Edit form column */}
         <div className="flex-1 px-8 py-8">
-          <div className="mono-label mb-1 text-[9px] text-veltol-fgMute">
+          <div className="mb-1 text-[11px] font-medium text-veltol-fgMute">
             {t("personalTitle")}
           </div>
           <p className="mb-6 text-sm text-veltol-fgDim">{t("personalDesc")}</p>
@@ -102,7 +96,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
           <form action={action} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">
                   {t("firstName")}
                 </Label>
                 <Input
@@ -113,7 +107,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="mono-label text-[9px] text-veltol-fgMute">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">
                   {t("lastName")}
                 </Label>
                 <Input
@@ -126,7 +120,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">
                 {t("email")}
               </Label>
               <Input
@@ -139,7 +133,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="mono-label text-[9px] text-veltol-fgMute">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">
                 {t("phone")}
               </Label>
               <Input

@@ -1,14 +1,17 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
+import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import * as projectService from "@/features/projects/services/projectService";
+import * as teamService from "@/features/teams/services/teamService";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import type { Project } from "@/features/projects/types";
 import type { DailyLogRecord } from "@/features/projects/checklists/types";
+import type { Team } from "@/features/teams/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -18,20 +21,15 @@ async function getChecklistPath(projectId: number) {
 }
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
 
 async function requireMutator() {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!["admin", "project_manager"].includes(profile?.role ?? "")) {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (!["admin", "project_manager"].includes(role ?? "")) {
     throw new Error("Forbidden");
   }
   return { supabase, user };
@@ -41,6 +39,12 @@ function intOrNull(raw: FormDataEntryValue | null): number | null {
   if (raw === null || raw === "") return null;
   const n = parseInt(raw as string, 10);
   return isNaN(n) ? null : n;
+}
+
+function strOrNull(raw: FormDataEntryValue | null): string | null {
+  if (raw === null) return null;
+  const s = (raw as string).trim();
+  return s === "" ? null : s;
 }
 
 export async function getProject(projectId: number): Promise<Project | null> {
@@ -109,6 +113,118 @@ export async function getDailyLog(itemId: number): Promise<DailyLogRecord[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseChecklistClient(supabase);
   return checklistService.getDailyLog(client, itemId);
+}
+
+export async function getTeamsForGantt(): Promise<Team[]> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseTeamsClient(supabase);
+  return teamService.getTeams(client);
+}
+
+export async function scheduleChecklistItemAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseChecklistClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const itemNumber = Number(formData.get("item_number"));
+    if (!projectId || !itemNumber) return { error: "errorGeneric" };
+
+    const start_date = strOrNull(formData.get("start_date"));
+    const end_date = strOrNull(formData.get("end_date"));
+    const team_id = intOrNull(formData.get("team_id"));
+
+    await checklistService.scheduleChecklistItem(client, {
+      projectId, itemNumber, start_date, end_date, team_id,
+    });
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "taskScheduled" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function unscheduleChecklistItemAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseChecklistClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const itemNumber = Number(formData.get("item_number"));
+    if (!projectId || !itemNumber) return { error: "errorGeneric" };
+
+    await checklistService.scheduleChecklistItem(client, {
+      projectId, itemNumber, start_date: null, end_date: null, team_id: null,
+    });
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "taskUnscheduled" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function createCustomTaskAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseChecklistClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const name = ((formData.get("name") as string) ?? "").trim();
+    const phase = ((formData.get("phase") as string) ?? "").trim();
+    if (!projectId || !name) return { error: "errorGeneric" };
+
+    const plan_total = intOrNull(formData.get("plan_total"));
+    const zile = intOrNull(formData.get("zile"));
+    const start_date = strOrNull(formData.get("start_date"));
+    const end_date = strOrNull(formData.get("end_date"));
+    const team_id = intOrNull(formData.get("team_id"));
+
+    await checklistService.createCustomTask(client, {
+      projectId, name, phase, plan_total, zile, start_date, end_date, team_id,
+    });
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "taskCreated" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message === "customTaskLimitReached") return { error: "errorCustomTaskLimit" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function deleteCustomTaskAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseChecklistClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const itemNumber = Number(formData.get("item_number"));
+    if (!projectId || !itemNumber) return { error: "errorGeneric" };
+
+    await checklistService.deleteCustomTask(client, projectId, itemNumber);
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "taskDeleted" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
 }
 
 export async function getProjectDocuments(projectId: number) {

@@ -1,19 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Audiowide, Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Exo_2, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const audiowide = Audiowide({
-  weight: "400",
+const exo2 = Exo_2({
+  weight: "variable",
   subsets: ["latin"],
-  variable: "--font-audiowide",
-});
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-});
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-exo2",
 });
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -35,7 +27,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      className={`dark ${audiowide.variable} ${spaceGrotesk.variable} ${inter.variable} ${jetbrains.variable} h-full antialiased`}
+      className={`dark ${exo2.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>

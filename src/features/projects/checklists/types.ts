@@ -25,6 +25,11 @@ export interface ChecklistTemplateRow {
   phase: ChecklistPhase;
 }
 
+export interface ChecklistTeamRef {
+  id: number;
+  name: string;
+}
+
 export interface ChecklistItemRecord {
   id: number;
   project_id: number;
@@ -35,6 +40,14 @@ export interface ChecklistItemRecord {
   target_zi: number | null;
   notes: string | null;
   updated_at: string;
+  start_date: string | null;
+  end_date: string | null;
+  team_id: number | null;
+  team?: ChecklistTeamRef | null;
+  /** Only set for custom (non-template) items — item_number 44-100. */
+  name: string | null;
+  /** Only set for custom (non-template) items — item_number 44-100. */
+  phase: string | null;
 }
 
 export interface DailyLogRecord {
@@ -45,9 +58,12 @@ export interface DailyLogRecord {
   updated_at: string;
 }
 
-export interface ChecklistRow extends ChecklistTemplateRow {
+export interface ChecklistRow extends Omit<ChecklistTemplateRow, "phase"> {
+  phase: ChecklistPhase | string;
   record: ChecklistItemRecord | null;
   pct: number | null;
+  /** True for custom tasks (item_number 44-100) with no CHECKLIST_TEMPLATE entry. */
+  isCustom: boolean;
 }
 
 export interface SectionSummary {

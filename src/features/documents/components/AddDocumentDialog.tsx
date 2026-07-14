@@ -37,8 +37,8 @@ export function AddDocumentDialog() {
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && closeAddDialog()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
-        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-white/[0.08] bg-veltol-deep p-5 shadow-2xl overflow-y-auto max-h-[90vh] sm:p-8">
-          <Dialog.Title className="font-display text-xl font-semibold text-veltol-fg">
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-5 shadow-2xl overflow-y-auto max-h-[90vh] sm:p-8">
+          <Dialog.Title className="text-xl font-semibold text-veltol-fg">
             {t("addDocument")}
           </Dialog.Title>
           {addContext && (

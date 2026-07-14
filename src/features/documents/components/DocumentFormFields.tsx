@@ -7,10 +7,10 @@ import type { DocumentCategory, DocumentStatus, Document } from "../types";
 import type { ResponsibleProfile } from "../hooks/useDocumentsStore";
 
 const INPUT_CLASS =
-  "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20";
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
 
 const SELECT_CLASS =
-  "h-8 w-full rounded-lg border border-white/10 bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-aqua/50 focus:ring-2 focus:ring-veltol-aqua/20 appearance-none";
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 appearance-none";
 
 interface Props {
   defaults?: Partial<Document>;
@@ -42,7 +42,7 @@ export function DocumentFormFields({
     <>
       {/* Name */}
       <div className="space-y-1.5">
-        <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.name")} *</Label>
+        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
         <input
           name="name"
           type="text"
@@ -55,7 +55,7 @@ export function DocumentFormFields({
 
       {/* URL */}
       <div className="space-y-1.5">
-        <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.url")} *</Label>
+        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.url")} *</Label>
         <input
           name="url"
           type="url"
@@ -69,7 +69,7 @@ export function DocumentFormFields({
       {/* Category + Status row */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.category")}</Label>
+          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.category")}</Label>
           <select name="category" defaultValue={defaults?.category ?? ""} className={SELECT_CLASS}>
             <option value="">—</option>
             {DOCUMENT_CATEGORIES.map((c) => (
@@ -78,7 +78,7 @@ export function DocumentFormFields({
           </select>
         </div>
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.status")}</Label>
+          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
           <select
             name="status"
             value={status}
@@ -96,7 +96,7 @@ export function DocumentFormFields({
       {/* Submitted at (shown when submitted/obtained/rejected) */}
       {showSubmittedAt && (
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.submittedAt")}</Label>
+          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.submittedAt")}</Label>
           <input
             name="submitted_at"
             type="date"
@@ -109,7 +109,7 @@ export function DocumentFormFields({
       {/* Obtained at (shown when obtained) */}
       {showObtainedAt && (
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.obtainedAt")}</Label>
+          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.obtainedAt")}</Label>
           <input
             name="obtained_at"
             type="date"
@@ -121,7 +121,7 @@ export function DocumentFormFields({
 
       {/* Responsible person */}
       <div className="space-y-1.5">
-        <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.responsible")}</Label>
+        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.responsible")}</Label>
         <select name="responsible_id" defaultValue={defaults?.responsible_id ?? ""} className={SELECT_CLASS}>
           <option value="">—</option>
           {responsibleProfiles.map((p) => (
@@ -132,7 +132,7 @@ export function DocumentFormFields({
 
       {/* Version */}
       <div className="space-y-1.5">
-        <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.version")}</Label>
+        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.version")}</Label>
         <input
           name="version"
           type="number"
@@ -150,9 +150,9 @@ export function DocumentFormFields({
           type="checkbox"
           checked={isRenewable}
           onChange={(e) => onIsRenewableChange(e.target.checked)}
-          className="h-3.5 w-3.5 rounded border border-white/20 bg-veltol-surface/60 accent-veltol-aqua"
+          className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface/60 accent-veltol-accent"
         />
-        <Label htmlFor="is_renewable" className="mono-label cursor-pointer text-[9px] text-veltol-fgMute">
+        <Label htmlFor="is_renewable" className="cursor-pointer text-[11px] font-medium text-veltol-fgMute">
           {t("fields.isRenewable")}
         </Label>
       </div>
@@ -160,7 +160,7 @@ export function DocumentFormFields({
       {/* Expiry date (only when renewable) */}
       {isRenewable && (
         <div className="space-y-1.5">
-          <Label className="mono-label text-[9px] text-veltol-fgMute">{t("fields.expiresAt")}</Label>
+          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.expiresAt")}</Label>
           <input
             name="expires_at"
             type="date"

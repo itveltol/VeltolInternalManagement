@@ -21,8 +21,8 @@ export function HolidaysListCard({ holidays }: Props) {
   if (holidays.length === 0) return null;
 
   return (
-    <div className="v-panel v-hairline rounded-xl p-5">
-      <div className="mono-label mb-3 text-[9px] text-veltol-fgMute">{t("officialHolidays")}</div>
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="mb-3 text-[11px] font-medium text-veltol-fgMute">{t("officialHolidays")}</div>
       <ul className="space-y-1.5">
         {holidays.map((holiday) => (
           <li key={holiday.id} className="flex items-center justify-between text-[13px]">

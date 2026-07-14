@@ -12,25 +12,25 @@ interface Props {
 
 export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, tPhase }: Props) {
   return (
-    <div className="v-panel v-hairline relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div className="p-5">
         <div className="flex items-center justify-between">
           <div>
-            <span className="mono-label text-[10px] text-veltol-fgMute">{eyebrow}</span>
-            <h2 className="mt-0.5 font-display text-base font-semibold text-veltol-fg">{title}</h2>
+            <span className="text-xs font-medium text-veltol-fgMute">{eyebrow}</span>
+            <h2 className="mt-0.5 text-base font-semibold text-veltol-fg">{title}</h2>
           </div>
           {/* <div className="inline-flex items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/[0.08] px-2.5 py-1">
             <div className="v-live-dot" />
-            <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-veltol-green">
+            <span className="text-[10px] font-medium text-veltol-green">
               {liveLabel}
             </span>
           </div> */}
         </div>
       </div>
 
-      <div className="h-px bg-gradient-to-r from-transparent via-veltol-aqua/20 to-transparent" />
+      <div className="h-px bg-border" />
 
-      <div className="divide-y divide-white/[0.04]">
+      <div className="divide-y divide-border">
         {projects.map((project) => (
           <div key={project.id} className="flex items-center gap-4 px-5 py-3.5">
             <div className="min-w-0 flex-1">

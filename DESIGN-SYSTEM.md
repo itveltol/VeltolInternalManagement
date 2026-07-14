@@ -1,17 +1,15 @@
 # Veltol Project Cloud — Design System Guide
 
 > Copy this file into any new project that should match the Veltol brand.
-> Visual reference: https://claude.ai/code/artifact/277a2219-9a91-45ea-b543-bfc03333e681
 
 ---
 
-## Quick start — 3 files to copy
+## Quick start — 2 files to copy
 
-1. `tailwind.config.ts` — all brand tokens as Tailwind classes
-2. `src/app/globals.css` — dark-mode aurora canvas, utility classes, CSS variables
-3. `src/app/layout.tsx` — 4 Google Font imports and CSS variable assignments
+1. `src/app/globals.css` — dark flat canvas, utility classes, CSS variables
+2. `src/app/layout.tsx` — 2 Google Font imports and CSS variable assignments
 
-After that, every color, shadow, and font decision flows from those three files.
+After that, every color, shadow, and font decision flows from those two files.
 
 ---
 
@@ -21,70 +19,57 @@ Paste into `:root` in `globals.css`. All component colors derive from these — 
 
 ```css
 :root {
-  /* Foundations — dark field */
-  --void:    #020B12;   /* base background */
-  --deep:    #041620;   /* card background */
-  --bg:      #061F2C;   /* popover background */
-  --surface: #0A2C3C;   /* secondary / muted */
-  --navy:    #0B1E3E;   /* gradient start */
+  /* Background tiers — clean blue ramp, hue 213° */
+  --v-bg:      #0d1b2b;   /* page background */
+  --v-card:    #122236;   /* card background */
+  --v-popover: #182c43;   /* popover / dropdown / modal background */
+  --v-surface: #1f3651;   /* secondary / muted surface, input fill, hover fill */
+  --v-border:  #2b4769;   /* flat opaque hairline border */
 
-  /* Brand spectrum — teal gradient spine */
-  --bluedp:  #163D64;   /* gradient 25% stop */
-  --blue:    #1A5F88;   /* gradient 45% stop */
-  --teal:    #1E8FA2;   /* primary color */
-  --aqua:    #2BC4C8;   /* accent · ring · active state */
-  --aqua-hi: #4DD9DB;   /* hover on aqua elements */
+  /* Brand hues */
+  --v-primary:    #225ba0;  /* primary color */
+  --v-primary-hi: #2e70c2;  /* hover/active state for primary */
+  --v-bright:     #42adfa;  /* vivid azure highlight — CTAs, prominent accents */
+  --v-accent:     #2bace3;  /* accent · ring · active state ("the signal") */
+  --v-accent-hi:  #58c1ea;  /* hover on accent elements */
+  --v-green:      #5fba6a;  /* success · residential segment */
+  --v-orange:     #f5882a;  /* warning · CTA · "new" tags · industrial segment */
+  --v-red:        #e0525f;  /* destructive — derived, brand has no red */
 
-  /* Semantic / status */
-  --magenta: #C042FF;   /* aurora plasma node only */
-  --green:   #2FE8A6;   /* success · live dot */
-  --amber:   #FFC043;   /* warning */
-  --red:     #FF6B7A;   /* destructive */
-
-  /* Foreground scale */
-  --fg:      #E8F5F6;   /* primary text */
-  --fg-dim:  #8FB5BC;   /* secondary text / descriptions */
-  --fg-mute: #4A6872;   /* labels / eyebrows / placeholders */
+  /* Foreground scale — white ramp with a hint of navy hue */
+  --v-fg:      #EDF0F7;   /* primary text */
+  --v-fg-dim:  #9AA3C0;   /* secondary text / descriptions */
+  --v-fg-mute: #616D93;   /* labels / placeholders / disabled */
 }
 ```
 
-### Tailwind color classes (from `tailwind.config.ts`)
+### Tailwind color classes (from `globals.css` `@theme inline`)
 
 | Class | Hex | Use |
 |---|---|---|
-| `text-veltol-aqua` | #2BC4C8 | Active nav, accent text, icons |
-| `text-veltol-teal` | #1E8FA2 | Primary interactive |
-| `text-veltol-green` | #2FE8A6 | Positive delta, success, live dot |
-| `text-veltol-amber` | #FFC043 | Warning state |
-| `text-veltol-red` | #FF6B7A | Destructive, overdue |
-| `text-veltol-fg` | #E8F5F6 | Primary foreground |
-| `text-veltol-fgDim` | #8FB5BC | Secondary text |
-| `text-veltol-fgMute` | #4A6872 | Mono labels, eyebrows |
-| `bg-veltol-void` | #020B12 | Page background |
-| `bg-veltol-deep` | #041620 | Card background |
-| `bg-veltol-surface` | #0A2C3C | Secondary surface |
+| `text-veltol-accent` | #2bace3 | Active nav, accent text, icons, focus ring |
+| `text-veltol-primary` | #2D458C | Primary interactive, featured surfaces |
+| `text-veltol-green` | #5fba6a | Positive delta, success, live dot |
+| `text-veltol-orange` | #f5882a | Warning state, CTA, "new" tags |
+| `text-veltol-red` | #e0525f | Destructive, overdue |
+| `text-veltol-fg` | #EDF0F7 | Primary foreground |
+| `text-veltol-fgDim` | #9AA3C0 | Secondary text |
+| `text-veltol-fgMute` | #616D93 | Muted labels, placeholders |
+| `bg-veltol-bg` | #0e1429 | Page background |
+| `bg-veltol-card` | #141b34 | Card background |
+| `bg-veltol-surface` | #212c4c | Secondary surface |
 
 ---
 
-## Gradients
+## No gradients, no blur, no glow
 
-### Named Tailwind gradient classes
+There is no aurora background, no gradient spine, and no glow shadow in this system. Where the brand itself renders a dark surface (roll-ups, social templates), it uses a **flat solid color block** — `#2D458C` or `#0e1429` — never a gradient, blur, or glow. This app follows the same rule:
 
-```
-bg-v-gradient        — 135° navy→aqua 5-stop spine. Featured KPI cards, V-mark, avatar.
-bg-v-gradient-soft   — Same spine at 35–40% alpha. Hover overlays, tinted surfaces.
-bg-v-gradient-line   — 90° #163D64→#2BC4C8. Hairline dividers, topbar/sidebar bottom line.
-bg-v-gradient-aurora — 120° with magenta node at 45%. Login page hero background.
-```
+- Featured surfaces (the primary KPI card, the V-mark, avatar fallbacks) use a **flat `bg-veltol-primary` fill**. No gradient.
+- Floating surfaces (sidebar, topbar, dropdowns, modals) are **flat `bg-card` / `bg-popover` with a solid `border-border`**. No `backdrop-blur`.
+- Elevation, where genuinely needed, uses a plain, restrained shadow — never a colored glow.
 
-### Raw values (for inline styles when Tailwind class isn't available)
-
-```
-v-gradient:        linear-gradient(135deg, #0B1E3E 0%, #163D64 25%, #1A5F88 45%, #1E8FA2 70%, #2BC4C8 100%)
-v-gradient-soft:   linear-gradient(135deg, rgba(11,30,62,0.4) 0%, rgba(22,61,100,0.35) 30%, rgba(30,143,162,0.35) 70%, rgba(43,196,200,0.35) 100%)
-v-gradient-line:   linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8)
-v-gradient-aurora: linear-gradient(120deg, #0B1E3E 0%, #163D64 20%, rgba(192,66,255,0.25) 45%, #1E8FA2 70%, #2BC4C8 100%)
-```
+If a decorative device is wanted later, the brand's actual visual signature is a thin **circuit-trace motif** (fine lines connecting small circular nodes) — used sparingly on hero/marketing surfaces, not stamped on every card.
 
 ---
 
@@ -94,97 +79,52 @@ v-gradient-aurora: linear-gradient(120deg, #0B1E3E 0%, #163D64 20%, rgba(192,66,
 
 | Role | Family | Variable | Use |
 |---|---|---|---|
-| Brand | Audiowide | `font-brand` | Logo wordmark only — never for body copy |
-| Display | Space Grotesk | `font-display` | Page titles, section heads, KPI values |
-| Body | Inter | `font-sans` | Paragraphs, table cells, descriptions |
-| Mono | JetBrains Mono | `font-mono` | Labels, eyebrows, codes, numbers, data |
+| Sans | Exo 2 | `font-sans` | Everything: headings, KPI values, body, nav, buttons, table cells. Weight 600 for titles/values, 400–500 for body. |
+| Mono | JetBrains Mono | `font-mono` | Tabular numeric values and literal codes/IDs only — not general labels. |
 
 ### Google Fonts import (in `layout.tsx`)
 
 ```tsx
-import { Audiowide, Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
+import { Exo_2, JetBrains_Mono } from 'next/font/google';
 
-const audiowide = Audiowide({ weight: '400', subsets: ['latin'], variable: '--font-audiowide' });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const exo2 = Exo_2({ weight: 'variable', subsets: ['latin'], variable: '--font-exo2' });
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains' });
 ```
 
 ### Type scale in practice
 
 ```
-Page title:      font-display text-3xl font-semibold tracking-tight (Space Grotesk 30px)
-Section title:   font-display text-xl font-semibold (Space Grotesk 20px)
-Card title:      font-display text-base font-semibold
-Topbar title:    font-display text-[15px] font-semibold tracking-tight
-Body:            text-sm text-muted-foreground (Inter 14px)
-Eyebrow label:   font-mono text-[10px] uppercase tracking-[0.2em] text-veltol-fgMute
-KPI label:       font-mono text-[10px] uppercase tracking-[0.16em]
-KPI value:       font-display text-[30px] font-medium leading-none tracking-tight
-Nav group label: font-mono text-[9px] uppercase tracking-[0.2em] text-veltol-fgMute
-Nav item:        text-[13px]
-Badge:           font-mono text-[10px] uppercase tracking-[0.08em]
+Page title:      font-sans text-3xl font-semibold tracking-tight (Exo 2, 600)
+Section title:   font-sans text-xl font-semibold
+Card title:      font-sans text-base font-semibold
+Topbar title:    font-sans text-[15px] font-semibold tracking-tight
+Body:            text-sm text-muted-foreground (Exo 2, 400)
+Eyebrow / label: font-sans text-xs font-medium text-muted-foreground (normal case, minimal tracking)
+Badge:           font-sans text-[11px] font-medium (normal case — no mono, no uppercase)
 Table number:    font-mono tabular-nums
+Literal code/ID: font-mono
 ```
 
----
-
-## Shadows & glow
-
-```
-shadow-v-glow     — 0 8px 28px -6px rgba(30,143,162,0.5), inset 0 0 0 1px rgba(255,255,255,0.08)
-                    Use on: featured cards, active elements
-shadow-v-glow-lg  — 0 16px 40px -10px rgba(30,143,162,0.45)
-                    Use on: featured KPI card (gradient variant)
-shadow-v-aqua-sm  — 0 0 8px rgba(43,196,200,0.6)
-                    Use on: live dot, active icon point-source glow
-```
+Mono is for data, not labels. The previous system forced uppercase-tracked monospace onto nearly every label, badge, and header — that is the single most recognizable "generated dashboard template" signature, and it has been deliberately removed. Mono now appears only where digit alignment or a literal code/identifier is involved.
 
 ---
 
 ## Utility classes (defined in `globals.css`)
 
 ### `.mono-label`
-Monospace engineering label — uppercase, tracked out.
+Reserved for codes/IDs/tabular labels only — not a general-purpose label style.
 ```css
 font-family: var(--font-mono);
 text-transform: uppercase;
-letter-spacing: 0.16em;
-```
-Usage: page eyebrows, section dividers, KPI card labels.
-
-### `.v-panel`
-Frosted glass card surface.
-```css
-background: rgba(10, 44, 60, 0.55);
-backdrop-filter: blur(20px);
-border: 1px solid rgba(90, 200, 210, 0.08);
-```
-Usage: main content cards, sidebar, topbar.
-
-### `.v-hairline::before`
-Top gradient accent line on cards — pseudo-element, no markup needed.
-```css
-position: absolute; top: 0; left: 16px; right: 16px; height: 1px;
-background: linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8);
-opacity: 0.4;
-```
-
-### `.v-text-gradient`
-Gradient text treatment — used for `.io` suffix and accent headlines.
-```css
-background: linear-gradient(90deg, #163D64, #1E8FA2, #2BC4C8);
--webkit-background-clip: text;
-background-clip: text;
--webkit-text-fill-color: transparent;
+letter-spacing: 0.08em;
 ```
 
 ### `.v-live-dot`
-Pulsing green status indicator.
+Pulsing status indicator — a small point-source "LED" signal, the one legitimate glow exception (it is not a page-wide decorative device).
 ```css
 width: 6px; height: 6px; border-radius: 50%;
-background: #2FE8A6;
-box-shadow: 0 0 10px #2FE8A6;
+background: var(--v-green);
+box-shadow: 0 0 6px var(--v-green);
 animation: pulse-dot 2s ease-in-out infinite;
 ```
 
@@ -192,16 +132,11 @@ animation: pulse-dot 2s ease-in-out infinite;
 
 ## Page background
 
-The dark aurora canvas runs on `body` in dark mode — three radial glows that drift slowly. Copy from `globals.css`:
+Flat, no gradient, no glow field.
 
 ```css
 .dark body {
-  background-color: #020B12;
-  background-image:
-    radial-gradient(circle at 15% 12%, rgba(30, 143, 162, 0.12), transparent 45%),
-    radial-gradient(circle at 85% 88%, rgba(43, 196, 200, 0.08), transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(192, 66, 255, 0.03), transparent 70%);
-  background-attachment: fixed;
+  background-color: var(--v-bg);
 }
 ```
 
@@ -209,37 +144,29 @@ The dark aurora canvas runs on `body` in dark mode — three radial glows that d
 
 ## Component patterns
 
-### KPI card — featured (gradient)
+### KPI card — featured (flat brand fill)
 
 ```tsx
-<div className="relative overflow-hidden rounded-xl p-5 bg-v-gradient shadow-v-glow-lg text-white">
-  {/* Radial highlight */}
-  <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 75% 20%, rgba(255,255,255,0.22), transparent 60%)' }} />
-  <div className="relative">
-    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/85">LABEL</span>
-    <div className="mt-3 flex items-baseline gap-1.5">
-      <span className="font-display text-[30px] font-medium leading-none tracking-tight">4 200 000</span>
-      <span className="font-mono text-[11px] text-white/75">EUR</span>
-    </div>
-    <span className="mt-3 block font-mono text-[10px] tracking-wider text-white">Delta text</span>
+<div className="relative overflow-hidden rounded-xl p-5 bg-veltol-primary text-white">
+  <span className="text-xs font-medium text-white/70">LABEL</span>
+  <div className="mt-3 flex items-baseline gap-1.5">
+    <span className="font-sans text-[30px] font-semibold leading-none tracking-tight">4 200 000</span>
+    <span className="text-[11px] text-white/75">EUR</span>
   </div>
+  <span className="mt-3 block text-[11px] tracking-wide text-white">Delta text</span>
 </div>
 ```
 
-### KPI card — plain (glass)
+### KPI card — plain (flat card)
 
 ```tsx
-<div className="relative overflow-hidden rounded-xl p-5 border border-veltol-aqua/10 bg-card/60 backdrop-blur-xl">
-  {/* Top hairline */}
-  <div className="absolute left-4 right-4 top-0 h-px bg-gradient-to-r from-transparent via-veltol-aqua/40 to-transparent" />
-  <div className="relative">
-    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">LABEL</span>
-    <div className="mt-3 flex items-baseline gap-1.5">
-      <span className="font-display text-[30px] font-medium leading-none tracking-tight">22.40</span>
-      <span className="font-mono text-[11px] text-muted-foreground">MWp</span>
-    </div>
-    <span className="mt-3 block font-mono text-[10px] tracking-wider text-veltol-green">Positive delta</span>
+<div className="relative overflow-hidden rounded-xl border border-border bg-card p-5">
+  <span className="text-xs font-medium text-muted-foreground">LABEL</span>
+  <div className="mt-3 flex items-baseline gap-1.5">
+    <span className="font-sans text-[30px] font-semibold leading-none tracking-tight">22.40</span>
+    <span className="text-[11px] text-muted-foreground">MWp</span>
   </div>
+  <span className="mt-3 block text-[11px] tracking-wide text-veltol-green">Positive delta</span>
 </div>
 ```
 
@@ -247,10 +174,10 @@ The dark aurora canvas runs on `body` in dark mode — three radial glows that d
 
 ```tsx
 <div>
-  <div className="mono-label text-[10px] text-veltol-fgMute">
+  <div className="text-xs font-medium text-muted-foreground">
     MODULE · SECTION NAME
   </div>
-  <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
+  <h1 className="mt-1 font-sans text-3xl font-semibold tracking-tight">
     Page title here
   </h1>
   <p className="mt-1 text-sm text-muted-foreground">
@@ -262,8 +189,8 @@ The dark aurora canvas runs on `body` in dark mode — three radial glows that d
 ### Sidebar nav item — active state
 
 ```tsx
-<Link className="flex items-center gap-2.5 rounded-md border border-veltol-aqua/25 bg-veltol-aqua/10 px-3 py-2 text-[13px] font-semibold text-veltol-aqua">
-  <Icon className="h-4 w-4 text-veltol-aqua" />
+<Link className="flex items-center gap-2.5 rounded-md border border-veltol-accent/25 bg-veltol-accent/10 px-3 py-2 text-[13px] font-semibold text-veltol-accent">
+  <Icon className="h-4 w-4 text-veltol-accent" />
   Nav item label
 </Link>
 ```
@@ -277,36 +204,24 @@ The dark aurora canvas runs on `body` in dark mode — three radial glows that d
 </Link>
 ```
 
-### Glass card (general content card)
+### Card (general content card)
 
 ```tsx
-<div className="v-panel relative rounded-xl p-5">
-  {/* optional: add v-hairline class for top accent line */}
-</div>
+<Card className="border-border bg-card" />
 ```
 
-Or with shadcn `Card`:
-```tsx
-<Card className="border-veltol-aqua/10 bg-card/60 backdrop-blur-xl" />
-```
+No `.v-panel`, no backdrop blur — a card is a flat surface with a solid border.
 
 ### Status badges
 
 ```tsx
-// Use the variant prop on shadcn Badge — these map to Tailwind classes in badge.tsx
-<Badge variant="info">Tervezés</Badge>        {/* teal — contracted, design, testing, handover */}
-<Badge variant="warning">Engedélyezés</Badge>  {/* amber — permitting, procurement */}
-<Badge variant="default">Kivitelezés</Badge>   {/* aqua — construction */}
+<Badge variant="info">Tervezés</Badge>        {/* primary blue — contracted, design, testing, handover */}
+<Badge variant="warning">Engedélyezés</Badge>  {/* orange — permitting, procurement */}
+<Badge variant="default">Kivitelezés</Badge>   {/* accent blue — construction */}
 <Badge variant="success">Garancia</Badge>      {/* green — warranty */}
 <Badge variant="secondary">Lezárt</Badge>      {/* muted — closed */}
 <Badge variant="destructive">Törölt</Badge>    {/* red — cancelled */}
 <Badge variant="outline">Ajánlat</Badge>       {/* subtle — offer */}
-```
-
-### Hairline gradient divider (standalone)
-
-```tsx
-<div className="h-px bg-gradient-to-r from-transparent via-veltol-aqua/35 to-transparent" />
 ```
 
 ### Live pill
@@ -314,7 +229,7 @@ Or with shadcn `Card`:
 ```tsx
 <div className="inline-flex items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/8 px-2.5 py-1">
   <div className="v-live-dot" />
-  <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-veltol-green">Live</span>
+  <span className="text-[10px] font-medium text-veltol-green">Live</span>
 </div>
 ```
 
@@ -325,13 +240,13 @@ Or with shadcn `Card`:
 From darkest (back) to brightest (front):
 
 ```
-#020B12  void      — page background
-#041620  deep      — card background (--card in shadcn)
-#061F2C  bg        — popover, dropdown background
-#0A2C3C  surface   — secondary, muted, sidebar switcher
+#0e1429  bg       — page background
+#141b34  card     — card background (--card in shadcn)
+#1a2340  popover  — popover, dropdown background
+#212c4c  surface  — secondary, muted, sidebar switcher
 ```
 
-Use `backdrop-filter: blur(20px)` on panels sitting above the aurora background — it creates the frosted glass effect that makes the brand distinctive.
+No `backdrop-filter` anywhere. Surfaces separate from the background using a flat fill plus a solid `border-border` — not blur.
 
 ---
 
@@ -339,13 +254,13 @@ Use `backdrop-filter: blur(20px)` on panels sitting above the aurora background 
 
 ```
 h-screen flex overflow-hidden
-├── aside  w-64  bg-[rgba(6,15,26,0.75)] backdrop-blur-xl border-r border-border/40
+├── aside  w-64  bg-card border-r border-border
 │   ├── brand lockup (h-[62px])
 │   ├── project switcher
 │   ├── nav (flex-1 overflow-y-auto)
 │   └── user footer
 └── div flex-1 flex-col overflow-hidden
-    ├── header h-[62px] bg-[rgba(6,15,26,0.75)] backdrop-blur-xl border-b border-border/40
+    ├── header h-[62px] bg-card border-b border-border
     └── main flex-1 overflow-y-auto bg-background p-4 md:p-8
 ```
 
@@ -353,11 +268,10 @@ h-screen flex overflow-hidden
 
 ## Design rules to follow
 
-- **Dark-mode first.** All design decisions are made in dark mode. Light mode is secondary.
-- **Mono labels everywhere.** Any eyebrow, section label, KPI label, or nav group uses `font-mono uppercase tracking-[0.16–0.22em] text-veltol-fgMute`.
-- **One gradient, used precisely.** `bg-v-gradient` goes on the featured KPI card, the V-mark, and user avatars — not as a general decoration.
-- **Aqua is the active signal.** Border, text, background tint — when something is active/selected/focused, it turns aqua (`#2BC4C8`). Green is only for success/live/positive.
-- **Top hairline on every glass card.** The `via-veltol-aqua/40` gradient line at the top of cards is a brand signature — include it consistently.
-- **Backdrop blur on floating surfaces.** Sidebar, topbar, dropdowns, modals all use `backdrop-blur-xl` — they sit above the aurora, not in front of a solid color.
-- **No decorative gradients.** The aurora background and the gradient spine are functional — they orient the viewer in the dark field. Don't add gradients to call-to-actions or decoration.
+- **Dark mode only.** There is no light mode branch — `<html class="dark">` is permanent. All design decisions are made for this single flat dark theme.
+- **No gradients, period.** There is no aurora background and no gradient spine. The page background, cards, and shell are flat colors. Gradients are not used anywhere, functional or decorative.
+- **No backdrop blur.** Sidebar, topbar, dropdowns, and modals are flat `bg-card`/`bg-popover` with a solid border. There is no glow field to sit above, so blur has no visual justification.
+- **Accent blue is the active signal.** Border, text, background tint — when something is active/selected/focused, it turns `--veltol-accent` (#2bace3). Green (#5fba6a) is only for success/live/positive; orange (#f5882a) is for warnings and CTA/"new" tags.
+- **Mono is for data, not labels.** `font-mono tabular-nums` on numeric table/KPI values and literal codes/IDs only. Eyebrows, section labels, KPI labels, nav groups, and badges use the sans face (Exo 2) at normal case, light or no letter-tracking.
 - **Tabular numbers for all data.** Any numeric value in a table or card uses `font-mono tabular-nums` so columns align.
+- **Logo assets.** Real brand SVG logo files (full-color + white) live in `public/branding/` once supplied — see `sidebar.tsx` for the current interim flat placeholder mark.

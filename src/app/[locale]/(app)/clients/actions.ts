@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
@@ -15,20 +15,15 @@ async function getClientsPath() {
 }
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }
 
 async function requireMutator() {
-  const { supabase, user } = await requireAuth();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  if (!["admin", "project_manager"].includes(profile?.role ?? "")) {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (!["admin", "project_manager"].includes(role ?? "")) {
     throw new Error("Forbidden");
   }
   return { supabase, user };
@@ -103,14 +98,8 @@ export async function updateClientAction(
 
 export async function deleteClientAction(id: number): Promise<ActionState> {
   try {
-    const { supabase } = await requireAuth();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user!.id)
-      .single();
-    if (profile?.role !== "admin") return { error: "errorNotAllowed" };
+    const { supabase, role } = await getUserProfileRole();
+    if (role !== "admin") return { error: "errorNotAllowed" };
     const api = createSupabaseClientsClient(supabase);
     await clientService.deleteClient(api, id);
     revalidatePath(await getClientsPath());

@@ -51,7 +51,7 @@ export function DocumentList({
               href={doc.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="truncate font-mono text-[12px] text-veltol-aqua underline-offset-2 hover:underline"
+              className="truncate font-mono text-[12px] text-veltol-accent underline-offset-2 hover:underline"
             >
               {doc.name}
             </a>

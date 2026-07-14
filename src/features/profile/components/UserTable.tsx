@@ -1,16 +1,20 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
 import { useProfileStore } from "../hooks/useProfileStore";
 import type { Profile, AppRole } from "../types";
+
+const PAGE_SIZE = 20;
 
 const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success" | "outline"> = {
   admin: "default",
@@ -59,6 +63,12 @@ export function UserTable({
     setDeletingId,
   } = useProfileStore();
 
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  if (currentPage !== page) setPage(currentPage);
+  const pagedUsers = users.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   function handleDelete(userId: string) {
     if (!confirm(`${t("deleteUser")}?`)) return;
     setDeletingId(userId);
@@ -71,14 +81,14 @@ export function UserTable({
 
   return (
     <>
-      <div className="v-panel v-hairline overflow-hidden rounded-xl">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <div className="mono-label text-[9px] text-veltol-fgMute">
+            <div className="text-[11px] font-medium text-veltol-fgMute">
               {t("adminEyebrow")}
             </div>
-            <h2 className="mt-0.5 font-display text-lg font-semibold text-veltol-fg">
+            <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">
               {t("adminTitle")}
             </h2>
           </div>
@@ -91,7 +101,7 @@ export function UserTable({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.06]">
+              <tr className="border-b border-border">
                 {[
                   t("colUser"),
                   t("colPhone"),
@@ -110,23 +120,17 @@ export function UserTable({
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => {
+              {pagedUsers.map((user) => {
                 const isMe = user.id === currentUserId;
                 return (
                   <tr
                     key={user.id}
-                    className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02]"
+                    className="border-b border-border last:border-0 hover:bg-veltol-surface/50"
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback
-                            className="text-[10px] font-bold text-white"
-                            style={{
-                              background:
-                                "linear-gradient(135deg, #0B1E3E 0%, #163D64 25%, #1A5F88 45%, #1E8FA2 70%, #2BC4C8 100%)",
-                            }}
-                          >
+                          <AvatarFallback className="bg-veltol-primary text-[10px] font-bold text-white">
                             {initials(user)}
                           </AvatarFallback>
                         </Avatar>
@@ -167,7 +171,7 @@ export function UserTable({
                         return (
                           <span className={
                             state === "expired" ? "font-mono text-[11px] font-semibold text-veltol-red" :
-                            state === "soon"    ? "font-mono text-[11px] font-semibold text-amber-400" :
+                            state === "soon"    ? "font-mono text-[11px] font-semibold text-veltol-orange" :
                                                   "font-mono text-[11px] text-veltol-fgDim"
                           }>
                             {formatDate(user.medical_exam_expires_at)}
@@ -177,7 +181,7 @@ export function UserTable({
                               </span>
                             )}
                             {state === "soon" && (
-                              <span className="ml-1.5 rounded bg-amber-400/10 px-1 py-0.5 text-[9px] uppercase tracking-wide text-amber-400">
+                              <span className="ml-1.5 rounded bg-veltol-orange/10 px-1 py-0.5 text-[9px] uppercase tracking-wide text-veltol-orange">
                                 {t("medicalExpiringSoon")}
                               </span>
                             )}
@@ -191,24 +195,24 @@ export function UserTable({
                     </td>
 
                     <td className="px-6 py-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-center gap-1">
                         <Button
-                          size="sm"
+                          size="icon-sm"
                           variant="outline"
+                          title={t("editUser")}
                           disabled={isMe}
                           onClick={() => openEditUser(user)}
                         >
-                          {t("editUser")}
+                          <Pencil />
                         </Button>
                         <Button
-                          size="sm"
+                          size="icon-sm"
                           variant="destructive"
+                          title={t("deleteUser")}
                           disabled={isMe || (isPending && deletingId === user.id)}
                           onClick={() => handleDelete(user.id)}
                         >
-                          {isPending && deletingId === user.id
-                            ? "..."
-                            : t("deleteUser")}
+                          {isPending && deletingId === user.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
                         </Button>
                       </div>
                     </td>
@@ -218,6 +222,15 @@ export function UserTable({
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          prevLabel={t("pagination.prev")}
+          nextLabel={t("pagination.next")}
+          pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+        />
       </div>
 
       {editingUser && (

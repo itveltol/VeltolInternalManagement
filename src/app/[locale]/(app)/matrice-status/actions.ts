@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
@@ -10,8 +10,7 @@ import type { Activity, MatrixData, MatrixProject, ActivityStatus } from "@/feat
 export type ActionState = { error?: string; success?: string } | null;
 
 async function requireAuth() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
   return { supabase, user };
 }

@@ -1,7 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import { useTranslations } from "next-intl";
-import { Paperclip } from "lucide-react";
+import { Loader2, Paperclip } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,31 +17,35 @@ interface Props {
   projectId: number;
   activityId: number;
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
-  onOpenDocuments: () => void;
+  onOpenDocuments: (projectId: number, activityId: number) => void;
   documentCount?: number;
   disabled?: boolean;
+  /** True while this cell's own status change is saving. */
+  pending?: boolean;
 }
 
-export function MatriceCell({ status, projectId, activityId, onChangeStatus, onOpenDocuments, documentCount = 0, disabled }: Props) {
+export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, onChangeStatus, onOpenDocuments, documentCount = 0, disabled, pending }: Props) {
   const t = useTranslations("matrice");
   const tDocs = useTranslations("documents");
+  const isDisabled = disabled || pending;
 
   return (
     <div className="flex items-center gap-0.5">
     <DropdownMenu>
       <DropdownMenuTrigger
-        disabled={disabled}
+        disabled={isDisabled}
         className={cn(
-          "w-full rounded border px-1.5 py-1 text-center font-mono text-[10px] uppercase tracking-wide transition-opacity focus:outline-none",
+          "flex w-full items-center justify-center gap-1 rounded border px-1.5 py-1 text-center font-mono text-[10px] uppercase tracking-wide transition-opacity focus:outline-none",
           STATUS_COLOR[status],
-          disabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80",
+          isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80",
         )}
       >
+        {pending && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
         {t(`status.${status}`)}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="center"
-        className="border-veltol-aqua/10 bg-veltol-bg text-veltol-fg"
+        className="border-veltol-accent/10 bg-veltol-bg text-veltol-fg"
       >
         {ACTIVITY_STATUS_VALUES.map((s) => (
           <DropdownMenuItem
@@ -64,15 +69,15 @@ export function MatriceCell({ status, projectId, activityId, onChangeStatus, onO
     </DropdownMenu>
     <button
       type="button"
-      onClick={(e) => { e.stopPropagation(); onOpenDocuments(); }}
+      onClick={(e) => { e.stopPropagation(); onOpenDocuments(projectId, activityId); }}
       title={tDocs("attachDocuments")}
       className="flex items-center gap-0.5 rounded p-0.5 text-veltol-fgMute/60 transition-colors hover:text-veltol-fgMute"
     >
       <Paperclip className="h-3 w-3" />
       {documentCount > 0 && (
-        <span className="font-mono text-[9px] text-veltol-aqua">{documentCount}</span>
+        <span className="font-mono text-[9px] text-veltol-accent">{documentCount}</span>
       )}
     </button>
     </div>
   );
-}
+});

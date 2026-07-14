@@ -37,8 +37,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="mono-label text-[10px] text-veltol-fgMute">{t("eyebrow")}</div>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-veltol-fg">
+        <div className="text-xs font-medium text-veltol-fgMute">{t("eyebrow")}</div>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
           {t("title")}
         </h1>
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>

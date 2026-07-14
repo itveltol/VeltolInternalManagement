@@ -1,15 +1,12 @@
 import { AppShellClient } from "@/shared/components/layout/AppShellClient";
-import { createClient } from "@/core/supabase/server";
+import { getSessionUser } from "@/core/supabase/session";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   let displayName: string | null = null;
   let initials = "?";
