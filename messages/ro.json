@@ -321,6 +321,7 @@
       "label": "PROIECTE",
       "empty": "Nu există proiecte disponibile.",
       "placeholder": "Căutați proiecte de adăugat...",
+      "maxReached": "Maximum 5 proiecte — eliminați unul pentru a adăuga altul",
       "noResults": "Niciun proiect corespunzător.",
       "remove": "Elimină {name}"
     },
@@ -749,6 +750,7 @@
       "label": "PROIECTE",
       "empty": "Niciun proiect disponibil.",
       "placeholder": "Căutați proiecte de adăugat...",
+      "maxReached": "Maximum 5 proiecte — eliminați unul pentru a adăuga altul",
       "noResults": "Niciun rezultat.",
       "remove": "Elimină {name}"
     },

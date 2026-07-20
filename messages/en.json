@@ -321,6 +321,7 @@
       "label": "PROJECTS",
       "empty": "No projects available.",
       "placeholder": "Search projects to add...",
+      "maxReached": "Maximum of 5 projects — remove one to add another",
       "noResults": "No matching projects.",
       "remove": "Remove {name}"
     },
@@ -749,6 +750,7 @@
       "label": "PROJECTS",
       "empty": "No projects available.",
       "placeholder": "Search projects to add...",
+      "maxReached": "Maximum of 5 projects — remove one to add another",
       "noResults": "No matching projects.",
       "remove": "Remove {name}"
     },

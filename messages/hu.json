@@ -321,6 +321,7 @@
       "label": "PROJEKTEK",
       "empty": "Nincsenek projektek.",
       "placeholder": "Projekt keresése és hozzáadása...",
+      "maxReached": "Legfeljebb 5 projekt — távolíts el egyet a hozzáadáshoz",
       "noResults": "Nincs egyező projekt.",
       "remove": "{name} eltávolítása"
     },
@@ -749,6 +750,7 @@
       "label": "PROJEKTEK",
       "empty": "Nincs elérhető projekt.",
       "placeholder": "Projektek keresése hozzáadáshoz...",
+      "maxReached": "Legfeljebb 5 projekt — távolíts el egyet a hozzáadáshoz",
       "noResults": "Nincs találat.",
       "remove": "{name} eltávolítása"
     },

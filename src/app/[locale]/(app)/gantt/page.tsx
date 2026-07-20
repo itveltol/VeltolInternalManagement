@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
-import { getGanttProjects, getGanttMatriceData, getHiddenGanttProjectIds } from "./actions";
+import { getGanttProjects, getGanttMatriceData, getShownGanttProjectIds } from "./actions";
 import { PortfolioGanttShell } from "@/features/gantt/components/PortfolioGanttShell";
 
 export default async function GanttPage() {
@@ -14,12 +14,11 @@ export default async function GanttPage() {
 
   const t = await getTranslations("gantt");
 
-  const [allProjects, initialHiddenIds] = await Promise.all([
+  const [allProjects, initialShownIds] = await Promise.all([
     getGanttProjects(),
-    getHiddenGanttProjectIds(),
+    getShownGanttProjectIds(),
   ]);
-  const visibleIds = allProjects.map((p) => p.id).filter((id) => !initialHiddenIds.includes(id));
-  const { activities, cells } = await getGanttMatriceData(visibleIds);
+  const { activities, cells } = await getGanttMatriceData(initialShownIds);
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
 
   return (
@@ -34,7 +33,7 @@ export default async function GanttPage() {
 
       <PortfolioGanttShell
         allProjects={allProjects}
-        initialHiddenIds={initialHiddenIds}
+        initialShownIds={initialShownIds}
         initialActivities={activities}
         initialCells={cells}
         todayMs={todayMs}

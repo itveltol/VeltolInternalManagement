@@ -1,6 +1,7 @@
 "use server";
 
 import { getSessionUser } from "@/core/supabase/session";
+import { createAdminClient } from "@/core/supabase/admin";
 import type { ProjectPhase, ContractType, ProjectCategory } from "@/features/projects/types";
 
 export type ActionState = { error?: string; success?: string } | null;
@@ -42,14 +43,17 @@ export async function requireAuth() {
 }
 
 export async function getProjects(): Promise<DashboardProject[]> {
-  const { supabase, user } = await requireAuth();
-  console.log("[dashboard debug] user:", user?.id, user?.email);
+  await requireAuth();
+  // Dashboard is a portfolio-wide overview and should show every project to
+  // every authenticated user, regardless of the per-manager "projects: scoped
+  // select" RLS policy — so this reads via the service-role client instead of
+  // the session-scoped one.
+  const supabase = createAdminClient();
   const { data: projects, error } = await supabase
     .from("projects")
     .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, deadline, value_eur, contract_date, created_at")
     .order("created_at", { ascending: true });
   if (error) console.error("[dashboard debug] projects query error:", error);
-  console.log("[dashboard debug] projects count:", projects?.length);
   return projects ?? [];
 }
 

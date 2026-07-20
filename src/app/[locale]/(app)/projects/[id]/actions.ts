@@ -1,6 +1,7 @@
 "use server";
 
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
+import { createAdminClient } from "@/core/supabase/admin";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
@@ -9,9 +10,12 @@ import * as projectService from "@/features/projects/services/projectService";
 import * as teamService from "@/features/teams/services/teamService";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
-import type { Project } from "@/features/projects/types";
+import type { Project, ProjectManager } from "@/features/projects/types";
 import type { DailyLogRecord } from "@/features/projects/checklists/types";
 import type { Team } from "@/features/teams/types";
+import type { ClientRef } from "@/features/clients/types";
+import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
+import * as clientService from "@/features/clients/services/clientService";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -48,9 +52,25 @@ function strOrNull(raw: FormDataEntryValue | null): string | null {
 }
 
 export async function getProject(projectId: number): Promise<Project | null> {
+  await requireAuth();
+  // "projects: scoped select" RLS only allows admins or the assigned manager
+  // to read a project via the session-scoped client — but any authenticated
+  // role may need to view/work a project's checklist, gantt, or documents, so
+  // this reads via the service-role client instead (same as dashboard/action.ts).
+  const client = createSupabaseProjectsClient(createAdminClient());
+  return projectService.getProjectById(client, projectId);
+}
+
+export async function getProjectManagers(): Promise<ProjectManager[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseProjectsClient(supabase);
-  return projectService.getProjectById(client, projectId);
+  return projectService.getProjectManagers(client);
+}
+
+export async function getClientRefs(): Promise<ClientRef[]> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseClientsClient(supabase);
+  return clientService.getClientRefs(api);
 }
 
 export async function getChecklistRecords(projectId: number) {

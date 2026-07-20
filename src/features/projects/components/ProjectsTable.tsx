@@ -3,13 +3,11 @@
 import { useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Loader2, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { Link } from "@/i18n/navigation";
 import { AddProjectDialog } from "./AddProjectDialog";
-import { EditProjectDialog } from "./EditProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { priorityVariant, phaseVariant } from "@/shared/utils/status-variant";
@@ -74,9 +72,8 @@ export function ProjectsTable({
   const [isPending, startTransition] = useTransition();
 
   const {
-    isAddDialogOpen, editingProject, deletingId,
+    isAddDialogOpen, deletingId,
     openAddDialog, closeAddDialog,
-    openEditDialog, closeEditDialog,
     setDeletingId,
   } = useProjectsStore();
 
@@ -237,7 +234,11 @@ export function ProjectsTable({
                 </tr>
               ) : (
                 pagedProjects.map((project) => (
-                  <tr key={project.id} className="group transition-colors hover:bg-veltol-surface/50">
+                  <tr
+                    key={project.id}
+                    className="group cursor-pointer transition-colors hover:bg-veltol-surface/50"
+                    onClick={() => router.push(`/${locale}/projects/${project.id}`)}
+                  >
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[11px] text-veltol-fgMute">{project.id}</td>
 
                     <td className="px-5 py-3.5">
@@ -305,38 +306,22 @@ export function ProjectsTable({
                     </td>
 
                     <td className="px-5 py-3.5">
-                      <div className="flex flex-col items-center gap-1">
-                        <Button
-                          size="icon-sm"
-                          variant="ghost"
-                          title={t("viewChecklist")}
-                          nativeButton={false}
-                          render={<Link href={`/projects/${project.id}`} />}
-                        >
-                          <Eye />
-                        </Button>
-                        {canMutate && (
-                          <>
-                            <Button
-                              size="icon-sm"
-                              variant="outline"
-                              title={t("editProject")}
-                              onClick={() => openEditDialog(project)}
-                            >
-                              <Pencil />
-                            </Button>
-                            <Button
-                              size="icon-sm"
-                              variant="destructive"
-                              title={t("deleteProject")}
-                              disabled={isPending && deletingId === project.id}
-                              onClick={() => handleDelete(project.id)}
-                            >
-                              {isPending && deletingId === project.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                      {canMutate && (
+                        <div className="flex flex-col items-center gap-1">
+                          <Button
+                            size="icon-sm"
+                            variant="destructive"
+                            title={t("deleteProject")}
+                            disabled={isPending && deletingId === project.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(project.id);
+                            }}
+                          >
+                            {isPending && deletingId === project.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -364,20 +349,6 @@ export function ProjectsTable({
           router.refresh();
         }}
       />
-
-      {editingProject && (
-        <EditProjectDialog
-          key={editingProject.id}
-          project={editingProject}
-          open={!!editingProject}
-          managers={managers}
-          clientRefs={clientRefs}
-          onClose={() => {
-            closeEditDialog();
-            router.refresh();
-          }}
-        />
-      )}
     </>
   );
 }
