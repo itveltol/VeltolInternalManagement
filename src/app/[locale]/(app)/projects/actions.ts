@@ -7,7 +7,8 @@ import { createSupabaseProjectsClient } from "@/features/projects/api/supabasePr
 import * as projectService from "@/features/projects/services/projectService";
 import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Project, ProjectManager } from "@/features/projects/types";
+import type { Project, ProjectManager, ProjectCategory } from "@/features/projects/types";
+import { CONTRACT_TYPES } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
@@ -50,13 +51,22 @@ function extractProjectPayload(formData: FormData) {
     return isNaN(n) ? null : n;
   };
 
+  const project_category: ProjectCategory =
+    formData.get("project_category") === "residential" ? "residential" : "industrial";
+
+  const contract_type = CONTRACT_TYPES.filter(
+    (c) => formData.get(`contract_type_${c}`) === "true",
+  );
+
   return {
     name: (formData.get("name") as string).trim(),
     county: str("county"),
     site_location: str("site_location"),
     mw_solar: num("mw_solar"),
     mw_bess: num("mw_bess"),
-    project_type: str("project_type"),
+    project_category,
+    project_type: project_category === "residential" ? null : str("project_type"),
+    contract_type,
     manager_id: str("manager_id"),
     client_id: num("client_id"),
     current_phase: formData.get("current_phase") as string,

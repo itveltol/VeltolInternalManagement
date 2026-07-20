@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { MatrixProject } from "../types";
+import type { Project } from "@/features/projects/types";
 import {
   Combobox,
   ComboboxInputGroup,
@@ -17,12 +17,12 @@ import {
 } from "@/shared/components/ui/combobox";
 
 interface Props {
-  hiddenProjects: MatrixProject[];
+  hiddenProjects: Project[];
   onUnhide: (id: number) => void;
 }
 
-export function MatriceProjectPicker({ hiddenProjects, onUnhide }: Props) {
-  const t = useTranslations("matrice");
+export function GanttProjectPicker({ hiddenProjects, onUnhide }: Props) {
+  const t = useTranslations("gantt");
   const filter = useComboboxFilter({ multiple: true });
 
   if (hiddenProjects.length === 0) {
@@ -35,7 +35,7 @@ export function MatriceProjectPicker({ hiddenProjects, onUnhide }: Props) {
       <Combobox
         items={hiddenProjects}
         value={[]}
-        onValueChange={(next: MatrixProject[]) => {
+        onValueChange={(next: Project[]) => {
           const added = next[next.length - 1];
           if (added) onUnhide(added.id);
         }}
@@ -51,13 +51,10 @@ export function MatriceProjectPicker({ hiddenProjects, onUnhide }: Props) {
             <ComboboxPopup>
               <ComboboxEmpty>{t("picker.noResults")}</ComboboxEmpty>
               <ComboboxList>
-                {(p: MatrixProject) => (
+                {(p: Project) => (
                   <ComboboxItem key={p.id} value={p}>
                     <ComboboxItemIndicator />
                     {p.name}
-                    {p.project_type && (
-                      <span className="ml-1.5 font-mono text-[9px] opacity-60">{p.project_type}</span>
-                    )}
                   </ComboboxItem>
                 )}
               </ComboboxList>

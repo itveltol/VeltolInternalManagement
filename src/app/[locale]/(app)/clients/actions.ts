@@ -7,7 +7,9 @@ import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClie
 import * as clientService from "@/features/clients/services/clientService";
 import type { Client, ClientRef } from "@/features/clients/types";
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState =
+  | { error?: string; success?: string; client?: { id: number; name: string } }
+  | null;
 
 async function getClientsPath() {
   const locale = await getLocale();
@@ -70,9 +72,10 @@ export async function createClientAction(
   try {
     const { supabase } = await requireMutator();
     const api = createSupabaseClientsClient(supabase);
-    await clientService.createClient(api, extractClientPayload(formData));
+    const payload = extractClientPayload(formData);
+    const result = await clientService.createClient(api, payload);
     revalidatePath(await getClientsPath());
-    return { success: "clientCreated" };
+    return { success: "clientCreated", client: { id: result.id, name: payload.name } };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };

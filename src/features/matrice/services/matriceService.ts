@@ -1,5 +1,23 @@
 import type { MatriceApiClient } from '../api/types';
 import type { Activity, MatrixCell, MatrixData, ActivityStatus, MatrixProject } from '../types';
+import type { ContractType } from '@/features/projects/types';
+
+/**
+ * Matrice phase_no ranges rolled up to the contract's service scope, mirroring
+ * GANTT_PHASE_MATRICE_RANGE (planning=1-7, execution=8-10, autorizare=11-12):
+ * these are workflow stages, contract_type is which services are contracted —
+ * this bridges the two so excluded services can be grayed out, not deleted.
+ */
+export function contractTypeForPhase(phaseNo: number): ContractType {
+  if (phaseNo <= 7) return 'proiectare';
+  if (phaseNo <= 10) return 'executie';
+  return 'mentenanta';
+}
+
+/** Whether a project's contract currently covers the given phase's service */
+export function isPhaseEnabled(project: MatrixProject, phaseNo: number): boolean {
+  return project.contract_type.includes(contractTypeForPhase(phaseNo));
+}
 
 export async function getMatrix(
   client: MatriceApiClient,
@@ -36,13 +54,14 @@ export function resolveStatus(
   return cells.find(c => c.project_id === projectId && c.activity_id === activityId)?.status ?? 'neinceput';
 }
 
-/** Client-side: compute per-project % complete (excludes na + section headers) */
+/** Client-side: compute per-project % complete (excludes na + section headers + phases not covered by the contract) */
 export function projectCompletionPct(
   activities: Activity[],
   cells: MatrixCell[],
   projectId: number,
+  project?: MatrixProject,
 ): number {
-  const eligible = activities.filter(a => !a.is_section_header);
+  const eligible = activities.filter(a => !a.is_section_header && (!project || isPhaseEnabled(project, a.phase_no)));
   const nonNa = eligible.filter(a => resolveStatus(cells, projectId, a.id) !== 'na');
   if (nonNa.length === 0) return 0;
   const done = nonNa.filter(a => resolveStatus(cells, projectId, a.id) === 'finalizat');

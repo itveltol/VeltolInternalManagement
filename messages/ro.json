@@ -17,7 +17,8 @@
     "documents": "Documente",
     "delivery": "Livrare",
     "site": "Construcție · Șantier",
-    "pontaj": "Personal · Pontaj"
+    "pontaj": "Personal · Pontaj",
+    "gantt": "Gantt"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -31,6 +32,10 @@
     "totalCapacity": "Capacitate totală",
     "totalProjects": "Proiecte totale",
     "totalFinishedProjects": "Proiecte finalizate",
+    "residentialValue": "Valoare rezidențial",
+    "residentialProjects": "Proiecte rezidențiale",
+    "industrialValue": "Valoare industrial",
+    "industrialProjects": "Proiecte industriale",
     "incomeByMonthEyebrow": "VENITURI",
     "incomeByMonthTitle": "Venituri lunare",
     "incomeCompareEyebrow": "COMPARAȚIE",
@@ -40,7 +45,11 @@
     "incomeClearSelection": "Șterge",
     "incomeNoData": "Nu există date de venit pentru această selecție",
     "incomeLabel": "Venit",
-    "incomeExcludedNote": "{count} proiect(e) fără dată limită excluse"
+    "incomeTotalLabel": "Total",
+    "incomeExcludedNote": "{count} proiect(e) fără dată limită excluse",
+    "contractTypeBreakdownTitle": "Proiecte pe tip de contract",
+    "contractTypeBreakdownEyebrow": "CONTRACTE",
+    "contractTypeProjectCount": "{count} proiecte"
   },
   "projects": {
     "eyebrow": "PROIECTE · TOATE",
@@ -48,6 +57,7 @@
     "subtitle": "Lista tuturor proiectelor solare și BESS",
     "totalCount": "{count} proiecte total",
     "addProject": "Adaugă proiect",
+    "newClient": "+ Client nou",
     "editProject": "Editează proiect",
     "deleteProject": "Șterge",
     "confirmDelete": "Ștergeți acest proiect?",
@@ -69,6 +79,12 @@
     "saving": "Salvare...",
     "emptyState": "Nu există proiecte. Adăugați primul proiect.",
     "viewChecklist": "Listă verificare",
+    "filterAllPhases": "Toate fazele",
+    "filterAllCategories": "Toate categoriile",
+    "filterAllContractTypes": "Toate tipurile de contract",
+    "filterMinValue": "Valoare minimă",
+    "filterMaxValue": "Valoare maximă",
+    "sortByValue": "Sortează după valoare",
     "pagination": {
       "prev": "Anterior",
       "next": "Următor",
@@ -95,6 +111,7 @@
       "siteLocation": "Locație site",
       "contractNumber": "Nr. contract",
       "contractDate": "Data contract",
+      "contractType": "Tipul contractului",
       "cuIssued": "CU emis?",
       "atrIssued": "ATR emis?",
       "notes": "Note"
@@ -106,7 +123,9 @@
       "siteLocation": "Locație site",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
-      "projectType": "Tipul proiectului",
+      "projectCategory": "Categoria proiectului",
+      "projectType": "Tipul tehnic",
+      "contractType": "Tipul contractului",
       "manager": "Manager de proiect",
       "phase": "Faza curentă",
       "progress": "Progres (%)",
@@ -266,6 +285,15 @@
     "completed": "Finalizat",
     "on_hold": "În așteptare"
   },
+  "projectCategory": {
+    "residential": "Rezidențial",
+    "industrial": "Industrial"
+  },
+  "contractType": {
+    "proiectare": "Proiectare",
+    "executie": "Execuție",
+    "mentenanta": "Mentenanță"
+  },
   "projectPriority": {
     "low": "Scăzută",
     "medium": "Medie",
@@ -295,7 +323,8 @@
     "grid": {
       "activity": "Activitate",
       "noProjects": "Selectați cel puțin un proiect.",
-      "loading": "Se actualizează..."
+      "loading": "Se actualizează...",
+      "notContracted": "Nu este acoperit de tipul de contract al proiectului"
     },
     "status": {
       "finalizat": "Finalizat",
@@ -304,7 +333,8 @@
       "blocat": "Blocat",
       "neinceput": "Neînceput",
       "na": "N/A"
-    }
+    },
+    "hideProject": "Ascunde din vizualizare"
   },
   "vacation": {
     "eyebrow": "HR · CERERI CONCEDIU",
@@ -423,6 +453,7 @@
     "save": "Salvează",
     "saving": "Salvare...",
     "emptyState": "Nu există clienți. Adăugați primul client.",
+    "filterAllTypes": "Toate tipurile",
     "columns": {
       "name": "Nume",
       "type": "Tip",
@@ -682,5 +713,45 @@
     "EMS": "EMS — Management energetic",
     "SCADA": "Automatizare / SCADA",
     "OM": "O&M — Doar operare"
+  },
+  "gantt": {
+    "eyebrow": "LUCRU · GANTT PORTOFOLIU",
+    "title": "Gantt",
+    "subtitle": "Planificare, execuție și autorizare pe toate proiectele",
+    "projectColumn": "Proiect",
+    "today": "Azi",
+    "loading": "Se actualizează...",
+    "emptyState": "Selectați cel puțin un proiect.",
+    "notContracted": "Nu este acoperit de tipul de contract al proiectului",
+    "phase": {
+      "planning": "Proiectare",
+      "execution": "Execuție",
+      "autorizare": "Autorizare"
+    },
+    "startDate": "Data de început",
+    "endDate": "Data de sfârșit",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Se salvează...",
+    "errorGeneric": "A apărut o eroare. Încercați din nou.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "picker": {
+      "label": "PROIECTE",
+      "empty": "Niciun proiect disponibil.",
+      "placeholder": "Căutați proiecte de adăugat...",
+      "noResults": "Niciun rezultat.",
+      "remove": "Elimină {name}"
+    },
+    "hideProject": "Ascunde din vizualizare",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
+    "startBeforePreviousEnd": "Data de început nu poate fi înainte de data de sfârșit a fazei anterioare.",
+    "endAfterNextStart": "Data de sfârșit nu poate fi după data de început a fazei următoare.",
+    "minStartDateHint": "Trebuie să fie la sau după {date} (sfârșitul fazei anterioare)",
+    "maxEndDateHint": "Trebuie să fie la sau înainte de {date} (începutul fazei următoare)",
+    "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început."
   }
 }

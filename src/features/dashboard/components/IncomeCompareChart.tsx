@@ -3,9 +3,18 @@
 import { useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { ChevronDownIcon } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
-import { cn } from "@/shared/utils/cn";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/shared/components/ui/dropdown-menu";
 import { ChartContainer, ChartTooltipContent } from "@/shared/components/ui/chart";
 import { getIncomeForMonths, type MonthKey } from "../lib/income";
 import type { DashboardProject } from "@/app/[locale]/(app)/dashboard/action";
@@ -48,9 +57,18 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
     for (const year of availableYears) {
       for (let month = 11; month >= 0; month--) keys.push({ year, month });
     }
-    const income = getIncomeForMonths(projects, keys);
-    return income.filter((point) => point.projectCount > 0);
-  }, [projects, availableYears]);
+    return keys;
+  }, [availableYears]);
+
+  const monthsByYear = useMemo(() => {
+    const groups = new Map<number, MonthKey[]>();
+    for (const key of availableMonths) {
+      const group = groups.get(key.year);
+      if (group) group.push(key);
+      else groups.set(key.year, [key]);
+    }
+    return [...groups.entries()];
+  }, [availableMonths]);
 
   const [selected, setSelected] = useState<MonthKey[]>(() => availableMonths.slice(0, 6));
 
@@ -90,27 +108,33 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
 
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-xs font-medium text-veltol-fgMute">{labels.selectMonths}</span>
-          {availableMonths.map((point) => {
-            const active = selectedSet.has(keyOf(point));
-            return (
-              <button
-                key={keyOf(point)}
-                type="button"
-                onClick={() => toggle(point)}
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
-                  active
-                    ? "border-veltol-accent/40 bg-veltol-accent/15 text-veltol-accent"
-                    : "border-border bg-veltol-surface/30 text-veltol-fgMute hover:text-veltol-fg",
-                )}
-              >
-                {monthNames[point.month]} {point.year}
-              </button>
-            );
-          })}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-veltol-surface/40 px-2.5 py-1.5 text-[13px] text-veltol-fg transition-colors hover:bg-veltol-surface/70">
+              {labels.selectMonths}
+              {selected.length > 0 && ` (${selected.length})`}
+              <ChevronDownIcon className="size-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {monthsByYear.map(([year, months], groupIndex) => (
+                <DropdownMenuGroup key={year}>
+                  {groupIndex > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel>{year}</DropdownMenuLabel>
+                  {months.map((point) => (
+                    <DropdownMenuCheckboxItem
+                      key={keyOf(point)}
+                      checked={selectedSet.has(keyOf(point))}
+                      onCheckedChange={() => toggle(point)}
+                      closeOnClick={false}
+                    >
+                      {monthNames[point.month]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuGroup>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {selected.length > 0 && (
-            <Button variant="ghost" size="xs" onClick={() => setSelected([])} className="ml-1">
+            <Button variant="ghost" size="xs" onClick={() => setSelected([])}>
               {labels.clearSelection}
             </Button>
           )}

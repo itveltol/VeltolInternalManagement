@@ -17,7 +17,8 @@
     "documents": "Documents",
     "delivery": "Delivery",
     "site": "Construction · Site",
-    "pontaj": "Personnel · Pontaj"
+    "pontaj": "Personnel · Pontaj",
+    "gantt": "Gantt"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -31,6 +32,10 @@
     "totalCapacity": "Total capacity",
     "totalProjects": "Total projects",
     "totalFinishedProjects": "Completed projects",
+    "residentialValue": "Residential value",
+    "residentialProjects": "Residential projects",
+    "industrialValue": "Industrial value",
+    "industrialProjects": "Industrial projects",
     "incomeByMonthEyebrow": "INCOME",
     "incomeByMonthTitle": "Monthly income",
     "incomeCompareEyebrow": "COMPARISON",
@@ -40,7 +45,11 @@
     "incomeClearSelection": "Clear",
     "incomeNoData": "No income data for this selection",
     "incomeLabel": "Income",
-    "incomeExcludedNote": "{count} project(s) without a deadline date excluded"
+    "incomeTotalLabel": "Total",
+    "incomeExcludedNote": "{count} project(s) without a deadline date excluded",
+    "contractTypeBreakdownTitle": "Projects by contract type",
+    "contractTypeBreakdownEyebrow": "CONTRACTS",
+    "contractTypeProjectCount": "{count} projects"
   },
   "projects": {
     "eyebrow": "PROJECTS · ALL",
@@ -48,6 +57,7 @@
     "subtitle": "Overview list of all solar and BESS projects",
     "totalCount": "{count} projects total",
     "addProject": "Add project",
+    "newClient": "+ New client",
     "editProject": "Edit project",
     "deleteProject": "Delete",
     "confirmDelete": "Delete this project?",
@@ -69,6 +79,12 @@
     "saving": "Saving...",
     "emptyState": "No projects yet. Add your first project.",
     "viewChecklist": "Checklist",
+    "filterAllPhases": "All phases",
+    "filterAllCategories": "All categories",
+    "filterAllContractTypes": "All contract types",
+    "filterMinValue": "Min value",
+    "filterMaxValue": "Max value",
+    "sortByValue": "Sort by value",
     "pagination": {
       "prev": "Previous",
       "next": "Next",
@@ -95,6 +111,7 @@
       "siteLocation": "Site location",
       "contractNumber": "Contract #",
       "contractDate": "Contract date",
+      "contractType": "Contract type",
       "cuIssued": "CU issued?",
       "atrIssued": "ATR issued?",
       "notes": "Notes"
@@ -106,7 +123,9 @@
       "siteLocation": "Site location",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
-      "projectType": "Project type",
+      "projectCategory": "Project category",
+      "projectType": "Technical type",
+      "contractType": "Contract type",
       "manager": "Project manager",
       "phase": "Current phase",
       "progress": "Progress (%)",
@@ -266,6 +285,15 @@
     "completed": "Completed",
     "on_hold": "On hold"
   },
+  "projectCategory": {
+    "residential": "Residential",
+    "industrial": "Industrial"
+  },
+  "contractType": {
+    "proiectare": "Proiectare",
+    "executie": "Execuție",
+    "mentenanta": "Mentenanță"
+  },
   "projectPriority": {
     "low": "Low",
     "medium": "Medium",
@@ -295,7 +323,8 @@
     "grid": {
       "activity": "Activity",
       "noProjects": "Select at least one project.",
-      "loading": "Refreshing..."
+      "loading": "Refreshing...",
+      "notContracted": "Not covered by this project's contract type"
     },
     "status": {
       "finalizat": "Done",
@@ -304,7 +333,8 @@
       "blocat": "Blocked",
       "neinceput": "Not started",
       "na": "N/A"
-    }
+    },
+    "hideProject": "Hide from view"
   },
   "vacation": {
     "eyebrow": "HR · VACATION REQUESTS",
@@ -423,6 +453,7 @@
     "save": "Save",
     "saving": "Saving...",
     "emptyState": "No clients yet. Add your first client.",
+    "filterAllTypes": "All types",
     "columns": {
       "name": "Name",
       "type": "Type",
@@ -682,5 +713,45 @@
     "EMS": "EMS — Energy management",
     "SCADA": "Automation / SCADA",
     "OM": "O&M — Operations only"
+  },
+  "gantt": {
+    "eyebrow": "WORK · PORTFOLIO GANTT",
+    "title": "Gantt",
+    "subtitle": "Planning, execution and authorization timeline across all projects",
+    "projectColumn": "Project",
+    "today": "Today",
+    "loading": "Refreshing...",
+    "emptyState": "Select at least one project.",
+    "notContracted": "Not covered by this project's contract type",
+    "phase": {
+      "planning": "Planning",
+      "execution": "Execution",
+      "autorizare": "Autorizare"
+    },
+    "startDate": "Start date",
+    "endDate": "End date",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "picker": {
+      "label": "PROJECTS",
+      "empty": "No projects available.",
+      "placeholder": "Search projects to add...",
+      "noResults": "No matching projects.",
+      "remove": "Remove {name}"
+    },
+    "hideProject": "Hide from view",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "startBeforePreviousEnd": "Start date can't be before the previous phase's end date.",
+    "endAfterNextStart": "End date can't be after the next phase's start date.",
+    "minStartDateHint": "Must be on or after {date} (previous phase end)",
+    "maxEndDateHint": "Must be on or before {date} (next phase start)",
+    "endBeforeStart": "End date can't be before the start date."
   }
 }

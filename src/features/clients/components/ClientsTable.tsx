@@ -11,16 +11,22 @@ import { AddClientDialog } from "./AddClientDialog";
 import { EditClientDialog } from "./EditClientDialog";
 import { deleteClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { useClientsStore } from "../hooks/useClientsStore";
-import type { Client } from "../types";
+import { CLIENT_TYPES } from "../types";
+import type { Client, ClientType } from "../types";
 
 const PAGE_SIZE = 20;
+
+const SELECT_CLASS =
+  "h-8 rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-[12px] text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 appearance-none";
 
 interface Props {
   clients: Client[];
   canMutate: boolean;
+  filterType: ClientType | "";
+  onFilterType: (v: ClientType | "") => void;
 }
 
-export function ClientsTable({ clients, canMutate }: Props) {
+export function ClientsTable({ clients, canMutate, filterType, onFilterType }: Props) {
   const t = useTranslations("clients");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -33,9 +39,19 @@ export function ClientsTable({ clients, canMutate }: Props) {
   } = useClientsStore();
 
   const [page, setPage] = useState(1);
+  const [lastFilterType, setLastFilterType] = useState(filterType);
   const pageCount = Math.max(1, Math.ceil(clients.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  if (currentPage !== page) setPage(currentPage);
+  // Reset to page 1 whenever the filter changes (derived during render, not
+  // an effect), then clamp in case the list itself shrank.
+  let currentPage = page;
+  if (filterType !== lastFilterType) {
+    setLastFilterType(filterType);
+    currentPage = 1;
+    setPage(1);
+  } else if (page !== Math.min(page, pageCount)) {
+    currentPage = Math.min(page, pageCount);
+    setPage(currentPage);
+  }
   const pagedClients = clients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   function handleDelete(clientId: number) {
@@ -62,6 +78,19 @@ export function ClientsTable({ clients, canMutate }: Props) {
               {t("addClient")}
             </Button>
           )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-3">
+          <select
+            value={filterType}
+            onChange={(e) => onFilterType(e.target.value as ClientType | "")}
+            className={SELECT_CLASS}
+          >
+            <option value="">{t("filterAllTypes")}</option>
+            {CLIENT_TYPES.map((ct) => (
+              <option key={ct} value={ct}>{t(`fields.type_${ct}` as Parameters<typeof t>[0])}</option>
+            ))}
+          </select>
         </div>
 
         <div className="overflow-x-auto">

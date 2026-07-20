@@ -1,7 +1,7 @@
 "use server";
 
 import { getSessionUser } from "@/core/supabase/session";
-import type { ProjectPhase } from "@/features/projects/types";
+import type { ProjectPhase, ContractType, ProjectCategory } from "@/features/projects/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -13,10 +13,18 @@ export type DashboardProject = {
   county: string;
   site_location: string;
   current_phase: ProjectPhase;
+  contract_type: ContractType[];
+  project_category: ProjectCategory;
   value_eur: number | null;
   contract_date: string | null;
   deadline: string | null;
   created_at: string;
+};
+
+export type CategoryStats = {
+  totalValue: number;
+  totalCapacity: number;
+  totalProjects: number;
 };
 
 export type DashboardStats = {
@@ -24,6 +32,8 @@ export type DashboardStats = {
   totalCapacity: number;
   totalProjects: number;
   totalFinishedProjects: number;
+  residential: CategoryStats;
+  industrial: CategoryStats;
 };
 
 export async function requireAuth() {
@@ -32,12 +42,24 @@ export async function requireAuth() {
 }
 
 export async function getProjects(): Promise<DashboardProject[]> {
-  const { supabase } = await requireAuth();
-  const { data: projects } = await supabase
+  const { supabase, user } = await requireAuth();
+  console.log("[dashboard debug] user:", user?.id, user?.email);
+  const { data: projects, error } = await supabase
     .from("projects")
-    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, deadline, value_eur, contract_date, created_at")
+    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, deadline, value_eur, contract_date, created_at")
     .order("created_at", { ascending: true });
+  if (error) console.error("[dashboard debug] projects query error:", error);
+  console.log("[dashboard debug] projects count:", projects?.length);
   return projects ?? [];
+}
+
+function getCategoryStats(projects: DashboardProject[], category: ProjectCategory): CategoryStats {
+  const categoryProjects = projects.filter((p) => p.project_category === category);
+  return {
+    totalValue: categoryProjects.reduce((acc, p) => acc + (p.value_eur ?? 0), 0),
+    totalCapacity: categoryProjects.reduce((acc, p) => acc + (p.mw_solar ?? 0), 0),
+    totalProjects: categoryProjects.length,
+  };
 }
 
 export async function getDashboardStats(projects: DashboardProject[]): Promise<DashboardStats> {
@@ -46,5 +68,7 @@ export async function getDashboardStats(projects: DashboardProject[]): Promise<D
     totalCapacity: projects.reduce((acc, p) => acc + (p.mw_solar ?? 0), 0),
     totalProjects: projects.length,
     totalFinishedProjects: 0,
+    residential: getCategoryStats(projects, "residential"),
+    industrial: getCategoryStats(projects, "industrial"),
   };
 }

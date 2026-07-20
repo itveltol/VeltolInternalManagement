@@ -3,6 +3,7 @@ import { DashboardKpiRow } from "@/features/dashboard/components/DashboardKpiRow
 import { DashboardRecentProjects } from "@/features/dashboard/components/DashboardRecentProjects";
 import { IncomeByMonthChart } from "@/features/dashboard/components/IncomeByMonthChart";
 import { IncomeCompareChart } from "@/features/dashboard/components/IncomeCompareChart";
+import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
 import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
 import { requireAuth, getProjects, getDashboardStats } from "@/app/[locale]/(app)/dashboard/action";
@@ -10,6 +11,7 @@ import { requireAuth, getProjects, getDashboardStats } from "@/app/[locale]/(app
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
   const tPhase = await getTranslations("projectPhase");
+  const tContractType = await getTranslations("contractType");
 
   const { user } = await requireAuth();
 
@@ -19,13 +21,20 @@ export default async function DashboardPage() {
   }
 
   const projectsData = await getProjects();
-  const { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects } = await getDashboardStats(projectsData);
+  const { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects, residential, industrial } = await getDashboardStats(projectsData);
 
   const kpiCardsReal = [
     { label: t("totalProjectsValue"), value: totalPortfolioValue.toLocaleString("hu-HU"), unit: "EUR", delta: "+" + "12" + t("percentageChange"), deltaPositive: true, featured: true },
     { label: t("totalCapacity"), value: totalCapacity.toLocaleString("hu-HU"), unit: "MW", delta: "+" + "5" + t("percentageChange"), deltaPositive: true, featured: false },
     { label: t("totalProjects"), value: totalProjects.toString(), unit: "", delta: "+" + "3" + t("percentageChange"), deltaPositive: true, featured: false },
     { label: t("totalFinishedProjects"), value: totalFinishedProjects.toString(), unit: "", delta: "+" + "2" + t("percentageChange"), deltaPositive: true, featured: false },
+  ];
+
+  const kpiCardsByCategory = [
+    { label: t("residentialValue"), value: residential.totalValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: false },
+    { label: t("residentialProjects"), value: residential.totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
+    { label: t("industrialValue"), value: industrial.totalValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: false },
+    { label: t("industrialProjects"), value: industrial.totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
   ];
 
   const recentProjects = projectsData.slice(0, 5);
@@ -46,6 +55,8 @@ export default async function DashboardPage() {
 
       <DashboardKpiRow cards={kpiCardsReal} />
 
+      <DashboardKpiRow cards={kpiCardsByCategory} />
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <IncomeByMonthChart
           projects={projectsData}
@@ -56,6 +67,7 @@ export default async function DashboardPage() {
             yearLabel: t("incomeYearLabel"),
             noData: t("incomeNoData"),
             incomeLabel: t("incomeLabel"),
+            totalLabel: t("incomeTotalLabel"),
             excludedNote,
           }}
         />
@@ -73,6 +85,16 @@ export default async function DashboardPage() {
           }}
         />
       </div>
+
+      <ContractTypeBreakdown
+        projects={projectsData}
+        labels={{
+          eyebrow: t("contractTypeBreakdownEyebrow"),
+          title: t("contractTypeBreakdownTitle"),
+          projectCount: (count) => t("contractTypeProjectCount", { count }),
+          contractType: (type) => tContractType(type as Parameters<typeof tContractType>[0]),
+        }}
+      />
 
       <DashboardRecentProjects
         projects={recentProjects}

@@ -55,4 +55,15 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .eq("id", id);
     if (error) throw new Error(error.message);
   },
+
+  async updatePhaseDates(id, phaseKey, dates) {
+    const { error } = await supabase
+      .from("projects")
+      .update({
+        [`${phaseKey}_start_date`]: dates.start_date,
+        [`${phaseKey}_end_date`]: dates.end_date,
+      })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  },
 });

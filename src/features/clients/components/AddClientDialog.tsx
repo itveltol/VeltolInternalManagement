@@ -46,9 +46,10 @@ const PERSON_TARGET = ["cnp", "id_series", "id_number", "reg_address", "contact_
 interface Props {
   open: boolean;
   onClose: () => void;
+  onCreated?: (client: { id: number; name: string }) => void;
 }
 
-export function AddClientDialog({ open, onClose }: Props) {
+export function AddClientDialog({ open, onClose, onCreated }: Props) {
   const t = useTranslations("clients");
   const [clientType, setClientType] = useState<ClientType>("company");
   const [fields, setFields] = useState<ClientFields>(EMPTY);
@@ -77,7 +78,10 @@ export function AddClientDialog({ open, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    if (state?.success) onClose();
+    if (state?.success) {
+      if (state.client) onCreated?.(state.client);
+      onClose();
+    }
   }, [state?.success]);
 
   const setField = useCallback(

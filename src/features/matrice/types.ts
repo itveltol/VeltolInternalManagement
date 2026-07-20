@@ -1,3 +1,5 @@
+import type { ContractType } from "@/features/projects/types";
+
 export type ActivityStatus =
   | 'finalizat'
   | 'in_progres'
@@ -35,6 +37,7 @@ export interface MatrixProject {
   id: number;
   name: string;
   project_type: ProjectType | null;
+  contract_type: ContractType[];
 }
 
 /** Resolved cell for the matrix grid (missing DB row → 'neinceput') */
