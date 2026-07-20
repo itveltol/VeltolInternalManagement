@@ -7,8 +7,16 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { updateProject } from "@/app/[locale]/(app)/projects/actions";
-import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES, isHybridProjectType } from "../types";
-import type { Project, ProjectManager } from "../types";
+import {
+  PROJECT_PHASES,
+  PROJECT_STATUSES,
+  PROJECT_PRIORITIES,
+  PROJECT_TYPES,
+  PROJECT_CATEGORIES,
+  CONTRACT_TYPES,
+  isHybridProjectType,
+} from "../types";
+import type { Project, ProjectManager, ProjectCategory } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 
 const SELECT_CLASS =
@@ -31,8 +39,11 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
   const tStatus = useTranslations("projectStatus");
   const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
+  const tCategory = useTranslations("projectCategory");
+  const tContractType = useTranslations("contractType");
 
   const [state, action, pending] = useActionState(updateProject, null);
+  const [category, setCategory] = useState<ProjectCategory>(project.project_category);
 
   const [projectType, setProjectType] = useState(project.project_type ?? "");
   const [valueEurSolar, setValueEurSolar] = useState(String(project.value_eur_solar ?? ""));
@@ -86,16 +97,15 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectType")}</Label>
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectCategory")}</Label>
                 <select
-                  name="project_type"
-                  value={projectType}
-                  onChange={(e) => setProjectType(e.target.value)}
+                  name="project_category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as ProjectCategory)}
                   className={SELECT_CLASS}
                 >
-                  <option value="" className="bg-card">—</option>
-                  {PROJECT_TYPES.map((pt) => (
-                    <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
+                  {PROJECT_CATEGORIES.map((c) => (
+                    <option key={c} value={c} className="bg-card">{tCategory(c)}</option>
                   ))}
                 </select>
               </div>
@@ -111,6 +121,36 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
                 </select>
               </div>
             </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
+              <div className="flex gap-6">
+                {CONTRACT_TYPES.map((c) => (
+                  <label key={c} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name={`contract_type_${c}`}
+                      value="true"
+                      defaultChecked={project.contract_type.includes(c)}
+                      className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                    />
+                    <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {category === "industrial" && (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectType")}</Label>
+                <select name="project_type" defaultValue={project.project_type ?? ""} className={SELECT_CLASS}>
+                  <option value="" className="bg-card">—</option>
+                  {PROJECT_TYPES.map((pt) => (
+                    <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.client")}</Label>

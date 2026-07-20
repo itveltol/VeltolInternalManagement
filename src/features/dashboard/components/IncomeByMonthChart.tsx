@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useLocale } from "next-intl";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { Bar, BarChart, CartesianGrid, Rectangle, XAxis, YAxis, Tooltip } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { ChevronDownIcon } from "lucide-react";
 
 import {
@@ -21,6 +22,7 @@ interface Labels {
   yearLabel: string;
   noData: string;
   incomeLabel: string;
+  totalLabel: string;
   excludedNote: string | null;
 }
 
@@ -45,18 +47,40 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
     return Array.from({ length: 12 }, (_, m) => formatter.format(new Date(Date.UTC(2000, m, 1))));
   }, [tag]);
 
-  const data = useMemo(
-    () =>
-      getMonthlyIncomeForYear(projects, selectedYear).map((point) => ({
-        ...point,
-        monthLabel: monthNames[point.month],
-      })),
-    [projects, selectedYear, monthNames],
-  );
+  const data = useMemo(() => {
+    const months = getMonthlyIncomeForYear(projects, selectedYear).map((point) => ({
+      ...point,
+      monthLabel: monthNames[point.month],
+      isTotal: false,
+    }));
+    const yearTotal = months.reduce((sum, point) => sum + point.totalEur, 0);
+    return [
+      ...months,
+      {
+        month: 12,
+        year: selectedYear,
+        totalEur: yearTotal,
+        projectCount: months.reduce((sum, point) => sum + point.projectCount, 0),
+        monthLabel: labels.totalLabel,
+        isTotal: true,
+      },
+    ];
+  }, [projects, selectedYear, monthNames, labels.totalLabel]);
 
   const hasData = data.some((point) => point.totalEur > 0);
   const numberFormatter = new Intl.NumberFormat(tag, { notation: "compact" });
   const fullNumberFormatter = new Intl.NumberFormat(tag);
+
+  const renderBar = (props: BarShapeProps) => {
+    const { payload, ...rest } = props;
+    const isTotal = (payload as { isTotal?: boolean } | undefined)?.isTotal;
+    return (
+      <Rectangle
+        {...rest}
+        fill={isTotal ? "var(--color-veltol-fgMute)" : "var(--color-veltol-primary)"}
+      />
+    );
+  };
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-border bg-card">
@@ -110,7 +134,12 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
                   />
                 )}
               />
-              <Bar dataKey="totalEur" name={labels.incomeLabel} fill="var(--color-veltol-primary)" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="totalEur"
+                name={labels.incomeLabel}
+                shape={renderBar}
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ChartContainer>
         ) : (

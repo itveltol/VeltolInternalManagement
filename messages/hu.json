@@ -17,7 +17,8 @@
     "documents": "Dokumentumok",
     "delivery": "Szállítás",
     "site": "Építési helyszín",
-    "pontaj": "Személyzet · Jelenlét"
+    "pontaj": "Személyzet · Jelenlét",
+    "gantt": "Gantt"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -31,6 +32,10 @@
     "totalCapacity": "Teljes kapacitás",
     "totalProjects": "Összes projekt",
     "totalFinishedProjects": "Befejezett projektek",
+    "residentialValue": "Lakossági érték",
+    "residentialProjects": "Lakossági projektek",
+    "industrialValue": "Ipari érték",
+    "industrialProjects": "Ipari projektek",
     "incomeByMonthEyebrow": "BEVÉTEL",
     "incomeByMonthTitle": "Havi bevétel",
     "incomeCompareEyebrow": "ÖSSZEHASONLÍTÁS",
@@ -40,7 +45,11 @@
     "incomeClearSelection": "Törlés",
     "incomeNoData": "Nincs bevételi adat a kiválasztáshoz",
     "incomeLabel": "Bevétel",
-    "incomeExcludedNote": "{count} projekt határidő dátum nélkül, ezért nem szerepel"
+    "incomeTotalLabel": "Összesen",
+    "incomeExcludedNote": "{count} projekt határidő dátum nélkül, ezért nem szerepel",
+    "contractTypeBreakdownTitle": "Projektek szerződéstípus szerint",
+    "contractTypeBreakdownEyebrow": "SZERZŐDÉSEK",
+    "contractTypeProjectCount": "{count} projekt"
   },
   "projects": {
     "eyebrow": "PROJEKTEK · ÖSSZES",
@@ -48,6 +57,7 @@
     "subtitle": "Az összes napelemes és BESS projekt áttekintő listája",
     "totalCount": "{count} projekt összesen",
     "addProject": "Projekt hozzáadása",
+    "newClient": "+ Új ügyfél",
     "editProject": "Projekt szerkesztése",
     "deleteProject": "Törlés",
     "confirmDelete": "Törli ezt a projektet?",
@@ -69,6 +79,12 @@
     "saving": "Mentés...",
     "emptyState": "Még nincsenek projektek. Adja hozzá az elsőt.",
     "viewChecklist": "Ellenőrzőlista",
+    "filterAllPhases": "Minden fázis",
+    "filterAllCategories": "Minden kategória",
+    "filterAllContractTypes": "Minden szerződéstípus",
+    "filterMinValue": "Min. érték",
+    "filterMaxValue": "Max. érték",
+    "sortByValue": "Rendezés érték szerint",
     "pagination": {
       "prev": "Előző",
       "next": "Következő",
@@ -95,6 +111,7 @@
       "siteLocation": "Helyszín",
       "contractNumber": "Szerz. szám",
       "contractDate": "Szerz. dátum",
+      "contractType": "Szerződés típusa",
       "cuIssued": "CU kiadva?",
       "atrIssued": "ATR kiadva?",
       "notes": "Megjegyzés"
@@ -107,7 +124,9 @@
       "siteLocation": "Helyszín",
       "mwSolar": "MW Napelem",
       "mwBess": "MW BESS",
-      "projectType": "Projekt típusa",
+      "projectCategory": "Projekt kategória",
+      "projectType": "Műszaki típus",
+      "contractType": "Szerződés típusa",
       "manager": "Projektmenedzser",
       "phase": "Jelenlegi fázis",
       "progress": "Haladás (%)",
@@ -270,6 +289,15 @@
     "completed": "Befejezett",
     "on_hold": "Szüneteltetett"
   },
+  "projectCategory": {
+    "residential": "Lakossági",
+    "industrial": "Ipari"
+  },
+  "contractType": {
+    "proiectare": "Proiectare",
+    "executie": "Execuție",
+    "mentenanta": "Mentenanță"
+  },
   "projectPriority": {
     "low": "Alacsony",
     "medium": "Közepes",
@@ -299,7 +327,8 @@
     "grid": {
       "activity": "Tevékenység",
       "noProjects": "Válasszon ki legalább egy projektet.",
-      "loading": "Frissítés..."
+      "loading": "Frissítés...",
+      "notContracted": "Nem része a projekt szerződéstípusának"
     },
     "status": {
       "finalizat": "Befejezett",
@@ -308,7 +337,8 @@
       "blocat": "Blokkolt",
       "neinceput": "Nem kezdett",
       "na": "N/A"
-    }
+    },
+    "hideProject": "Elrejtés a nézetből"
   },
   "vacation": {
     "eyebrow": "HR · SZABADSÁGKÉRELMEK",
@@ -427,6 +457,7 @@
     "save": "Mentés",
     "saving": "Mentés...",
     "emptyState": "Még nincsenek ügyfelek. Adja hozzá az elsőt.",
+    "filterAllTypes": "Minden típus",
     "columns": {
       "name": "Név",
       "type": "Típus",
@@ -692,5 +723,45 @@
     "EMS": "EMS — Energia menedzsment",
     "SCADA": "Automatizálás / SCADA",
     "OM": "O&M — csak üzemeltetés"
+  },
+  "gantt": {
+    "eyebrow": "MUNKA · PORTFÓLIÓ GANTT",
+    "title": "Gantt",
+    "subtitle": "Tervezési, kivitelezési és engedélyeztetési ütemterv az összes projekten",
+    "projectColumn": "Projekt",
+    "today": "Ma",
+    "loading": "Frissítés...",
+    "emptyState": "Válassz ki legalább egy projektet.",
+    "notContracted": "Nem része a projekt szerződéstípusának",
+    "phase": {
+      "planning": "Tervezés",
+      "execution": "Kivitelezés",
+      "autorizare": "Engedélyeztetés"
+    },
+    "startDate": "Kezdő dátum",
+    "endDate": "Befejező dátum",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "errorGeneric": "Hiba történt. Kérjük, próbáld újra.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez a művelethez.",
+    "picker": {
+      "label": "PROJEKTEK",
+      "empty": "Nincs elérhető projekt.",
+      "placeholder": "Projektek keresése hozzáadáshoz...",
+      "noResults": "Nincs találat.",
+      "remove": "{name} eltávolítása"
+    },
+    "hideProject": "Elrejtés a nézetből",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
+    "startBeforePreviousEnd": "A kezdő dátum nem lehet korábbi az előző fázis befejező dátumánál.",
+    "endAfterNextStart": "A befejező dátum nem lehet későbbi a következő fázis kezdő dátumánál.",
+    "minStartDateHint": "{date} napon vagy azután kell lennie (előző fázis vége)",
+    "maxEndDateHint": "{date} napon vagy azelőtt kell lennie (következő fázis kezdete)",
+    "endBeforeStart": "A befejező dátum nem lehet korábbi a kezdő dátumnál."
   }
 }

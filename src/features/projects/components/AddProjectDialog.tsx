@@ -9,14 +9,19 @@ import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
 import { createProject } from "@/app/[locale]/(app)/projects/actions";
-import { PROJECT_PHASES, PROJECT_STATUSES, PROJECT_PRIORITIES, PROJECT_TYPES, isHybridProjectType } from "../types";
-import type { ProjectManager } from "../types";
+import {
+  PROJECT_PHASES,
+  PROJECT_STATUSES,
+  PROJECT_PRIORITIES,
+  PROJECT_TYPES,
+  PROJECT_CATEGORIES,
+  CONTRACT_TYPES,
+} from "../types";
+import type { ProjectManager, ProjectCategory } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
 import { FolderScanStep } from "./FolderScanStep";
 import { cn } from "@/shared/utils/cn";
-
-const ADD_NEW_CLIENT = "__add_new__";
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
@@ -28,6 +33,7 @@ interface ProjectFields {
   name: string;
   county: string;
   site_location: string;
+  project_category: ProjectCategory;
   project_type: string;
   contract_number: string;
   mw_solar: string;
@@ -39,6 +45,7 @@ const EMPTY: ProjectFields = {
   name: "",
   county: "",
   site_location: "",
+  project_category: "industrial",
   project_type: "",
   contract_number: "",
   mw_solar: "",
@@ -70,6 +77,8 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
   const tStatus = useTranslations("projectStatus");
   const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
+  const tCategory = useTranslations("projectCategory");
+  const tContractType = useTranslations("contractType");
 
   const [state, action, pending] = useActionState(createProject, null);
   const [step, setStep] = useState<"form" | "scan">("form");
@@ -78,16 +87,13 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
 
   const [fields, setFields] = useState<ProjectFields>(EMPTY);
   const [snapshot, setSnapshot] = useState<ProjectFields | null>(null);
-
+  const [clientId, setClientId] = useState("");
   const [localClientRefs, setLocalClientRefs] = useState<ClientRef[]>(clientRefs);
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [addClientOpen, setAddClientOpen] = useState(false);
+  const [showAddClient, setShowAddClient] = useState(false);
 
-  const [valueEurSolar, setValueEurSolar] = useState("");
-  const [valueEurBess, setValueEurBess] = useState("");
-  const [valueEurManual, setValueEurManual] = useState("");
-  const hybrid = isHybridProjectType(fields.project_type);
-  const valueEurTotal = (Number(valueEurSolar) || 0) + (Number(valueEurBess) || 0);
+  useEffect(() => {
+    setLocalClientRefs(clientRefs);
+  }, [clientRefs]);
 
   const getContext = useCallback(() => ({ name: fields.name }), [fields.name]);
 
@@ -111,34 +117,27 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
       setSnapshot(null);
       setStep("form");
       setCreatedProjectId(null);
-      setLocalClientRefs(clientRefs);
-      setSelectedClientId("");
-      setAddClientOpen(false);
-      setValueEurSolar("");
-      setValueEurBess("");
-      setValueEurManual("");
+      setClientId("");
       reset();
     }
   }, [open]);
-
-  const handleClientSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (e.target.value === ADD_NEW_CLIENT) {
-      setAddClientOpen(true);
-      return;
-    }
-    setSelectedClientId(e.target.value);
-  };
-
-  const handleClientCreated = (client: ClientRef) => {
-    setLocalClientRefs((refs) => [...refs, client]);
-    setSelectedClientId(String(client.id));
-    setAddClientOpen(false);
-  };
 
   const setField = useCallback(
     (key: keyof ProjectFields) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
         setFields((f) => ({ ...f, [key]: e.target.value })),
+    [],
+  );
+
+  const handleCategoryChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const project_category = e.target.value as ProjectCategory;
+      setFields((f) => ({
+        ...f,
+        project_category,
+        project_type: project_category === "residential" ? "" : f.project_type,
+      }));
+    },
     [],
   );
 
@@ -170,6 +169,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
     cn(hasSuggestions && fields[key] ? "ring-1 ring-veltol-accent/30" : "");
 
   return (
+    <>
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
@@ -269,16 +269,15 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectType")}</Label>
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectCategory")}</Label>
                     <select
-                      name="project_type"
-                      value={fields.project_type}
-                      onChange={(e) => setFields((f) => ({ ...f, project_type: e.target.value }))}
-                      className={cn(SELECT_CLASS, aiClass("project_type"))}
+                      name="project_category"
+                      value={fields.project_category}
+                      onChange={handleCategoryChange}
+                      className={SELECT_CLASS}
                     >
-                      <option value="" className="bg-card">—</option>
-                      {PROJECT_TYPES.map((pt) => (
-                        <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
+                      {PROJECT_CATEGORIES.map((c) => (
+                        <option key={c} value={c} className="bg-card">{tCategory(c)}</option>
                       ))}
                     </select>
                   </div>
@@ -296,18 +295,61 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.client")}</Label>
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
+                  <div className="flex gap-6">
+                    {CONTRACT_TYPES.map((c) => (
+                      <label key={c} className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name={`contract_type_${c}`}
+                          value="true"
+                          defaultChecked
+                          className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                        />
+                        <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {fields.project_category === "industrial" && (
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.projectType")}</Label>
+                    <select
+                      name="project_type"
+                      value={fields.project_type}
+                      onChange={(e) => setFields((f) => ({ ...f, project_type: e.target.value }))}
+                      className={cn(SELECT_CLASS, aiClass("project_type"))}
+                    >
+                      <option value="" className="bg-card">—</option>
+                      {PROJECT_TYPES.map((pt) => (
+                        <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.client")}</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddClient(true)}
+                      className="text-[11px] font-medium text-veltol-accent hover:underline"
+                    >
+                      {t("newClient")}
+                    </button>
+                  </div>
                   <select
                     name="client_id"
-                    value={selectedClientId}
-                    onChange={handleClientSelectChange}
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
                     className={SELECT_CLASS}
                   >
                     <option value="" className="bg-card">—</option>
                     {localClientRefs.map((c) => (
                       <option key={c.id} value={c.id} className="bg-card">{c.name}</option>
                     ))}
-                    <option value={ADD_NEW_CLIENT} className="bg-card">{t("fields.addNewClient")}</option>
                   </select>
                 </div>
 
@@ -349,44 +391,10 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                     <input name="deadline" type="date" className={SELECT_CLASS} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">
-                      {hybrid ? t("fields.valueEurSolar") : t("fields.valueEur")}
-                    </Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder={hybrid ? "1500000" : "2195000"}
-                      value={hybrid ? valueEurSolar : valueEurManual}
-                      onChange={(e) =>
-                        hybrid ? setValueEurSolar(e.target.value) : setValueEurManual(e.target.value)
-                      }
-                    />
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEur")}</Label>
+                    <Input name="value_eur" type="number" min="0" placeholder="2195000" />
                   </div>
                 </div>
-
-                <input type="hidden" name="value_eur" value={hybrid ? valueEurTotal : valueEurManual} />
-
-                {hybrid && (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
-                      <Input
-                        name="value_eur_bess"
-                        type="number"
-                        min="0"
-                        placeholder="695000"
-                        value={valueEurBess}
-                        onChange={(e) => setValueEurBess(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
-                      <p className="flex h-8 items-center font-mono text-sm text-veltol-fg">
-                        {new Intl.NumberFormat("hu-HU").format(valueEurTotal)} €
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
@@ -439,16 +447,22 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   <Button type="submit" disabled={pending}>{pending ? t("saving") : t("save")}</Button>
                 </div>
               </form>
-
-              <AddClientDialog
-                open={addClientOpen}
-                onClose={() => setAddClientOpen(false)}
-                onCreated={handleClientCreated}
-              />
             </>
           )}
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
+
+    <AddClientDialog
+      open={showAddClient}
+      onClose={() => setShowAddClient(false)}
+      onCreated={(client) => {
+        setLocalClientRefs((refs) =>
+          [...refs, client].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        setClientId(String(client.id));
+      }}
+    />
+    </>
   );
 }

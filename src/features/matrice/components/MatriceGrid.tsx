@@ -2,11 +2,13 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { X } from "lucide-react";
 import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from "../types";
 import {
   projectCompletionPct,
   phaseCompletionPct,
   activityRowPct,
+  isPhaseEnabled,
 } from "../services/matriceService";
 import { MatriceCell } from "./MatriceCell";
 import { cn } from "@/shared/utils/cn";
@@ -17,11 +19,12 @@ interface Props {
   projects: MatrixProject[];
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
+  onHideProject: (projectId: number) => void;
   docCounts?: Map<string, number>;
   pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, docCounts = new Map(), pendingCells }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, docCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
   const phases = useMemo(
@@ -60,7 +63,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
 
   const projectPctById = useMemo(() => {
     const map = new Map<number, number>();
-    for (const p of projects) map.set(p.id, projectCompletionPct(activities, cells, p.id));
+    for (const p of projects) map.set(p.id, projectCompletionPct(activities, cells, p.id, p));
     return map;
   }, [activities, cells, projects]);
 
@@ -120,12 +123,24 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
             {projects.map((p) => (
               <th
                 key={p.id}
-                className="min-w-[120px] px-2 py-2 text-center"
+                className="group/col min-w-[120px] px-2 py-2 text-center"
               >
-                <div className="text-[12px] font-semibold text-veltol-fg">{p.name}</div>
-                {p.project_type && (
-                  <div className="mt-0.5 font-mono text-[9px] text-veltol-fgMute">{p.project_type}</div>
-                )}
+                <div className="relative flex items-start justify-center">
+                  <div>
+                    <div className="text-[12px] font-semibold text-veltol-fg">{p.name}</div>
+                    {p.project_type && (
+                      <div className="mt-0.5 font-mono text-[9px] text-veltol-fgMute">{p.project_type}</div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onHideProject(p.id)}
+                    title={t("hideProject")}
+                    className="absolute -right-1 -top-1 rounded p-0.5 text-veltol-fgMute opacity-0 transition-opacity hover:bg-veltol-red/10 hover:text-veltol-red group-hover/col:opacity-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
                 <div className="mt-1 font-mono text-[11px] tabular-nums text-veltol-accent">
                   {projectPctById.get(p.id) ?? 0}%
                 </div>
@@ -157,11 +172,21 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                 >
                   {phaseNo}. {phaseName}
                 </td>
-                {projects.map((p) => (
-                  <td key={p.id} className="px-2 py-2 text-center font-mono text-[11px] tabular-nums text-veltol-fgDim">
-                    {phasePctByKey.get(`${phaseNo}:${p.id}`) ?? 0}%
-                  </td>
-                ))}
+                {projects.map((p) => {
+                  const enabled = isPhaseEnabled(p, phaseNo);
+                  return (
+                    <td
+                      key={p.id}
+                      className={cn(
+                        "px-2 py-2 text-center font-mono text-[11px] tabular-nums",
+                        enabled ? "text-veltol-fgDim" : "text-veltol-fgMute/30",
+                      )}
+                      title={enabled ? undefined : t("grid.notContracted")}
+                    >
+                      {enabled ? `${phasePctByKey.get(`${phaseNo}:${p.id}`) ?? 0}%` : "—"}
+                    </td>
+                  );
+                })}
               </tr>,
 
               // Activity rows for this phase (hidden when collapsed)
@@ -200,17 +225,27 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                         </td>
                         {projects.map((p) => {
                           const status = getStatus(p.id, activity.id);
+                          const enabled = isPhaseEnabled(p, activity.phase_no);
                           return (
                             <td key={p.id} className="px-1.5 py-1">
-                              <MatriceCell
-                                status={status}
-                                projectId={p.id}
-                                activityId={activity.id}
-                                onChangeStatus={onChangeStatus}
-                                onOpenDocuments={onOpenDocuments}
-                                documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
-                                pending={pendingCells?.has(`${p.id}:${activity.id}`)}
-                              />
+                              {enabled ? (
+                                <MatriceCell
+                                  status={status}
+                                  projectId={p.id}
+                                  activityId={activity.id}
+                                  onChangeStatus={onChangeStatus}
+                                  onOpenDocuments={onOpenDocuments}
+                                  documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
+                                  pending={pendingCells?.has(`${p.id}:${activity.id}`)}
+                                />
+                              ) : (
+                                <div
+                                  className="flex h-7 w-full items-center justify-center rounded border border-dashed border-veltol-fgMute/20 text-veltol-fgMute/40"
+                                  title={t("grid.notContracted")}
+                                >
+                                  —
+                                </div>
+                              )}
                             </td>
                           );
                         })}

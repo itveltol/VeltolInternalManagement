@@ -79,7 +79,7 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
 
   useEffect(() => {
     if (state?.success) {
-      if (state.clientId) onCreated?.({ id: state.clientId, name: fields.name.trim() });
+      if (state.client) onCreated?.(state.client);
       onClose();
     }
   }, [state?.success]);

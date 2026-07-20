@@ -1,10 +1,10 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
-import { getMatrixData, getAvailableProjects, getHiddenMatriceProjectIds } from "./actions";
-import { MatriceShell } from "@/features/matrice/components/MatriceShell";
+import { getGanttProjects, getGanttMatriceData, getHiddenGanttProjectIds } from "./actions";
+import { PortfolioGanttShell } from "@/features/gantt/components/PortfolioGanttShell";
 
-export default async function MatriceStatusPage() {
+export default async function GanttPage() {
   const { user } = await getSessionUser();
 
   if (!user) {
@@ -12,15 +12,15 @@ export default async function MatriceStatusPage() {
     redirect(`/${locale}/login`);
   }
 
-  const t = await getTranslations("matrice");
+  const t = await getTranslations("gantt");
 
   const [allProjects, initialHiddenIds] = await Promise.all([
-    getAvailableProjects(),
-    getHiddenMatriceProjectIds(),
+    getGanttProjects(),
+    getHiddenGanttProjectIds(),
   ]);
-  // Load all projects by default; client hides individual ones via server-persisted per-user state
   const visibleIds = allProjects.map((p) => p.id).filter((id) => !initialHiddenIds.includes(id));
-  const initialData = await getMatrixData(visibleIds);
+  const { activities, cells } = await getGanttMatriceData(visibleIds);
+  const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
 
   return (
     <div className="space-y-8">
@@ -32,7 +32,13 @@ export default async function MatriceStatusPage() {
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
       </div>
 
-      <MatriceShell initialData={initialData} allProjects={allProjects} initialHiddenIds={initialHiddenIds} />
+      <PortfolioGanttShell
+        allProjects={allProjects}
+        initialHiddenIds={initialHiddenIds}
+        initialActivities={activities}
+        initialCells={cells}
+        todayMs={todayMs}
+      />
     </div>
   );
 }

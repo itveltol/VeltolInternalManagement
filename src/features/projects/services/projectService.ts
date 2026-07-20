@@ -24,3 +24,12 @@ export async function updateProject(client: ProjectsApiClient, id: number, paylo
 export async function deleteProject(client: ProjectsApiClient, id: number): Promise<void> {
   return client.deleteProject(id);
 }
+
+export async function updatePhaseDates(
+  client: ProjectsApiClient,
+  id: number,
+  phaseKey: "planning" | "execution" | "autorizare",
+  dates: { start_date: string | null; end_date: string | null },
+): Promise<void> {
+  return client.updatePhaseDates(id, phaseKey, dates);
+}

@@ -16,6 +16,10 @@ export type ProjectStatus =
 
 export type ProjectPriority = "low" | "medium" | "high";
 
+export type ProjectCategory = "residential" | "industrial";
+
+export type ContractType = "proiectare" | "executie" | "mentenanta";
+
 export interface Project {
   id: number;
   name: string;
@@ -23,7 +27,9 @@ export interface Project {
   site_location: string | null;
   mw_solar: number | null;
   mw_bess: number | null;
+  project_category: ProjectCategory;
   project_type: string | null;
+  contract_type: ContractType[];
   manager_id: string | null;
   manager?: { first_name: string | null; last_name: string | null } | null;
   client_id: number | null;
@@ -44,6 +50,12 @@ export interface Project {
   paid_by: string | null;
   onedrive_folder_id: string | null;
   onedrive_folder_url: string | null;
+  planning_start_date: string | null;
+  planning_end_date: string | null;
+  execution_start_date: string | null;
+  execution_end_date: string | null;
+  autorizare_start_date: string | null;
+  autorizare_end_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +85,10 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
 ];
 
 export const PROJECT_PRIORITIES: ProjectPriority[] = ["low", "medium", "high"];
+
+export const PROJECT_CATEGORIES: ProjectCategory[] = ["residential", "industrial"];
+
+export const CONTRACT_TYPES: ContractType[] = ["proiectare", "executie", "mentenanta"];
 
 export type ProjectType =
   | "CEF"

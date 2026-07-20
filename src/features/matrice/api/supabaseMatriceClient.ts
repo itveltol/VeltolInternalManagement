@@ -26,7 +26,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
     if (projectIds.length === 0) return [];
     const { data, error } = await supabase
       .from('projects')
-      .select('id, name, project_type')
+      .select('id, name, project_type, contract_type')
       .in('id', projectIds)
       .order('id');
     if (error) throw new Error(error.message);
@@ -36,7 +36,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
   async getAllProjects() {
     const { data, error } = await supabase
       .from('projects')
-      .select('id, name, project_type')
+      .select('id, name, project_type, contract_type')
       .order('name');
     if (error) throw new Error(error.message);
     return (data ?? []) as MatrixProject[];
