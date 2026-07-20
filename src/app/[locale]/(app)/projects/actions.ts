@@ -173,7 +173,9 @@ export async function updateProject(
     const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
     await projectService.updateProject(client, projectId, extractProjectPayload(formData));
+    const locale = await getLocale();
     revalidatePath(await getProjectsPath());
+    revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "projectSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };

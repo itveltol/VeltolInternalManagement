@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
 import * as matriceService from "@/features/matrice/services/matriceService";
-import * as hiddenProjectsService from "@/features/hiddenProjects/services/hiddenProjectsService";
+import * as shownProjectsService from "@/features/hiddenProjects/services/shownProjectsService";
+import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import type { Activity, MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
 
 export type ActionState = { error?: string; success?: string } | null;
@@ -28,19 +29,24 @@ export async function getAvailableProjects(): Promise<MatrixProject[]> {
   return matriceService.getAllProjects(client);
 }
 
-export async function getHiddenMatriceProjectIds(): Promise<number[]> {
+export async function getShownMatriceProjectIds(): Promise<number[]> {
   const { supabase, user } = await requireAuth();
-  return hiddenProjectsService.getHiddenProjectIds(supabase, user.id, "matrice");
+  return shownProjectsService.getShownProjectIds(supabase, user.id, "matrice");
 }
 
-export async function hideMatriceProject(projectId: number): Promise<void> {
+export async function showMatriceProject(projectId: number): Promise<ActionState> {
   const { supabase, user } = await requireAuth();
-  await hiddenProjectsService.hideProject(supabase, user.id, "matrice", projectId);
+  const shownIds = await shownProjectsService.getShownProjectIds(supabase, user.id, "matrice");
+  if (!shownIds.includes(projectId) && shownIds.length >= MAX_VISIBLE_PROJECTS) {
+    return { error: "errorMaxProjects" };
+  }
+  await shownProjectsService.showProject(supabase, user.id, "matrice", projectId);
+  return { success: "saved" };
 }
 
-export async function unhideMatriceProject(projectId: number): Promise<void> {
+export async function unshowMatriceProject(projectId: number): Promise<void> {
   const { supabase, user } = await requireAuth();
-  await hiddenProjectsService.unhideProject(supabase, user.id, "matrice", projectId);
+  await shownProjectsService.unshowProject(supabase, user.id, "matrice", projectId);
 }
 
 export async function getActivities(): Promise<Activity[]> {

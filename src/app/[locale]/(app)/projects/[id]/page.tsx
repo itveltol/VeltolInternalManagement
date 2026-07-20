@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs } from "./actions";
 import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
 import { GanttShell } from "@/features/projects/checklists/components/GanttShell";
 import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
+import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
 import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
@@ -35,11 +36,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const isDocumentsTab = tab === "documents";
   const isGanttTab = tab === "gantt";
 
-  const [project, records, projectDocuments, teams] = await Promise.all([
+  const [project, records, projectDocuments, teams, managers, clientRefs] = await Promise.all([
     getProject(projectId),
     getChecklistRecords(projectId),
     isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
     isGanttTab ? getTeamsForGantt() : Promise.resolve([]),
+    canMutate ? getProjectManagers() : Promise.resolve([]),
+    canMutate ? getClientRefs() : Promise.resolve([]),
   ]);
 
   if (!project) notFound();
@@ -128,6 +131,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
           </div>
         </div>
       </div>
+
+      <ProjectOverviewPanel
+        project={project}
+        canMutate={canMutate}
+        managers={managers}
+        clientRefs={clientRefs}
+      />
 
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-border">

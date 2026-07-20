@@ -12,32 +12,33 @@ import { GanttProjectPicker } from "./GanttProjectPicker";
 import { PortfolioGanttChart } from "./PortfolioGanttChart";
 import { PhaseDateDialog } from "./PhaseDateDialog";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { getGanttMatriceData, hideGanttProject, unhideGanttProject } from "@/app/[locale]/(app)/gantt/actions";
+import { getGanttMatriceData, showGanttProject, unshowGanttProject } from "@/app/[locale]/(app)/gantt/actions";
+import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 
 const PAGE_SIZE = 5;
 
 interface Props {
   allProjects: Project[];
-  initialHiddenIds: number[];
+  initialShownIds: number[];
   initialActivities: Activity[];
   initialCells: MatrixCell[];
   todayMs: number;
 }
 
-export function PortfolioGanttShell({ allProjects, initialHiddenIds, initialActivities, initialCells, todayMs }: Props) {
+export function PortfolioGanttShell({ allProjects, initialShownIds, initialActivities, initialCells, todayMs }: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [hiddenIds, setHiddenIds] = useState<number[]>(initialHiddenIds);
+  const [shownIds, setShownIds] = useState<number[]>(initialShownIds);
   const [page, setPage] = useState(1);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [cells, setCells] = useState<MatrixCell[]>(initialCells);
   const [editing, setEditing] = useState<{ projectId: number; segment: GanttPhaseSegment } | null>(null);
 
   const visibleIds = useMemo(
-    () => allProjects.map((p) => p.id).filter((id) => !hiddenIds.includes(id)),
-    [allProjects, hiddenIds],
+    () => allProjects.map((p) => p.id).filter((id) => shownIds.includes(id)),
+    [allProjects, shownIds],
   );
 
   const isFirstDataLoad = useRef(true);
@@ -59,9 +60,9 @@ export function PortfolioGanttShell({ allProjects, initialHiddenIds, initialActi
     [allProjects, visibleIds],
   );
 
-  const hiddenProjects = useMemo(
-    () => allProjects.filter((p) => hiddenIds.includes(p.id)),
-    [allProjects, hiddenIds],
+  const pickableProjects = useMemo(
+    () => allProjects.filter((p) => !shownIds.includes(p.id)),
+    [allProjects, shownIds],
   );
 
   const pageCount = Math.max(1, Math.ceil(visibleProjects.length / PAGE_SIZE));
@@ -80,17 +81,21 @@ export function PortfolioGanttShell({ allProjects, initialHiddenIds, initialActi
     [pageProjects, activities, cells, todayMs],
   );
 
-  function handleHide(projectId: number) {
-    setHiddenIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
+  function handleRemove(projectId: number) {
+    setShownIds((prev) => prev.filter((id) => id !== projectId));
     startTransition(async () => {
-      await hideGanttProject(projectId);
+      await unshowGanttProject(projectId);
     });
   }
 
-  function handleUnhide(projectId: number) {
-    setHiddenIds((prev) => prev.filter((id) => id !== projectId));
+  function handleAdd(projectId: number) {
+    if (shownIds.length >= MAX_VISIBLE_PROJECTS) return;
+    setShownIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
     startTransition(async () => {
-      await unhideGanttProject(projectId);
+      const result = await showGanttProject(projectId);
+      if (result?.error) {
+        setShownIds((prev) => prev.filter((id) => id !== projectId));
+      }
     });
   }
 
@@ -98,11 +103,15 @@ export function PortfolioGanttShell({ allProjects, initialHiddenIds, initialActi
 
   return (
     <div className="space-y-6">
-      {hiddenProjects.length > 0 && (
-        <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
-          <GanttProjectPicker hiddenProjects={hiddenProjects} onUnhide={handleUnhide} />
-        </div>
-      )}
+      <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
+        <GanttProjectPicker
+          pickableProjects={pickableProjects}
+          onAdd={handleAdd}
+          disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
+          maxProjects={MAX_VISIBLE_PROJECTS}
+          shownCount={shownIds.length}
+        />
+      </div>
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
@@ -123,7 +132,7 @@ export function PortfolioGanttShell({ allProjects, initialHiddenIds, initialActi
         rows={rows}
         todayMs={todayMs}
         onSegmentClick={(projectId, segment) => setEditing({ projectId, segment })}
-        onHideProject={handleHide}
+        onHideProject={handleRemove}
         pagination={
           <Pagination
             page={currentPage}

@@ -17,34 +17,36 @@ import {
 } from "@/shared/components/ui/combobox";
 
 interface Props {
-  hiddenProjects: Project[];
-  onUnhide: (id: number) => void;
+  pickableProjects: Project[];
+  onAdd: (id: number) => void;
+  disabled: boolean;
+  maxProjects: number;
+  shownCount: number;
 }
 
-export function GanttProjectPicker({ hiddenProjects, onUnhide }: Props) {
+export function GanttProjectPicker({ pickableProjects, onAdd, disabled, maxProjects, shownCount }: Props) {
   const t = useTranslations("gantt");
   const filter = useComboboxFilter({ multiple: true });
 
-  if (hiddenProjects.length === 0) {
-    return null;
-  }
-
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-medium text-veltol-fgMute">{t("picker.label")}</span>
+      <span className="text-[11px] font-medium text-veltol-fgMute">
+        {t("picker.label")} ({shownCount}/{maxProjects})
+      </span>
       <Combobox
-        items={hiddenProjects}
+        items={pickableProjects}
         value={[]}
         onValueChange={(next: Project[]) => {
           const added = next[next.length - 1];
-          if (added) onUnhide(added.id);
+          if (added) onAdd(added.id);
         }}
         itemToStringLabel={(p) => p.name}
         filter={filter.contains}
+        disabled={disabled}
         multiple
       >
         <ComboboxInputGroup>
-          <ComboboxInput placeholder={t("picker.placeholder")} />
+          <ComboboxInput placeholder={disabled ? t("picker.maxReached") : t("picker.placeholder")} />
         </ComboboxInputGroup>
         <ComboboxPortal>
           <ComboboxPositioner>

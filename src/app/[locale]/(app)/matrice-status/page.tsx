@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
-import { getMatrixData, getAvailableProjects, getHiddenMatriceProjectIds } from "./actions";
+import { getMatrixData, getAvailableProjects, getShownMatriceProjectIds } from "./actions";
 import { MatriceShell } from "@/features/matrice/components/MatriceShell";
 
 export default async function MatriceStatusPage() {
@@ -14,13 +14,13 @@ export default async function MatriceStatusPage() {
 
   const t = await getTranslations("matrice");
 
-  const [allProjects, initialHiddenIds] = await Promise.all([
+  const [allProjects, initialShownIds] = await Promise.all([
     getAvailableProjects(),
-    getHiddenMatriceProjectIds(),
+    getShownMatriceProjectIds(),
   ]);
-  // Load all projects by default; client hides individual ones via server-persisted per-user state
-  const visibleIds = allProjects.map((p) => p.id).filter((id) => !initialHiddenIds.includes(id));
-  const initialData = await getMatrixData(visibleIds);
+  // Nothing is shown by default (portfolio can run into the hundreds of
+  // projects) — the user picks a handful to view, persisted server-side.
+  const initialData = await getMatrixData(initialShownIds);
 
   return (
     <div className="space-y-8">
@@ -32,7 +32,7 @@ export default async function MatriceStatusPage() {
         <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
       </div>
 
-      <MatriceShell initialData={initialData} allProjects={allProjects} initialHiddenIds={initialHiddenIds} />
+      <MatriceShell initialData={initialData} allProjects={allProjects} initialShownIds={initialShownIds} />
     </div>
   );
 }

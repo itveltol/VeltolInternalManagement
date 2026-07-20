@@ -10,35 +10,36 @@ import { DocumentsPopover } from "@/features/documents/components/DocumentsPopov
 import {
   setCellStatus,
   getMatrixData,
-  hideMatriceProject,
-  unhideMatriceProject,
+  showMatriceProject,
+  unshowMatriceProject,
 } from "@/app/[locale]/(app)/matrice-status/actions";
+import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import { getDocuments } from "@/app/[locale]/(app)/documents/actions";
 
 interface Props {
   initialData: MatrixData;
   allProjects: MatrixProject[];
-  initialHiddenIds: number[];
+  initialShownIds: number[];
 }
 
-export function MatriceShell({ initialData, allProjects, initialHiddenIds }: Props) {
+export function MatriceShell({ initialData, allProjects, initialShownIds }: Props) {
   const t = useTranslations("matrice");
   const [isPending, startTransition] = useTransition();
 
-  const [hiddenIds, setHiddenIds] = useState<number[]>(initialHiddenIds);
+  const [shownIds, setShownIds] = useState<number[]>(initialShownIds);
   const [data, setData] = useState<MatrixData>(initialData);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
   const [docsPopover, setDocsPopover] = useState<{ projectId: number; activityId: number } | null>(null);
   const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
 
   const visibleIds = useMemo(
-    () => allProjects.map((p) => p.id).filter((id) => !hiddenIds.includes(id)),
-    [allProjects, hiddenIds],
+    () => allProjects.map((p) => p.id).filter((id) => shownIds.includes(id)),
+    [allProjects, shownIds],
   );
 
-  const hiddenProjects = useMemo(
-    () => allProjects.filter((p) => hiddenIds.includes(p.id)),
-    [allProjects, hiddenIds],
+  const pickableProjects = useMemo(
+    () => allProjects.filter((p) => !shownIds.includes(p.id)),
+    [allProjects, shownIds],
   );
 
   // Reload matrix when the visible set changes (skip the very first run —
@@ -73,17 +74,22 @@ export function MatriceShell({ initialData, allProjects, initialHiddenIds }: Pro
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleIds]);
 
-  function handleHideProject(projectId: number) {
-    setHiddenIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
+  function handleRemoveProject(projectId: number) {
+    setShownIds((prev) => prev.filter((id) => id !== projectId));
     startTransition(async () => {
-      await hideMatriceProject(projectId);
+      await unshowMatriceProject(projectId);
     });
   }
 
-  function handleUnhideProject(projectId: number) {
-    setHiddenIds((prev) => prev.filter((id) => id !== projectId));
+  function handleAddProject(projectId: number) {
+    if (shownIds.length >= MAX_VISIBLE_PROJECTS) return;
+    setShownIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
     startTransition(async () => {
-      await unhideMatriceProject(projectId);
+      const result = await showMatriceProject(projectId);
+      if (result?.error) {
+        // Server rejected it (cap reached elsewhere/race): roll back optimistic add.
+        setShownIds((prev) => prev.filter((id) => id !== projectId));
+      }
     });
   }
 
@@ -124,12 +130,16 @@ export function MatriceShell({ initialData, allProjects, initialHiddenIds }: Pro
 
   return (
     <div className="space-y-6">
-      {/* Project picker: only lists hidden projects, re-adds them on pick */}
-      {hiddenProjects.length > 0 && (
-        <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
-          <MatriceProjectPicker hiddenProjects={hiddenProjects} onUnhide={handleUnhideProject} />
-        </div>
-      )}
+      {/* Project picker: pick up to MAX_VISIBLE_PROJECTS projects to view */}
+      <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
+        <MatriceProjectPicker
+          pickableProjects={pickableProjects}
+          onAdd={handleAddProject}
+          disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
+          maxProjects={MAX_VISIBLE_PROJECTS}
+          shownCount={shownIds.length}
+        />
+      </div>
 
       {/* Legend */}
       <div className="flex items-center justify-between gap-4">
@@ -147,7 +157,7 @@ export function MatriceShell({ initialData, allProjects, initialHiddenIds }: Pro
           projects={data.projects}
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
-          onHideProject={handleHideProject}
+          onHideProject={handleRemoveProject}
           docCounts={docCounts}
           pendingCells={pendingCells}
         />

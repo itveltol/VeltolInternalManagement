@@ -1,6 +1,7 @@
 import { Badge } from "@/shared/components/ui/badge";
 import { statusVariant } from "@/shared/utils/status-variant";
 import { DashboardProject } from "@/app/[locale]/(app)/dashboard/action";
+import { Link } from "@/i18n/navigation";
 
 interface Props {
   projects: DashboardProject[];
@@ -32,7 +33,11 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
 
       <div className="divide-y divide-border">
         {projects.map((project) => (
-          <div key={project.id} className="flex items-center gap-4 px-5 py-3.5">
+          <Link
+            key={project.id}
+            href={`/projects/${project.id}`}
+            className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-veltol-surface/40"
+          >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] text-veltol-fgMute">{project.id}</span>
@@ -53,7 +58,7 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
             <div className="shrink-0">
               <Badge variant={statusVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

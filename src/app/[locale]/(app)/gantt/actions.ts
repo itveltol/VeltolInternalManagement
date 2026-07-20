@@ -8,7 +8,8 @@ import * as matriceService from "@/features/matrice/services/matriceService";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import * as projectService from "@/features/projects/services/projectService";
 import { validatePhaseDates } from "@/features/gantt/services/ganttPhaseService";
-import * as hiddenProjectsService from "@/features/hiddenProjects/services/hiddenProjectsService";
+import * as shownProjectsService from "@/features/hiddenProjects/services/shownProjectsService";
+import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import type { Project } from "@/features/projects/types";
 import type { GanttPhaseKey } from "@/features/gantt/types";
@@ -36,19 +37,24 @@ export async function getGanttProjects(): Promise<Project[]> {
   return projectService.getProjects(client);
 }
 
-export async function getHiddenGanttProjectIds(): Promise<number[]> {
+export async function getShownGanttProjectIds(): Promise<number[]> {
   const { supabase, user } = await requireAuth();
-  return hiddenProjectsService.getHiddenProjectIds(supabase, user.id, "gantt");
+  return shownProjectsService.getShownProjectIds(supabase, user.id, "gantt");
 }
 
-export async function hideGanttProject(projectId: number): Promise<void> {
+export async function showGanttProject(projectId: number): Promise<ActionState> {
   const { supabase, user } = await requireAuth();
-  await hiddenProjectsService.hideProject(supabase, user.id, "gantt", projectId);
+  const shownIds = await shownProjectsService.getShownProjectIds(supabase, user.id, "gantt");
+  if (!shownIds.includes(projectId) && shownIds.length >= MAX_VISIBLE_PROJECTS) {
+    return { error: "errorMaxProjects" };
+  }
+  await shownProjectsService.showProject(supabase, user.id, "gantt", projectId);
+  return { success: "saved" };
 }
 
-export async function unhideGanttProject(projectId: number): Promise<void> {
+export async function unshowGanttProject(projectId: number): Promise<void> {
   const { supabase, user } = await requireAuth();
-  await hiddenProjectsService.unhideProject(supabase, user.id, "gantt", projectId);
+  await shownProjectsService.unshowProject(supabase, user.id, "gantt", projectId);
 }
 
 export async function getGanttMatriceData(
