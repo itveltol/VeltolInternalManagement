@@ -130,27 +130,35 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
 
   return (
     <div className="space-y-6">
-      {/* Project picker: pick up to MAX_VISIBLE_PROJECTS projects to view */}
-      <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
-        <MatriceProjectPicker
-          pickableProjects={pickableProjects}
-          onAdd={handleAddProject}
-          disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
-          maxProjects={MAX_VISIBLE_PROJECTS}
-          shownCount={shownIds.length}
-        />
-      </div>
+      {/* Project picker + legend */}
+      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
+        <div className="flex items-center justify-between gap-4 p-5">
+          <div className="min-w-0 flex-1">
+            <MatriceProjectPicker
+              pickableProjects={pickableProjects}
+              onAdd={handleAddProject}
+              disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
+              maxProjects={MAX_VISIBLE_PROJECTS}
+              shownCount={shownIds.length}
+            />
+          </div>
+          <span className="shrink-0 text-[13px] font-medium text-veltol-fgDim">
+            {t("picker.shownCount", { count: shownIds.length })}
+          </span>
+        </div>
 
-      {/* Legend */}
-      <div className="flex items-center justify-between gap-4">
-        <MatriceLegend />
-        {isPending && (
-          <span className="font-mono text-[10px] text-veltol-fgMute">{t("grid.loading")}</span>
-        )}
+        <div className="h-px bg-border" />
+
+        <div className="flex items-center justify-between gap-4 p-5">
+          <MatriceLegend />
+          {isPending && (
+            <span className="text-[12px] font-medium text-veltol-fgMute">{t("grid.loading")}</span>
+          )}
+        </div>
       </div>
 
       {/* Matrix */}
-      <div className="rounded-xl border border-t-2 border-t-veltol-accent/60 border-border bg-veltol-surface/20 p-0 overflow-hidden">
+      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
         <MatriceGrid
           activities={data.activities}
           cells={data.cells}

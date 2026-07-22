@@ -106,11 +106,11 @@ export function InlineSearchBar() {
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input */}
-      <div className="flex w-full items-center gap-3 rounded-lg border border-border bg-veltol-surface/40 px-4 py-3 transition-colors focus-within:border-veltol-accent/40 focus-within:bg-veltol-surface/70">
+      <div className="flex h-11 w-full items-center gap-3 rounded-btn border border-border bg-[#F4F7FC] px-4 transition-colors focus-within:border-veltol-accent focus-within:bg-card focus-within:ring-[3px] focus-within:ring-veltol-accent/[0.18]">
         {isPending ? (
-          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-veltol-fgMute" />
+          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-veltol-faint" />
         ) : (
-          <Search className="h-3.5 w-3.5 shrink-0 text-veltol-fgMute" />
+          <Search className="h-3.5 w-3.5 shrink-0 text-veltol-faint" />
         )}
         <input
           ref={inputRef}
@@ -122,7 +122,7 @@ export function InlineSearchBar() {
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={t("placeholder")}
-          className="flex-1 bg-transparent font-mono text-[12px] text-veltol-fg placeholder:text-veltol-fgMute outline-none min-w-0"
+          className="flex-1 bg-transparent text-[14px] text-veltol-fg placeholder:text-veltol-faint outline-none min-w-0"
         />
         {query ? (
           <button
@@ -133,7 +133,7 @@ export function InlineSearchBar() {
             <X className="h-3 w-3" />
           </button>
         ) : (
-          <kbd className="shrink-0 rounded border border-border bg-veltol-surface/60 px-1.5 py-0.5 font-mono text-[10px] text-veltol-fgMute">
+          <kbd className="shrink-0 rounded border border-border bg-card px-1.5 py-0.5 text-[10px] font-semibold text-veltol-fgMute">
             ⌘K
           </kbd>
         )}
@@ -253,7 +253,7 @@ function ResultItem({
       <span className="min-w-0 flex-1">
         <span className="block truncate font-mono text-sm text-veltol-fg">{title}</span>
         {subtitle && (
-          <span className="block truncate font-mono text-[11px] text-veltol-fgMute">{subtitle}</span>
+          <span className="block truncate text-[12px] font-medium text-veltol-fgMute">{subtitle}</span>
         )}
       </span>
       <Badge variant={badgeVariant}>{badge}</Badge>

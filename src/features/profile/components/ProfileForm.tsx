@@ -40,7 +40,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
         {/* Identity column */}
         <div className="flex flex-col items-center gap-4 border-b border-border px-8 py-8 md:w-56 md:shrink-0 md:border-b-0 md:border-r">
           <Avatar className="h-20 w-20">
-            <AvatarFallback className="bg-veltol-primary text-2xl font-bold text-white">
+            <AvatarFallback className="grad-blue text-2xl font-bold text-white">
               {initials(profile)}
             </AvatarFallback>
           </Avatar>

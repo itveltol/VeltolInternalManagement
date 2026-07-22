@@ -1,12 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
-import { updateProject } from "@/app/[locale]/(app)/projects/actions";
+import { updateProject, assignProjectTeam } from "@/app/[locale]/(app)/projects/actions";
 import {
   PROJECT_PHASES,
   PROJECT_STATUSES,
@@ -15,9 +15,11 @@ import {
   PROJECT_CATEGORIES,
   CONTRACT_TYPES,
   isHybridProjectType,
+  FINANCIAL_TYPES,
 } from "../types";
 import type { Project, ProjectManager, ProjectCategory } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+import type { Team } from "@/features/teams/types";
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
@@ -30,10 +32,12 @@ interface Props {
   open: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
+  teams: Team[];
+  canAssignTeam: boolean;
   onClose: () => void;
 }
 
-export function EditProjectDialog({ project, open, managers, clientRefs, onClose }: Props) {
+export function EditProjectDialog({ project, open, managers, clientRefs, teams, canAssignTeam, onClose }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -41,9 +45,25 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
+  const tFinancialType = useTranslations("financialType");
 
   const [state, action, pending] = useActionState(updateProject, null);
   const [category, setCategory] = useState<ProjectCategory>(project.project_category);
+  const [progressManual, setProgressManual] = useState(project.progress_pct_manual);
+  const [statusManual, setStatusManual] = useState(project.status_manual);
+
+  const [teamId, setTeamId] = useState<number | null>(project.team_id);
+  const [teamState, setTeamState] = useState<{ error?: string; success?: string } | null>(null);
+  const [teamPending, startTeamTransition] = useTransition();
+
+  function handleTeamChange(value: string) {
+    const nextTeamId = value === "" ? null : Number(value);
+    setTeamId(nextTeamId);
+    startTeamTransition(async () => {
+      const result = await assignProjectTeam(project.id, nextTeamId);
+      setTeamState(result);
+    });
+  }
 
   const [projectType, setProjectType] = useState(project.project_type ?? "");
   const [valueEurSolar, setValueEurSolar] = useState(String(project.value_eur_solar ?? ""));
@@ -122,6 +142,36 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
               </div>
             </div>
 
+            {canAssignTeam && (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.team")}</Label>
+                <select
+                  value={teamId ?? ""}
+                  onChange={(e) => handleTeamChange(e.target.value)}
+                  disabled={teamPending}
+                  className={SELECT_CLASS}
+                >
+                  <option value="" className="bg-card">—</option>
+                  {teams.map((tm) => (
+                    <option key={tm.id} value={tm.id} className="bg-card">{tm.name}</option>
+                  ))}
+                </select>
+                {teamState?.error && <p className="text-xs text-veltol-red">{t(teamState.error as Parameters<typeof t>[0])}</p>}
+                {teamState?.success && <p className="text-xs text-veltol-green">{t(teamState.success as Parameters<typeof t>[0])}</p>}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.financialType")}</Label>
+                <select name="financial_type" defaultValue={project.financial_type} className={SELECT_CLASS}>
+                  {FINANCIAL_TYPES.map((ft) => (
+                    <option key={ft} value={ft} className="bg-card">{tFinancialType(ft)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
               <div className="flex gap-6">
@@ -172,8 +222,29 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
-                <Input name="progress_pct" type="number" min="0" max="100" defaultValue={project.progress_pct} />
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
+                  <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                    <input
+                      type="checkbox"
+                      checked={progressManual}
+                      onChange={(e) => setProgressManual(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                    />
+                    <span className="font-mono text-[10px] text-veltol-fgDim">
+                      {progressManual ? t("autoManual.manual") : t("autoManual.auto")}
+                    </span>
+                  </label>
+                </div>
+                <input type="hidden" name="progress_pct_manual" value={progressManual ? "true" : "false"} />
+                <Input
+                  name="progress_pct"
+                  type="number"
+                  min="0"
+                  max="100"
+                  defaultValue={project.progress_pct}
+                  disabled={!progressManual}
+                />
               </div>
             </div>
 
@@ -233,8 +304,22 @@ export function EditProjectDialog({ project, open, managers, clientRefs, onClose
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
-                <select name="status" defaultValue={project.status} className={SELECT_CLASS}>
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
+                  <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                    <input
+                      type="checkbox"
+                      checked={statusManual}
+                      onChange={(e) => setStatusManual(e.target.checked)}
+                      className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                    />
+                    <span className="font-mono text-[10px] text-veltol-fgDim">
+                      {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
+                    </span>
+                  </label>
+                </div>
+                <input type="hidden" name="status_manual" value={statusManual ? "true" : "false"} />
+                <select name="status" defaultValue={project.status} className={SELECT_CLASS} disabled={!statusManual}>
                   {PROJECT_STATUSES.map((s) => (
                     <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
                   ))}

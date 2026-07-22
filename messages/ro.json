@@ -1,6 +1,8 @@
 {
   "nav": {
     "overview": "Prezentare generală",
+    "mainMenuGroup": "MENIU PRINCIPAL",
+    "accountGroup": "CONT",
     "dashboard": "Panou de control",
     "work": "Muncă",
     "projects": "Proiecte",
@@ -22,6 +24,11 @@
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
+    "eyebrowSection": "PANOU",
+    "eyebrowSub": "PREZENTARE",
+    "addProject": "Adaugă proiect",
+    "phaseDistributionEyebrow": "STATUS OPERAȚIONAL",
+    "phaseDistributionTitle": "Distribuție pe faze",
     "title": "Prezentare generală",
     "subtitle": "Veltol Holding S.R.L. — sumar portofoliu proiecte active",
     "recentEyebrow": "PROIECTE RECENTE",
@@ -53,6 +60,8 @@
   },
   "projects": {
     "eyebrow": "PROIECTE · TOATE",
+    "eyebrowSection": "PROIECTE",
+    "eyebrowSub": "TOATE",
     "title": "Proiecte",
     "subtitle": "Lista tuturor proiectelor solare și BESS",
     "totalCount": "{count} proiecte total",
@@ -64,6 +73,7 @@
     "projectSaved": "Proiect salvat.",
     "projectCreated": "Proiect creat.",
     "projectDeleted": "Proiect șters.",
+    "teamAssigned": "Echipă atribuită.",
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
     "folderCreated": "Dosar creat.",
@@ -78,6 +88,9 @@
     "save": "Salvează",
     "saving": "Salvare...",
     "emptyState": "Nu există proiecte. Adăugați primul proiect.",
+    "daysOverdue": "{count}z întârziere",
+    "daysLeftToday": "astăzi",
+    "daysLeft": "{count}z rămase",
     "viewChecklist": "Listă verificare",
     "filterAllPhases": "Toate fazele",
     "filterAllCategories": "Toate categoriile",
@@ -125,9 +138,11 @@
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Categoria proiectului",
+      "financialType": "Tip finanțare",
       "projectType": "Tipul tehnic",
       "contractType": "Tipul contractului",
       "manager": "Manager de proiect",
+      "team": "Echipă atribuită",
       "phase": "Faza curentă",
       "progress": "Progres (%)",
       "contractNumber": "Numărul contractului",
@@ -142,6 +157,11 @@
       "cuIssued": "CU emis",
       "atrIssued": "ATR emis",
       "notes": "Note"
+    },
+    "autoManual": {
+      "auto": "Automat",
+      "manual": "Manual",
+      "autoHint": "Calculat din progresul Matrice/checklist"
     },
     "folderScan": {
       "stepTitle": "Scanare folder AI",
@@ -293,6 +313,10 @@
     "residential": "Rezidențial",
     "industrial": "Industrial"
   },
+  "financialType": {
+    "proprii": "Sursa proprii",
+    "finantare": "Sursa finanțare"
+  },
   "contractType": {
     "proiectare": "Proiectare",
     "executie": "Execuție",
@@ -315,10 +339,13 @@
   },
   "matrice": {
     "eyebrow": "MUNCĂ · MATRICE STATUS",
+    "eyebrowSection": "MUNCĂ",
+    "eyebrowSub": "MATRICE STATUS",
     "title": "Matrice Status",
-    "subtitle": "Matrice de stare activități × proiecte",
+    "subtitle": "Matrice de stare activități × proiecte — urmărește livrabilele și progresul pentru fiecare client.",
     "picker": {
       "label": "PROIECTE",
+      "shownCount": "{count} selectate",
       "empty": "Nu există proiecte disponibile.",
       "placeholder": "Căutați proiecte de adăugat...",
       "maxReached": "Maximum 5 proiecte — eliminați unul pentru a adăuga altul",
@@ -327,9 +354,11 @@
     },
     "grid": {
       "activity": "Activitate",
+      "pctComplete": "{pct}% complet",
       "noProjects": "Selectați cel puțin un proiect.",
       "loading": "Se actualizează...",
-      "notContracted": "Nu este acoperit de tipul de contract al proiectului"
+      "notContracted": "Nu este acoperit de tipul de contract al proiectului",
+      "derivedFromChecklist": "Determinat de progresul din checklist — actualizați-l în checklist-ul proiectului"
     },
     "status": {
       "finalizat": "Finalizat",
@@ -339,7 +368,10 @@
       "neinceput": "Neînceput",
       "na": "N/A"
     },
-    "hideProject": "Ascunde din vizualizare"
+    "hideProject": "Ascunde din vizualizare",
+    "legend": {
+      "label": "LEGENDĂ"
+    }
   },
   "vacation": {
     "eyebrow": "HR · CERERI CONCEDIU",
@@ -760,10 +792,6 @@
       "next": "Următor",
       "pageOf": "Pagina {page} din {total}"
     },
-    "startBeforePreviousEnd": "Data de început nu poate fi înainte de data de sfârșit a fazei anterioare.",
-    "endAfterNextStart": "Data de sfârșit nu poate fi după data de început a fazei următoare.",
-    "minStartDateHint": "Trebuie să fie la sau după {date} (sfârșitul fazei anterioare)",
-    "maxEndDateHint": "Trebuie să fie la sau înainte de {date} (începutul fazei următoare)",
     "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început."
   }
 }

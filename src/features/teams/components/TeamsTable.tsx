@@ -109,7 +109,7 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
                       {team.lead_id ? (
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6 shrink-0">
-                            <AvatarFallback className="bg-veltol-primary text-[9px] font-bold text-white">
+                            <AvatarFallback className="grad-blue text-[9px] font-bold text-white">
                               {leadInitials(team)}
                             </AvatarFallback>
                           </Avatar>

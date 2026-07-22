@@ -87,18 +87,18 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="flex border-b border-border">
-        <div className="flex w-64 shrink-0 flex-col justify-center gap-0.5 border-r border-border px-4 py-2">
-          <span className="text-[11px] font-medium text-veltol-fgMute">{t("projectColumn")}</span>
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <div className="flex border-b border-border bg-veltol-surface/40">
+        <div className="flex w-64 shrink-0 flex-col justify-center gap-0.5 border-r border-border px-4 py-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-veltol-fgMute">{t("projectColumn")}</span>
           <span className="font-mono text-[10px] text-veltol-fgMute/70">
             {rangeStartLabel} → {rangeEndLabel}
           </span>
         </div>
-        <div className="relative flex-1 py-2">
+        <div className="relative flex-1 py-3">
           {monthMarkers.map((m, i) => (
             <div key={i} className="absolute top-0 flex h-full flex-col items-start" style={{ left: `${m.leftPct}%` }}>
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-veltol-fgMute">
+              <span className="rounded-full bg-card px-2 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.1em] text-veltol-fgDim shadow-sm">
                 {m.label}
               </span>
             </div>
@@ -106,7 +106,7 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
         </div>
       </div>
 
-      <div className="relative divide-y divide-border pt-5">
+      <div className="relative divide-y divide-border/70 pt-5">
         <div className="pointer-events-none absolute inset-0 left-64 z-10">
           {monthMarkers.map((m, i) => (
             <div key={i} className="absolute inset-y-0 w-px bg-border" style={{ left: `${m.leftPct}%` }} />
@@ -133,8 +133,8 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
             );
           })}
           {todayPct !== null && (
-            <div className="absolute inset-y-0 w-px bg-veltol-accent" style={{ left: `${todayPct}%` }}>
-              <span className="absolute -top-5 left-1 whitespace-nowrap rounded bg-veltol-accent px-1 font-mono text-[8px] font-semibold uppercase tracking-[0.05em] text-white">
+            <div className="absolute inset-y-0 w-px bg-veltol-primary" style={{ left: `${todayPct}%` }}>
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-veltol-primary px-2 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-[0.05em] text-white shadow-sm">
                 {t("today")}
               </span>
             </div>
@@ -142,10 +142,13 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
         </div>
 
         {rows.map(({ project, segments }) => (
-          <div key={project.id} className="group/row flex items-center hover:bg-veltol-surface/50">
-            <div className="flex w-64 shrink-0 items-center gap-2 border-r border-border px-4 py-3">
+          <div key={project.id} className="group/row flex transition-colors hover:bg-veltol-surface/40">
+            <div className="flex w-64 shrink-0 items-center gap-2 border-r border-border px-4 py-4">
               <div className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-medium text-veltol-fg">{project.name}</span>
+                <span className="block truncate text-[13px] font-semibold text-veltol-fg">{project.name}</span>
+                {project.team?.name && (
+                  <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.team.name}</span>
+                )}
                 {project.project_type && (
                   <span className="font-mono text-[9px] uppercase tracking-wide text-veltol-fgMute">
                     {project.project_type}
@@ -161,65 +164,67 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
                 <X className="h-3 w-3" />
               </button>
             </div>
-            <div className="relative h-14 flex-1 px-1">
-              {segments.map((segment) => {
+            <div className="flex flex-1 flex-col divide-y divide-border/50 px-1 py-1">
+              {GANTT_PHASE_KEYS.map((key) => {
+                const segment = segments.find((s) => s.key === key)!;
                 const color = GANTT_PHASE_COLOR[segment.key];
 
-                if (!segment.startDate || !segment.endDate) {
-                  return (
-                    <PlaceholderSegment
-                      key={segment.key}
-                      segment={segment}
-                      label={t(`phase.${segment.key}`)}
-                      onClick={() => onSegmentClick(project.id, segment)}
-                    />
-                  );
-                }
-
-                if (!hasValidRange(segment)) {
-                  return (
-                    <InvalidRangeSegment
-                      key={segment.key}
-                      segment={segment}
-                      label={t(`phase.${segment.key}`)}
-                      onClick={() => onSegmentClick(project.id, segment)}
-                    />
-                  );
-                }
-
-                const start = toDayMs(segment.startDate!);
-                const end = toDayMs(segment.endDate!) + DAY_MS;
-                const leftPct = ((start - rangeStart) / totalSpan) * 100;
-                const widthPct = Math.max(1, ((end - start) / totalSpan) * 100);
-                const title = segment.disabled
-                  ? `${t(`phase.${segment.key}`)} · ${t("notContracted")}`
-                  : `${t(`phase.${segment.key}`)} · ${segment.pct}% · ${segment.startDate} → ${segment.endDate}`;
-
                 return (
-                  <button
-                    key={segment.key}
-                    type="button"
-                    disabled={segment.disabled}
-                    onClick={() => onSegmentClick(project.id, segment)}
-                    title={title}
-                    className={cn(
-                      "group absolute top-1/2 h-6 -translate-y-1/2 overflow-hidden rounded-md border transition-opacity hover:opacity-90",
-                      segment.disabled
-                        ? "border-dashed border-veltol-fgMute/30 bg-veltol-fgMute/10 opacity-60"
-                        : color.fill,
-                    )}
-                    style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
-                  >
-                    {!segment.disabled && (
-                      <div
-                        className="h-full bg-black/25"
-                        style={{ width: `${100 - segment.pct}%`, marginLeft: `${segment.pct}%` }}
+                  <div key={key} className="relative h-11">
+                    {!segment.startDate || !segment.endDate ? (
+                      <PlaceholderSegment
+                        segment={segment}
+                        label={t(`phase.${segment.key}`)}
+                        onClick={() => onSegmentClick(project.id, segment)}
                       />
+                    ) : !hasValidRange(segment) ? (
+                      <InvalidRangeSegment
+                        label={t(`phase.${segment.key}`)}
+                        onClick={() => onSegmentClick(project.id, segment)}
+                      />
+                    ) : (
+                      (() => {
+                        const start = toDayMs(segment.startDate!);
+                        const end = toDayMs(segment.endDate!) + DAY_MS;
+                        const leftPct = ((start - rangeStart) / totalSpan) * 100;
+                        const widthPct = Math.max(1, ((end - start) / totalSpan) * 100);
+                        const title = segment.disabled
+                          ? `${t(`phase.${segment.key}`)} · ${t("notContracted")}`
+                          : `${t(`phase.${segment.key}`)} · ${segment.pct}% · ${segment.startDate} → ${segment.endDate}`;
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={segment.disabled}
+                            onClick={() => onSegmentClick(project.id, segment)}
+                            title={title}
+                            className={cn(
+                              "group absolute top-1/2 flex h-7 -translate-y-1/2 items-center overflow-hidden rounded-full border shadow-sm transition-all hover:brightness-105 hover:shadow-md",
+                              segment.disabled
+                                ? "border-dashed border-veltol-fgMute/30 bg-veltol-fgMute/10 opacity-60"
+                                : color.fill,
+                            )}
+                            style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
+                          >
+                            {!segment.disabled && (
+                              <div
+                                className="absolute inset-y-0 right-0 bg-black/20"
+                                style={{ width: `${100 - segment.pct}%` }}
+                              />
+                            )}
+                            {!segment.disabled && (
+                              <span className="relative truncate px-3 font-mono text-[10px] font-semibold uppercase tracking-wide text-white">
+                                {t(`phase.${segment.key}`)}
+                              </span>
+                            )}
+                            {!segment.disabled && segment.variance === "behind" && (
+                              <AlertTriangle className="relative ml-auto mr-2 h-3.5 w-3.5 shrink-0 text-white drop-shadow" />
+                            )}
+                          </button>
+                        );
+                      })()
                     )}
-                    {!segment.disabled && segment.variance === "behind" && (
-                      <AlertTriangle className="absolute right-1 top-1/2 h-3 w-3 -translate-y-1/2 text-white drop-shadow" />
-                    )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -233,23 +238,19 @@ export function PortfolioGanttChart({ rows, todayMs, onSegmentClick, onHideProje
 }
 
 function InvalidRangeSegment({
-  segment,
   label,
   onClick,
 }: {
-  segment: GanttPhaseSegment;
   label: string;
   onClick: () => void;
 }) {
-  const index = GANTT_PHASE_KEYS.indexOf(segment.key);
-  const widthPct = 100 / GANTT_PHASE_KEYS.length;
   return (
     <button
       type="button"
       onClick={onClick}
       title={`${label}: end date is before start date — click to fix`}
-      className="absolute top-1/2 flex h-6 -translate-y-1/2 items-center justify-center gap-1 overflow-hidden rounded-md border border-dashed border-veltol-red/50 bg-veltol-red/10 text-[9px] text-veltol-red transition-colors hover:bg-veltol-red/20"
-      style={{ left: `${index * widthPct}%`, width: `${widthPct}%` }}
+      className="absolute top-1/2 flex h-7 -translate-y-1/2 items-center justify-center gap-1 overflow-hidden rounded-full border border-dashed border-veltol-red/50 bg-veltol-red/10 font-mono text-[9px] font-semibold uppercase tracking-wide text-veltol-red transition-colors hover:bg-veltol-red/20"
+      style={{ left: 0, width: "100%" }}
     >
       <AlertTriangle className="h-3 w-3 shrink-0" />
       {label}
@@ -266,8 +267,6 @@ function PlaceholderSegment({
   label: string;
   onClick: () => void;
 }) {
-  const index = GANTT_PHASE_KEYS.indexOf(segment.key);
-  const widthPct = 100 / GANTT_PHASE_KEYS.length;
   return (
     <button
       type="button"
@@ -275,12 +274,12 @@ function PlaceholderSegment({
       onClick={onClick}
       title={label}
       className={cn(
-        "absolute top-1/2 h-6 -translate-y-1/2 overflow-hidden rounded-md border border-dashed text-[9px] transition-colors",
+        "absolute top-1/2 flex h-7 -translate-y-1/2 items-center overflow-hidden rounded-full border border-dashed px-3 font-mono text-[9px] font-semibold uppercase tracking-wide transition-colors",
         segment.disabled
           ? "border-veltol-fgMute/20 bg-veltol-fgMute/5 text-veltol-fgMute/30 opacity-60"
-          : "border-veltol-fgMute/40 bg-veltol-fgMute/5 text-veltol-fgMute/60 hover:border-veltol-accent/50 hover:bg-veltol-accent/10 hover:text-veltol-accent",
+          : "border-veltol-fgMute/40 bg-veltol-fgMute/5 text-veltol-fgMute/60 hover:border-veltol-primary/50 hover:bg-veltol-primary/10 hover:text-veltol-primary",
       )}
-      style={{ left: `${index * widthPct}%`, width: `${widthPct}%` }}
+      style={{ left: 0, width: "100%" }}
     >
       {label}
     </button>

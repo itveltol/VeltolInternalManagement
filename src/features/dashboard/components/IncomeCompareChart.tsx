@@ -98,21 +98,19 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
   const fullNumberFormatter = new Intl.NumberFormat(tag);
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+    <div className="relative overflow-hidden rounded-card border border-border bg-card shadow-card">
       <div className="p-5 pb-0">
-        <span className="text-xs font-medium text-veltol-fgMute">{labels.eyebrow}</span>
-        <h2 className="mt-0.5 text-base font-semibold text-veltol-fg">{labels.title}</h2>
+        <span className="text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">{labels.eyebrow}</span>
+        <h2 className="mt-0.5 text-[20px] font-bold text-veltol-fg">{labels.title}</h2>
       </div>
-
-      <div className="mt-4 h-px bg-border" />
 
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-veltol-surface/40 px-2.5 py-1.5 text-[13px] text-veltol-fg transition-colors hover:bg-veltol-surface/70">
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-veltol-fg shadow-sm transition-colors hover:bg-[#F3F6FC]">
               {labels.selectMonths}
               {selected.length > 0 && ` (${selected.length})`}
-              <ChevronDownIcon className="size-3.5" />
+              <ChevronDownIcon className="size-3.5 text-veltol-faint" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               {monthsByYear.map(([year, months], groupIndex) => (
@@ -144,15 +142,15 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
           {data.length > 0 ? (
             <ChartContainer>
               <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-veltol-border)" vertical={false} />
                 <XAxis
                   dataKey="monthLabel"
-                  tick={{ fill: "var(--color-veltol-fgMute)", fontSize: 11 }}
+                  tick={{ fill: "var(--color-veltol-faint)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "var(--color-veltol-fgMute)", fontSize: 11 }}
+                  tick={{ fill: "var(--color-veltol-faint)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value: number) => numberFormatter.format(value)}
@@ -182,7 +180,7 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
         </div>
 
         {labels.excludedNote && (
-          <p className="mt-3 text-[11px] text-veltol-fgMute">{labels.excludedNote}</p>
+          <p className="mt-3 text-[12px] text-veltol-fgMute">{labels.excludedNote}</p>
         )}
       </div>
     </div>

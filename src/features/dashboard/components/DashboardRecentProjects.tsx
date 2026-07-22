@@ -13,19 +13,19 @@ interface Props {
 
 export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, tPhase }: Props) {
   return (
-    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+    <div className="relative overflow-hidden rounded-card border border-border bg-card shadow-card">
       <div className="p-5">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs font-medium text-veltol-fgMute">{eyebrow}</span>
-            <h2 className="mt-0.5 text-base font-semibold text-veltol-fg">{title}</h2>
+            <span className="text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">{eyebrow}</span>
+            <h2 className="mt-0.5 text-[20px] font-bold text-veltol-fg">{title}</h2>
           </div>
-          {/* <div className="inline-flex items-center gap-1.5 rounded-full border border-veltol-green/20 bg-veltol-green/[0.08] px-2.5 py-1">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[var(--v-success)]/20 bg-[var(--v-success-bg)] px-2.5 py-1">
             <div className="v-live-dot" />
-            <span className="text-[10px] font-medium text-veltol-green">
+            <span className="text-[11px] font-bold uppercase tracking-[.09em] text-[var(--v-success)]">
               {liveLabel}
             </span>
-          </div> */}
+          </div>
         </div>
       </div>
 
@@ -36,21 +36,21 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
           <Link
             key={project.id}
             href={`/projects/${project.id}`}
-            className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-veltol-surface/40"
+            className="flex items-center gap-4 px-5 py-3.5 transition-colors duration-150 hover:bg-[#F6F9FE]"
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-veltol-fgMute">{project.id}</span>
-                <span className="truncate text-[13px] font-medium text-veltol-fg">{project.name}</span>
+                <span className="text-[11px] tabular-nums whitespace-nowrap text-veltol-fgMute">{project.id}</span>
+                <span className="truncate text-[14px] font-semibold text-veltol-fg">{project.name}</span>
               </div>
-              <div className="mt-0.5 text-xs text-veltol-fgDim">{project.site_location}</div>
+              <div className="mt-0.5 text-[13px] text-veltol-fgDim">{project.site_location}</div>
             </div>
             <div className="shrink-0 text-right">
-              <div className="font-mono tabular-nums text-[13px] text-veltol-fg">
+              <div className="text-[14px] font-medium tabular-nums whitespace-nowrap text-veltol-fg">
                 {project.mw_solar?.toFixed(1) ?? "0.0"}{" "}
                 <span className="text-veltol-fgMute">MWp</span>
               </div>
-              <div className="mt-0.5 font-mono tabular-nums text-[11px] text-veltol-fgDim">
+              <div className="mt-0.5 text-[12px] tabular-nums whitespace-nowrap text-veltol-fgDim">
                 {project.value_eur?.toLocaleString("hu-HU") ?? "0"}{" "}
                 <span className="text-veltol-fgMute">EUR</span>
               </div>

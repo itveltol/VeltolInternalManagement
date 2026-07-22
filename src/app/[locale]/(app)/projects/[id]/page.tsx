@@ -40,12 +40,14 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
     getProject(projectId),
     getChecklistRecords(projectId),
     isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
-    isGanttTab ? getTeamsForGantt() : Promise.resolve([]),
+    canMutate ? getTeamsForGantt() : Promise.resolve([]),
     canMutate ? getProjectManagers() : Promise.resolve([]),
     canMutate ? getClientRefs() : Promise.resolve([]),
   ]);
 
   if (!project) notFound();
+
+  const canAssignTeam = role === "admin" || project.manager_id === user?.id;
 
   const rows = mergeChecklistRows(records);
   const sections = computeSectionSummaries(rows);
@@ -137,6 +139,8 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         canMutate={canMutate}
         managers={managers}
         clientRefs={clientRefs}
+        teams={teams}
+        canAssignTeam={canAssignTeam}
       />
 
       {/* Tab bar */}

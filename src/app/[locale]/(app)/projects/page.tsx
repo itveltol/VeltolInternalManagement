@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { getProjects, getProjectManagers, getClientRefs } from "./actions";
 import { ProjectsShell } from "@/features/projects/components/ProjectsShell";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default async function ProjectsPage() {
   const { user, role } = await getUserProfileRole();
@@ -23,13 +24,11 @@ export default async function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="text-xs font-medium text-veltol-fgMute">{t("eyebrow")}</div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
-          {t("title")}
-        </h1>
-        <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
-      </div>
+      <PageHeader
+        eyebrowSegments={[t("eyebrowSection"), t("eyebrowSub")]}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
 
       <ProjectsShell projects={projects} canMutate={canMutate} managers={managers} clientRefs={clientRefs} />
     </div>

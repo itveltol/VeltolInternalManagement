@@ -64,10 +64,21 @@ export const ACTIVITY_STATUS_VALUES: ActivityStatus[] = [
 ];
 
 export const STATUS_COLOR: Record<ActivityStatus, string> = {
-  finalizat:     'bg-veltol-green/20 text-veltol-green border-veltol-green/30',
-  in_progres:    'bg-veltol-accent/20 text-veltol-accent border-veltol-accent/30',
-  in_asteptare:  'bg-veltol-orange/20 text-veltol-orange border-veltol-orange/30',
-  blocat:        'bg-veltol-red/20 text-veltol-red border-veltol-red/30',
-  neinceput:     'bg-veltol-fgMute/10 text-veltol-fgMute border-veltol-fgMute/20',
-  na:            'bg-transparent text-veltol-fgMute/40 border-transparent',
+  finalizat:     'bg-[var(--v-success-bg)] text-[var(--v-success)] border-transparent',
+  in_progres:    'bg-veltol-tint text-veltol-primary border-transparent',
+  in_asteptare:  'bg-[var(--v-warning-bg)] text-[var(--v-warning)] border-transparent',
+  blocat:        'bg-[var(--v-danger-bg)] text-[var(--v-danger)] border-transparent',
+  neinceput:     'bg-veltol-surface text-veltol-fgDim border-transparent',
+  na:            'bg-transparent text-veltol-faint border border-dashed border-veltol-border',
+};
+
+/** Solid swatch color for the small status dot in dropdown menus — stays
+ * visible even for statuses whose pill background is very pale. */
+export const STATUS_DOT_COLOR: Record<ActivityStatus, string> = {
+  finalizat:     'bg-[var(--v-success)]',
+  in_progres:    'bg-veltol-primary',
+  in_asteptare:  'bg-[var(--v-warning)]',
+  blocat:        'bg-[var(--v-danger)]',
+  neinceput:     'bg-veltol-faint',
+  na:            'bg-transparent border border-veltol-border',
 };

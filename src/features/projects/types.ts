@@ -18,6 +18,8 @@ export type ProjectPriority = "low" | "medium" | "high";
 
 export type ProjectCategory = "residential" | "industrial";
 
+export type FinancialType = "proprii" | "finantare";
+
 export type ContractType = "proiectare" | "executie" | "mentenanta";
 
 export interface Project {
@@ -28,12 +30,15 @@ export interface Project {
   mw_solar: number | null;
   mw_bess: number | null;
   project_category: ProjectCategory;
+  financial_type: FinancialType;
   project_type: string | null;
   contract_type: ContractType[];
   manager_id: string | null;
   manager?: { first_name: string | null; last_name: string | null } | null;
   client_id: number | null;
   client?: { id: number; name: string } | null;
+  team_id: number | null;
+  team?: { id: number; name: string } | null;
   current_phase: ProjectPhase;
   progress_pct: number;
   contract_number: string | null;
@@ -43,7 +48,11 @@ export interface Project {
   value_eur_solar: number | null;
   value_eur_bess: number | null;
   status: ProjectStatus;
+  /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
+  status_manual: boolean;
   priority: ProjectPriority;
+  /** When false, `progress_pct` is recomputed from Matrice/checklist progress on the next relevant change. */
+  progress_pct_manual: boolean;
   cu_issued: boolean;
   atr_issued: boolean;
   notes: string | null;
@@ -87,6 +96,8 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
 export const PROJECT_PRIORITIES: ProjectPriority[] = ["low", "medium", "high"];
 
 export const PROJECT_CATEGORIES: ProjectCategory[] = ["residential", "industrial"];
+
+export const FINANCIAL_TYPES: FinancialType[] = ["proprii", "finantare"];
 
 export const CONTRACT_TYPES: ContractType[] = ["proiectare", "executie", "mentenanta"];
 

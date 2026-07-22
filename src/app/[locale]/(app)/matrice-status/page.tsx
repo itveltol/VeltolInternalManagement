@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
 import { getMatrixData, getAvailableProjects, getShownMatriceProjectIds } from "./actions";
 import { MatriceShell } from "@/features/matrice/components/MatriceShell";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export default async function MatriceStatusPage() {
   const { user } = await getSessionUser();
@@ -24,13 +25,11 @@ export default async function MatriceStatusPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="text-xs font-medium text-veltol-fgMute">{t("eyebrow")}</div>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
-          {t("title")}
-        </h1>
-        <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
-      </div>
+      <PageHeader
+        eyebrowSegments={[t("eyebrowSection"), t("eyebrowSub")]}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
 
       <MatriceShell initialData={initialData} allProjects={allProjects} initialShownIds={initialShownIds} />
     </div>

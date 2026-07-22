@@ -9,15 +9,18 @@ import { EditProjectDialog } from "./EditProjectDialog";
 import { phaseVariant, projectStatusVariant, priorityVariant } from "@/shared/utils/status-variant";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+import type { Team } from "@/features/teams/types";
 
 interface Props {
   project: Project;
   canMutate: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
+  teams: Team[];
+  canAssignTeam: boolean;
 }
 
-export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs }: Props) {
+export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, teams, canAssignTeam }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -58,6 +61,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs 
     { label: t("fields.mwBess"), value: formatMw(project.mw_bess) },
     { label: t("fields.client"), value: project.client?.name ?? "—" },
     { label: t("fields.manager"), value: managerName },
+    { label: t("fields.team"), value: project.team?.name ?? "—" },
     {
       label: t("fields.contractType"),
       value: project.contract_type.length > 0
@@ -111,6 +115,8 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs 
           open={isEditOpen}
           managers={managers}
           clientRefs={clientRefs}
+          teams={teams}
+          canAssignTeam={canAssignTeam}
           onClose={() => setIsEditOpen(false)}
         />
       )}

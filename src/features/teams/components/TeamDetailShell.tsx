@@ -110,7 +110,7 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback className="bg-veltol-primary text-[10px] font-bold text-white">
+                          <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
                             {memberInitials(m)}
                           </AvatarFallback>
                         </Avatar>

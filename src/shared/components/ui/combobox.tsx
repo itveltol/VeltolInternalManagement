@@ -57,7 +57,7 @@ function ComboboxInputGroup({ className, ...props }: ComboboxPrimitive.InputGrou
     <ComboboxPrimitive.InputGroup
       data-slot="combobox-input-group"
       className={cn(
-        "flex min-h-8 flex-wrap items-center gap-1.5 rounded-lg border border-border bg-veltol-surface/60 px-2 py-1.5 focus-within:border-veltol-accent/50 focus-within:ring-2 focus-within:ring-veltol-accent/20",
+        "flex min-h-11 flex-wrap items-center gap-1.5 rounded-btn border border-border bg-[#F4F7FC] px-3 py-1.5 focus-within:border-veltol-accent focus-within:bg-card focus-within:ring-[3px] focus-within:ring-veltol-accent/[0.18]",
         className
       )}
       {...props}
@@ -74,7 +74,7 @@ function ComboboxInput({ className, ...props }: ComboboxPrimitive.Input.Props) {
     <ComboboxPrimitive.Input
       data-slot="combobox-input"
       className={cn(
-        "h-6 min-w-24 flex-1 bg-transparent font-mono text-[12px] text-veltol-fg outline-none placeholder:text-veltol-fgMute",
+        "h-6 min-w-24 flex-1 bg-transparent text-[13px] text-veltol-fg outline-none placeholder:text-veltol-faint",
         className
       )}
       {...props}

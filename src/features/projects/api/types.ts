@@ -1,4 +1,4 @@
-import type { Project, ProjectManager, ProjectCategory, ContractType } from "../types";
+import type { Project, ProjectManager, ProjectCategory, ContractType, FinancialType } from "../types";
 
 export interface CreateProjectPayload {
   name: string;
@@ -7,6 +7,7 @@ export interface CreateProjectPayload {
   mw_solar: number | null;
   mw_bess: number | null;
   project_category: ProjectCategory;
+  financial_type: FinancialType;
   project_type: string | null;
   contract_type: ContractType[];
   manager_id: string | null;
@@ -20,7 +21,9 @@ export interface CreateProjectPayload {
   value_eur_solar: number | null;
   value_eur_bess: number | null;
   status: string;
+  status_manual: boolean;
   priority: string;
+  progress_pct_manual: boolean;
   cu_issued: boolean;
   atr_issued: boolean;
   notes: string | null;
@@ -38,6 +41,7 @@ export interface ProjectsApiClient {
   getProjectManagers(): Promise<ProjectManager[]>;
   createProject(payload: CreateProjectPayload): Promise<{ id: number }>;
   updateProject(id: number, payload: CreateProjectPayload): Promise<void>;
+  updateProjectTeam(id: number, teamId: number | null): Promise<void>;
   deleteProject(id: number): Promise<void>;
   linkOneDriveFolder(id: number, folderId: string, folderUrl: string): Promise<void>;
   updatePhaseDates(

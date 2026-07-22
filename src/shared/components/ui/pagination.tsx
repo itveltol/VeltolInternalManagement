@@ -17,7 +17,7 @@ export function Pagination({ page, pageCount, onPageChange, prevLabel, nextLabel
 
   return (
     <div className="flex items-center justify-between border-t border-border px-6 py-3">
-      <span className="font-mono text-[11px] text-veltol-fgMute">{pageLabel(page, pageCount)}</span>
+      <span className="text-[13px] text-veltol-fgDim">{pageLabel(page, pageCount)}</span>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
