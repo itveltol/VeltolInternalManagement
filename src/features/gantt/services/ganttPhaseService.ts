@@ -6,7 +6,6 @@ import {
   GANTT_PHASE_DATE_FIELDS,
   GANTT_PHASE_MATRICE_RANGE,
   CONTRACT_TYPE_BY_PHASE,
-  type GanttPhaseKey,
   type GanttPhaseSegment,
   type GanttVariance,
   type ProjectGanttRow,
@@ -54,43 +53,15 @@ export function segmentVariance(
   return "on_track";
 }
 
-export type PhaseDateValidationError =
-  | "endBeforeStart"
-  | "startBeforePreviousEnd"
-  | "endAfterNextStart";
+export type PhaseDateValidationError = "endBeforeStart";
 
-/**
- * Ensure a phase's [start, end] window is internally consistent and doesn't
- * overlap the adjacent phases' windows: end can't precede its own start,
- * start can't precede the previous phase's end, and end can't follow the
- * next phase's start.
- */
+/** Ensure a phase's [start, end] window is internally consistent: end can't precede its own start. */
 export function validatePhaseDates(
-  phaseKey: GanttPhaseKey,
   startDate: string | null,
   endDate: string | null,
-  project: Project,
 ): PhaseDateValidationError | null {
   if (startDate && endDate && toDayMs(endDate) < toDayMs(startDate)) {
     return "endBeforeStart";
-  }
-
-  const index = GANTT_PHASE_KEYS.indexOf(phaseKey);
-
-  const previousKey = GANTT_PHASE_KEYS[index - 1];
-  if (startDate && previousKey) {
-    const previousEnd = project[GANTT_PHASE_DATE_FIELDS[previousKey].end] as string | null;
-    if (previousEnd && toDayMs(startDate) < toDayMs(previousEnd)) {
-      return "startBeforePreviousEnd";
-    }
-  }
-
-  const nextKey = GANTT_PHASE_KEYS[index + 1];
-  if (endDate && nextKey) {
-    const nextStart = project[GANTT_PHASE_DATE_FIELDS[nextKey].start] as string | null;
-    if (nextStart && toDayMs(endDate) > toDayMs(nextStart)) {
-      return "endAfterNextStart";
-    }
   }
 
   return null;

@@ -6,7 +6,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjects() {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name)")
       .order("id");
     if (error) throw new Error(error.message);
     return (data ?? []) as unknown as Project[];
@@ -15,7 +15,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name)")
       .eq("id", id)
       .single();
     if (error) return null;
@@ -40,6 +40,11 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
 
   async updateProject(id, payload: CreateProjectPayload) {
     const { error } = await supabase.from("projects").update(payload).eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
+  async updateProjectTeam(id, teamId) {
+    const { error } = await supabase.from("projects").update({ team_id: teamId }).eq("id", id);
     if (error) throw new Error(error.message);
   },
 

@@ -16,8 +16,9 @@ import {
   PROJECT_TYPES,
   PROJECT_CATEGORIES,
   CONTRACT_TYPES,
+  FINANCIAL_TYPES,
 } from "../types";
-import type { ProjectManager, ProjectCategory } from "../types";
+import type { ProjectManager, ProjectCategory, FinancialType } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
 import { FolderScanStep } from "./FolderScanStep";
@@ -34,6 +35,7 @@ interface ProjectFields {
   county: string;
   site_location: string;
   project_category: ProjectCategory;
+  financial_type: FinancialType;
   project_type: string;
   contract_number: string;
   mw_solar: string;
@@ -46,6 +48,7 @@ const EMPTY: ProjectFields = {
   county: "",
   site_location: "",
   project_category: "industrial",
+  financial_type: "proprii",
   project_type: "",
   contract_number: "",
   mw_solar: "",
@@ -79,6 +82,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
+  const tFinancialType = useTranslations("financialType");
 
   const [state, action, pending] = useActionState(createProject, null);
   const [step, setStep] = useState<"form" | "scan">("form");
@@ -203,6 +207,8 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
               </div>
 
               <form action={action} className="mt-6 space-y-4">
+                <input type="hidden" name="progress_pct_manual" value="false" />
+                <input type="hidden" name="status_manual" value="false" />
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
                   <Input
@@ -289,6 +295,24 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                         <option key={m.id} value={m.id} className="bg-card">
                           {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
                         </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.financialType")}</Label>
+                    <select
+                      name="financial_type"
+                      value={fields.financial_type}
+                      onChange={(e) =>
+                        setFields((f) => ({ ...f, financial_type: e.target.value as FinancialType }))
+                      }
+                      className={SELECT_CLASS}
+                    >
+                      {FINANCIAL_TYPES.map((ft) => (
+                        <option key={ft} value={ft} className="bg-card">{tFinancialType(ft)}</option>
                       ))}
                     </select>
                   </div>

@@ -7,7 +7,7 @@ import { createSupabaseProjectsClient } from "@/features/projects/api/supabasePr
 import * as projectService from "@/features/projects/services/projectService";
 import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Project, ProjectManager, ProjectCategory } from "@/features/projects/types";
+import type { Project, ProjectManager, ProjectCategory, FinancialType } from "@/features/projects/types";
 import { CONTRACT_TYPES } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
@@ -15,6 +15,7 @@ import * as clientService from "@/features/clients/services/clientService";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
 import * as matriceService from "@/features/matrice/services/matriceService";
+import { buildDerivedActivityIds } from "@/features/matrice/services/checklistActivityMapping";
 import type { ActivityStatus } from "@/features/matrice/types";
 
 export type ActionState = { error?: string; success?: string; folderCreated?: boolean; projectId?: number } | null;
@@ -39,6 +40,17 @@ async function requireMutator() {
   return { supabase, user };
 }
 
+/** Only an admin or the project's own manager may reassign its team. */
+async function requireProjectOwner(projectId: number) {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (role === "admin") return { supabase, user };
+  const client = createSupabaseProjectsClient(supabase);
+  const project = await projectService.getProjectById(client, projectId);
+  if (!project || project.manager_id !== user.id) throw new Error("Forbidden");
+  return { supabase, user };
+}
+
 function extractProjectPayload(formData: FormData) {
   const str = (key: string) => {
     const v = formData.get(key) as string | null;
@@ -54,6 +66,9 @@ function extractProjectPayload(formData: FormData) {
   const project_category: ProjectCategory =
     formData.get("project_category") === "residential" ? "residential" : "industrial";
 
+  const financial_type: FinancialType =
+    formData.get("financial_type") === "finantare" ? "finantare" : "proprii";
+
   const contract_type = CONTRACT_TYPES.filter(
     (c) => formData.get(`contract_type_${c}`) === "true",
   );
@@ -65,6 +80,7 @@ function extractProjectPayload(formData: FormData) {
     mw_solar: num("mw_solar"),
     mw_bess: num("mw_bess"),
     project_category,
+    financial_type,
     project_type: project_category === "residential" ? null : str("project_type"),
     contract_type,
     manager_id: str("manager_id"),
@@ -76,7 +92,9 @@ function extractProjectPayload(formData: FormData) {
     deadline: str("deadline"),
     value_eur: num("value_eur"),
     status: formData.get("status") as string,
+    status_manual: formData.get("status_manual") === "true",
     priority: formData.get("priority") as string,
+    progress_pct_manual: formData.get("progress_pct_manual") === "true",
     cu_issued: formData.get("cu_issued") === "true",
     atr_issued: formData.get("atr_issued") === "true",
     notes: str("notes"),
@@ -202,6 +220,22 @@ export async function getClientRefs(): Promise<ClientRef[]> {
   return clientService.getClientRefs(api);
 }
 
+export async function assignProjectTeam(projectId: number, teamId: number | null): Promise<ActionState> {
+  try {
+    const { supabase } = await requireProjectOwner(projectId);
+    const client = createSupabaseProjectsClient(supabase);
+    await projectService.updateProjectTeam(client, projectId, teamId);
+    const locale = await getLocale();
+    revalidatePath(await getProjectsPath());
+    revalidatePath(`/${locale}/projects/${projectId}`);
+    revalidatePath(`/${locale}/gantt`);
+    return { success: "teamAssigned" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
 export async function scanProjectFolder(
   projectId: number,
 ): Promise<{ files: FolderItem[]; error?: string }> {
@@ -239,7 +273,14 @@ export async function applyFolderScanSuggestions(
       });
     }
 
+    // Mapped activities (phase_no 9/10 items also tracked in the checklist)
+    // are driven by checklist progress via a DB trigger — a folder-scan
+    // suggestion for one of these would just be silently overwritten on the
+    // next checklist edit, so skip them here rather than apply-then-clobber.
+    const activities = await matriceClient.getActivities();
+    const derivedActivityIds = buildDerivedActivityIds(activities);
     for (const { activityId, status } of matriceUpdates) {
+      if (derivedActivityIds.has(activityId)) continue;
       await matriceService.setCellStatus(matriceClient, projectId, activityId, status, user.id);
     }
 

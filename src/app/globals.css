@@ -2,91 +2,111 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ─── Veltol brand tokens ─── */
 @theme inline {
   /* shadcn semantic tokens wired to Veltol surfaces */
-  --color-background: var(--v-bg);
-  --color-foreground: var(--v-fg);
+  --color-background: var(--v-page);
+  --color-foreground: var(--v-ink);
   --color-card: var(--v-card);
-  --color-card-foreground: var(--v-fg);
-  --color-popover: var(--v-popover);
-  --color-popover-foreground: var(--v-fg);
-  --color-primary: var(--v-primary);
+  --color-card-foreground: var(--v-ink);
+  --color-popover: var(--v-card);
+  --color-popover-foreground: var(--v-ink);
+  --color-primary: var(--v-blue);
   --color-primary-foreground: #ffffff;
-  --color-secondary: var(--v-surface);
-  --color-secondary-foreground: var(--v-fg);
-  --color-muted: var(--v-surface);
-  --color-muted-foreground: var(--v-fg-dim);
-  --color-accent: var(--v-surface);
-  --color-accent-foreground: var(--v-accent);
-  --color-destructive: var(--v-red);
+  --color-secondary: var(--v-tint);
+  --color-secondary-foreground: var(--v-ink);
+  --color-muted: var(--v-tint);
+  --color-muted-foreground: var(--v-ink-2);
+  --color-accent: var(--v-tint);
+  --color-accent-foreground: var(--v-blue);
+  --color-destructive: var(--v-danger);
   --color-destructive-foreground: #ffffff;
-  --color-border: var(--v-border);
-  --color-input: var(--v-surface);
-  --color-ring: var(--v-accent);
+  --color-border: var(--v-line);
+  --color-input: var(--v-tint);
+  --color-ring: var(--v-blue);
 
   /* Veltol color palette */
-  --color-veltol-bg: #0d1b2b;
-  --color-veltol-card: #122236;
-  --color-veltol-popover: #182c43;
-  --color-veltol-surface: #1f3651;
-  --color-veltol-border: #2b4769;
-  --color-veltol-primary: #225ba0;
-  --color-veltol-primaryHi: #2e70c2;
-  --color-veltol-bright: #42adfa;
-  --color-veltol-accent: #2bace3;
-  --color-veltol-accentHi: #58c1ea;
-  --color-veltol-green: #5fba6a;
-  --color-veltol-orange: #f5882a;
-  --color-veltol-red: #e0525f;
-  --color-veltol-fg: #EDF0F7;
-  --color-veltol-fgDim: #9AA3C0;
-  --color-veltol-fgMute: #616D93;
+  --color-veltol-bg: var(--v-page);
+  --color-veltol-card: var(--v-card);
+  --color-veltol-popover: var(--v-card);
+  --color-veltol-surface: var(--v-tint);
+  --color-veltol-tint: var(--v-tint);
+  --color-veltol-border: var(--v-line);
+  --color-veltol-navy: var(--v-navy);
+  --color-veltol-primary: var(--v-blue);
+  --color-veltol-primaryHi: var(--v-blue-2);
+  --color-veltol-bright: var(--v-blue-2);
+  --color-veltol-accent: var(--v-blue);
+  --color-veltol-accentHi: var(--v-blue-2);
+  --color-veltol-green: var(--v-success);
+  --color-veltol-orange: var(--v-warning);
+  --color-veltol-red: var(--v-danger);
+  --color-veltol-fg: var(--v-ink);
+  --color-veltol-fgDim: var(--v-ink-2);
+  --color-veltol-fgMute: var(--v-muted);
+  --color-veltol-faint: var(--v-faint);
 
   /* Fonts */
-  --font-sans: var(--font-exo2), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-display), sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
 
-  --radius-sm: calc(var(--radius) * 0.75);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 1.25);
-  --radius-xl: calc(var(--radius) * 1.75);
-  --radius-2xl: calc(var(--radius) * 2.25);
+  --radius-sm: var(--radius-btn);
+  --radius-md: var(--radius-btn);
+  --radius-lg: var(--radius-card);
+  --radius-xl: var(--radius-card);
+  --radius-2xl: var(--radius-hero);
+  --radius-btn: 12px;
+  --radius-nav: 10px;
+  --radius-card: 18px;
+  --radius-hero: 18px;
+
+  --shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
+  --shadow-panel: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
+  --shadow-navy: 0 16px 32px -16px rgba(10,20,36,.7);
+  --shadow-primary: 0 10px 22px -8px rgba(47,107,237,.6);
 }
 
 /* ─── CSS custom properties ─── */
 :root {
-  /* Background tiers — clean blue ramp (hue 213°, shifted from the original
-     225-228° which sat too close to the blue/violet boundary and read as purple) */
-  --v-bg:      #0d1b2b;
-  --v-card:    #122236;
-  --v-popover: #182c43;
-  --v-surface: #1f3651;
-  --v-border:  #2b4769;
+  /* Surfaces */
+  --v-page:   #F6F8FC;
+  --v-card:   #FFFFFF;
+  --v-line:   #EBEFF6;
+  --v-line-2: #F1F4F9;
+
+  /* Text */
+  --v-ink:   #0F1729;
+  --v-ink-2: #3A4560;
+  --v-muted: #5D6B85;
+  --v-faint: #8A93A5;
 
   /* Brand hues */
-  --v-primary:    #225ba0;
-  --v-primary-hi: #2e70c2;
-  --v-bright:     #42adfa;  /* vivid azure highlight — distinct from --v-accent, for CTAs/highlights */
-  --v-accent:     #2bace3;
-  --v-accent-hi:  #58c1ea;
-  --v-green:      #5fba6a;
-  --v-orange:     #f5882a;
-  --v-red:        #e0525f;
+  --v-blue:   #2F6BED;
+  --v-blue-2: #5B8DEF;
+  --v-tint:   #EAF1FE;
+  --v-navy:   #0E1B33;
 
-  /* Foreground tiers — white ramp with a hint of navy hue */
-  --v-fg:      #EDF0F7;
-  --v-fg-dim:  #9AA3C0;
-  --v-fg-mute: #616D93;
+  /* Semantic status */
+  --v-success:    #16A34A;
+  --v-success-bg: #E7F6EC;
+  --v-warning:    #E0A312;
+  --v-warning-bg: #FDF3E1;
+  --v-danger:     #DC2626;
+  --v-danger-bg:  #FCEBEB;
+  --v-grey:       #94A3B8;
 
-  --radius: 0.5rem;
-}
+  /* Category coding (dots/accents only) */
+  --v-cat-ops: #2F6BED;
+  --v-cat-hr:  #12B886;
+  --v-cat-it:  #7048E8;
+  --v-cat-pm:  #F5882A;
 
-/* ─── Flat dark background ─── */
-.dark body {
-  background-color: var(--v-bg);
+  /* Gradients */
+  --grad-blue: linear-gradient(140deg,#2F6BED,#5B8DEF);
+  --grad-navy: linear-gradient(155deg,#12233F,#0A1424);
+
+  --radius: 0.625rem;
 }
 
 /* ─── Utility classes ─── */
@@ -96,18 +116,20 @@
   letter-spacing: 0.08em;
 }
 
+.grad-blue {
+  background: var(--grad-blue);
+}
+
+.grad-navy {
+  background: var(--grad-navy);
+}
+
 .v-live-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--v-green);
-  box-shadow: 0 0 6px var(--v-green);
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.8); }
+  background: var(--v-success);
+  box-shadow: 0 0 6px var(--v-success);
 }
 
 @layer base {

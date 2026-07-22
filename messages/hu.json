@@ -1,6 +1,8 @@
 {
   "nav": {
     "overview": "Áttekintés",
+    "mainMenuGroup": "FŐMENÜ",
+    "accountGroup": "FIÓK",
     "dashboard": "Irányítópult",
     "work": "Munka",
     "projects": "Projektek",
@@ -22,6 +24,11 @@
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
+    "eyebrowSection": "PANEL",
+    "eyebrowSub": "ÁTTEKINTÉS",
+    "addProject": "Projekt hozzáadása",
+    "phaseDistributionEyebrow": "MŰKÖDÉSI STÁTUSZ",
+    "phaseDistributionTitle": "Eloszlás fázis szerint",
     "title": "Áttekintés",
     "subtitle": "Veltol Holding S.R.L. — aktív projekt portfólió összesítő",
     "recentEyebrow": "LEGUTÓBBI PROJEKTEK",
@@ -53,6 +60,8 @@
   },
   "projects": {
     "eyebrow": "PROJEKTEK · ÖSSZES",
+    "eyebrowSection": "PROJEKTEK",
+    "eyebrowSub": "ÖSSZES",
     "title": "Projektek",
     "subtitle": "Az összes napelemes és BESS projekt áttekintő listája",
     "totalCount": "{count} projekt összesen",
@@ -64,6 +73,7 @@
     "projectSaved": "Projekt mentve.",
     "projectCreated": "Projekt létrehozva.",
     "projectDeleted": "Projekt törölve.",
+    "teamAssigned": "Csapat hozzárendelve.",
     "errorGeneric": "Hiba történt. Próbálja újra.",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
     "folderCreated": "Mappa létrehozva.",
@@ -78,6 +88,9 @@
     "save": "Mentés",
     "saving": "Mentés...",
     "emptyState": "Még nincsenek projektek. Adja hozzá az elsőt.",
+    "daysOverdue": "{count} napja lejárt",
+    "daysLeftToday": "ma",
+    "daysLeft": "{count} nap múlva",
     "viewChecklist": "Ellenőrzőlista",
     "filterAllPhases": "Minden fázis",
     "filterAllCategories": "Minden kategória",
@@ -124,9 +137,11 @@
       "mwSolar": "MW Napelem",
       "mwBess": "MW BESS",
       "projectCategory": "Projekt kategória",
+      "financialType": "Finanszírozási típus",
       "projectType": "Műszaki típus",
       "contractType": "Szerződés típusa",
       "manager": "Projektmenedzser",
+      "team": "Hozzárendelt csapat",
       "phase": "Jelenlegi fázis",
       "progress": "Haladás (%)",
       "contractNumber": "Szerződésszám",
@@ -138,6 +153,11 @@
       "cuIssued": "CU kiadva",
       "atrIssued": "ATR kiadva",
       "notes": "Megjegyzés"
+    },
+    "autoManual": {
+      "auto": "Automatikus",
+      "manual": "Manuális",
+      "autoHint": "A Matrice/checklist haladásból számítva"
     },
     "folderScan": {
       "stepTitle": "AI mappaelemzés",
@@ -289,6 +309,10 @@
     "residential": "Lakossági",
     "industrial": "Ipari"
   },
+  "financialType": {
+    "proprii": "Sursa proprii",
+    "finantare": "Sursa finanțare"
+  },
   "contractType": {
     "proiectare": "Proiectare",
     "executie": "Execuție",
@@ -311,10 +335,13 @@
   },
   "matrice": {
     "eyebrow": "MUNKA · MATRICE STATUS",
+    "eyebrowSection": "MUNKA",
+    "eyebrowSub": "MATRICE STATUS",
     "title": "Matrice Status",
-    "subtitle": "Tevékenységek × projektek állapotmátrix",
+    "subtitle": "Tevékenységek × projektek állapotmátrix — kövesd a leadandókat és a haladást ügyfelenként.",
     "picker": {
       "label": "PROJEKTEK",
+      "shownCount": "{count} kiválasztva",
       "empty": "Nincsenek projektek.",
       "placeholder": "Projekt keresése és hozzáadása...",
       "maxReached": "Legfeljebb 5 projekt — távolíts el egyet a hozzáadáshoz",
@@ -323,9 +350,11 @@
     },
     "grid": {
       "activity": "Tevékenység",
+      "pctComplete": "{pct}% kész",
       "noProjects": "Válasszon ki legalább egy projektet.",
       "loading": "Frissítés...",
-      "notContracted": "Nem része a projekt szerződéstípusának"
+      "notContracted": "Nem része a projekt szerződéstípusának",
+      "derivedFromChecklist": "A checklist alapján automatikusan frissül — módosítsd a projekt checklist-jében"
     },
     "status": {
       "finalizat": "Befejezett",
@@ -335,7 +364,10 @@
       "neinceput": "Nem kezdett",
       "na": "N/A"
     },
-    "hideProject": "Elrejtés a nézetből"
+    "hideProject": "Elrejtés a nézetből",
+    "legend": {
+      "label": "JELMAGYARÁZAT"
+    }
   },
   "vacation": {
     "eyebrow": "HR · SZABADSÁGKÉRELMEK",
@@ -750,10 +782,6 @@
       "next": "Következő",
       "pageOf": "{page}. oldal / {total}"
     },
-    "startBeforePreviousEnd": "A kezdő dátum nem lehet korábbi az előző fázis befejező dátumánál.",
-    "endAfterNextStart": "A befejező dátum nem lehet későbbi a következő fázis kezdő dátumánál.",
-    "minStartDateHint": "{date} napon vagy azután kell lennie (előző fázis vége)",
-    "maxEndDateHint": "{date} napon vagy azelőtt kell lennie (következő fázis kezdete)",
     "endBeforeStart": "A befejező dátum nem lehet korábbi a kezdő dátumnál."
   }
 }

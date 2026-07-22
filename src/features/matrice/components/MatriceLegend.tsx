@@ -9,11 +9,14 @@ export function MatriceLegend() {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <span className="text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
+        {t("legend.label")}
+      </span>
       {ACTIVITY_STATUS_VALUES.map((s) => (
         <span
           key={s}
           className={cn(
-            "inline-flex items-center rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide",
+            "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[.06em]",
             STATUS_COLOR[s as ActivityStatus],
           )}
         >

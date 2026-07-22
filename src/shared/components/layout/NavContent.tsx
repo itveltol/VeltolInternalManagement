@@ -11,7 +11,6 @@ import {
   GanttChartSquare,
   Settings,
   LogOut,
-  ChevronRight,
   User,
   CalendarDays,
   Building2,
@@ -20,6 +19,7 @@ import {
   Users,
   UsersRound,
   Loader2,
+  Bell,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
@@ -60,32 +60,22 @@ export function NavContent({
 
   const NAV_GROUPS = [
     {
-      label: t("overview"),
+      label: t("mainMenuGroup"),
       items: [
         { href: `/${locale}/dashboard`, label: t("dashboard"), icon: LayoutDashboard },
-      ],
-    },
-    {
-      label: t("work"),
-      items: [
         { href: `/${locale}/projects`, label: t("projects"), icon: FolderKanban },
-        { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
-        { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
         { href: `/${locale}/matrice-status`, label: t("matriceStatus"), icon: Grid2X2 },
-        { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
-        { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
-      ],
-    },
-    {
-      label: t("delivery"),
-      items: [
+        { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
         { href: `/${locale}/documents`, label: t("documents"), icon: FileText },
         { href: `/${locale}/site`, label: t("site"), icon: HardHat },
+        { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
+        { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
+        { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
         { href: `/${locale}/pontaj`, label: t("pontaj"), icon: Users },
       ],
     },
     {
-      label: t("system"),
+      label: t("accountGroup"),
       items: [
         { href: `/${locale}/profile`, label: t("profile"), icon: User },
         { href: `/${locale}/settings`, label: t("settings"), icon: Settings },
@@ -119,7 +109,7 @@ export function NavContent({
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {!collapsed && (
-              <div className="mb-1.5 px-3 text-[11px] font-medium text-veltol-fgMute">
+              <div className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-[.13em] text-veltol-fgMute">
                 {group.label}
               </div>
             )}
@@ -135,11 +125,11 @@ export function NavContent({
                     onClick={(e) => handleNavClick(e, item.href)}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-md border border-veltol-accent/25 bg-veltol-accent/10 px-3 py-2 text-[13px] font-semibold text-veltol-accent",
+                      "flex h-[42px] items-center gap-2.5 rounded-nav bg-veltol-tint px-3 text-[14px] font-bold text-veltol-primary shadow-[inset_0_0_0_1px_rgba(47,107,237,0.16)] transition-colors duration-150",
                       collapsed && "justify-center px-0",
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0 text-veltol-accent" />
+                    <Icon className="h-4 w-4 shrink-0 text-veltol-primary" />
                     {!collapsed && item.label}
                   </Link>
                 ) : (
@@ -150,7 +140,7 @@ export function NavContent({
                     aria-busy={isPending}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-md border border-transparent px-3 py-2 text-[13px] text-veltol-fg/80 transition-colors hover:bg-veltol-surface/50 hover:text-veltol-fg",
+                      "flex h-[42px] items-center gap-2.5 rounded-nav px-3 text-[14px] font-medium text-veltol-fgDim transition-colors duration-150 hover:bg-[#F3F6FC] hover:text-veltol-fg",
                       isPending && "opacity-60",
                       collapsed && "justify-center px-0",
                     )}
@@ -175,23 +165,23 @@ export function NavContent({
           <DropdownMenuTrigger
             title={collapsed ? (displayName ?? undefined) : undefined}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-veltol-surface/50 transition-colors",
+              "flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#F3F6FC] transition-colors",
               collapsed && "justify-center",
             )}
           >
             <Avatar className="h-8 w-8 shrink-0">
-              <AvatarFallback className="bg-veltol-primary text-[11px] font-bold text-white">
+              <AvatarFallback className="bg-[#E7ECF4] text-[11px] font-bold text-[#5A6478]">
                 {initials ?? "?"}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1 text-left">
-                  <div className="truncate text-[13px] font-semibold text-veltol-fg">
+                  <div className="truncate text-[14px] font-bold text-veltol-fg">
                     {displayName ?? "—"}
                   </div>
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-veltol-fgMute" />
+                <Bell className="h-3.5 w-3.5 shrink-0 text-veltol-fgMute" />
               </>
             )}
           </DropdownMenuTrigger>

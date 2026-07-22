@@ -14,7 +14,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="h-8 w-8 shrink-0 text-veltol-fgMute hover:bg-veltol-surface/50 hover:text-veltol-fg lg:hidden"
+          className="h-8 w-8 shrink-0 text-veltol-fgMute hover:bg-[#F3F6FC] hover:text-veltol-fg lg:hidden"
         >
           <Menu className="h-4 w-4" />
         </Button>
@@ -25,14 +25,15 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         </div>
 
         {/* Right actions */}
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-veltol-fgMute hover:bg-veltol-surface/50 hover:text-veltol-fg"
+            className="relative h-[38px] w-[38px] text-veltol-fgMute hover:bg-[#F3F6FC] hover:text-veltol-fg"
           >
             <Bell className="h-4 w-4" />
+            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-[var(--v-warning)]" />
           </Button>
         </div>
       </div>

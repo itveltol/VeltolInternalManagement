@@ -24,6 +24,18 @@ async function getChecklistPath(projectId: number) {
   return `/${locale}/projects/${projectId}`;
 }
 
+/**
+ * Checklist writes can flip a mapped Matrice cell (via a DB trigger) and, from
+ * there, the project's derived progress_pct/status — revalidate those views
+ * too, not just the checklist page, so they don't show stale data.
+ */
+async function revalidateDerivedViews(projectId: number) {
+  const locale = await getLocale();
+  revalidatePath(`/${locale}/matrice-status`);
+  revalidatePath(`/${locale}/projects`);
+  revalidatePath(`/${locale}/projects/${projectId}`);
+}
+
 async function requireAuth() {
   const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
@@ -98,6 +110,7 @@ export async function upsertChecklistItem(
     await checklistService.upsertChecklistItem(client, { projectId, itemNumber, plan_total, zile, notes });
 
     revalidatePath(await getChecklistPath(projectId));
+    await revalidateDerivedViews(projectId);
     return { success: "itemSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -122,6 +135,7 @@ export async function logTodayRealizat(
     await checklistService.logTodayRealizat(client, itemId, projectId, realizat);
 
     revalidatePath(await getChecklistPath(projectId));
+    await revalidateDerivedViews(projectId);
     return { success: "todaySaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };

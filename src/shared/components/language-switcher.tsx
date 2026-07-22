@@ -40,7 +40,7 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={isPending}
-        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-veltol-fgMute transition-colors hover:bg-veltol-surface/50 hover:text-veltol-fg disabled:pointer-events-none disabled:opacity-60"
+        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.09em] text-veltol-fgDim transition-colors hover:bg-[#F3F6FC] disabled:pointer-events-none disabled:opacity-60"
       >
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -51,17 +51,17 @@ export function LanguageSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-36 border-veltol-accent/10 bg-veltol-bg text-veltol-fg"
+        className="w-36 border-border bg-card text-veltol-fg"
       >
         {locales.map((l) => (
           <DropdownMenuItem
             key={l}
             onClick={() => switchLocale(l)}
             disabled={isPending}
-            className={`cursor-pointer font-mono text-[11px] ${
+            className={`cursor-pointer text-[13px] ${
               l === locale
-                ? "text-veltol-accent focus:bg-veltol-accent/10 focus:text-veltol-accent"
-                : "text-veltol-fg focus:bg-veltol-surface/50"
+                ? "text-veltol-accent focus:bg-veltol-tint focus:text-veltol-accent"
+                : "text-veltol-fg focus:bg-[#F3F6FC]"
             }`}
           >
             <span className="mr-2 font-bold">{LOCALE_FLAGS[l]}</span>

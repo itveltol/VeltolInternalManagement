@@ -31,10 +31,10 @@ export const GANTT_PHASE_DATE_FIELDS: Record<
   autorizare: { start: "autorizare_start_date", end: "autorizare_end_date" },
 };
 
-export const GANTT_PHASE_COLOR: Record<GanttPhaseKey, { fill: string; line: string }> = {
-  planning: { fill: "bg-veltol-primary/70 border-veltol-primary", line: "bg-veltol-primary" },
-  execution: { fill: "bg-veltol-accent/70 border-veltol-accent", line: "bg-veltol-accent" },
-  autorizare: { fill: "bg-veltol-green/70 border-veltol-green", line: "bg-veltol-green" },
+export const GANTT_PHASE_COLOR: Record<GanttPhaseKey, { fill: string; line: string; dot: string }> = {
+  planning: { fill: "bg-veltol-primary border-veltol-primary", line: "bg-veltol-primary", dot: "bg-veltol-primary" },
+  execution: { fill: "bg-veltol-primaryHi border-veltol-primaryHi", line: "bg-veltol-primaryHi", dot: "bg-veltol-primaryHi" },
+  autorizare: { fill: "bg-veltol-green border-veltol-green", line: "bg-veltol-green", dot: "bg-veltol-green" },
 };
 
 export type GanttVariance = "ahead" | "on_track" | "behind" | null;

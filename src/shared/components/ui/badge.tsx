@@ -10,22 +10,22 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-veltol-accent/30 bg-veltol-accent/10 text-veltol-accent",
+          "border-transparent bg-veltol-tint text-veltol-primary",
         secondary:
-          "border-veltol-fgMute/20 bg-veltol-surface/60 text-veltol-fgDim",
+          "border-transparent bg-veltol-surface text-veltol-fgDim",
         destructive:
-          "border-veltol-red/30 bg-veltol-red/10 text-veltol-red",
+          "border-transparent bg-[var(--v-danger-bg)] text-[var(--v-danger)]",
         outline:
-          "border-veltol-fgMute/30 text-veltol-fgDim",
+          "border-veltol-border text-veltol-fgDim",
         ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+          "hover:bg-muted hover:text-muted-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         info:
-          "border-veltol-primary/30 bg-veltol-primary/10 text-veltol-primary",
+          "border-transparent bg-veltol-tint text-veltol-primary",
         warning:
-          "border-veltol-orange/30 bg-veltol-orange/10 text-veltol-orange",
+          "border-transparent bg-[var(--v-warning-bg)] text-[var(--v-warning)]",
         success:
-          "border-veltol-green/30 bg-veltol-green/10 text-veltol-green",
+          "border-transparent bg-[var(--v-success-bg)] text-[var(--v-success)]",
       },
     },
     defaultVariants: {
@@ -37,14 +37,28 @@ const badgeVariants = cva(
 function Badge({
   className,
   variant = "default",
+  dot = false,
   render,
+  children,
   ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+}: useRender.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & { dot?: boolean }) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
         className: cn(badgeVariants({ variant }), className),
+        children: dot ? (
+          <>
+            <span
+              className="size-1.5 shrink-0 rounded-full bg-current"
+              aria-hidden="true"
+            />
+            {children}
+          </>
+        ) : (
+          children
+        ),
       },
       props
     ),

@@ -1,6 +1,8 @@
 {
   "nav": {
     "overview": "Overview",
+    "mainMenuGroup": "MAIN MENU",
+    "accountGroup": "ACCOUNT",
     "dashboard": "Dashboard",
     "work": "Work",
     "projects": "Projects",
@@ -22,6 +24,11 @@
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
+    "eyebrowSection": "DASHBOARD",
+    "eyebrowSub": "OVERVIEW",
+    "addProject": "Add project",
+    "phaseDistributionEyebrow": "OPERATIONAL STATUS",
+    "phaseDistributionTitle": "Distribution by phase",
     "title": "Overview",
     "subtitle": "Veltol Holding S.R.L. — active project portfolio summary",
     "recentEyebrow": "RECENT PROJECTS",
@@ -53,6 +60,8 @@
   },
   "projects": {
     "eyebrow": "PROJECTS · ALL",
+    "eyebrowSection": "PROJECTS",
+    "eyebrowSub": "ALL",
     "title": "Projects",
     "subtitle": "Overview list of all solar and BESS projects",
     "totalCount": "{count} projects total",
@@ -64,6 +73,7 @@
     "projectSaved": "Project saved.",
     "projectCreated": "Project created.",
     "projectDeleted": "Project deleted.",
+    "teamAssigned": "Team assigned.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
     "folderCreated": "Folder created.",
@@ -78,6 +88,9 @@
     "save": "Save",
     "saving": "Saving...",
     "emptyState": "No projects yet. Add your first project.",
+    "daysOverdue": "{count}d overdue",
+    "daysLeftToday": "today",
+    "daysLeft": "{count}d left",
     "viewChecklist": "Checklist",
     "filterAllPhases": "All phases",
     "filterAllCategories": "All categories",
@@ -124,9 +137,11 @@
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Project category",
+      "financialType": "Financial type",
       "projectType": "Technical type",
       "contractType": "Contract type",
       "manager": "Project manager",
+      "team": "Assigned team",
       "phase": "Current phase",
       "progress": "Progress (%)",
       "contractNumber": "Contract number",
@@ -138,6 +153,11 @@
       "cuIssued": "CU issued",
       "atrIssued": "ATR issued",
       "notes": "Notes"
+    },
+    "autoManual": {
+      "auto": "Auto",
+      "manual": "Manual",
+      "autoHint": "Computed from Matrice/checklist progress"
     },
     "folderScan": {
       "stepTitle": "AI Folder Scan",
@@ -289,6 +309,10 @@
     "residential": "Residential",
     "industrial": "Industrial"
   },
+  "financialType": {
+    "proprii": "Sursa proprii",
+    "finantare": "Sursa finanțare"
+  },
   "contractType": {
     "proiectare": "Proiectare",
     "executie": "Execuție",
@@ -311,10 +335,13 @@
   },
   "matrice": {
     "eyebrow": "WORK · MATRICE STATUS",
+    "eyebrowSection": "WORK",
+    "eyebrowSub": "MATRICE STATUS",
     "title": "Matrice Status",
-    "subtitle": "Activities × projects status matrix",
+    "subtitle": "Activities × projects status matrix — track deliverables and progress for each client.",
     "picker": {
       "label": "PROJECTS",
+      "shownCount": "{count} selected",
       "empty": "No projects available.",
       "placeholder": "Search projects to add...",
       "maxReached": "Maximum of 5 projects — remove one to add another",
@@ -323,9 +350,11 @@
     },
     "grid": {
       "activity": "Activity",
+      "pctComplete": "{pct}% complete",
       "noProjects": "Select at least one project.",
       "loading": "Refreshing...",
-      "notContracted": "Not covered by this project's contract type"
+      "notContracted": "Not covered by this project's contract type",
+      "derivedFromChecklist": "Driven by checklist progress — update it in the project's checklist"
     },
     "status": {
       "finalizat": "Done",
@@ -335,7 +364,10 @@
       "neinceput": "Not started",
       "na": "N/A"
     },
-    "hideProject": "Hide from view"
+    "hideProject": "Hide from view",
+    "legend": {
+      "label": "LEGEND"
+    }
   },
   "vacation": {
     "eyebrow": "HR · VACATION REQUESTS",
@@ -750,10 +782,6 @@
       "next": "Next",
       "pageOf": "Page {page} of {total}"
     },
-    "startBeforePreviousEnd": "Start date can't be before the previous phase's end date.",
-    "endAfterNextStart": "End date can't be after the next phase's start date.",
-    "minStartDateHint": "Must be on or after {date} (previous phase end)",
-    "maxEndDateHint": "Must be on or before {date} (next phase start)",
     "endBeforeStart": "End date can't be before the start date."
   }
 }

@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import { ACTIVITY_STATUS_VALUES, STATUS_COLOR, type ActivityStatus } from "../types";
+import { ACTIVITY_STATUS_VALUES, STATUS_COLOR, STATUS_DOT_COLOR, type ActivityStatus } from "../types";
 import { cn } from "@/shared/utils/cn";
 
 interface Props {
@@ -30,12 +30,12 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
   const isDisabled = disabled || pending;
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={isDisabled}
         className={cn(
-          "flex w-full items-center justify-center gap-1 rounded border px-1.5 py-1 text-center font-mono text-[10px] uppercase tracking-wide transition-opacity focus:outline-none",
+          "flex w-full items-center justify-center gap-1.5 rounded-full px-2.5 py-1 text-center text-[11px] font-bold uppercase tracking-[.06em] transition-opacity focus:outline-none",
           STATUS_COLOR[status],
           isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80",
         )}
@@ -45,21 +45,21 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="center"
-        className="border-veltol-accent/10 bg-veltol-bg text-veltol-fg"
+        className="border-border bg-popover text-veltol-fg"
       >
         {ACTIVITY_STATUS_VALUES.map((s) => (
           <DropdownMenuItem
             key={s}
             onClick={() => onChangeStatus(projectId, activityId, s)}
             className={cn(
-              "cursor-pointer font-mono text-[11px] uppercase tracking-wide",
+              "cursor-pointer text-[13px] font-medium",
               s === status && "font-bold",
             )}
           >
             <span
               className={cn(
-                "mr-2 inline-block h-2 w-2 rounded-full border",
-                STATUS_COLOR[s],
+                "mr-2 inline-block h-2 w-2 rounded-full",
+                STATUS_DOT_COLOR[s],
               )}
             />
             {t(`status.${s}`)}
@@ -71,11 +71,11 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
       type="button"
       onClick={(e) => { e.stopPropagation(); onOpenDocuments(projectId, activityId); }}
       title={tDocs("attachDocuments")}
-      className="flex items-center gap-0.5 rounded p-0.5 text-veltol-fgMute/60 transition-colors hover:text-veltol-fgMute"
+      className="flex items-center gap-0.5 rounded p-0.5 text-veltol-faint transition-colors hover:text-veltol-fgMute"
     >
       <Paperclip className="h-3 w-3" />
       {documentCount > 0 && (
-        <span className="font-mono text-[9px] text-veltol-accent">{documentCount}</span>
+        <span className="text-[10px] font-semibold text-veltol-primary">{documentCount}</span>
       )}
     </button>
     </div>

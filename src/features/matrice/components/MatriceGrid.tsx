@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from "../types";
 import {
   projectCompletionPct,
@@ -10,6 +10,7 @@ import {
   activityRowPct,
   isPhaseEnabled,
 } from "../services/matriceService";
+import { buildDerivedActivityIds } from "../services/checklistActivityMapping";
 import { MatriceCell } from "./MatriceCell";
 import { cn } from "@/shared/utils/cn";
 
@@ -96,6 +97,8 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
     return map;
   }, [activities]);
 
+  const derivedActivityIds = useMemo(() => buildDerivedActivityIds(activities), [activities]);
+
   if (projects.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center text-sm text-veltol-fgMute">
@@ -110,42 +113,51 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
         <thead>
           <tr className="border-b border-border">
             {/* Sticky: phase col */}
-            <th className="sticky left-0 z-20 w-6 bg-veltol-bg px-1" />
+            <th className="sticky left-0 z-20 w-6 bg-card px-1" />
             {/* Sticky: activity col */}
-            <th className="sticky left-6 z-20 min-w-[220px] bg-veltol-bg px-3 py-2 text-left font-mono text-[9px] uppercase tracking-[0.15em] text-veltol-fgMute">
+            <th className="sticky left-6 z-20 min-w-[220px] bg-card px-3 py-2 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
               {t("grid.activity")}
             </th>
             {/* Sticky: row% col */}
-            <th className="sticky left-[calc(1.5rem+220px)] z-20 w-12 bg-veltol-bg px-2 py-2 text-center font-mono text-[9px] uppercase tracking-[0.15em] text-veltol-fgMute tabular-nums">
+            <th className="sticky left-[calc(1.5rem+220px)] z-20 w-12 bg-card px-2 py-2 text-center text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute tabular-nums">
               %
             </th>
             {/* Project columns */}
-            {projects.map((p) => (
-              <th
-                key={p.id}
-                className="group/col min-w-[120px] px-2 py-2 text-center"
-              >
-                <div className="relative flex items-start justify-center">
-                  <div>
-                    <div className="text-[12px] font-semibold text-veltol-fg">{p.name}</div>
-                    {p.project_type && (
-                      <div className="mt-0.5 font-mono text-[9px] text-veltol-fgMute">{p.project_type}</div>
-                    )}
+            {projects.map((p) => {
+              const pct = projectPctById.get(p.id) ?? 0;
+              return (
+                <th
+                  key={p.id}
+                  className="group/col min-w-[140px] px-3 py-3 text-center"
+                >
+                  <div className="relative flex items-start justify-center">
+                    <div>
+                      <div className="text-[13px] font-bold text-veltol-fg">{p.name}</div>
+                      {p.project_type && (
+                        <div className="mt-0.5 text-[11px] font-medium text-veltol-fgMute">{p.project_type}</div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onHideProject(p.id)}
+                      title={t("hideProject")}
+                      className="absolute -right-1 -top-1 rounded p-0.5 text-veltol-faint opacity-0 transition-opacity hover:bg-[var(--v-danger-bg)] hover:text-veltol-red group-hover/col:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onHideProject(p.id)}
-                    title={t("hideProject")}
-                    className="absolute -right-1 -top-1 rounded p-0.5 text-veltol-fgMute opacity-0 transition-opacity hover:bg-veltol-red/10 hover:text-veltol-red group-hover/col:opacity-100"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-                <div className="mt-1 font-mono text-[11px] tabular-nums text-veltol-accent">
-                  {projectPctById.get(p.id) ?? 0}%
-                </div>
-              </th>
-            ))}
+                  <div className="mx-auto mt-2 h-1.5 w-full max-w-[100px] overflow-hidden rounded-full bg-[var(--v-line-2)]">
+                    <div
+                      className="h-full rounded-full bg-veltol-accent transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="mt-1.5 text-[12px] font-semibold tabular-nums text-veltol-primary">
+                    {t("grid.pctComplete", { pct })}
+                  </div>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -157,18 +169,18 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
               // Phase header row
               <tr
                 key={`phase-${phaseNo}`}
-                className="cursor-pointer select-none border-b border-border bg-veltol-surface/30 hover:bg-veltol-surface/50"
+                className="cursor-pointer select-none border-b border-border bg-veltol-surface/60 hover:bg-veltol-surface"
                 onClick={() => togglePhase(phaseNo)}
               >
                 {/* collapse arrow */}
-                <td className="sticky left-0 z-10 bg-veltol-surface/30 px-1 py-2 text-center text-veltol-fgMute">
-                  <span className={cn("inline-block text-[10px] transition-transform", isCollapsed ? "" : "rotate-90")}>
-                    ▶
-                  </span>
+                <td className="sticky left-0 z-10 bg-veltol-surface/60 px-1 py-2.5 text-center text-veltol-fgMute">
+                  <ChevronRight
+                    className={cn("inline-block h-3 w-3 transition-transform", !isCollapsed && "rotate-90")}
+                  />
                 </td>
                 <td
                   colSpan={2}
-                  className="sticky left-6 z-10 bg-veltol-surface/30 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-veltol-fgMute"
+                  className="sticky left-6 z-10 bg-veltol-surface/60 px-3 py-2.5 text-[13px] font-bold text-veltol-fg"
                 >
                   {phaseNo}. {phaseName}
                 </td>
@@ -178,8 +190,8 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                     <td
                       key={p.id}
                       className={cn(
-                        "px-2 py-2 text-center font-mono text-[11px] tabular-nums",
-                        enabled ? "text-veltol-fgDim" : "text-veltol-fgMute/30",
+                        "px-2 py-2.5 text-center text-[12px] font-semibold tabular-nums",
+                        enabled ? "text-veltol-fgDim" : "text-veltol-faint",
                       )}
                       title={enabled ? undefined : t("grid.notContracted")}
                     >
@@ -196,12 +208,12 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                       return (
                         <tr
                           key={`activity-${activity.id}`}
-                          className="border-b border-border bg-veltol-surface/10"
+                          className="border-b border-border bg-[var(--v-line-2)]"
                         >
-                          <td className="sticky left-0 z-10 bg-veltol-surface/10" />
+                          <td className="sticky left-0 z-10 bg-[var(--v-line-2)]" />
                           <td
                             colSpan={2 + projects.length}
-                            className="sticky left-6 z-10 bg-veltol-surface/10 px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-veltol-fg/60"
+                            className="sticky left-6 z-10 bg-[var(--v-line-2)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.09em] text-veltol-fgMute"
                           >
                             {activity.name}
                           </td>
@@ -214,20 +226,26 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                     return (
                       <tr
                         key={`activity-${activity.id}`}
-                        className="border-b border-border hover:bg-veltol-surface/20"
+                        className="border-b border-border hover:bg-[#F6F9FE]"
                       >
-                        <td className="sticky left-0 z-10 bg-veltol-bg" />
-                        <td className="sticky left-6 z-10 bg-veltol-bg px-3 py-1.5 text-[12px] text-veltol-fg/80">
+                        <td className="sticky left-0 z-10 bg-card" />
+                        <td className="sticky left-6 z-10 bg-card px-3 py-2 text-[13px] font-medium text-veltol-fg">
+                          <span className="mr-2 inline-block size-1.5 rounded-full bg-veltol-accent" />
                           {activity.name}
                         </td>
-                        <td className="sticky left-[calc(1.5rem+220px)] z-10 bg-veltol-bg px-2 py-1.5 text-center font-mono text-[11px] tabular-nums text-veltol-fgDim">
+                        <td className="sticky left-[calc(1.5rem+220px)] z-10 bg-card px-2 py-2 text-center text-[12px] font-medium tabular-nums text-veltol-fgDim">
                           {rowPct}%
                         </td>
                         {projects.map((p) => {
                           const status = getStatus(p.id, activity.id);
                           const enabled = isPhaseEnabled(p, activity.phase_no);
+                          const derived = derivedActivityIds.has(activity.id);
                           return (
-                            <td key={p.id} className="px-1.5 py-1">
+                            <td
+                              key={p.id}
+                              className="px-1.5 py-1"
+                              title={enabled && derived ? t("grid.derivedFromChecklist") : undefined}
+                            >
                               {enabled ? (
                                 <MatriceCell
                                   status={status}
@@ -237,10 +255,11 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   onOpenDocuments={onOpenDocuments}
                                   documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
                                   pending={pendingCells?.has(`${p.id}:${activity.id}`)}
+                                  disabled={derived}
                                 />
                               ) : (
                                 <div
-                                  className="flex h-7 w-full items-center justify-center rounded border border-dashed border-veltol-fgMute/20 text-veltol-fgMute/40"
+                                  className="flex h-7 w-full items-center justify-center rounded-full border border-dashed border-veltol-border text-veltol-faint"
                                   title={t("grid.notContracted")}
                                 >
                                   —

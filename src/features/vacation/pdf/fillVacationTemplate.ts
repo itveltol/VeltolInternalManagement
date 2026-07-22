@@ -64,7 +64,7 @@ export async function fillVacationTemplate(
 
   draw(formatDate(request.created_at), 385, 307.2 + Y_NUDGE);
 
-  draw(fullName(request.approver), 300, 223.3 + Y_NUDGE);
+  draw(request.superior_name ?? "", 300, 223.3 + Y_NUDGE);
   draw(formatDate(request.approved_at), 174, 195.9 + Y_NUDGE);
 
   const mark = LEAVE_TYPE_MARK_POSITION[request.leave_type];

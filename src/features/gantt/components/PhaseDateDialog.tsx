@@ -7,7 +7,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { savePhaseDates } from "@/app/[locale]/(app)/gantt/actions";
 import { validatePhaseDates } from "../services/ganttPhaseService";
-import { GANTT_PHASE_KEYS, GANTT_PHASE_DATE_FIELDS, type GanttPhaseKey } from "../types";
+import { GANTT_PHASE_DATE_FIELDS, type GanttPhaseKey } from "../types";
 import type { Project } from "@/features/projects/types";
 
 const INPUT_CLASS =
@@ -38,17 +38,11 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialStartDate, initialEndDate, phaseKey, project.id]);
 
-  const index = GANTT_PHASE_KEYS.indexOf(phaseKey);
-  const previousKey = GANTT_PHASE_KEYS[index - 1];
-  const nextKey = GANTT_PHASE_KEYS[index + 1];
-  const minStartDate = previousKey ? (project[GANTT_PHASE_DATE_FIELDS[previousKey].end] as string | null) : null;
-  const maxEndDate = nextKey ? (project[GANTT_PHASE_DATE_FIELDS[nextKey].start] as string | null) : null;
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const validationError = validatePhaseDates(phaseKey, startDate || null, endDate || null, project);
+    const validationError = validatePhaseDates(startDate || null, endDate || null);
     if (validationError) {
       setError(validationError);
       return;
@@ -86,16 +80,10 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
                 <input
                   type="date"
                   value={startDate}
-                  min={minStartDate ?? undefined}
                   max={endDate || undefined}
                   onChange={(e) => setStartDate(e.target.value)}
                   className={INPUT_CLASS}
                 />
-                {minStartDate && (
-                  <p className="font-mono text-[9px] text-veltol-fgMute">
-                    {t("minStartDateHint", { date: minStartDate })}
-                  </p>
-                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("endDate")}</Label>
@@ -103,15 +91,9 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
                   type="date"
                   value={endDate}
                   min={startDate || undefined}
-                  max={maxEndDate ?? undefined}
                   onChange={(e) => setEndDate(e.target.value)}
                   className={INPUT_CLASS}
                 />
-                {maxEndDate && (
-                  <p className="font-mono text-[9px] text-veltol-fgMute">
-                    {t("maxEndDateHint", { date: maxEndDate })}
-                  </p>
-                )}
               </div>
             </div>
 

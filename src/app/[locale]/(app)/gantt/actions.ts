@@ -82,7 +82,7 @@ export async function savePhaseDates(
     const project = await projectService.getProjectById(client, projectId);
     if (!project) return { error: "errorGeneric" };
 
-    const validationError = validatePhaseDates(phaseKey, startDate, endDate, project);
+    const validationError = validatePhaseDates(startDate, endDate);
     if (validationError) return { error: validationError };
 
     await projectService.updatePhaseDates(client, projectId, phaseKey, {

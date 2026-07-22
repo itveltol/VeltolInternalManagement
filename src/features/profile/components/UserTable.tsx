@@ -130,7 +130,7 @@ export function UserTable({
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback className="bg-veltol-primary text-[10px] font-bold text-white">
+                          <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
                             {initials(user)}
                           </AvatarFallback>
                         </Avatar>

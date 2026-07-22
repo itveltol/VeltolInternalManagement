@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Search } from "lucide-react";
 import type { MatrixProject } from "../types";
 import {
   Combobox,
@@ -30,7 +31,7 @@ export function MatriceProjectPicker({ pickableProjects, onAdd, disabled, maxPro
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-medium text-veltol-fgMute">
+      <span className="text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
         {t("picker.label")} ({shownCount}/{maxProjects})
       </span>
       <Combobox
@@ -46,6 +47,7 @@ export function MatriceProjectPicker({ pickableProjects, onAdd, disabled, maxPro
         multiple
       >
         <ComboboxInputGroup>
+          <Search className="size-3.5 shrink-0 text-veltol-faint" />
           <ComboboxInput placeholder={disabled ? t("picker.maxReached") : t("picker.placeholder")} />
         </ComboboxInputGroup>
         <ComboboxPortal>
@@ -58,7 +60,7 @@ export function MatriceProjectPicker({ pickableProjects, onAdd, disabled, maxPro
                     <ComboboxItemIndicator />
                     {p.name}
                     {p.project_type && (
-                      <span className="ml-1.5 font-mono text-[9px] opacity-60">{p.project_type}</span>
+                      <span className="ml-1.5 text-[11px] text-veltol-fgMute">{p.project_type}</span>
                     )}
                   </ComboboxItem>
                 )}
