@@ -75,6 +75,7 @@
     "projectDeleted": "Proiect șters.",
     "teamAssigned": "Echipă atribuită.",
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
+    "errorDetail": "Salvare eșuată: {message}",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
     "folderCreated": "Dosar creat.",
     "folderFailed": "Proiect creat. Dosarul nu a putut fi creat — îl puteți asocia mai târziu.",
