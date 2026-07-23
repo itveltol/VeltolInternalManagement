@@ -75,6 +75,7 @@
     "projectDeleted": "Project deleted.",
     "teamAssigned": "Team assigned.",
     "errorGeneric": "Something went wrong.",
+    "errorDetail": "Couldn't save: {message}",
     "errorNotAllowed": "You don't have permission to do this.",
     "folderCreated": "Folder created.",
     "folderFailed": "Project created. Folder could not be created — you can link it later.",

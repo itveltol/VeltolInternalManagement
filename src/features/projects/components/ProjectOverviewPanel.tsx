@@ -30,6 +30,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
   const tContractType = useTranslations("contractType");
   const locale = useLocale();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editSession, setEditSession] = useState(0);
 
   function formatDate(iso: string | null) {
     if (!iso) return "—";
@@ -86,7 +87,14 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
           <Badge variant={priorityVariant(project.priority)}>{tPriority(project.priority)}</Badge>
         </div>
         {canMutate && (
-          <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setEditSession((n) => n + 1);
+              setIsEditOpen(true);
+            }}
+          >
             <Pencil />
             {t("editProject")}
           </Button>
@@ -111,6 +119,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
 
       {canMutate && (
         <EditProjectDialog
+          key={`${project.id}-${editSession}`}
           project={project}
           open={isEditOpen}
           managers={managers}

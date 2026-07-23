@@ -75,6 +75,7 @@
     "projectDeleted": "Projekt törölve.",
     "teamAssigned": "Csapat hozzárendelve.",
     "errorGeneric": "Hiba történt. Próbálja újra.",
+    "errorDetail": "Mentés sikertelen: {message}",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
     "folderCreated": "Mappa létrehozva.",
     "folderFailed": "Projekt létrehozva. A mappa nem hozható létre — később is összekapcsolhatja.",

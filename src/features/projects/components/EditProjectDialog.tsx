@@ -311,7 +311,13 @@ export function EditProjectDialog({ project, open, managers, clientRefs, teams, 
               <textarea name="notes" rows={3} defaultValue={project.notes ?? ""} className={TEXTAREA_CLASS} />
             </div>
 
-            {state?.error && <p className="text-sm text-veltol-red">{t(state.error as Parameters<typeof t>[0])}</p>}
+            {state?.error && (
+              <p className="text-sm text-veltol-red">
+                {state.error === "errorDetail"
+                  ? t("errorDetail", { message: state.errorMessage ?? "" })
+                  : t(state.error as Parameters<typeof t>[0])}
+              </p>
+            )}
             {state?.success && <p className="text-sm text-veltol-green">{t(state.success as Parameters<typeof t>[0])}</p>}
 
             <div className="flex justify-end gap-3 pt-2">

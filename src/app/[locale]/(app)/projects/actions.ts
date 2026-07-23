@@ -18,7 +18,13 @@ import * as matriceService from "@/features/matrice/services/matriceService";
 import { buildDerivedActivityIds } from "@/features/matrice/services/checklistActivityMapping";
 import type { ActivityStatus } from "@/features/matrice/types";
 
-export type ActionState = { error?: string; success?: string; folderCreated?: boolean; projectId?: number } | null;
+export type ActionState = {
+  error?: string;
+  errorMessage?: string;
+  success?: string;
+  folderCreated?: boolean;
+  projectId?: number;
+} | null;
 
 async function getProjectsPath() {
   const locale = await getLocale();
@@ -51,7 +57,7 @@ async function requireProjectOwner(projectId: number) {
   return { supabase, user };
 }
 
-function extractProjectPayload(formData: FormData) {
+function extractProjectPayload(formData: FormData, existing?: Project) {
   const str = (key: string) => {
     const v = formData.get(key) as string | null;
     return v && v.trim() !== "" ? v.trim() : null;
@@ -62,6 +68,10 @@ function extractProjectPayload(formData: FormData) {
     const n = Number(v);
     return isNaN(n) ? null : n;
   };
+  // Disabled form controls (e.g. status/progress in "auto" mode) are omitted
+  // from FormData entirely — fall back to the existing DB value instead of
+  // sending null/blank and clobbering it.
+  const strOrExisting = (key: string, fallback: string | null) => formData.has(key) ? str(key) : fallback;
 
   const project_category: ProjectCategory =
     formData.get("project_category") === "residential" ? "residential" : "industrial";
@@ -85,20 +95,20 @@ function extractProjectPayload(formData: FormData) {
     contract_type,
     manager_id: str("manager_id"),
     client_id: num("client_id"),
-    current_phase: formData.get("current_phase") as string,
-    progress_pct: Number(formData.get("progress_pct") ?? 0),
+    current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "",
+    progress_pct: formData.has("progress_pct") ? Number(formData.get("progress_pct")) : existing?.progress_pct ?? 0,
     contract_number: str("contract_number"),
     contract_date: str("contract_date"),
     deadline: str("deadline"),
     value_eur: num("value_eur"),
-    status: formData.get("status") as string,
+    status: (formData.get("status") as string | null) ?? existing?.status ?? "on_schedule",
     status_manual: formData.get("status_manual") === "true",
-    priority: formData.get("priority") as string,
+    priority: (formData.get("priority") as string | null) ?? existing?.priority ?? "medium",
     progress_pct_manual: formData.get("progress_pct_manual") === "true",
     cu_issued: formData.get("cu_issued") === "true",
     atr_issued: formData.get("atr_issued") === "true",
     notes: str("notes"),
-    paid_by: str("paid_by"),
+    paid_by: strOrExisting("paid_by", existing?.paid_by ?? null),
   };
 }
 
@@ -190,13 +200,15 @@ export async function updateProject(
     const { supabase } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
-    await projectService.updateProject(client, projectId, extractProjectPayload(formData));
+    const existing = await projectService.getProjectById(client, projectId);
+    await projectService.updateProject(client, projectId, extractProjectPayload(formData, existing ?? undefined));
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());
     revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "projectSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message) return { error: "errorDetail", errorMessage: e.message };
     return { error: "errorGeneric" };
   }
 }
