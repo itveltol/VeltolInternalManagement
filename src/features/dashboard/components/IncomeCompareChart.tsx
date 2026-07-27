@@ -107,7 +107,7 @@ export function IncomeCompareChart({ projects, availableYears, labels }: Props) 
       <div className="p-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-veltol-fg shadow-sm transition-colors hover:bg-[#F3F6FC]">
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-veltol-fg shadow-sm transition-colors hover:bg-veltol-hover">
               {labels.selectMonths}
               {selected.length > 0 && ` (${selected.length})`}
               <ChevronDownIcon className="size-3.5 text-veltol-faint" />

@@ -78,7 +78,7 @@ export const projects: MockProject[] = [
     name: "Kecskemét Tejipari Üzem",
     location: "Kecskemét",
     capacityMWp: 2.5,
-    status: "proposal",
+    status: "planning",
     deadline: "2027-06-01",
     valueEur: 2_000_000,
     client: "Alföldi Tej Zrt.",

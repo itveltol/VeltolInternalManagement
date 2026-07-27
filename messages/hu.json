@@ -115,7 +115,6 @@
       "phase": "Fázis",
       "progress": "Haladás",
       "generalStatus": "Státusz",
-      "priority": "Prioritás",
       "manager": "PM",
       "client": "Ügyfél",
       "mwSolar": "MW Napelem",
@@ -126,8 +125,6 @@
       "contractNumber": "Szerz. szám",
       "contractDate": "Szerz. dátum",
       "contractType": "Szerződés típusa",
-      "cuIssued": "CU kiadva?",
-      "atrIssued": "ATR kiadva?",
       "notes": "Megjegyzés"
     },
     "fields": {
@@ -135,6 +132,7 @@
       "county": "Megye",
       "client": "Ügyfél",
       "siteLocation": "Helyszín",
+      "pinLocation": "Helyszín kijelölése térképen",
       "mwSolar": "MW Napelem",
       "mwBess": "MW BESS",
       "projectCategory": "Projekt kategória",
@@ -150,9 +148,6 @@
       "deadline": "Végső határidő",
       "valueEur": "Érték (€)",
       "status": "Általános státusz",
-      "priority": "Prioritás",
-      "cuIssued": "CU kiadva",
-      "atrIssued": "ATR kiadva",
       "notes": "Megjegyzés"
     },
     "autoManual": {
@@ -291,7 +286,6 @@
     "alreadyRegistered": "Ez a fiók már befejezte a regisztrációt."
   },
   "projectPhase": {
-    "proposal": "Ajánlat",
     "planning": "Tervezés",
     "permitting": "Engedélyezés",
     "construction": "Kivitelezés",
@@ -318,11 +312,6 @@
     "proiectare": "Proiectare",
     "executie": "Execuție",
     "mentenanta": "Mentenanță"
-  },
-  "projectPriority": {
-    "low": "Alacsony",
-    "medium": "Közepes",
-    "high": "Magas"
   },
   "kpi": {
     "portfolioValue": "Teljes portfólióérték",
@@ -743,10 +732,8 @@
     "CEF+BESS": "CEF + BESS — Hibrid",
     "BESS": "BESS — Stand-alone",
     "BESS_CEF": "BESS meglévő CEF-ben",
-    "PV_CI": "PV ipari / C&I",
     "EMS": "EMS — Energia menedzsment",
-    "SCADA": "Automatizálás / SCADA",
-    "OM": "O&M — csak üzemeltetés"
+    "SCADA": "Automatizálás / SCADA"
   },
   "gantt": {
     "eyebrow": "MUNKA · PORTFÓLIÓ GANTT",
@@ -784,5 +771,9 @@
       "pageOf": "{page}. oldal / {total}"
     },
     "endBeforeStart": "A befejező dátum nem lehet korábbi a kezdő dátumnál."
+  },
+  "theme": {
+    "switchToLight": "Váltás világos módra",
+    "switchToDark": "Váltás sötét módra"
   }
 }

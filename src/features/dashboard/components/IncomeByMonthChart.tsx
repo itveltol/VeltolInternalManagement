@@ -82,7 +82,7 @@ export function IncomeByMonthChart({ projects, availableYears, labels }: Props) 
         </div>
         {availableYears.length > 0 && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-veltol-fg shadow-sm transition-colors hover:bg-[#F3F6FC]">
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-veltol-fg shadow-sm transition-colors hover:bg-veltol-hover">
               <span className="size-1.5 rounded-full bg-veltol-accent" />
               {labels.yearLabel}: {selectedYear}
               <ChevronDownIcon className="size-3.5 text-veltol-faint" />

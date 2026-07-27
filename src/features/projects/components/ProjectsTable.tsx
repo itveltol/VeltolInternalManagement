@@ -10,7 +10,7 @@ import { Pagination } from "@/shared/components/ui/pagination";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { useProjectsStore } from "../hooks/useProjectsStore";
-import { priorityVariant, phaseVariant } from "@/shared/utils/status-variant";
+import { phaseVariant } from "@/shared/utils/status-variant";
 import { PROJECT_PHASES, PROJECT_CATEGORIES, CONTRACT_TYPES } from "../types";
 import type { Project, ProjectManager, ProjectType, ProjectPhase, ProjectCategory, ContractType } from "../types";
 import type { SortDir } from "./ProjectsShell";
@@ -69,7 +69,6 @@ export function ProjectsTable({
 }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
-  const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
@@ -223,7 +222,7 @@ export function ProjectsTable({
                   t("columns.id"), t("columns.project"), t("columns.county"),
                   t("columns.contractType"),
                   t("columns.phase"), t("columns.progress"),
-                  `${t("columns.priority")} / ${t("columns.deadline")}`, t("columns.value"),
+                  t("columns.deadline"), t("columns.value"),
                   t("columns.manager"), t("columns.client"), "",
                 ].map((col, i) => (
                   <th key={i} className="px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
@@ -243,7 +242,7 @@ export function ProjectsTable({
                 pagedProjects.map((project) => (
                   <tr
                     key={project.id}
-                    className="group cursor-pointer transition-colors hover:bg-[#F6F9FE]"
+                    className="group cursor-pointer transition-colors hover:bg-veltol-hover"
                     onClick={() => router.push(`/${locale}/projects/${project.id}`)}
                   >
                     <td className="px-3 py-3 tabular-nums whitespace-nowrap text-[12px] text-veltol-fgMute">{project.id}</td>
@@ -292,8 +291,7 @@ export function ProjectsTable({
                     </td>
 
                     <td className="px-3 py-3">
-                      <Badge variant={priorityVariant(project.priority)}>{tPriority(project.priority)}</Badge>
-                      <span className="mt-0.5 block tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">{formatDate(project.deadline)}</span>
+                      <span className="block tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">{formatDate(project.deadline)}</span>
                       {project.deadline && (() => {
                         const d = daysLeft(project.deadline);
                         if (d === null) return null;

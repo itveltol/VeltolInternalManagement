@@ -63,9 +63,9 @@ export default async function DashboardPage() {
     closed: "var(--v-success)",
     construction: "var(--v-blue)",
     permitting: "var(--v-warning)",
-    proposal: "var(--v-grey)",
+    planning: "var(--v-grey)",
   };
-  const distributionPhases = (["closed", "construction", "permitting", "proposal"] as const)
+  const distributionPhases = (["closed", "construction", "permitting", "planning"] as const)
     .map((phase) => ({
       phase,
       label: tPhase(phase),
@@ -79,7 +79,6 @@ export default async function DashboardPage() {
       <PageHeader
         eyebrowSegments={[t("eyebrowSection"), t("eyebrowSub")]}
         title={t("title")}
-        subtitle={t("subtitle")}
         action={
           <Button size="lg" nativeButton={false} render={<Link href="/projects" />}>
             <Plus data-icon="inline-start" />

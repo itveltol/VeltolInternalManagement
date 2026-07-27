@@ -3,6 +3,7 @@
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { LanguageSwitcher } from "@/shared/components/language-switcher";
+import { ThemeSwitcher } from "@/shared/components/theme-switcher";
 import { InlineSearchBar } from "@/features/search/components/InlineSearchBar";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
@@ -14,7 +15,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="h-8 w-8 shrink-0 text-veltol-fgMute hover:bg-[#F3F6FC] hover:text-veltol-fg lg:hidden"
+          className="h-8 w-8 shrink-0 text-veltol-fgMute hover:bg-veltol-hover hover:text-veltol-fg lg:hidden"
         >
           <Menu className="h-4 w-4" />
         </Button>
@@ -27,10 +28,11 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         {/* Right actions */}
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
+          <ThemeSwitcher />
           <Button
             variant="ghost"
             size="icon"
-            className="relative h-[38px] w-[38px] text-veltol-fgMute hover:bg-[#F3F6FC] hover:text-veltol-fg"
+            className="relative h-[38px] w-[38px] text-veltol-fgMute hover:bg-veltol-hover hover:text-veltol-fg"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute right-2 top-2 size-1.5 rounded-full bg-[var(--v-warning)]" />

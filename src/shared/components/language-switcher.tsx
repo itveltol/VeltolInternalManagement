@@ -40,7 +40,7 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={isPending}
-        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.09em] text-veltol-fgDim transition-colors hover:bg-[#F3F6FC] disabled:pointer-events-none disabled:opacity-60"
+        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.09em] text-veltol-fgDim transition-colors hover:bg-veltol-hover disabled:pointer-events-none disabled:opacity-60"
       >
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -61,7 +61,7 @@ export function LanguageSwitcher() {
             className={`cursor-pointer text-[13px] ${
               l === locale
                 ? "text-veltol-accent focus:bg-veltol-tint focus:text-veltol-accent"
-                : "text-veltol-fg focus:bg-[#F3F6FC]"
+                : "text-veltol-fg focus:bg-veltol-hover"
             }`}
           >
             <span className="mr-2 font-bold">{LOCALE_FLAGS[l]}</span>

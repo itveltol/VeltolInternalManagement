@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
@@ -8,11 +9,10 @@ import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
-import { createProject } from "@/app/[locale]/(app)/projects/actions";
+import { createProject, reverseGeocode } from "@/app/[locale]/(app)/projects/actions";
 import {
   PROJECT_PHASES,
   PROJECT_STATUSES,
-  PROJECT_PRIORITIES,
   PROJECT_TYPES,
   PROJECT_CATEGORIES,
   CONTRACT_TYPES,
@@ -24,6 +24,11 @@ import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
 import { FolderScanStep } from "./FolderScanStep";
 import { cn } from "@/shared/utils/cn";
 
+const LocationPickerMap = dynamic(
+  () => import("@/shared/components/ui/location-picker-map").then((m) => m.LocationPickerMap),
+  { ssr: false },
+);
+
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
 
@@ -34,6 +39,8 @@ interface ProjectFields {
   name: string;
   county: string;
   site_location: string;
+  site_lat: string;
+  site_lng: string;
   project_category: ProjectCategory;
   financial_type: FinancialType;
   project_type: string;
@@ -47,6 +54,8 @@ const EMPTY: ProjectFields = {
   name: "",
   county: "",
   site_location: "",
+  site_lat: "",
+  site_lng: "",
   project_category: "industrial",
   financial_type: "proprii",
   project_type: "",
@@ -78,7 +87,6 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
-  const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
@@ -169,6 +177,14 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
     }
   };
 
+  const handleMapChange = useCallback(async (lat: number, lng: number) => {
+    setFields((f) => ({ ...f, site_lat: String(lat), site_lng: String(lng) }));
+    const address = await reverseGeocode(lat, lng);
+    if (address) {
+      setFields((f) => ({ ...f, site_location: address }));
+    }
+  }, []);
+
   const aiClass = (key: keyof ProjectFields) =>
     cn(hasSuggestions && fields[key] ? "ring-1 ring-veltol-accent/30" : "");
 
@@ -242,6 +258,17 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                       className={aiClass("site_location")}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.pinLocation")}</Label>
+                  <input type="hidden" name="site_lat" value={fields.site_lat} />
+                  <input type="hidden" name="site_lng" value={fields.site_lng} />
+                  <LocationPickerMap
+                    lat={fields.site_lat ? Number(fields.site_lat) : null}
+                    lng={fields.site_lng ? Number(fields.site_lng) : null}
+                    onChange={handleMapChange}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -380,7 +407,7 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
-                    <select name="current_phase" defaultValue="proposal" className={SELECT_CLASS}>
+                    <select name="current_phase" defaultValue="planning" className={SELECT_CLASS}>
                       {PROJECT_PHASES.map((p) => (
                         <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
                       ))}
@@ -420,34 +447,13 @@ export function AddProjectDialog({ open, managers, clientRefs, onClose }: Props)
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
-                    <select name="status" defaultValue="on_schedule" className={SELECT_CLASS}>
-                      {PROJECT_STATUSES.map((s) => (
-                        <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.priority")}</Label>
-                    <select name="priority" defaultValue="medium" className={SELECT_CLASS}>
-                      {PROJECT_PRIORITIES.map((p) => (
-                        <option key={p} value={p} className="bg-card">{tPriority(p)}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex gap-6">
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="checkbox" name="cu_issued" value="true" className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
-                    <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.cuIssued")}</span>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2">
-                    <input type="checkbox" name="atr_issued" value="true" className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
-                    <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.atrIssued")}</span>
-                  </label>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
+                  <select name="status" defaultValue="on_schedule" className={SELECT_CLASS}>
+                    {PROJECT_STATUSES.map((s) => (
+                      <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-1.5">

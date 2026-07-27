@@ -51,7 +51,6 @@ export function InviteUserDialog({ open, onClose }: Props) {
               <Dialog.Title className="text-xl font-semibold text-veltol-fg">
                 {t("inviteLinkTitle")}
               </Dialog.Title>
-              <p className="mt-1 text-sm text-veltol-fgDim">{t("inviteLinkDesc")}</p>
 
               <div className="mt-6 space-y-1.5">
                 <Input value={state.actionLink} readOnly onFocus={(e) => e.currentTarget.select()} />
@@ -71,7 +70,6 @@ export function InviteUserDialog({ open, onClose }: Props) {
               <Dialog.Title className="text-xl font-semibold text-veltol-fg">
                 {t("inviteTitle")}
               </Dialog.Title>
-              <p className="mt-1 text-sm text-veltol-fgDim">{t("inviteDesc")}</p>
 
               <form action={action} className="mt-6 space-y-4">
                 <div className="space-y-1.5">

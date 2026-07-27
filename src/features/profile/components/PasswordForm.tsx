@@ -16,10 +16,9 @@ export function PasswordForm() {
       className="overflow-hidden rounded-xl border border-border bg-card px-8 py-8"
       style={{ background: "rgba(6, 10, 18, 0.6)" }}
     >
-      <div className="mb-1 text-[11px] font-medium text-veltol-fgMute">
+      <div className="mb-6 text-[11px] font-medium text-veltol-fgMute">
         {t("passwordTitle")}
       </div>
-      <p className="mb-6 text-sm text-veltol-fgDim">{t("passwordDesc")}</p>
 
       <form action={action} className="max-w-sm space-y-4">
         <div className="space-y-1.5">

@@ -87,6 +87,8 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     name: (formData.get("name") as string).trim(),
     county: str("county"),
     site_location: str("site_location"),
+    site_lat: num("site_lat"),
+    site_lng: num("site_lng"),
     mw_solar: num("mw_solar"),
     mw_bess: num("mw_bess"),
     project_category,
@@ -103,13 +105,24 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     value_eur: num("value_eur"),
     status: (formData.get("status") as string | null) ?? existing?.status ?? "on_schedule",
     status_manual: formData.get("status_manual") === "true",
-    priority: (formData.get("priority") as string | null) ?? existing?.priority ?? "medium",
     progress_pct_manual: formData.get("progress_pct_manual") === "true",
-    cu_issued: formData.get("cu_issued") === "true",
-    atr_issued: formData.get("atr_issued") === "true",
     notes: str("notes"),
     paid_by: strOrExisting("paid_by", existing?.paid_by ?? null),
   };
+}
+
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+      { headers: { "User-Agent": "VeltolInternalManagement/1.0" } },
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { display_name?: string };
+    return data.display_name ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getProjects(): Promise<Project[]> {

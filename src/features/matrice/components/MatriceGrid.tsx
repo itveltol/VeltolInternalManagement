@@ -226,7 +226,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                     return (
                       <tr
                         key={`activity-${activity.id}`}
-                        className="border-b border-border hover:bg-[#F6F9FE]"
+                        className="border-b border-border hover:bg-veltol-hover"
                       >
                         <td className="sticky left-0 z-10 bg-card" />
                         <td className="sticky left-6 z-10 bg-card px-3 py-2 text-[13px] font-medium text-veltol-fg">

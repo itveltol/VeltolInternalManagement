@@ -9,14 +9,11 @@ import {
   FolderKanban,
   Grid2X2,
   GanttChartSquare,
-  Settings,
   LogOut,
   User,
   CalendarDays,
   Building2,
   FileText,
-  HardHat,
-  Users,
   UsersRound,
   Loader2,
   Bell,
@@ -67,19 +64,14 @@ export function NavContent({
         { href: `/${locale}/matrice-status`, label: t("matriceStatus"), icon: Grid2X2 },
         { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
         { href: `/${locale}/documents`, label: t("documents"), icon: FileText },
-        { href: `/${locale}/site`, label: t("site"), icon: HardHat },
         { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
         { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
         { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
-        { href: `/${locale}/pontaj`, label: t("pontaj"), icon: Users },
       ],
     },
     {
       label: t("accountGroup"),
-      items: [
-        { href: `/${locale}/profile`, label: t("profile"), icon: User },
-        { href: `/${locale}/settings`, label: t("settings"), icon: Settings },
-      ],
+      items: [{ href: `/${locale}/profile`, label: t("profile"), icon: User }],
     },
   ];
 
@@ -140,7 +132,7 @@ export function NavContent({
                     aria-busy={isPending}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex h-[42px] items-center gap-2.5 rounded-nav px-3 text-[14px] font-medium text-veltol-fgDim transition-colors duration-150 hover:bg-[#F3F6FC] hover:text-veltol-fg",
+                      "flex h-[42px] items-center gap-2.5 rounded-nav px-3 text-[14px] font-medium text-veltol-fgDim transition-colors duration-150 hover:bg-veltol-hover hover:text-veltol-fg",
                       isPending && "opacity-60",
                       collapsed && "justify-center px-0",
                     )}
@@ -165,12 +157,12 @@ export function NavContent({
           <DropdownMenuTrigger
             title={collapsed ? (displayName ?? undefined) : undefined}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-[#F3F6FC] transition-colors",
+              "flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-veltol-hover transition-colors",
               collapsed && "justify-center",
             )}
           >
             <Avatar className="h-8 w-8 shrink-0">
-              <AvatarFallback className="bg-[#E7ECF4] text-[11px] font-bold text-[#5A6478]">
+              <AvatarFallback className="bg-veltol-avatar-bg text-[11px] font-bold text-veltol-avatar-fg">
                 {initials ?? "?"}
               </AvatarFallback>
             </Avatar>

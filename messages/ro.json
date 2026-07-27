@@ -115,7 +115,6 @@
       "phase": "Fază",
       "progress": "Progres",
       "generalStatus": "Status",
-      "priority": "Prioritate",
       "manager": "MP",
       "client": "Client",
       "mwSolar": "MW Solar",
@@ -126,8 +125,6 @@
       "contractNumber": "Nr. contract",
       "contractDate": "Data contract",
       "contractType": "Tipul contractului",
-      "cuIssued": "CU emis?",
-      "atrIssued": "ATR emis?",
       "notes": "Note"
     },
     "fields": {
@@ -135,6 +132,7 @@
       "county": "Județ",
       "client": "Client",
       "siteLocation": "Locație site",
+      "pinLocation": "Marcați locația pe hartă",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Categoria proiectului",
@@ -150,9 +148,6 @@
       "deadline": "Termen final",
       "valueEur": "Valoare (€)",
       "status": "Status general",
-      "priority": "Prioritate",
-      "cuIssued": "CU emis",
-      "atrIssued": "ATR emis",
       "notes": "Note"
     },
     "autoManual": {
@@ -291,7 +286,6 @@
     "alreadyRegistered": "Acest cont a finalizat deja înregistrarea."
   },
   "projectPhase": {
-    "proposal": "Ofertă",
     "planning": "Planificare",
     "permitting": "Autorizare",
     "construction": "Construcție",
@@ -318,11 +312,6 @@
     "proiectare": "Proiectare",
     "executie": "Execuție",
     "mentenanta": "Mentenanță"
-  },
-  "projectPriority": {
-    "low": "Scăzută",
-    "medium": "Medie",
-    "high": "Ridicată"
   },
   "kpi": {
     "portfolioValue": "Valoare totală portofoliu",
@@ -743,10 +732,8 @@
     "CEF+BESS": "CEF + BESS — Hibrid",
     "BESS": "BESS — Standalone",
     "BESS_CEF": "BESS în CEF existent",
-    "PV_CI": "PV industrial / C&I",
     "EMS": "EMS — Management energetic",
-    "SCADA": "Automatizare / SCADA",
-    "OM": "O&M — Doar operare"
+    "SCADA": "Automatizare / SCADA"
   },
   "gantt": {
     "eyebrow": "LUCRU · GANTT PORTOFOLIU",
@@ -784,5 +771,9 @@
       "pageOf": "Pagina {page} din {total}"
     },
     "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început."
+  },
+  "theme": {
+    "switchToLight": "Comută la modul luminos",
+    "switchToDark": "Comută la modul întunecat"
   }
 }

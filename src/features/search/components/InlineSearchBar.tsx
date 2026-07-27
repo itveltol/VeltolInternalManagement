@@ -106,7 +106,7 @@ export function InlineSearchBar() {
   return (
     <div ref={containerRef} className="relative w-full">
       {/* Input */}
-      <div className="flex h-11 w-full items-center gap-3 rounded-btn border border-border bg-[#F4F7FC] px-4 transition-colors focus-within:border-veltol-accent focus-within:bg-card focus-within:ring-[3px] focus-within:ring-veltol-accent/[0.18]">
+      <div className="flex h-11 w-full items-center gap-3 rounded-btn border border-border bg-veltol-hover px-4 transition-colors focus-within:border-veltol-accent focus-within:bg-card focus-within:ring-[3px] focus-within:ring-veltol-accent/[0.18]">
         {isPending ? (
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-veltol-faint" />
         ) : (
