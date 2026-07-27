@@ -4,6 +4,8 @@ export interface CreateProjectPayload {
   name: string;
   county: string | null;
   site_location: string | null;
+  site_lat: number | null;
+  site_lng: number | null;
   mw_solar: number | null;
   mw_bess: number | null;
   project_category: ProjectCategory;
@@ -22,10 +24,7 @@ export interface CreateProjectPayload {
   value_eur_bess: number | null;
   status: string;
   status_manual: boolean;
-  priority: string;
   progress_pct_manual: boolean;
-  cu_issued: boolean;
-  atr_issued: boolean;
   notes: string | null;
   paid_by: string | null;
 }

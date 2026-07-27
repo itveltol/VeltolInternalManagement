@@ -88,10 +88,9 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
 
         {/* Edit form column */}
         <div className="flex-1 px-8 py-8">
-          <div className="mb-1 text-[11px] font-medium text-veltol-fgMute">
+          <div className="mb-6 text-[11px] font-medium text-veltol-fgMute">
             {t("personalTitle")}
           </div>
-          <p className="mb-6 text-sm text-veltol-fgDim">{t("personalDesc")}</p>
 
           <form action={action} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

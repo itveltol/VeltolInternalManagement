@@ -1,16 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
-import { updateProject, assignProjectTeam } from "@/app/[locale]/(app)/projects/actions";
+import { updateProject, assignProjectTeam, reverseGeocode } from "@/app/[locale]/(app)/projects/actions";
 import {
   PROJECT_PHASES,
   PROJECT_STATUSES,
-  PROJECT_PRIORITIES,
   PROJECT_TYPES,
   PROJECT_CATEGORIES,
   CONTRACT_TYPES,
@@ -20,6 +20,11 @@ import {
 import type { Project, ProjectManager, ProjectCategory } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { Team } from "@/features/teams/types";
+
+const LocationPickerMap = dynamic(
+  () => import("@/shared/components/ui/location-picker-map").then((m) => m.LocationPickerMap),
+  { ssr: false },
+);
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
@@ -41,7 +46,6 @@ export function EditProjectDialog({ project, open, managers, clientRefs, teams, 
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
-  const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
@@ -55,6 +59,17 @@ export function EditProjectDialog({ project, open, managers, clientRefs, teams, 
   const [teamId, setTeamId] = useState<number | null>(project.team_id);
   const [teamState, setTeamState] = useState<{ error?: string; success?: string } | null>(null);
   const [teamPending, startTeamTransition] = useTransition();
+
+  const [siteLocation, setSiteLocation] = useState(project.site_location ?? "");
+  const [siteLat, setSiteLat] = useState<number | null>(project.site_lat);
+  const [siteLng, setSiteLng] = useState<number | null>(project.site_lng);
+
+  const handleMapChange = useCallback(async (lat: number, lng: number) => {
+    setSiteLat(lat);
+    setSiteLng(lng);
+    const address = await reverseGeocode(lat, lng);
+    if (address) setSiteLocation(address);
+  }, []);
 
   function handleTeamChange(value: string) {
     const nextTeamId = value === "" ? null : Number(value);
@@ -100,8 +115,19 @@ export function EditProjectDialog({ project, open, managers, clientRefs, teams, 
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.siteLocation")}</Label>
-                <Input name="site_location" defaultValue={project.site_location ?? ""} />
+                <Input
+                  name="site_location"
+                  value={siteLocation}
+                  onChange={(e) => setSiteLocation(e.target.value)}
+                />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.pinLocation")}</Label>
+              <input type="hidden" name="site_lat" value={siteLat ?? ""} />
+              <input type="hidden" name="site_lng" value={siteLng ?? ""} />
+              <LocationPickerMap lat={siteLat} lng={siteLng} onChange={handleMapChange} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -325,25 +351,6 @@ export function EditProjectDialog({ project, open, managers, clientRefs, teams, 
                   ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.priority")}</Label>
-                <select name="priority" defaultValue={project.priority} className={SELECT_CLASS}>
-                  {PROJECT_PRIORITIES.map((p) => (
-                    <option key={p} value={p} className="bg-card">{tPriority(p)}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-6">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" name="cu_issued" value="true" defaultChecked={project.cu_issued} className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
-                <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.cuIssued")}</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" name="atr_issued" value="true" defaultChecked={project.atr_issued} className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent" />
-                <span className="font-mono text-[11px] text-veltol-fgDim">{t("fields.atrIssued")}</span>
-              </label>
             </div>
 
             <div className="space-y-1.5">

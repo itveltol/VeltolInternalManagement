@@ -1,15 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations, useLocale } from "next-intl";
 import { Pencil } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { EditProjectDialog } from "./EditProjectDialog";
-import { phaseVariant, projectStatusVariant, priorityVariant } from "@/shared/utils/status-variant";
+import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { Team } from "@/features/teams/types";
+
+const LocationPickerMap = dynamic(
+  () => import("@/shared/components/ui/location-picker-map").then((m) => m.LocationPickerMap),
+  { ssr: false },
+);
 
 interface Props {
   project: Project;
@@ -24,7 +30,6 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
-  const tPriority = useTranslations("projectPriority");
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
@@ -74,8 +79,6 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
     { label: t("fields.deadline"), value: formatDate(project.deadline) },
     { label: t("fields.valueEur"), value: formatValue(project.value_eur) },
     { label: t("fields.progress"), value: `${project.progress_pct}%` },
-    { label: t("fields.cuIssued"), value: project.cu_issued ? "✓" : "—" },
-    { label: t("fields.atrIssued"), value: project.atr_issued ? "✓" : "—" },
   ];
 
   return (
@@ -84,7 +87,6 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={phaseVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
           <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
-          <Badge variant={priorityVariant(project.priority)}>{tPriority(project.priority)}</Badge>
         </div>
         {canMutate && (
           <Button
@@ -109,6 +111,13 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
           </div>
         ))}
       </div>
+
+      {project.site_lat != null && project.site_lng != null && (
+        <div className="mt-4 border-t border-border pt-4">
+          <div className="mb-1.5 text-[11px] font-medium text-veltol-fgMute">{t("fields.pinLocation")}</div>
+          <LocationPickerMap lat={project.site_lat} lng={project.site_lng} readOnly />
+        </div>
+      )}
 
       {project.notes && (
         <div className="mt-4 border-t border-border pt-4">

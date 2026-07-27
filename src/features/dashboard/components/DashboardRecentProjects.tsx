@@ -36,7 +36,7 @@ export function DashboardRecentProjects({ projects, liveLabel, eyebrow, title, t
           <Link
             key={project.id}
             href={`/projects/${project.id}`}
-            className="flex items-center gap-4 px-5 py-3.5 transition-colors duration-150 hover:bg-[#F6F9FE]"
+            className="flex items-center gap-4 px-5 py-3.5 transition-colors duration-150 hover:bg-veltol-hover"
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import type { ProjectStatus, ProjectPriority, ProjectPhase } from "@/features/projects/types";
+import type { ProjectStatus, ProjectPhase } from "@/features/projects/types";
 import type { VacationStatus } from "@/features/vacation/types";
 
 type BadgeVariant =
@@ -11,7 +11,6 @@ type BadgeVariant =
   | "destructive";
 
 const PHASE_VARIANT: Record<ProjectPhase, BadgeVariant> = {
-  proposal:     "outline",
   planning:     "info",
   permitting:   "warning",
   construction: "default",
@@ -37,15 +36,6 @@ export function projectStatusVariant(status: ProjectStatus): BadgeVariant {
     on_hold:     "outline",
   };
   return map[status] ?? "secondary";
-}
-
-export function priorityVariant(priority: ProjectPriority): BadgeVariant {
-  const map: Record<ProjectPriority, BadgeVariant> = {
-    low:    "secondary",
-    medium: "info",
-    high:   "destructive",
-  };
-  return map[priority] ?? "secondary";
 }
 
 export function vacationStatusVariant(status: VacationStatus): BadgeVariant {

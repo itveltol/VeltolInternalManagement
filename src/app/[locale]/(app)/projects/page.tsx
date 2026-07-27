@@ -27,7 +27,6 @@ export default async function ProjectsPage() {
       <PageHeader
         eyebrowSegments={[t("eyebrowSection"), t("eyebrowSub")]}
         title={t("title")}
-        subtitle={t("subtitle")}
       />
 
       <ProjectsShell projects={projects} canMutate={canMutate} managers={managers} clientRefs={clientRefs} />

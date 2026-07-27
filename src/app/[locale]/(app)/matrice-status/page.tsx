@@ -28,7 +28,6 @@ export default async function MatriceStatusPage() {
       <PageHeader
         eyebrowSegments={[t("eyebrowSection"), t("eyebrowSub")]}
         title={t("title")}
-        subtitle={t("subtitle")}
       />
 
       <MatriceShell initialData={initialData} allProjects={allProjects} initialShownIds={initialShownIds} />

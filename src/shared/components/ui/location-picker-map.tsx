@@ -1,0 +1,85 @@
+"use client";
+
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const ROMANIA_CENTER: [number, number] = [45.9432, 24.9668];
+const DEFAULT_ZOOM = 7;
+const PIN_ZOOM = 14;
+
+interface Props {
+  lat: number | null;
+  lng: number | null;
+  onChange?: (lat: number, lng: number) => void;
+  readOnly?: boolean;
+  className?: string;
+}
+
+function ClickHandler({ onChange }: { onChange: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onChange(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function RecenterOnPin({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMapEvents({});
+  useEffect(() => {
+    map.setView([lat, lng], Math.max(map.getZoom(), PIN_ZOOM));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lat, lng]);
+  return null;
+}
+
+export function LocationPickerMap({ lat, lng, onChange, readOnly = false, className }: Props) {
+  const hasPin = lat != null && lng != null;
+  const center: [number, number] = hasPin ? [lat, lng] : ROMANIA_CENTER;
+
+  return (
+    <div className={className ?? "h-56 w-full overflow-hidden rounded-lg border border-border"}>
+      <MapContainer
+        center={center}
+        zoom={hasPin ? PIN_ZOOM : DEFAULT_ZOOM}
+        scrollWheelZoom={!readOnly}
+        dragging={!readOnly}
+        doubleClickZoom={!readOnly}
+        touchZoom={!readOnly}
+        className="h-full w-full"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        {!readOnly && onChange && <ClickHandler onChange={onChange} />}
+        {hasPin && (
+          <Marker
+            position={[lat, lng]}
+            draggable={!readOnly}
+            eventHandlers={
+              !readOnly && onChange
+                ? {
+                    dragend: (e) => {
+                      const marker = e.target as L.Marker;
+                      const pos = marker.getLatLng();
+                      onChange(pos.lat, pos.lng);
+                    },
+                  }
+                : undefined
+            }
+          />
+        )}
+        {hasPin && <RecenterOnPin lat={lat} lng={lng} />}
+      </MapContainer>
+    </div>
+  );
+}

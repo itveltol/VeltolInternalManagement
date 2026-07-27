@@ -115,7 +115,6 @@
       "phase": "Phase",
       "progress": "Progress",
       "generalStatus": "Status",
-      "priority": "Priority",
       "manager": "PM",
       "client": "Client",
       "mwSolar": "MW Solar",
@@ -126,8 +125,6 @@
       "contractNumber": "Contract #",
       "contractDate": "Contract date",
       "contractType": "Contract type",
-      "cuIssued": "CU issued?",
-      "atrIssued": "ATR issued?",
       "notes": "Notes"
     },
     "fields": {
@@ -136,6 +133,7 @@
       "client": "Client",
       "addNewClient": "+ Add new client",
       "siteLocation": "Site location",
+      "pinLocation": "Pin location on map",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Project category",
@@ -154,9 +152,6 @@
       "valueEurBess": "Battery value (€)",
       "valueEurTotal": "Total value (€)",
       "status": "General status",
-      "priority": "Priority",
-      "cuIssued": "CU issued",
-      "atrIssued": "ATR issued",
       "notes": "Notes"
     },
     "autoManual": {
@@ -295,7 +290,6 @@
     "alreadyRegistered": "This account has already completed registration."
   },
   "projectPhase": {
-    "proposal": "Proposal",
     "planning": "Planning",
     "permitting": "Permitting",
     "construction": "Construction",
@@ -322,11 +316,6 @@
     "proiectare": "Proiectare",
     "executie": "Execuție",
     "mentenanta": "Mentenanță"
-  },
-  "projectPriority": {
-    "low": "Low",
-    "medium": "Medium",
-    "high": "High"
   },
   "kpi": {
     "portfolioValue": "Total portfolio value",
@@ -753,10 +742,8 @@
     "CEF+BESS": "CEF + BESS — Hybrid",
     "BESS": "BESS — Stand-alone",
     "BESS_CEF": "BESS in existing solar farm",
-    "PV_CI": "PV Industrial / C&I",
     "EMS": "EMS — Energy management",
-    "SCADA": "Automation / SCADA",
-    "OM": "O&M — Operations only"
+    "SCADA": "Automation / SCADA"
   },
   "gantt": {
     "eyebrow": "WORK · PORTFOLIO GANTT",
@@ -794,5 +781,9 @@
       "pageOf": "Page {page} of {total}"
     },
     "endBeforeStart": "End date can't be before the start date."
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
   }
 }

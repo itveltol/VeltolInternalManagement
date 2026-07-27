@@ -26,7 +26,6 @@ export default async function TeamsPage() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-veltol-fg">
           {t("title")}
         </h1>
-        <p className="mt-1 text-sm text-veltol-fgDim">{t("subtitle")}</p>
       </div>
 
       <TeamsShell teams={teams} canMutate={canMutate} allProfiles={allProfiles} />

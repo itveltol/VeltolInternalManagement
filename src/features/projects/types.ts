@@ -1,5 +1,4 @@
 export type ProjectPhase =
-  | "proposal"
   | "planning"
   | "permitting"
   | "construction"
@@ -14,8 +13,6 @@ export type ProjectStatus =
   | "completed"
   | "on_hold";
 
-export type ProjectPriority = "low" | "medium" | "high";
-
 export type ProjectCategory = "residential" | "industrial";
 
 export type FinancialType = "proprii" | "finantare";
@@ -27,6 +24,8 @@ export interface Project {
   name: string;
   county: string | null;
   site_location: string | null;
+  site_lat: number | null;
+  site_lng: number | null;
   mw_solar: number | null;
   mw_bess: number | null;
   project_category: ProjectCategory;
@@ -50,11 +49,8 @@ export interface Project {
   status: ProjectStatus;
   /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
   status_manual: boolean;
-  priority: ProjectPriority;
   /** When false, `progress_pct` is recomputed from Matrice/checklist progress on the next relevant change. */
   progress_pct_manual: boolean;
-  cu_issued: boolean;
-  atr_issued: boolean;
   notes: string | null;
   paid_by: string | null;
   onedrive_folder_id: string | null;
@@ -76,7 +72,6 @@ export interface ProjectManager {
 }
 
 export const PROJECT_PHASES: ProjectPhase[] = [
-  "proposal",
   "planning",
   "permitting",
   "construction",
@@ -93,8 +88,6 @@ export const PROJECT_STATUSES: ProjectStatus[] = [
   "on_hold",
 ];
 
-export const PROJECT_PRIORITIES: ProjectPriority[] = ["low", "medium", "high"];
-
 export const PROJECT_CATEGORIES: ProjectCategory[] = ["residential", "industrial"];
 
 export const FINANCIAL_TYPES: FinancialType[] = ["proprii", "finantare"];
@@ -106,20 +99,16 @@ export type ProjectType =
   | "CEF+BESS"
   | "BESS"
   | "BESS_CEF"
-  | "PV_CI"
   | "EMS"
-  | "SCADA"
-  | "OM";
+  | "SCADA";
 
 export const PROJECT_TYPES: ProjectType[] = [
   "CEF",
   "CEF+BESS",
   "BESS",
   "BESS_CEF",
-  "PV_CI",
   "EMS",
   "SCADA",
-  "OM",
 ];
 
 export function isHybridProjectType(type: string | null | undefined): boolean {

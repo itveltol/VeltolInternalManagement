@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ─── Veltol brand tokens ─── */
 @theme inline {
   /* shadcn semantic tokens wired to Veltol surfaces */
@@ -45,6 +47,9 @@
   --color-veltol-fgDim: var(--v-ink-2);
   --color-veltol-fgMute: var(--v-muted);
   --color-veltol-faint: var(--v-faint);
+  --color-veltol-hover: var(--v-hover);
+  --color-veltol-avatar-bg: var(--v-avatar-bg);
+  --color-veltol-avatar-fg: var(--v-avatar-fg);
 
   /* Fonts */
   --font-sans: var(--font-inter), sans-serif;
@@ -61,10 +66,10 @@
   --radius-card: 18px;
   --radius-hero: 18px;
 
-  --shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
-  --shadow-panel: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
-  --shadow-navy: 0 16px 32px -16px rgba(10,20,36,.7);
-  --shadow-primary: 0 10px 22px -8px rgba(47,107,237,.6);
+  --shadow-card: var(--v-shadow-card);
+  --shadow-panel: var(--v-shadow-panel);
+  --shadow-navy: var(--v-shadow-navy);
+  --shadow-primary: var(--v-shadow-primary);
 }
 
 /* ─── CSS custom properties ─── */
@@ -74,12 +79,15 @@
   --v-card:   #FFFFFF;
   --v-line:   #EBEFF6;
   --v-line-2: #F1F4F9;
+  --v-hover:  #F3F6FC;
 
   /* Text */
   --v-ink:   #0F1729;
   --v-ink-2: #3A4560;
   --v-muted: #5D6B85;
   --v-faint: #8A93A5;
+  --v-avatar-bg: #E7ECF4;
+  --v-avatar-fg: #5A6478;
 
   /* Brand hues */
   --v-blue:   #2F6BED;
@@ -106,7 +114,61 @@
   --grad-blue: linear-gradient(140deg,#2F6BED,#5B8DEF);
   --grad-navy: linear-gradient(155deg,#12233F,#0A1424);
 
+  /* Shadows */
+  --v-shadow-card: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
+  --v-shadow-panel: 0 1px 2px rgba(16,24,40,.04), 0 14px 26px -18px rgba(16,24,40,.16);
+  --v-shadow-navy: 0 16px 32px -16px rgba(10,20,36,.7);
+  --v-shadow-primary: 0 10px 22px -8px rgba(47,107,237,.6);
+
   --radius: 0.625rem;
+}
+
+.dark {
+  /* Surfaces */
+  --v-page:   #0B1220;
+  --v-card:   #121A2B;
+  --v-line:   #232D42;
+  --v-line-2: #1B2436;
+  --v-hover:  #1A2338;
+
+  /* Text */
+  --v-ink:   #E8ECF6;
+  --v-ink-2: #B7C0D6;
+  --v-muted: #8B96AE;
+  --v-faint: #626D85;
+  --v-avatar-bg: #232D42;
+  --v-avatar-fg: #B7C0D6;
+
+  /* Brand hues */
+  --v-blue:   #5B8DEF;
+  --v-blue-2: #7FA6F5;
+  --v-tint:   #16223F;
+  --v-navy:   #060B16;
+
+  /* Semantic status */
+  --v-success:    #34D399;
+  --v-success-bg: #123527;
+  --v-warning:    #F2B84B;
+  --v-warning-bg: #3A2C0F;
+  --v-danger:     #F87171;
+  --v-danger-bg:  #3B1616;
+  --v-grey:       #64748B;
+
+  /* Category coding (dots/accents only) */
+  --v-cat-ops: #5B8DEF;
+  --v-cat-hr:  #2FD9A6;
+  --v-cat-it:  #9B87F5;
+  --v-cat-pm:  #F5A05C;
+
+  /* Gradients */
+  --grad-blue: linear-gradient(140deg,#2F6BED,#5B8DEF);
+  --grad-navy: linear-gradient(155deg,#0A1424,#050A12);
+
+  /* Shadows */
+  --v-shadow-card: 0 1px 2px rgba(0,0,0,.24), 0 14px 26px -18px rgba(0,0,0,.5);
+  --v-shadow-panel: 0 1px 2px rgba(0,0,0,.24), 0 14px 26px -18px rgba(0,0,0,.5);
+  --v-shadow-navy: 0 16px 32px -16px rgba(0,0,0,.85);
+  --v-shadow-primary: 0 10px 22px -8px rgba(47,107,237,.5);
 }
 
 /* ─── Utility classes ─── */
