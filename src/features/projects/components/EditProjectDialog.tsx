@@ -42,7 +42,12 @@ interface Props {
   onClose: () => void;
 }
 
-export function EditProjectDialog({ project, open, managers, clientRefs, teams, canAssignTeam, onClose }: Props) {
+export function EditProjectDialog(props: Props) {
+  // Snapshot the project on first mount so a server-side revalidation that
+  // lands while the dialog is still open (e.g. right after submit) can't
+  // change already-uncontrolled fields' defaultValue mid-flight.
+  const [project] = useState(props.project);
+  const { open, managers, clientRefs, teams, canAssignTeam, onClose } = props;
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
