@@ -41,12 +41,24 @@ function RecenterOnPin({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+function InvalidateSizeOnMount() {
+  const map = useMapEvents({});
+  useEffect(() => {
+    // The map can mount while its dialog is still animating in, so Leaflet
+    // measures a stale (often larger) container size and renders tiles past
+    // the intended box. Re-measure once the popup has finished opening.
+    const timeout = setTimeout(() => map.invalidateSize(), 250);
+    return () => clearTimeout(timeout);
+  }, [map]);
+  return null;
+}
+
 export function LocationPickerMap({ lat, lng, onChange, readOnly = false, className }: Props) {
   const hasPin = lat != null && lng != null;
   const center: [number, number] = hasPin ? [lat, lng] : ROMANIA_CENTER;
 
   return (
-    <div className={className ?? "h-56 w-full overflow-hidden rounded-lg border border-border"}>
+    <div className={className ?? "relative isolate h-56 w-full overflow-hidden rounded-lg border border-border"}>
       <MapContainer
         center={center}
         zoom={hasPin ? PIN_ZOOM : DEFAULT_ZOOM}
@@ -54,12 +66,13 @@ export function LocationPickerMap({ lat, lng, onChange, readOnly = false, classN
         dragging={!readOnly}
         doubleClickZoom={!readOnly}
         touchZoom={!readOnly}
-        className="h-full w-full"
+        className="h-full w-full rounded-[inherit]"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <InvalidateSizeOnMount />
         {!readOnly && onChange && <ClickHandler onChange={onChange} />}
         {hasPin && (
           <Marker
