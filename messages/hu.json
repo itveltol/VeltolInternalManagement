@@ -12,9 +12,10 @@
     "activeProject": "Aktív projekt",
     "signOut": "Kijelentkezés",
     "signingOut": "Kijelentkezés folyamatban…",
-    "matriceStatus": "Matrice Status",
+    "matriceStatus": "Állapot Mátrix",
     "vacation": "Szabadság",
     "clients": "Ügyfelek",
+    "subcontractors": "Alvállalkozók",
     "teams": "Csapatok",
     "documents": "Dokumentumok",
     "delivery": "Szállítás",
@@ -67,6 +68,14 @@
     "totalCount": "{count} projekt összesen",
     "addProject": "Projekt hozzáadása",
     "newClient": "+ Új ügyfél",
+    "clientSearchPlaceholder": "Ügyfél keresése...",
+    "clientSearchNoResults": "Nincs találat.",
+    "clientSearchNone": "—",
+    "newSubcontractor": "+ Új alvállalkozó",
+    "subcontractorSearchPlaceholder": "Alvállalkozó keresése...",
+    "subcontractorSearchNoResults": "Nincs találat.",
+    "subcontractorSearchNone": "—",
+    "subcontracted": "Alvállalkozásban",
     "editProject": "Projekt szerkesztése",
     "deleteProject": "Törlés",
     "confirmDelete": "Törli ezt a projektet?",
@@ -99,6 +108,13 @@
     "filterMinValue": "Min. érték",
     "filterMaxValue": "Max. érték",
     "sortByValue": "Rendezés érték szerint",
+    "filters": {
+      "phase": "Fázis",
+      "category": "Kategória",
+      "contractType": "Szerződéstípus",
+      "minValue": "Min. érték (€)",
+      "maxValue": "Max. érték (€)"
+    },
     "pagination": {
       "prev": "Előző",
       "next": "Következő",
@@ -112,6 +128,7 @@
       "status": "Állapot",
       "deadline": "Határidő",
       "value": "Érték",
+      "valueLei": "Érték (Lej)",
       "phase": "Fázis",
       "progress": "Haladás",
       "generalStatus": "Státusz",
@@ -125,7 +142,8 @@
       "contractNumber": "Szerz. szám",
       "contractDate": "Szerz. dátum",
       "contractType": "Szerződés típusa",
-      "notes": "Megjegyzés"
+      "notes": "Megjegyzés",
+      "lastModified": "Utoljára módosítva"
     },
     "fields": {
       "name": "Projekt neve",
@@ -141,12 +159,21 @@
       "contractType": "Szerződés típusa",
       "manager": "Projektmenedzser",
       "team": "Hozzárendelt csapat",
+      "executionMode": "Kivitelezés",
+      "subcontractor": "Alvállalkozó",
+      "subcontractorName": "Alvállalkozó neve",
+      "subcontractorContactPerson": "Kapcsolattartó",
+      "subcontractorPhone": "Telefonszám",
+      "subcontractorPrice": "Ár",
+      "subcontractorPriceLei": "Ár (Lej)",
+      "subcontractorDeadline": "Határidő",
       "phase": "Jelenlegi fázis",
       "progress": "Haladás (%)",
       "contractNumber": "Szerződésszám",
       "contractDate": "Szerződés dátuma",
       "deadline": "Végső határidő",
       "valueEur": "Érték (€)",
+      "valueLei": "Érték (Lej)",
       "status": "Általános státusz",
       "notes": "Megjegyzés"
     },
@@ -304,14 +331,19 @@
     "residential": "Lakossági",
     "industrial": "Ipari"
   },
+  "executionMode": {
+    "internal": "Saját kivitelezés",
+    "subcontracted": "Alvállalkozásban"
+  },
   "financialType": {
-    "proprii": "Sursa proprii",
-    "finantare": "Sursa finanțare"
+    "proprii": "Saját forrás",
+    "finantare": "Finanszírozás"
   },
   "contractType": {
-    "proiectare": "Proiectare",
-    "executie": "Execuție",
-    "mentenanta": "Mentenanță"
+    "proiectare": "Tervezés",
+    "executie": "Kivitelezés",
+    "mentenanta": "Karbantartás",
+    "racordare": "Hálózati csatlakozás"
   },
   "kpi": {
     "portfolioValue": "Teljes portfólióérték",
@@ -324,10 +356,10 @@
     "deltaCompleted": "100% határidőn belül"
   },
   "matrice": {
-    "eyebrow": "MUNKA · MATRICE STATUS",
+    "eyebrow": "MUNKA · ÁLLAPOT MÁTRIX",
     "eyebrowSection": "MUNKA",
-    "eyebrowSub": "MATRICE STATUS",
-    "title": "Matrice Status",
+    "eyebrowSub": "ÁLLAPOT MÁTRIX",
+    "title": "Állapot Mátrix",
     "subtitle": "Tevékenységek × projektek állapotmátrix — kövesd a leadandókat és a haladást ügyfelenként.",
     "picker": {
       "label": "PROJEKTEK",
@@ -344,7 +376,8 @@
       "noProjects": "Válasszon ki legalább egy projektet.",
       "loading": "Frissítés...",
       "notContracted": "Nem része a projekt szerződéstípusának",
-      "derivedFromChecklist": "A checklist alapján automatikusan frissül — módosítsd a projekt checklist-jében"
+      "derivedFromChecklist": "A checklist alapján automatikusan frissül — módosítsd a projekt checklist-jében",
+      "expiresOn": "Lejár: {date}"
     },
     "status": {
       "finalizat": "Befejezett",
@@ -357,6 +390,32 @@
     "hideProject": "Elrejtés a nézetből",
     "legend": {
       "label": "JELMAGYARÁZAT"
+    },
+    "avizExpiryDialog": {
+      "title": "Lejárati dátum megadása",
+      "description": "„{activity}” egy időszakos engedély — add meg a lejárati dátumát, hogy megújítási emlékeztetőt küldhessünk.",
+      "dateLabel": "Lejárati dátum",
+      "confirm": "Mentés",
+      "cancel": "Mégse"
+    },
+    "autoProgressWarning": {
+      "title": "Áttérés manuális haladásra?",
+      "description": "A projekt haladása jelenleg automatikusan van beállítva, a Matrice/checklist alapján számítva. A manuális módosítás átállítja manuális haladásra.",
+      "confirm": "OK",
+      "cancel": "Mégse"
+    },
+    "avizReminders": {
+      "eyebrow": "Állapot Mátrix",
+      "title": "Aviz megújítási emlékeztetők",
+      "empty": "Jelenleg nincs hamarosan lejáró aviz.",
+      "noResults": "Nincs a keresésnek megfelelő projekt.",
+      "searchPlaceholder": "Keresés projekt neve alapján",
+      "expiresOn": "Lejár: {date}",
+      "pagination": {
+        "prev": "Előző",
+        "next": "Következő",
+        "pageOf": "{page}. oldal / {total}"
+      }
     }
   },
   "vacation": {
@@ -477,6 +536,9 @@
     "saving": "Mentés...",
     "emptyState": "Még nincsenek ügyfelek. Adja hozzá az elsőt.",
     "filterAllTypes": "Minden típus",
+    "filters": {
+      "type": "Ügyféltípus"
+    },
     "columns": {
       "name": "Név",
       "type": "Típus",
@@ -501,6 +563,47 @@
       "contactPerson": "Kapcsolattartó személy",
       "email": "Email",
       "phone": "Telefon",
+      "notes": "Megjegyzés"
+    }
+  },
+  "subcontractors": {
+    "eyebrow": "ALVÁLLALKOZÓK · ÖSSZES",
+    "title": "Alvállalkozók",
+    "subtitle": "Külső cégek, amelyeknek projekteket adunk ki teljes egészében",
+    "totalCount": "{count} alvállalkozó összesen",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
+    "addSubcontractor": "Alvállalkozó hozzáadása",
+    "editSubcontractor": "Szerkesztés",
+    "deleteSubcontractor": "Törlés",
+    "confirmDelete": "Törli ezt az alvállalkozót? A kapcsolódó projektek elveszítik az alvállalkozói kapcsolatot.",
+    "subcontractorSaved": "Alvállalkozó mentve.",
+    "subcontractorCreated": "Alvállalkozó létrehozva.",
+    "subcontractorDeleted": "Alvállalkozó törölve.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "emptyState": "Még nincsenek alvállalkozók. Adja hozzá az elsőt.",
+    "columns": {
+      "name": "Név",
+      "contactPerson": "Kapcsolattartó",
+      "phone": "Telefonszám",
+      "price": "Ár",
+      "priceLei": "Ár (Lej)",
+      "deadline": "Határidő"
+    },
+    "fields": {
+      "name": "Név",
+      "contactPerson": "Kapcsolattartó",
+      "phone": "Telefonszám",
+      "priceEur": "Ár (€)",
+      "priceLei": "Ár (Lej)",
+      "deadline": "Határidő",
       "notes": "Megjegyzés"
     }
   },
@@ -625,6 +728,11 @@
     "globalContext": "Összes projekt",
     "filterAll": "Minden kategória",
     "filterAllStatuses": "Minden státusz",
+    "filters": {
+      "search": "Keresés név szerint",
+      "category": "Kategória",
+      "status": "Státusz"
+    },
     "category": {
       "atr": "ATR",
       "cu": "CU",
@@ -775,5 +883,33 @@
   "theme": {
     "switchToLight": "Váltás világos módra",
     "switchToDark": "Váltás sötét módra"
+  },
+  "maintenance": {
+    "tabLabel": "Karbantartás",
+    "breadcrumb": "Karbantartás",
+    "title": "Karbantartás",
+    "description": "Évente kétszer — márciusban és októberben — a projekt helyszínén karbantartási ellenőrzésre van szükség. Jelöld be, ha megtörtént.",
+    "checkSaved": "Mentve.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "period": {
+      "march": "{year}. márciusi ellenőrzés megtörtént",
+      "october": "{year}. októberi ellenőrzés megtörtént"
+    },
+    "state": {
+      "needsAttention": "Figyelmet igényel",
+      "done": "Kész",
+      "notDue": "Még nem esedékes"
+    },
+    "remindersEyebrow": "Karbantartás",
+    "remindersTitle": "Karbantartási emlékeztetők",
+    "remindersEmpty": "Jelenleg nincs esedékes karbantartási ellenőrzés.",
+    "remindersNoResults": "Nincs a keresésnek megfelelő projekt.",
+    "remindersSearchPlaceholder": "Keresés projekt neve alapján",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    }
   }
 }

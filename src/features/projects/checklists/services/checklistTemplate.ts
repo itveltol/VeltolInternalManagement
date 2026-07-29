@@ -168,21 +168,6 @@ export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] 
     "verificari_bess",
   ];
 
-  const LABELS: Record<ChecklistPhase, string> = {
-    structura: "STRUCTURA",
-    montaj_panouri: "MONTAJ PANOURI",
-    cablaj_ac: "CABLAJ AC",
-    invertoare: "INVERTOARE",
-    conexiuni: "CONEXIUNI",
-    post_transformare: "POST TRAFO",
-    verificari: "VERIFICĂRI",
-    montaj_bess: "MONTAJ BESS",
-    pregatire_teren_bess: "PREGĂTIRE TEREN BESS",
-    constructii_bess: "CONSTRUCȚII BESS",
-    conectare_bess: "CONECTARE BESS",
-    verificari_bess: "VERIFICĂRI BESS",
-  };
-
   const map = new Map<
     ChecklistPhase,
     { total: number; pctSum: number; completed: number }
@@ -207,7 +192,6 @@ export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] 
       return {
         phase,
         sectionNumber: idx + 1,
-        label: LABELS[phase],
         totalItems: e.total,
         completedItems: e.completed,
         avgPct: e.total > 0 ? e.pctSum / e.total : 0,

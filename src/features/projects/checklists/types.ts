@@ -69,7 +69,6 @@ export interface ChecklistRow extends Omit<ChecklistTemplateRow, "phase"> {
 export interface SectionSummary {
   phase: ChecklistPhase;
   sectionNumber: number;
-  label: string;
   totalItems: number;
   completedItems: number;
   avgPct: number;

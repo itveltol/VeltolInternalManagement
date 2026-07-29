@@ -4,20 +4,22 @@ import { useState } from "react";
 import { ProjectsTable } from "./ProjectsTable";
 import type { Project, ProjectManager, ProjectPhase, ProjectCategory, ContractType } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
 
 interface Props {
   projects: Project[];
   canMutate: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
+  subcontractorRefs: SubcontractorRef[];
 }
 
 export type SortDir = "asc" | "desc" | null;
 
-export function ProjectsShell({ projects, canMutate, managers, clientRefs }: Props) {
-  const [filterPhase, setFilterPhase] = useState<ProjectPhase | "">("");
+export function ProjectsShell({ projects, canMutate, managers, clientRefs, subcontractorRefs }: Props) {
+  const [filterPhase, setFilterPhase] = useState<ProjectPhase[]>([]);
   const [filterCategory, setFilterCategory] = useState<ProjectCategory | "">("");
-  const [filterContractType, setFilterContractType] = useState<ContractType | "">("");
+  const [filterContractType, setFilterContractType] = useState<ContractType[]>([]);
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
   const [sortDir, setSortDir] = useState<SortDir>(null);
@@ -26,9 +28,13 @@ export function ProjectsShell({ projects, canMutate, managers, clientRefs }: Pro
   const max = maxValue.trim() !== "" ? Number(maxValue) : null;
 
   const filtered = projects.filter((p) => {
-    if (filterPhase && p.current_phase !== filterPhase) return false;
+    if (filterPhase.length > 0 && !filterPhase.includes(p.current_phase)) return false;
     if (filterCategory && p.project_category !== filterCategory) return false;
-    if (filterContractType && !p.contract_type.includes(filterContractType)) return false;
+    if (
+      filterContractType.length > 0 &&
+      (p.contract_type.length !== filterContractType.length ||
+        !p.contract_type.every((c) => filterContractType.includes(c)))
+    ) return false;
     if ((min !== null || max !== null)) {
       if (p.value_eur == null) return false;
       if (min !== null && p.value_eur < min) return false;
@@ -52,6 +58,7 @@ export function ProjectsShell({ projects, canMutate, managers, clientRefs }: Pro
       canMutate={canMutate}
       managers={managers}
       clientRefs={clientRefs}
+      subcontractorRefs={subcontractorRefs}
       filterPhase={filterPhase}
       onFilterPhase={setFilterPhase}
       filterCategory={filterCategory}

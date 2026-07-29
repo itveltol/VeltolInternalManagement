@@ -12,6 +12,8 @@ import {
   getMatrixData,
   showMatriceProject,
   unshowMatriceProject,
+  setProjectProgressManual,
+  syncChecklistFromMatriceCell,
 } from "@/app/[locale]/(app)/matrice-status/actions";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import { getDocuments } from "@/app/[locale]/(app)/documents/actions";
@@ -97,27 +99,36 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
     setDocsPopover({ projectId, activityId });
   }
 
-  function handleChangeStatus(projectId: number, activityId: number, status: ActivityStatus) {
+  function handleChangeStatus(projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) {
     const cellKey = `${projectId}:${activityId}`;
 
     // Optimistic update
     setData((prev) => {
+      const existing = prev.cells.find((c) => c.project_id === projectId && c.activity_id === activityId);
       const cells: MatrixCell[] = prev.cells.filter(
         (c) => !(c.project_id === projectId && c.activity_id === activityId),
       );
-      cells.push({ project_id: projectId, activity_id: activityId, status, note: null });
+      cells.push({
+        project_id: projectId,
+        activity_id: activityId,
+        status,
+        note: existing?.note ?? null,
+        expires_at: expiresAt !== undefined ? expiresAt : existing?.expires_at ?? null,
+      });
       return { ...prev, cells };
     });
 
     setPendingCells((prev) => new Set(prev).add(cellKey));
     startTransition(async () => {
       try {
-        const result = await setCellStatus(projectId, activityId, status);
+        const result = await setCellStatus(projectId, activityId, status, expiresAt);
         if (result?.error) {
           // Rollback: refetch
           const fresh = await getMatrixData(visibleIds);
           setData(fresh);
+          return;
         }
+        await syncChecklistFromMatriceCell(projectId, activityId, status, data.activities);
       } finally {
         setPendingCells((prev) => {
           const next = new Set(prev);
@@ -125,6 +136,18 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           return next;
         });
       }
+    });
+  }
+
+  function handleConfirmAutoProgress(projectId: number) {
+    setData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((p) =>
+        p.id === projectId ? { ...p, progress_pct_manual: true } : p,
+      ),
+    }));
+    startTransition(async () => {
+      await setProjectProgressManual(projectId);
     });
   }
 
@@ -166,6 +189,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
           onHideProject={handleRemoveProject}
+          onConfirmAutoProgress={handleConfirmAutoProgress}
           docCounts={docCounts}
           pendingCells={pendingCells}
         />

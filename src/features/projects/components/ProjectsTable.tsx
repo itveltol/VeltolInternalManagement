@@ -7,27 +7,25 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Plus, Trash2 } from "lucide-r
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterField, FilterDropdown, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { phaseVariant } from "@/shared/utils/status-variant";
+import { formatDate } from "@/shared/utils/formatDate";
 import { PROJECT_PHASES, PROJECT_CATEGORIES, CONTRACT_TYPES } from "../types";
 import type { Project, ProjectManager, ProjectType, ProjectPhase, ProjectCategory, ContractType } from "../types";
 import type { SortDir } from "./ProjectsShell";
 import type { ClientRef } from "@/features/clients/types";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
 
 const PAGE_SIZE = 20;
-
-const SELECT_CLASS =
-  "h-8 rounded-btn border border-border bg-card px-2.5 py-1 text-[13px] font-medium text-veltol-fg outline-none focus:border-veltol-accent focus:ring-2 focus:ring-veltol-accent/20 appearance-none";
-
-const INPUT_CLASS =
-  "h-8 w-24 rounded-btn border border-border bg-card px-2.5 py-1 text-[13px] font-medium text-veltol-fg outline-none placeholder:text-veltol-faint focus:border-veltol-accent focus:ring-2 focus:ring-veltol-accent/20";
 
 const DISCIPLINE_COLORS: Record<ContractType, string> = {
   proiectare: "var(--v-blue)",
   executie: "var(--v-success)",
   mentenanta: "var(--v-warning)",
+  racordare: "var(--v-cat-it)",
 };
 
 interface Props {
@@ -35,12 +33,13 @@ interface Props {
   canMutate: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
-  filterPhase: ProjectPhase | "";
-  onFilterPhase: (v: ProjectPhase | "") => void;
+  subcontractorRefs: SubcontractorRef[];
+  filterPhase: ProjectPhase[];
+  onFilterPhase: (v: ProjectPhase[]) => void;
   filterCategory: ProjectCategory | "";
   onFilterCategory: (v: ProjectCategory | "") => void;
-  filterContractType: ContractType | "";
-  onFilterContractType: (v: ContractType | "") => void;
+  filterContractType: ContractType[];
+  onFilterContractType: (v: ContractType[]) => void;
   minValue: string;
   onMinValue: (v: string) => void;
   maxValue: string;
@@ -54,6 +53,7 @@ export function ProjectsTable({
   canMutate,
   managers,
   clientRefs,
+  subcontractorRefs,
   filterPhase,
   onFilterPhase,
   filterCategory,
@@ -83,7 +83,7 @@ export function ProjectsTable({
   } = useProjectsStore();
 
   const [page, setPage] = useState(1);
-  const filterKey = `${filterPhase}:${filterCategory}:${filterContractType}:${minValue}:${maxValue}:${sortDir}`;
+  const filterKey = `${filterPhase.join(",")}:${filterCategory}:${filterContractType.join(",")}:${minValue}:${maxValue}:${sortDir}`;
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   const pageCount = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
   // Reset to page 1 whenever the filter/sort combo changes (derived during
@@ -105,14 +105,6 @@ export function ProjectsTable({
 
   const SortIcon = sortDir === "asc" ? ArrowUp : sortDir === "desc" ? ArrowDown : ArrowUpDown;
 
-  function formatDate(iso: string | null) {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "2-digit", day: "2-digit" },
-    );
-  }
-
   function daysLeft(iso: string | null): number | null {
     if (!iso) return null;
     const diff = new Date(iso).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
@@ -123,6 +115,13 @@ export function ProjectsTable({
     const m = project.manager;
     if (!m) return "—";
     const name = [m.first_name, m.last_name].filter(Boolean).join(" ");
+    return name || "—";
+  }
+
+  function updatedByName(project: Project) {
+    const u = project.updated_by_user;
+    if (!u) return "—";
+    const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
     return name || "—";
   }
 
@@ -153,54 +152,56 @@ export function ProjectsTable({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-3">
-          <select
-            value={filterPhase}
-            onChange={(e) => onFilterPhase(e.target.value as ProjectPhase | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAllPhases")}</option>
-            {PROJECT_PHASES.map((p) => (
-              <option key={p} value={p}>{tPhase(p)}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-end gap-3 border-b border-border px-6 py-3">
+          <FilterField label={t("filters.phase")} htmlFor="filter-phase">
+            <FilterMultiDropdown
+              id="filter-phase"
+              value={filterPhase}
+              onChange={(v) => onFilterPhase(v as ProjectPhase[])}
+              allLabel={t("filterAllPhases")}
+              options={PROJECT_PHASES.map((p) => ({ value: p, label: tPhase(p) }))}
+            />
+          </FilterField>
 
-          <select
-            value={filterCategory}
-            onChange={(e) => onFilterCategory(e.target.value as ProjectCategory | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAllCategories")}</option>
-            {PROJECT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{tCategory(c)}</option>
-            ))}
-          </select>
+          <FilterField label={t("filters.category")} htmlFor="filter-category">
+            <FilterDropdown
+              id="filter-category"
+              value={filterCategory}
+              onChange={(v) => onFilterCategory(v as ProjectCategory | "")}
+              allLabel={t("filterAllCategories")}
+              options={PROJECT_CATEGORIES.map((c) => ({ value: c, label: tCategory(c) }))}
+            />
+          </FilterField>
 
-          <select
-            value={filterContractType}
-            onChange={(e) => onFilterContractType(e.target.value as ContractType | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAllContractTypes")}</option>
-            {CONTRACT_TYPES.map((c) => (
-              <option key={c} value={c}>{tContractType(c)}</option>
-            ))}
-          </select>
+          <FilterField label={t("filters.contractType")} htmlFor="filter-contract-type">
+            <FilterMultiDropdown
+              id="filter-contract-type"
+              value={filterContractType}
+              onChange={(v) => onFilterContractType(v as ContractType[])}
+              allLabel={t("filterAllContractTypes")}
+              options={CONTRACT_TYPES.map((c) => ({ value: c, label: tContractType(c) }))}
+            />
+          </FilterField>
 
-          <input
-            type="number"
-            value={minValue}
-            onChange={(e) => onMinValue(e.target.value)}
-            placeholder={t("filterMinValue")}
-            className={INPUT_CLASS}
-          />
-          <input
-            type="number"
-            value={maxValue}
-            onChange={(e) => onMaxValue(e.target.value)}
-            placeholder={t("filterMaxValue")}
-            className={INPUT_CLASS}
-          />
+          <FilterField label={t("filters.minValue")} htmlFor="filter-min-value">
+            <FilterInput
+              id="filter-min-value"
+              type="number"
+              value={minValue}
+              onChange={(e) => onMinValue(e.target.value)}
+              placeholder={t("filterMinValue")}
+            />
+          </FilterField>
+
+          <FilterField label={t("filters.maxValue")} htmlFor="filter-max-value">
+            <FilterInput
+              id="filter-max-value"
+              type="number"
+              value={maxValue}
+              onChange={(e) => onMaxValue(e.target.value)}
+              placeholder={t("filterMaxValue")}
+            />
+          </FilterField>
 
           <Button
             variant="outline"
@@ -222,8 +223,8 @@ export function ProjectsTable({
                   t("columns.id"), t("columns.project"), t("columns.county"),
                   t("columns.contractType"),
                   t("columns.phase"), t("columns.progress"),
-                  t("columns.deadline"), t("columns.value"),
-                  t("columns.manager"), t("columns.client"), "",
+                  t("columns.deadline"), t("columns.value"), t("columns.valueLei"),
+                  t("columns.manager"), t("columns.client"), t("columns.lastModified"), "",
                 ].map((col, i) => (
                   <th key={i} className="px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
                     {col}
@@ -234,7 +235,7 @@ export function ProjectsTable({
             <tbody className="divide-y divide-border">
               {projects.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-3 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={12} className="px-3 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
                   </td>
                 </tr>
@@ -275,45 +276,80 @@ export function ProjectsTable({
                     </td>
 
                     <td className="px-3 py-3">
-                      <Badge variant={phaseVariant(project.current_phase)} dot>{tPhase(project.current_phase)}</Badge>
+                      {project.execution_mode === "subcontracted" ? (
+                        <Badge variant="secondary" dot>{t("subcontracted")}</Badge>
+                      ) : (
+                        <Badge variant={phaseVariant(project.current_phase)} dot>{tPhase(project.current_phase)}</Badge>
+                      )}
                     </td>
 
                     <td className="px-3 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="h-1.5 w-12 overflow-hidden rounded-full bg-[var(--v-line-2)]">
-                          <div
-                            className="h-full rounded-full bg-veltol-accent transition-all"
-                            style={{ width: `${project.progress_pct}%` }}
-                          />
+                      {project.execution_mode === "subcontracted" ? (
+                        <span className="whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">
+                          {project.subcontractor?.name ?? "—"}
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-1.5 w-12 overflow-hidden rounded-full bg-[var(--v-line-2)]">
+                            <div
+                              className="h-full rounded-full bg-veltol-accent transition-all"
+                              style={{ width: `${project.progress_pct}%` }}
+                            />
+                          </div>
+                          <span className="tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgMute">{project.progress_pct}%</span>
                         </div>
-                        <span className="tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgMute">{project.progress_pct}%</span>
-                      </div>
+                      )}
                     </td>
 
-                    <td className="px-3 py-3">
-                      <span className="block tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">{formatDate(project.deadline)}</span>
-                      {project.deadline && (() => {
-                        const d = daysLeft(project.deadline);
-                        if (d === null) return null;
-                        const color = d < 0 ? "text-veltol-red" : d <= 7 ? "text-veltol-orange" : "text-veltol-fgMute";
-                        const label = d < 0
-                          ? t("daysOverdue", { count: Math.abs(d) })
-                          : d === 0
-                            ? t("daysLeftToday")
-                            : t("daysLeft", { count: d });
-                        return <span className={`block tabular-nums whitespace-nowrap text-[11px] font-medium ${color}`}>{label}</span>;
-                      })()}
-                    </td>
+                    {(() => {
+                      const deadline = project.execution_mode === "subcontracted"
+                        ? project.subcontractor?.deadline ?? null
+                        : project.deadline;
+                      const valueEur = project.execution_mode === "subcontracted"
+                        ? project.subcontractor?.price_eur ?? null
+                        : project.value_eur;
+                      const valueLei = project.execution_mode === "subcontracted"
+                        ? project.subcontractor?.price_lei ?? null
+                        : project.value_lei;
+                      return (
+                        <>
+                          <td className="px-3 py-3">
+                            <span className="block tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">{formatDate(deadline) || "—"}</span>
+                            {deadline && (() => {
+                              const d = daysLeft(deadline);
+                              if (d === null) return null;
+                              const color = d < 0 ? "text-veltol-red" : d <= 7 ? "text-veltol-orange" : "text-veltol-fgMute";
+                              const label = d < 0
+                                ? t("daysOverdue", { count: Math.abs(d) })
+                                : d === 0
+                                  ? t("daysLeftToday")
+                                  : t("daysLeft", { count: d });
+                              return <span className={`block tabular-nums whitespace-nowrap text-[11px] font-medium ${color}`}>{label}</span>;
+                            })()}
+                          </td>
 
-                    <td className="px-3 py-3 font-semibold tabular-nums whitespace-nowrap text-veltol-fg">
-                      {project.value_eur != null ? new Intl.NumberFormat("hu-HU").format(project.value_eur) : "—"}
-                      {project.value_eur != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">€</span>}
-                    </td>
+                          <td className="px-3 py-3 font-semibold tabular-nums whitespace-nowrap text-veltol-fg">
+                            {valueEur != null ? new Intl.NumberFormat("hu-HU").format(valueEur) : "—"}
+                            {valueEur != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">€</span>}
+                          </td>
+
+                          <td className="px-3 py-3 font-semibold tabular-nums whitespace-nowrap text-veltol-fg">
+                            {valueLei != null ? new Intl.NumberFormat("hu-HU").format(valueLei) : "—"}
+                            {valueLei != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">Lei</span>}
+                          </td>
+                        </>
+                      );
+                    })()}
 
                     <td className="px-3 py-3 text-[13px] font-medium text-veltol-fgDim">{managerName(project)}</td>
 
                     <td className="px-3 py-3 text-[13px] font-medium text-veltol-fgDim">
                       {project.client?.name ?? "—"}
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <div className="whitespace-nowrap text-[13px] font-medium text-veltol-fgDim">{updatedByName(project)}</div>
+                      <div className="whitespace-nowrap text-[11px] font-medium text-veltol-fgMute">{formatDate(project.updated_at) || "—"}</div>
                     </td>
 
                     <td className="px-3 py-3">
@@ -355,6 +391,7 @@ export function ProjectsTable({
         open={isAddDialogOpen}
         managers={managers}
         clientRefs={clientRefs}
+        subcontractorRefs={subcontractorRefs}
         onClose={() => {
           closeAddDialog();
           router.refresh();

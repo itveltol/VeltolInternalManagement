@@ -15,6 +15,7 @@
     "matriceStatus": "Matrice Status",
     "vacation": "Concediu",
     "clients": "Clienți",
+    "subcontractors": "Subcontractanți",
     "teams": "Echipe",
     "documents": "Documente",
     "delivery": "Livrare",
@@ -67,6 +68,14 @@
     "totalCount": "{count} proiecte total",
     "addProject": "Adaugă proiect",
     "newClient": "+ Client nou",
+    "clientSearchPlaceholder": "Caută clienți...",
+    "clientSearchNoResults": "Niciun client găsit.",
+    "clientSearchNone": "—",
+    "newSubcontractor": "+ Subcontractant nou",
+    "subcontractorSearchPlaceholder": "Caută subcontractanți...",
+    "subcontractorSearchNoResults": "Niciun subcontractant găsit.",
+    "subcontractorSearchNone": "—",
+    "subcontracted": "În subcontractare",
     "editProject": "Editează proiect",
     "deleteProject": "Șterge",
     "confirmDelete": "Ștergeți acest proiect?",
@@ -99,6 +108,13 @@
     "filterMinValue": "Valoare minimă",
     "filterMaxValue": "Valoare maximă",
     "sortByValue": "Sortează după valoare",
+    "filters": {
+      "phase": "Fază",
+      "category": "Categorie",
+      "contractType": "Tip de contract",
+      "minValue": "Valoare min. (€)",
+      "maxValue": "Valoare max. (€)"
+    },
     "pagination": {
       "prev": "Anterior",
       "next": "Următor",
@@ -112,6 +128,7 @@
       "status": "Status",
       "deadline": "Termen",
       "value": "Valoare",
+      "valueLei": "Valoare (Lei)",
       "phase": "Fază",
       "progress": "Progres",
       "generalStatus": "Status",
@@ -125,7 +142,8 @@
       "contractNumber": "Nr. contract",
       "contractDate": "Data contract",
       "contractType": "Tipul contractului",
-      "notes": "Note"
+      "notes": "Note",
+      "lastModified": "Ultima modificare"
     },
     "fields": {
       "name": "Numele proiectului",
@@ -141,12 +159,21 @@
       "contractType": "Tipul contractului",
       "manager": "Manager de proiect",
       "team": "Echipă atribuită",
+      "executionMode": "Execuție",
+      "subcontractor": "Subcontractant",
+      "subcontractorName": "Numele subcontractantului",
+      "subcontractorContactPerson": "Persoană de contact",
+      "subcontractorPhone": "Telefon",
+      "subcontractorPrice": "Preț",
+      "subcontractorPriceLei": "Preț (Lei)",
+      "subcontractorDeadline": "Termen",
       "phase": "Faza curentă",
       "progress": "Progres (%)",
       "contractNumber": "Numărul contractului",
       "contractDate": "Data contractului",
       "deadline": "Termen final",
       "valueEur": "Valoare (€)",
+      "valueLei": "Valoare (Lei)",
       "status": "Status general",
       "notes": "Note"
     },
@@ -304,6 +331,10 @@
     "residential": "Rezidențial",
     "industrial": "Industrial"
   },
+  "executionMode": {
+    "internal": "Execuție proprie",
+    "subcontracted": "În subcontractare"
+  },
   "financialType": {
     "proprii": "Sursa proprii",
     "finantare": "Sursa finanțare"
@@ -311,7 +342,8 @@
   "contractType": {
     "proiectare": "Proiectare",
     "executie": "Execuție",
-    "mentenanta": "Mentenanță"
+    "mentenanta": "Mentenanță",
+    "racordare": "Racordare"
   },
   "kpi": {
     "portfolioValue": "Valoare totală portofoliu",
@@ -344,7 +376,8 @@
       "noProjects": "Selectați cel puțin un proiect.",
       "loading": "Se actualizează...",
       "notContracted": "Nu este acoperit de tipul de contract al proiectului",
-      "derivedFromChecklist": "Determinat de progresul din checklist — actualizați-l în checklist-ul proiectului"
+      "derivedFromChecklist": "Determinat de progresul din checklist — actualizați-l în checklist-ul proiectului",
+      "expiresOn": "Expiră {date}"
     },
     "status": {
       "finalizat": "Finalizat",
@@ -357,6 +390,32 @@
     "hideProject": "Ascunde din vizualizare",
     "legend": {
       "label": "LEGENDĂ"
+    },
+    "avizExpiryDialog": {
+      "title": "Setează data expirării",
+      "description": "„{activity}” este un aviz periodic — setează data expirării pentru a putea trimite un reminder de reînnoire.",
+      "dateLabel": "Data expirării",
+      "confirm": "Salvează",
+      "cancel": "Anulează"
+    },
+    "autoProgressWarning": {
+      "title": "Treci la progres manual?",
+      "description": "Progresul acestui proiect este setat momentan pe automat, calculat din completarea Matrice/checklist. Modificarea manuală va trece proiectul pe progres manual.",
+      "confirm": "OK",
+      "cancel": "Anulează"
+    },
+    "avizReminders": {
+      "eyebrow": "Matrice Status",
+      "title": "Remindere de reînnoire avize",
+      "empty": "Niciun aviz nu expiră în curând.",
+      "noResults": "Niciun proiect nu corespunde căutării.",
+      "searchPlaceholder": "Caută după numele proiectului",
+      "expiresOn": "Expiră {date}",
+      "pagination": {
+        "prev": "Anterior",
+        "next": "Următor",
+        "pageOf": "Pagina {page} din {total}"
+      }
     }
   },
   "vacation": {
@@ -456,7 +515,7 @@
   "clients": {
     "eyebrow": "CLIENȚI · TOȚI",
     "title": "Clienți",
-    "subtitle": "Companii și persoane asociate proiectelor",
+    "subtitle": "Persoane Juridice și persoane asociate proiectelor",
     "totalCount": "{count} clienți total",
     "pagination": {
       "prev": "Anterior",
@@ -477,6 +536,9 @@
     "saving": "Salvare...",
     "emptyState": "Nu există clienți. Adăugați primul client.",
     "filterAllTypes": "Toate tipurile",
+    "filters": {
+      "type": "Tip client"
+    },
     "columns": {
       "name": "Nume",
       "type": "Tip",
@@ -488,7 +550,7 @@
     },
     "fields": {
       "type": "Tip",
-      "type_company": "Companie",
+      "type_company": "Persoana Juridica",
       "type_person": "Persoană fizică",
       "name": "Nume",
       "cui": "CUI / CIF",
@@ -501,6 +563,47 @@
       "contactPerson": "Persoană de contact",
       "email": "Email",
       "phone": "Telefon",
+      "notes": "Note"
+    }
+  },
+  "subcontractors": {
+    "eyebrow": "SUBCONTRACTANȚI · TOȚI",
+    "title": "Subcontractanți",
+    "subtitle": "Persoane Juridice externe cărora le sunt predate proiecte integral",
+    "totalCount": "{count} subcontractanți total",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
+    "addSubcontractor": "Adaugă subcontractant",
+    "editSubcontractor": "Editează",
+    "deleteSubcontractor": "Șterge",
+    "confirmDelete": "Ștergeți acest subcontractant? Proiectele asociate vor pierde legătura cu subcontractantul.",
+    "subcontractorSaved": "Subcontractant salvat.",
+    "subcontractorCreated": "Subcontractant creat.",
+    "subcontractorDeleted": "Subcontractant șters.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Salvare...",
+    "emptyState": "Nu există subcontractanți. Adăugați primul subcontractant.",
+    "columns": {
+      "name": "Nume",
+      "contactPerson": "Persoană de contact",
+      "phone": "Telefon",
+      "price": "Preț",
+      "priceLei": "Preț (Lei)",
+      "deadline": "Termen"
+    },
+    "fields": {
+      "name": "Nume",
+      "contactPerson": "Persoană de contact",
+      "phone": "Telefon",
+      "priceEur": "Preț (€)",
+      "priceLei": "Preț (Lei)",
+      "deadline": "Termen",
       "notes": "Note"
     }
   },
@@ -625,6 +728,11 @@
     "globalContext": "Toate proiectele",
     "filterAll": "Toate categoriile",
     "filterAllStatuses": "Toate statusurile",
+    "filters": {
+      "search": "Căutare după nume",
+      "category": "Categorie",
+      "status": "Status"
+    },
     "category": {
       "atr": "ATR",
       "cu": "CU",
@@ -775,5 +883,33 @@
   "theme": {
     "switchToLight": "Comută la modul luminos",
     "switchToDark": "Comută la modul întunecat"
+  },
+  "maintenance": {
+    "tabLabel": "Mentenanță",
+    "breadcrumb": "Mentenanță",
+    "title": "Mentenanță",
+    "description": "De două ori pe an — în martie și octombrie — șantierul acestui proiect necesită o inspecție de mentenanță. Bifează după ce a fost efectuată.",
+    "checkSaved": "Salvat.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu ai permisiunea necesară.",
+    "period": {
+      "march": "Inspecția din martie {year} efectuată",
+      "october": "Inspecția din octombrie {year} efectuată"
+    },
+    "state": {
+      "needsAttention": "Necesită atenție",
+      "done": "Efectuat",
+      "notDue": "Nu este încă scadent"
+    },
+    "remindersEyebrow": "Mentenanță",
+    "remindersTitle": "Remindere de mentenanță",
+    "remindersEmpty": "Nu există inspecții de mentenanță scadente în acest moment.",
+    "remindersNoResults": "Niciun proiect nu corespunde căutării.",
+    "remindersSearchPlaceholder": "Caută după numele proiectului",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    }
   }
 }

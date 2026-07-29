@@ -18,14 +18,15 @@ interface Props {
   activities: Activity[];
   cells: MatrixCell[];
   projects: MatrixProject[];
-  onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus) => void;
+  onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   onHideProject: (projectId: number) => void;
+  onConfirmAutoProgress: (projectId: number) => void;
   docCounts?: Map<string, number>;
   pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, docCounts = new Map(), pendingCells }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, onConfirmAutoProgress, docCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
   const phases = useMemo(
@@ -60,6 +61,18 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
     (projectId: number, activityId: number) =>
       statusByKey.get(`${projectId}:${activityId}`) ?? "neinceput",
     [statusByKey],
+  );
+
+  const expiresAtByKey = useMemo(() => {
+    const map = new Map<string, string | null>();
+    for (const c of cells) map.set(`${c.project_id}:${c.activity_id}`, c.expires_at);
+    return map;
+  }, [cells]);
+
+  const getExpiresAt = useCallback(
+    (projectId: number, activityId: number) =>
+      expiresAtByKey.get(`${projectId}:${activityId}`) ?? null,
+    [expiresAtByKey],
   );
 
   const projectPctById = useMemo(() => {
@@ -251,11 +264,16 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   status={status}
                                   projectId={p.id}
                                   activityId={activity.id}
+                                  activityName={activity.name}
+                                  isAviz={activity.is_aviz}
+                                  expiresAt={getExpiresAt(p.id, activity.id)}
                                   onChangeStatus={onChangeStatus}
                                   onOpenDocuments={onOpenDocuments}
                                   documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
                                   pending={pendingCells?.has(`${p.id}:${activity.id}`)}
                                   disabled={derived}
+                                  progressManual={p.progress_pct_manual}
+                                  onConfirmAutoProgress={onConfirmAutoProgress}
                                 />
                               ) : (
                                 <div

@@ -12,6 +12,7 @@ import { AddTeamDialog } from "./AddTeamDialog";
 import { EditTeamDialog } from "./EditTeamDialog";
 import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useTeamsStore } from "../hooks/useTeamsStore";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Team } from "../types";
 import type { ProfileRef } from "./TeamMemberPicker";
 
@@ -127,7 +128,7 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
                     </td>
 
                     <td className="px-5 py-3.5 font-mono text-[11px] text-veltol-fgDim">
-                      {new Date(team.created_at).toLocaleDateString()}
+                      {formatDate(team.created_at)}
                     </td>
 
                     <td className="px-5 py-3.5">

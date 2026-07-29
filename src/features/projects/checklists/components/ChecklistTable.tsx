@@ -1,13 +1,14 @@
 "use client";
 
 import React, { memo, useTransition, useCallback, useRef, useEffect } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Loader2, Paperclip } from "lucide-react";
 import { upsertChecklistItem, logTodayRealizat, getDailyLog, getLinkedDocuments } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { useChecklistStore } from "../hooks/useChecklistStore";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { AddDocumentDialog } from "@/features/documents/components/AddDocumentDialog";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { ChecklistRow, ChecklistPhase } from "@/features/projects/checklists/types";
 
 interface Props {
@@ -63,7 +64,6 @@ function NumInput({
 
 export function ChecklistTable({ rows, projectId, canMutate }: Props) {
   const t = useTranslations("checklist");
-  const locale = useLocale();
   const [, startTransition] = useTransition();
 
   const {
@@ -270,7 +270,6 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
                   row={row}
                   projectId={projectId}
                   canMutate={canMutate}
-                  locale={locale}
                   onFieldChange={handleFieldChange}
                   onBlur={handleBlur}
                   onTodayValueChange={updateTodayValue}
@@ -292,7 +291,6 @@ interface ChecklistDataRowProps {
   row: ChecklistRow;
   projectId: number;
   canMutate: boolean;
-  locale: string;
   onFieldChange: (itemNumber: number, field: "plan_total" | "zile", value: string) => void;
   onBlur: (itemNumber: number) => void;
   onTodayValueChange: (itemNumber: number, value: string) => void;
@@ -302,7 +300,7 @@ interface ChecklistDataRowProps {
 }
 
 const ChecklistDataRow = memo(function ChecklistDataRow({
-  row, projectId, canMutate, locale,
+  row, projectId, canMutate,
   onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
 }: ChecklistDataRowProps) {
   const t = useTranslations("checklist");
@@ -318,13 +316,6 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
     !isNaN(planTotal) && planTotal > 0 && realizat != null
       ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
       : row.pct;
-
-  function formatDate(iso: string) {
-    return new Date(iso + "T00:00:00").toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "2-digit", day: "2-digit" },
-    );
-  }
 
   return (
     <React.Fragment>
@@ -486,7 +477,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
                   <tbody className="divide-y divide-border">
                     {state.historyRecords.map((rec) => (
                       <tr key={rec.id}>
-                        <td className="py-1.5 font-mono text-[11px] text-veltol-fgDim">{formatDate(rec.log_date)}</td>
+                        <td className="py-1.5 font-mono text-[11px] text-veltol-fgDim">{formatDate(rec.log_date + "T00:00:00")}</td>
                         <td className="py-1.5 text-right font-mono tabular-nums text-[12px] text-veltol-fg">{rec.realizat}</td>
                       </tr>
                     ))}

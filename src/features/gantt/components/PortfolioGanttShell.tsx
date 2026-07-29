@@ -13,6 +13,7 @@ import { PortfolioGanttChart } from "./PortfolioGanttChart";
 import { PhaseDateDialog } from "./PhaseDateDialog";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { getGanttMatriceData, showGanttProject, unshowGanttProject } from "@/app/[locale]/(app)/gantt/actions";
+import { pinMatriceProject } from "@/app/[locale]/(app)/matrice-status/actions";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 
 const PAGE_SIZE = 5;
@@ -131,7 +132,13 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
       <PortfolioGanttChart
         rows={rows}
         todayMs={todayMs}
-        onSegmentClick={(projectId, segment) => setEditing({ projectId, segment })}
+        onNavigateToPhase={(projectId) => {
+          startTransition(async () => {
+            await pinMatriceProject(projectId);
+            router.push("/matrice-status");
+          });
+        }}
+        onEditDates={(projectId, segment) => setEditing({ projectId, segment })}
         onHideProject={handleRemove}
         pagination={
           <Pagination

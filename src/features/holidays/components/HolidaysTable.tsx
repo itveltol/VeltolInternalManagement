@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useState, useTransition } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { createHoliday, deleteHoliday } from "@/app/[locale]/(app)/settings/actions";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Holiday } from "../types";
 
 const INPUT_CLASS =
@@ -21,7 +22,6 @@ interface Props {
 
 export function HolidaysTable({ holidays }: Props) {
   const t = useTranslations("settings");
-  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [state, formAction, pending] = useActionState(createHoliday, null);
@@ -35,13 +35,6 @@ export function HolidaysTable({ holidays }: Props) {
   useEffect(() => {
     if (state?.success) router.refresh();
   }, [state?.success]);
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "2-digit", day: "2-digit" },
-    );
-  }
 
   function handleDelete(id: number) {
     if (!confirm(t("confirmDeleteHoliday"))) return;

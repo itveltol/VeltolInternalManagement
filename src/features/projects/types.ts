@@ -17,7 +17,9 @@ export type ProjectCategory = "residential" | "industrial";
 
 export type FinancialType = "proprii" | "finantare";
 
-export type ContractType = "proiectare" | "executie" | "mentenanta";
+export type ContractType = "proiectare" | "executie" | "mentenanta" | "racordare";
+
+export type ExecutionMode = "internal" | "subcontracted";
 
 export interface Project {
   id: number;
@@ -38,12 +40,24 @@ export interface Project {
   client?: { id: number; name: string } | null;
   team_id: number | null;
   team?: { id: number; name: string } | null;
+  execution_mode: ExecutionMode;
+  subcontractor_id: number | null;
+  subcontractor?: {
+    id: number;
+    name: string;
+    contact_person: string | null;
+    phone: string | null;
+    price_eur: number | null;
+    price_lei: number | null;
+    deadline: string | null;
+  } | null;
   current_phase: ProjectPhase;
   progress_pct: number;
   contract_number: string | null;
   contract_date: string | null;
   deadline: string | null;
   value_eur: number | null;
+  value_lei: number | null;
   status: ProjectStatus;
   /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
   status_manual: boolean;
@@ -61,6 +75,8 @@ export interface Project {
   autorizare_end_date: string | null;
   created_at: string;
   updated_at: string;
+  updated_by: string | null;
+  updated_by_user?: { first_name: string | null; last_name: string | null } | null;
 }
 
 export interface ProjectManager {
@@ -90,7 +106,9 @@ export const PROJECT_CATEGORIES: ProjectCategory[] = ["residential", "industrial
 
 export const FINANCIAL_TYPES: FinancialType[] = ["proprii", "finantare"];
 
-export const CONTRACT_TYPES: ContractType[] = ["proiectare", "executie", "mentenanta"];
+export const CONTRACT_TYPES: ContractType[] = ["proiectare", "executie", "mentenanta", "racordare"];
+
+export const EXECUTION_MODES: ExecutionMode[] = ["internal", "subcontracted"];
 
 export type ProjectType =
   | "CEF"

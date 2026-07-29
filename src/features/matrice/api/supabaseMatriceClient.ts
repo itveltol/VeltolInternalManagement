@@ -16,7 +16,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
     if (projectIds.length === 0) return [];
     const { data, error } = await supabase
       .from('project_activity_status')
-      .select('project_id, activity_id, status, note')
+      .select('project_id, activity_id, status, note, expires_at')
       .in('project_id', projectIds);
     if (error) throw new Error(error.message);
     return (data ?? []) as MatrixCell[];
@@ -26,7 +26,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
     if (projectIds.length === 0) return [];
     const { data, error } = await supabase
       .from('projects')
-      .select('id, name, project_type, contract_type')
+      .select('id, name, project_type, contract_type, progress_pct_manual')
       .in('id', projectIds)
       .order('id');
     if (error) throw new Error(error.message);
@@ -36,17 +36,24 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
   async getAllProjects() {
     const { data, error } = await supabase
       .from('projects')
-      .select('id, name, project_type, contract_type')
+      .select('id, name, project_type, contract_type, progress_pct_manual')
       .order('name');
     if (error) throw new Error(error.message);
     return (data ?? []) as MatrixProject[];
   },
 
-  async setCellStatus(projectId, activityId, status, userId) {
+  async setCellStatus(projectId, activityId, status, userId, expiresAt) {
     const { error } = await supabase
       .from('project_activity_status')
       .upsert(
-        { project_id: projectId, activity_id: activityId, status, updated_by: userId, updated_at: new Date().toISOString() },
+        {
+          project_id: projectId,
+          activity_id: activityId,
+          status,
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+          ...(expiresAt !== undefined ? { expires_at: expiresAt } : {}),
+        },
         { onConflict: 'project_id,activity_id' },
       );
     if (error) throw new Error(error.message);
