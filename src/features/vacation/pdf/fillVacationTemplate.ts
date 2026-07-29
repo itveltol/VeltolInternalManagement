@@ -2,6 +2,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import { formatDate } from "@/shared/utils/formatDate";
 import { vacationDays } from "../types";
 import type { VacationRequest } from "../types";
 
@@ -14,15 +15,6 @@ const LEAVE_TYPE_MARK_POSITION: Record<VacationRequest["leave_type"], { x: numbe
   personal: { x: 118, y: 603.9 + Y_NUDGE },
   medical: { x: 205, y: 603.9 + Y_NUDGE },
 };
-
-function formatDate(iso: string | null) {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("ro-RO", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
 
 export function fullName(p: { first_name: string | null; last_name: string | null } | null) {
   if (!p) return "";

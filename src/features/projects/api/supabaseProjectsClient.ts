@@ -6,7 +6,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjects() {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), subcontractor:subcontractors!subcontractor_id(id, name, contact_person, phone, price_eur, price_lei, deadline), updated_by_user:profiles!updated_by(first_name, last_name)")
       .order("id");
     if (error) throw new Error(error.message);
     return (data ?? []) as unknown as Project[];
@@ -15,7 +15,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name)")
+      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), subcontractor:subcontractors!subcontractor_id(id, name, contact_person, phone, price_eur, price_lei, deadline), updated_by_user:profiles!updated_by(first_name, last_name)")
       .eq("id", id)
       .single();
     if (error) return null;
@@ -32,19 +32,29 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     return (data ?? []) as ProjectManager[];
   },
 
-  async createProject(payload: CreateProjectPayload) {
-    const { data, error } = await supabase.from("projects").insert(payload).select("id").single();
+  async createProject(payload: CreateProjectPayload, userId) {
+    const { data, error } = await supabase
+      .from("projects")
+      .insert({ ...payload, updated_by: userId })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
     return { id: (data as { id: number }).id };
   },
 
-  async updateProject(id, payload: CreateProjectPayload) {
-    const { error } = await supabase.from("projects").update(payload).eq("id", id);
+  async updateProject(id, payload: CreateProjectPayload, userId) {
+    const { error } = await supabase
+      .from("projects")
+      .update({ ...payload, updated_by: userId })
+      .eq("id", id);
     if (error) throw new Error(error.message);
   },
 
-  async updateProjectTeam(id, teamId) {
-    const { error } = await supabase.from("projects").update({ team_id: teamId }).eq("id", id);
+  async updateProjectTeam(id, teamId, userId) {
+    const { error } = await supabase
+      .from("projects")
+      .update({ team_id: teamId, updated_by: userId })
+      .eq("id", id);
     if (error) throw new Error(error.message);
   },
 
@@ -53,20 +63,21 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     if (error) throw new Error(error.message);
   },
 
-  async linkOneDriveFolder(id, folderId, folderUrl) {
+  async linkOneDriveFolder(id, folderId, folderUrl, userId) {
     const { error } = await supabase
       .from("projects")
-      .update({ onedrive_folder_id: folderId, onedrive_folder_url: folderUrl })
+      .update({ onedrive_folder_id: folderId, onedrive_folder_url: folderUrl, updated_by: userId })
       .eq("id", id);
     if (error) throw new Error(error.message);
   },
 
-  async updatePhaseDates(id, phaseKey, dates) {
+  async updatePhaseDates(id, phaseKey, dates, userId) {
     const { error } = await supabase
       .from("projects")
       .update({
         [`${phaseKey}_start_date`]: dates.start_date,
         [`${phaseKey}_end_date`]: dates.end_date,
+        updated_by: userId,
       })
       .eq("id", id);
     if (error) throw new Error(error.message);

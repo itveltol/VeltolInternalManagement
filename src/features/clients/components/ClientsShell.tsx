@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ClientsTable } from "./ClientsTable";
 import type { Client, ClientType } from "../types";
 
@@ -10,6 +11,9 @@ interface Props {
 }
 
 export function ClientsShell({ clients, canMutate }: Props) {
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+
   const [filterType, setFilterType] = useState<ClientType | "">("");
 
   const filtered = clients.filter((c) => {
@@ -23,6 +27,7 @@ export function ClientsShell({ clients, canMutate }: Props) {
       canMutate={canMutate}
       filterType={filterType}
       onFilterType={setFilterType}
+      highlightId={highlightId ? Number(highlightId) : null}
     />
   );
 }

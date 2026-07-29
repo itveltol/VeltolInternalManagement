@@ -13,16 +13,16 @@ export async function getProjectManagers(client: ProjectsApiClient): Promise<Pro
   return client.getProjectManagers();
 }
 
-export async function createProject(client: ProjectsApiClient, payload: CreateProjectPayload): Promise<{ id: number }> {
-  return client.createProject(payload);
+export async function createProject(client: ProjectsApiClient, payload: CreateProjectPayload, userId: string): Promise<{ id: number }> {
+  return client.createProject(payload, userId);
 }
 
-export async function updateProject(client: ProjectsApiClient, id: number, payload: CreateProjectPayload): Promise<void> {
-  return client.updateProject(id, payload);
+export async function updateProject(client: ProjectsApiClient, id: number, payload: CreateProjectPayload, userId: string): Promise<void> {
+  return client.updateProject(id, payload, userId);
 }
 
-export async function updateProjectTeam(client: ProjectsApiClient, id: number, teamId: number | null): Promise<void> {
-  return client.updateProjectTeam(id, teamId);
+export async function updateProjectTeam(client: ProjectsApiClient, id: number, teamId: number | null, userId: string): Promise<void> {
+  return client.updateProjectTeam(id, teamId, userId);
 }
 
 export async function deleteProject(client: ProjectsApiClient, id: number): Promise<void> {
@@ -34,6 +34,7 @@ export async function updatePhaseDates(
   id: number,
   phaseKey: "planning" | "execution" | "autorizare",
   dates: { start_date: string | null; end_date: string | null },
+  userId: string,
 ): Promise<void> {
-  return client.updatePhaseDates(id, phaseKey, dates);
+  return client.updatePhaseDates(id, phaseKey, dates, userId);
 }

@@ -14,11 +14,15 @@ import {
   PROJECT_TYPES,
   PROJECT_CATEGORIES,
   CONTRACT_TYPES,
-  isHybridProjectType,
   FINANCIAL_TYPES,
+  EXECUTION_MODES,
 } from "../types";
-import type { Project, ProjectManager, ProjectCategory } from "../types";
+import type { Project, ProjectManager, ProjectCategory, ExecutionMode } from "../types";
 import type { ClientRef } from "@/features/clients/types";
+import { ClientCombobox } from "@/features/clients/components/ClientCombobox";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
+import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
+import { SubcontractorCombobox } from "@/features/subcontractors/components/SubcontractorCombobox";
 import type { Team } from "@/features/teams/types";
 
 const LocationPickerMap = dynamic(
@@ -37,6 +41,7 @@ interface Props {
   open: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
+  subcontractorRefs: SubcontractorRef[];
   teams: Team[];
   canAssignTeam: boolean;
   onClose: () => void;
@@ -47,7 +52,7 @@ export function EditProjectDialog(props: Props) {
   // lands while the dialog is still open (e.g. right after submit) can't
   // change already-uncontrolled fields' defaultValue mid-flight.
   const [project] = useState(props.project);
-  const { open, managers, clientRefs, teams, canAssignTeam, onClose } = props;
+  const { open, managers, clientRefs, subcontractorRefs, teams, canAssignTeam, onClose } = props;
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -55,11 +60,15 @@ export function EditProjectDialog(props: Props) {
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
   const tFinancialType = useTranslations("financialType");
+  const tExecutionMode = useTranslations("executionMode");
 
   const [state, action, pending] = useActionState(updateProject, null);
   const [category, setCategory] = useState<ProjectCategory>(project.project_category);
   const [progressManual, setProgressManual] = useState(project.progress_pct_manual);
   const [statusManual, setStatusManual] = useState(project.status_manual);
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>(project.execution_mode);
+  const [localSubcontractorRefs, setLocalSubcontractorRefs] = useState<SubcontractorRef[]>(subcontractorRefs);
+  const [showAddSubcontractor, setShowAddSubcontractor] = useState(false);
 
   const [teamId, setTeamId] = useState<number | null>(project.team_id);
   const [teamState, setTeamState] = useState<{ error?: string; success?: string } | null>(null);
@@ -68,6 +77,13 @@ export function EditProjectDialog(props: Props) {
   const [siteLocation, setSiteLocation] = useState(project.site_location ?? "");
   const [siteLat, setSiteLat] = useState<number | null>(project.site_lat);
   const [siteLng, setSiteLng] = useState<number | null>(project.site_lng);
+
+  const [selectedClient, setSelectedClient] = useState<ClientRef | null>(
+    clientRefs.find((c) => c.id === project.client_id) ?? null,
+  );
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState<SubcontractorRef | null>(
+    subcontractorRefs.find((s) => s.id === project.subcontractor_id) ?? null,
+  );
 
   const handleMapChange = useCallback(async (lat: number, lng: number) => {
     setSiteLat(lat);
@@ -85,18 +101,12 @@ export function EditProjectDialog(props: Props) {
     });
   }
 
-  const [projectType, setProjectType] = useState(project.project_type ?? "");
-  const [valueEurSolar, setValueEurSolar] = useState(String(project.value_eur_solar ?? ""));
-  const [valueEurBess, setValueEurBess] = useState(String(project.value_eur_bess ?? ""));
-  const [valueEurManual, setValueEurManual] = useState(String(project.value_eur ?? ""));
-  const hybrid = isHybridProjectType(projectType);
-  const valueEurTotal = (Number(valueEurSolar) || 0) + (Number(valueEurBess) || 0);
-
   useEffect(() => {
     if (state?.success) onClose();
   }, [state?.success]);
 
   return (
+    <>
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
@@ -111,6 +121,20 @@ export function EditProjectDialog(props: Props) {
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
               <Input name="name" required defaultValue={project.name} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.executionMode")}</Label>
+              <select
+                name="execution_mode"
+                value={executionMode}
+                onChange={(e) => setExecutionMode(e.target.value as ExecutionMode)}
+                className={SELECT_CLASS}
+              >
+                {EXECUTION_MODES.map((m) => (
+                  <option key={m} value={m} className="bg-card">{tExecutionMode(m)}</option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -160,20 +184,22 @@ export function EditProjectDialog(props: Props) {
                   ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.manager")}</Label>
-                <select name="manager_id" defaultValue={project.manager_id ?? ""} className={SELECT_CLASS}>
-                  <option value="" className="bg-card">—</option>
-                  {managers.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-card">
-                      {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {executionMode === "internal" && (
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.manager")}</Label>
+                  <select name="manager_id" defaultValue={project.manager_id ?? ""} className={SELECT_CLASS}>
+                    <option value="" className="bg-card">—</option>
+                    {managers.map((m) => (
+                      <option key={m.id} value={m.id} className="bg-card">
+                        {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
-            {canAssignTeam && (
+            {executionMode === "internal" && canAssignTeam && (
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.team")}</Label>
                 <select
@@ -203,23 +229,25 @@ export function EditProjectDialog(props: Props) {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
-              <div className="flex gap-6">
-                {CONTRACT_TYPES.map((c) => (
-                  <label key={c} className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name={`contract_type_${c}`}
-                      value="true"
-                      defaultChecked={project.contract_type.includes(c)}
-                      className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                    />
-                    <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
-                  </label>
-                ))}
+            {executionMode === "internal" && (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
+                <div className="flex gap-6">
+                  {CONTRACT_TYPES.map((c) => (
+                    <label key={c} className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name={`contract_type_${c}`}
+                        value="true"
+                        defaultChecked={project.contract_type.includes(c)}
+                        className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                      />
+                      <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {category === "industrial" && (
               <div className="space-y-1.5">
@@ -235,128 +263,124 @@ export function EditProjectDialog(props: Props) {
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.client")}</Label>
-              <select name="client_id" defaultValue={project.client_id ?? ""} className={SELECT_CLASS}>
-                <option value="" className="bg-card">—</option>
-                {clientRefs.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-card">{c.name}</option>
-                ))}
-              </select>
+              <ClientCombobox
+                name="client_id"
+                clients={clientRefs}
+                value={selectedClient}
+                onValueChange={setSelectedClient}
+              />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
-                <select name="current_phase" defaultValue={project.current_phase} className={SELECT_CLASS}>
-                  {PROJECT_PHASES.map((p) => (
-                    <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
-                  ))}
-                </select>
-              </div>
+            {executionMode === "subcontracted" ? (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
-                  <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
-                    <input
-                      type="checkbox"
-                      checked={progressManual}
-                      onChange={(e) => setProgressManual(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractor")}</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddSubcontractor(true)}
+                    className="text-[11px] font-medium text-veltol-accent hover:underline"
+                  >
+                    {t("newSubcontractor")}
+                  </button>
+                </div>
+                <SubcontractorCombobox
+                  name="subcontractor_id"
+                  subcontractors={localSubcontractorRefs}
+                  value={selectedSubcontractor}
+                  onValueChange={setSelectedSubcontractor}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
+                    <select name="current_phase" defaultValue={project.current_phase} className={SELECT_CLASS}>
+                      {PROJECT_PHASES.map((p) => (
+                        <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
+                      <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                        <input
+                          type="checkbox"
+                          checked={progressManual}
+                          onChange={(e) => setProgressManual(e.target.checked)}
+                          className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                        />
+                        <span className="font-mono text-[10px] text-veltol-fgDim">
+                          {progressManual ? t("autoManual.manual") : t("autoManual.auto")}
+                        </span>
+                      </label>
+                    </div>
+                    <input type="hidden" name="progress_pct_manual" value={progressManual ? "true" : "false"} />
+                    <Input
+                      name="progress_pct"
+                      type="number"
+                      min="0"
+                      max="100"
+                      defaultValue={project.progress_pct}
+                      disabled={!progressManual}
                     />
-                    <span className="font-mono text-[10px] text-veltol-fgDim">
-                      {progressManual ? t("autoManual.manual") : t("autoManual.auto")}
-                    </span>
-                  </label>
+                  </div>
                 </div>
-                <input type="hidden" name="progress_pct_manual" value={progressManual ? "true" : "false"} />
-                <Input
-                  name="progress_pct"
-                  type="number"
-                  min="0"
-                  max="100"
-                  defaultValue={project.progress_pct}
-                  disabled={!progressManual}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
-                <Input name="contract_number" defaultValue={project.contract_number ?? ""} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
-                <input name="contract_date" type="date" defaultValue={project.contract_date ?? ""} className={SELECT_CLASS} />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
+                    <Input name="contract_number" defaultValue={project.contract_number ?? ""} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
+                    <input name="contract_date" type="date" defaultValue={project.contract_date ?? ""} className={SELECT_CLASS} />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
-                <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={SELECT_CLASS} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">
-                  {hybrid ? t("fields.valueEurSolar") : t("fields.valueEur")}
-                </Label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={hybrid ? valueEurSolar : valueEurManual}
-                  onChange={(e) =>
-                    hybrid ? setValueEurSolar(e.target.value) : setValueEurManual(e.target.value)
-                  }
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
+                    <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={SELECT_CLASS} />
+                  </div>
+                </div>
 
-            <input type="hidden" name="value_eur" value={hybrid ? valueEurTotal : valueEurManual} />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEur")}</Label>
+                    <Input name="value_eur" type="number" min="0" defaultValue={project.value_eur ?? ""} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueLei")}</Label>
+                    <Input name="value_lei" type="number" min="0" defaultValue={project.value_lei ?? ""} />
+                  </div>
+                </div>
 
-            {hybrid && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurBess")}</Label>
-                  <Input
-                    name="value_eur_bess"
-                    type="number"
-                    min="0"
-                    value={valueEurBess}
-                    onChange={(e) => setValueEurBess(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
+                    <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                      <input
+                        type="checkbox"
+                        checked={statusManual}
+                        onChange={(e) => setStatusManual(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                      />
+                      <span className="font-mono text-[10px] text-veltol-fgDim">
+                        {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
+                      </span>
+                    </label>
+                  </div>
+                  <input type="hidden" name="status_manual" value={statusManual ? "true" : "false"} />
+                  <select name="status" defaultValue={project.status} className={SELECT_CLASS} disabled={!statusManual}>
+                    {PROJECT_STATUSES.map((s) => (
+                      <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEurTotal")}</Label>
-                  <p className="flex h-8 items-center font-mono text-sm text-veltol-fg">
-                    {new Intl.NumberFormat("hu-HU").format(valueEurTotal)} €
-                  </p>
-                </div>
-              </div>
+              </>
             )}
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.status")}</Label>
-                  <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
-                    <input
-                      type="checkbox"
-                      checked={statusManual}
-                      onChange={(e) => setStatusManual(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                    />
-                    <span className="font-mono text-[10px] text-veltol-fgDim">
-                      {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
-                    </span>
-                  </label>
-                </div>
-                <input type="hidden" name="status_manual" value={statusManual ? "true" : "false"} />
-                <select name="status" defaultValue={project.status} className={SELECT_CLASS} disabled={!statusManual}>
-                  {PROJECT_STATUSES.map((s) => (
-                    <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</Label>
@@ -380,5 +404,17 @@ export function EditProjectDialog(props: Props) {
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
+
+    <AddSubcontractorDialog
+      open={showAddSubcontractor}
+      onClose={() => setShowAddSubcontractor(false)}
+      onCreated={(subcontractor) => {
+        setLocalSubcontractorRefs((refs) =>
+          [...refs, subcontractor].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+        setSelectedSubcontractor(subcontractor);
+      }}
+    />
+    </>
   );
 }

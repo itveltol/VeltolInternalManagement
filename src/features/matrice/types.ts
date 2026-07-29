@@ -22,6 +22,8 @@ export interface Activity {
   sort_order: number;
   is_section_header: boolean;
   applies_to: ProjectType[] | null;
+  /** Periodic permit/notice — completing it requires an expiry date and is tracked for renewal reminders. */
+  is_aviz: boolean;
 }
 
 export interface ProjectActivityStatus {
@@ -31,6 +33,8 @@ export interface ProjectActivityStatus {
   note: string | null;
   updated_by: string | null;
   updated_at: string;
+  /** Renewal date for aviz activities; null for everything else. */
+  expires_at: string | null;
 }
 
 export interface MatrixProject {
@@ -38,6 +42,7 @@ export interface MatrixProject {
   name: string;
   project_type: ProjectType | null;
   contract_type: ContractType[];
+  progress_pct_manual: boolean;
 }
 
 /** Resolved cell for the matrix grid (missing DB row → 'neinceput') */
@@ -46,6 +51,7 @@ export interface MatrixCell {
   project_id: number;
   status: ActivityStatus;
   note: string | null;
+  expires_at: string | null;
 }
 
 export interface MatrixData {
@@ -82,3 +88,15 @@ export const STATUS_DOT_COLOR: Record<ActivityStatus, string> = {
   neinceput:     'bg-veltol-faint',
   na:            'bg-transparent border border-veltol-border',
 };
+
+/** Renewal state for a finished aviz cell, relative to today. */
+export type AvizState = 'needsAttention' | 'done' | 'notDue' | 'noExpiry';
+
+export interface AvizReminder {
+  projectId: number;
+  projectName: string;
+  activityId: number;
+  activityName: string;
+  expiresAt: string;
+  state: AvizState;
+}

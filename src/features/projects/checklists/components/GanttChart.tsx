@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { CalendarOff, X } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import type { ChecklistRow } from "@/features/projects/checklists/types";
+import { DAY_MS, toDayMs, buildMonthWeekMarkers } from "@/shared/utils/ganttTimeline";
+import { formatDate } from "@/shared/utils/formatDate";
 
 const TEAM_COLORS = [
   "bg-veltol-accent/70 border-veltol-accent",
@@ -34,12 +36,6 @@ function teamLineColor(teamId: number | null): string {
   return TEAM_LINE_COLORS[teamId % TEAM_LINE_COLORS.length];
 }
 
-function toDayMs(dateStr: string): number {
-  return new Date(dateStr + "T00:00:00").getTime();
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
 interface Props {
   rows: ChecklistRow[];
   onSchedule: (row: ChecklistRow) => void;
@@ -50,6 +46,7 @@ interface Props {
 
 export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate }: Props) {
   const t = useTranslations("checklist");
+  const [hoveredRowKey, setHoveredRowKey] = useState<string | null>(null);
 
   const taskRows = rows.filter((r) => !r.isSection);
   const scheduled = taskRows.filter((r) => r.record?.start_date && r.record?.end_date);
@@ -70,22 +67,15 @@ export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate
 
   const totalSpan = Math.max(DAY_MS, rangeEnd - rangeStart);
 
-  const monthMarkers = useMemo(() => {
-    const markers: { label: string; leftPct: number }[] = [];
-    const start = new Date(rangeStart);
-    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
-    while (cursor.getTime() < rangeEnd) {
-      const ms = cursor.getTime();
-      if (ms >= rangeStart) {
-        markers.push({
-          label: cursor.toLocaleDateString(undefined, { month: "short", year: "2-digit" }),
-          leftPct: ((ms - rangeStart) / totalSpan) * 100,
-        });
-      }
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-    return markers;
-  }, [rangeStart, rangeEnd, totalSpan]);
+  const monthMarkers = useMemo(
+    () => buildMonthWeekMarkers(rangeStart, rangeEnd, totalSpan),
+    [rangeStart, rangeEnd, totalSpan],
+  );
+
+  const weekMarkers = useMemo(
+    () => monthMarkers.flatMap((m) => m.weeks),
+    [monthMarkers],
+  );
 
   const todayPct = useMemo(() => {
     const today = toDayMs(new Date().toISOString().slice(0, 10));
@@ -93,11 +83,11 @@ export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate
     return ((today - rangeStart) / totalSpan) * 100;
   }, [rangeStart, rangeEnd, totalSpan]);
 
-  const rangeStartLabel = new Date(rangeStart).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
-  const rangeEndLabel = new Date(rangeEnd).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  const rangeStartLabel = formatDate(new Date(rangeStart), { day: "2-digit", month: "short", year: undefined });
+  const rangeEndLabel = formatDate(new Date(rangeEnd), { day: "2-digit", month: "short", year: "numeric" });
 
   function shortDate(ms: number) {
-    return new Date(ms).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+    return formatDate(new Date(ms), { day: "2-digit", month: "short", year: undefined });
   }
 
   return (
@@ -156,23 +146,43 @@ export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate
               </span>
             </div>
             <div className="relative flex-1 py-2">
-              {monthMarkers.map((m, i) => (
-                <div
-                  key={i}
-                  className="absolute top-0 flex h-full flex-col items-start"
-                  style={{ left: `${m.leftPct}%` }}
-                >
-                  <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-veltol-fgMute">
-                    {m.label}
-                  </span>
-                </div>
-              ))}
+              <div className="relative h-4">
+                {monthMarkers.map((m, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-0 flex h-full items-start justify-center overflow-hidden"
+                    style={{ left: `${m.leftPct}%`, width: `${m.widthPct}%` }}
+                  >
+                    <span className="truncate font-mono text-[9px] uppercase tracking-[0.1em] text-veltol-fgMute">
+                      {m.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="relative mt-1.5 h-3 border-t border-border/60">
+                {weekMarkers.map((w, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-0 flex h-full items-center border-l border-border/40 pl-1 first:border-l-0"
+                    style={{ left: `${w.leftPct}%`, width: `${w.widthPct}%` }}
+                  >
+                    <span className="truncate font-mono text-[8px] text-veltol-fgMute/60">{w.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <div className="relative divide-y divide-border pt-5">
             {/* Date lines spanning the full chart body, drawn above row content so they cross every row */}
             <div className="pointer-events-none absolute inset-0 left-64 z-10">
+              {weekMarkers.map((w, i) => (
+                <div
+                  key={i}
+                  className="absolute inset-y-0 w-px bg-border opacity-40"
+                  style={{ left: `${w.leftPct}%` }}
+                />
+              ))}
               {monthMarkers.map((m, i) => (
                 <div
                   key={i}
@@ -181,6 +191,7 @@ export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate
                 />
               ))}
               {scheduled.map((row) => {
+                if (row.rowKey !== hoveredRowKey) return null;
                 const start = toDayMs(row.record!.start_date!);
                 const end = toDayMs(row.record!.end_date!) + DAY_MS;
                 const startPct = ((start - rangeStart) / totalSpan) * 100;
@@ -257,6 +268,8 @@ export function GanttChart({ rows, onSchedule, onDelete, onUnschedule, canMutate
                       type="button"
                       disabled={!canMutate}
                       onClick={() => onSchedule(row)}
+                      onMouseEnter={() => setHoveredRowKey(row.rowKey)}
+                      onMouseLeave={() => setHoveredRowKey(null)}
                       className={`group absolute top-1/2 h-6 -translate-y-1/2 overflow-hidden rounded-md border ${teamColor(row.record?.team_id ?? null)} transition-opacity hover:opacity-90 disabled:cursor-default`}
                       style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                       title={`${row.activitate} · ${row.record?.start_date} → ${row.record?.end_date}`}

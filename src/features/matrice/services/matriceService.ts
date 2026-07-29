@@ -41,8 +41,9 @@ export async function setCellStatus(
   activityId: number,
   status: ActivityStatus,
   userId: string,
+  expiresAt?: string | null,
 ): Promise<void> {
-  return client.setCellStatus(projectId, activityId, status, userId);
+  return client.setCellStatus(projectId, activityId, status, userId, expiresAt);
 }
 
 /** Client-side: resolve a cell status (missing row = 'neinceput') */

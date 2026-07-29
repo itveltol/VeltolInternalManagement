@@ -7,8 +7,10 @@ import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterField, FilterDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { deleteDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import { useDocumentsStore } from "../hooks/useDocumentsStore";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Document, DocumentLinkedType, DocumentStatus, DocumentCategory } from "../types";
 import { DOCUMENT_CATEGORIES, DOCUMENT_STATUSES } from "../types";
 
@@ -24,12 +26,6 @@ interface Props {
   filterStatus: DocumentStatus | "";
   onFilterStatus: (v: DocumentStatus | "") => void;
 }
-
-const INPUT_CLASS =
-  "h-8 rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-[12px] text-veltol-fg outline-none placeholder:text-veltol-fgMute focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
-
-const SELECT_CLASS =
-  "h-8 rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-[12px] text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 appearance-none";
 
 function linkedTypeVariant(type: DocumentLinkedType) {
   switch (type) {
@@ -50,11 +46,6 @@ function statusVariant(status: DocumentStatus | null) {
     case "expired":    return "bg-veltol-red/15 text-veltol-red border-veltol-red/20";
     default:           return "bg-white/5 text-veltol-fgMute border-border";
   }
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
 function expiryState(expiresAt: string | null, status: DocumentStatus | null): "expired" | "soon" | "ok" | null {
@@ -118,34 +109,35 @@ export function DocumentsTable({
         <span className="text-xs font-medium text-veltol-fgMute">
           {t("totalCount", { count: documents.length })}
         </span>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={t("fields.namePlaceholder")}
-            className={`${INPUT_CLASS} w-48`}
-          />
-          <select
-            value={filterCategory}
-            onChange={(e) => onFilterCategory(e.target.value as DocumentCategory | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAll")}</option>
-            {DOCUMENT_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{t(`category.${c}`)}</option>
-            ))}
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => onFilterStatus(e.target.value as DocumentStatus | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAllStatuses")}</option>
-            {DOCUMENT_STATUSES.map((s) => (
-              <option key={s} value={s}>{t(`status.${s}`)}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-end gap-3">
+          <FilterField label={t("filters.search")} htmlFor="filter-doc-search">
+            <FilterInput
+              id="filter-doc-search"
+              type="search"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={t("fields.namePlaceholder")}
+              className="w-48"
+            />
+          </FilterField>
+          <FilterField label={t("filters.category")} htmlFor="filter-doc-category">
+            <FilterDropdown
+              id="filter-doc-category"
+              value={filterCategory}
+              onChange={(v) => onFilterCategory(v as DocumentCategory | "")}
+              allLabel={t("filterAll")}
+              options={DOCUMENT_CATEGORIES.map((c) => ({ value: c, label: t(`category.${c}`) }))}
+            />
+          </FilterField>
+          <FilterField label={t("filters.status")} htmlFor="filter-doc-status">
+            <FilterDropdown
+              id="filter-doc-status"
+              value={filterStatus}
+              onChange={(v) => onFilterStatus(v as DocumentStatus | "")}
+              allLabel={t("filterAllStatuses")}
+              options={DOCUMENT_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }))}
+            />
+          </FilterField>
         </div>
       </div>
 

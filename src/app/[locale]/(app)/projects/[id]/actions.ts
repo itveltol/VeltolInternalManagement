@@ -5,9 +5,12 @@ import { createAdminClient } from "@/core/supabase/admin";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
+import { createSupabaseMaintenanceClient } from "@/features/projects/maintenance/api/supabaseMaintenanceClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import * as projectService from "@/features/projects/services/projectService";
 import * as teamService from "@/features/teams/services/teamService";
+import * as maintenanceRecordsService from "@/features/projects/maintenance/services/maintenanceRecordsService";
+import type { MaintenancePeriod } from "@/features/projects/maintenance/types";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import type { Project, ProjectManager } from "@/features/projects/types";
@@ -16,6 +19,9 @@ import type { Team } from "@/features/teams/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
+import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
+import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -83,6 +89,12 @@ export async function getClientRefs(): Promise<ClientRef[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseClientsClient(supabase);
   return clientService.getClientRefs(api);
+}
+
+export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseSubcontractorsClient(supabase);
+  return subcontractorService.getSubcontractorRefs(api);
 }
 
 export async function getChecklistRecords(projectId: number) {
@@ -255,6 +267,34 @@ export async function deleteCustomTaskAction(
 
     revalidatePath(await getChecklistPath(projectId));
     return { success: "taskDeleted" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function getMaintenanceChecks(projectId: number) {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseMaintenanceClient(supabase);
+  return maintenanceRecordsService.getMaintenanceChecks(client, projectId);
+}
+
+export async function setMaintenanceCheckAction(
+  projectId: number,
+  year: number,
+  period: MaintenancePeriod,
+  checked: boolean,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const client = createSupabaseMaintenanceClient(supabase);
+
+    await maintenanceRecordsService.setMaintenanceCheck(client, {
+      projectId, year, period, checked, checkedBy: user.id,
+    });
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "checkSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };

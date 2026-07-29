@@ -76,7 +76,7 @@ export async function savePhaseDates(
   endDate: string | null,
 ): Promise<ActionState> {
   try {
-    const { supabase } = await requireMutator();
+    const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
 
     const project = await projectService.getProjectById(client, projectId);
@@ -88,9 +88,10 @@ export async function savePhaseDates(
     await projectService.updatePhaseDates(client, projectId, phaseKey, {
       start_date: startDate,
       end_date: endDate,
-    });
+    }, user.id);
     const locale = await getLocale();
     revalidatePath(`/${locale}/gantt`);
+    revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "saved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };

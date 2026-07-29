@@ -10,5 +10,6 @@ export interface MatriceApiClient {
     activityId: number,
     status: ActivityStatus,
     userId: string,
+    expiresAt?: string | null,
   ): Promise<void>;
 }

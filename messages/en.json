@@ -7,6 +7,7 @@
     "work": "Work",
     "projects": "Projects",
     "clients": "Clients",
+    "subcontractors": "Subcontractors",
     "teams": "Teams",
     "system": "System",
     "profile": "Profile",
@@ -67,6 +68,14 @@
     "totalCount": "{count} projects total",
     "addProject": "Add project",
     "newClient": "+ New client",
+    "clientSearchPlaceholder": "Search clients...",
+    "clientSearchNoResults": "No matching clients.",
+    "clientSearchNone": "—",
+    "newSubcontractor": "+ New subcontractor",
+    "subcontractorSearchPlaceholder": "Search subcontractors...",
+    "subcontractorSearchNoResults": "No matching subcontractors.",
+    "subcontractorSearchNone": "—",
+    "subcontracted": "Subcontracted",
     "editProject": "Edit project",
     "deleteProject": "Delete",
     "confirmDelete": "Delete this project?",
@@ -99,6 +108,13 @@
     "filterMinValue": "Min value",
     "filterMaxValue": "Max value",
     "sortByValue": "Sort by value",
+    "filters": {
+      "phase": "Phase",
+      "category": "Category",
+      "contractType": "Contract type",
+      "minValue": "Min value (€)",
+      "maxValue": "Max value (€)"
+    },
     "pagination": {
       "prev": "Previous",
       "next": "Next",
@@ -112,6 +128,7 @@
       "status": "Status",
       "deadline": "Deadline",
       "value": "Value",
+      "valueLei": "Value (Lei)",
       "phase": "Phase",
       "progress": "Progress",
       "generalStatus": "Status",
@@ -125,13 +142,13 @@
       "contractNumber": "Contract #",
       "contractDate": "Contract date",
       "contractType": "Contract type",
-      "notes": "Notes"
+      "notes": "Notes",
+      "lastModified": "Last modified"
     },
     "fields": {
       "name": "Project name",
       "county": "County",
       "client": "Client",
-      "addNewClient": "+ Add new client",
       "siteLocation": "Site location",
       "pinLocation": "Pin location on map",
       "mwSolar": "MW Solar",
@@ -142,15 +159,21 @@
       "contractType": "Contract type",
       "manager": "Project manager",
       "team": "Assigned team",
+      "executionMode": "Execution",
+      "subcontractor": "Subcontractor",
+      "subcontractorName": "Subcontractor name",
+      "subcontractorContactPerson": "Contact person",
+      "subcontractorPhone": "Phone",
+      "subcontractorPrice": "Price",
+      "subcontractorPriceLei": "Price (Lei)",
+      "subcontractorDeadline": "Deadline",
       "phase": "Current phase",
       "progress": "Progress (%)",
       "contractNumber": "Contract number",
       "contractDate": "Contract date",
       "deadline": "Final deadline",
       "valueEur": "Value (€)",
-      "valueEurSolar": "Solar system value (€)",
-      "valueEurBess": "Battery value (€)",
-      "valueEurTotal": "Total value (€)",
+      "valueLei": "Value (Lei)",
       "status": "General status",
       "notes": "Notes"
     },
@@ -308,14 +331,19 @@
     "residential": "Residential",
     "industrial": "Industrial"
   },
+  "executionMode": {
+    "internal": "Internal execution",
+    "subcontracted": "Subcontracted"
+  },
   "financialType": {
-    "proprii": "Sursa proprii",
-    "finantare": "Sursa finanțare"
+    "proprii": "Own funds",
+    "finantare": "Financing"
   },
   "contractType": {
-    "proiectare": "Proiectare",
-    "executie": "Execuție",
-    "mentenanta": "Mentenanță"
+    "proiectare": "Design",
+    "executie": "Execution",
+    "mentenanta": "Maintenance",
+    "racordare": "Grid connection"
   },
   "kpi": {
     "portfolioValue": "Total portfolio value",
@@ -348,7 +376,8 @@
       "noProjects": "Select at least one project.",
       "loading": "Refreshing...",
       "notContracted": "Not covered by this project's contract type",
-      "derivedFromChecklist": "Driven by checklist progress — update it in the project's checklist"
+      "derivedFromChecklist": "Driven by checklist progress — update it in the project's checklist",
+      "expiresOn": "Expires {date}"
     },
     "status": {
       "finalizat": "Done",
@@ -361,6 +390,32 @@
     "hideProject": "Hide from view",
     "legend": {
       "label": "LEGEND"
+    },
+    "avizExpiryDialog": {
+      "title": "Set expiry date",
+      "description": "\"{activity}\" is a periodic permit — set its expiry date so a renewal reminder can be sent.",
+      "dateLabel": "Expiry date",
+      "confirm": "Save",
+      "cancel": "Cancel"
+    },
+    "autoProgressWarning": {
+      "title": "Switch to manual progress?",
+      "description": "This project's progress is currently set to automatic, calculated from Matrice/checklist completion. Changing this manually will switch it to manual progress.",
+      "confirm": "OK",
+      "cancel": "Cancel"
+    },
+    "avizReminders": {
+      "eyebrow": "Matrice Status",
+      "title": "Aviz renewal reminders",
+      "empty": "No avize approaching expiry right now.",
+      "noResults": "No projects match your search.",
+      "searchPlaceholder": "Search by project name",
+      "expiresOn": "Expires {date}",
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {total}"
+      }
     }
   },
   "vacation": {
@@ -481,6 +536,9 @@
     "saving": "Saving...",
     "emptyState": "No clients yet. Add your first client.",
     "filterAllTypes": "All types",
+    "filters": {
+      "type": "Client type"
+    },
     "columns": {
       "name": "Name",
       "type": "Type",
@@ -505,6 +563,47 @@
       "contactPerson": "Contact person",
       "email": "Email",
       "phone": "Phone",
+      "notes": "Notes"
+    }
+  },
+  "subcontractors": {
+    "eyebrow": "SUBCONTRACTORS · ALL",
+    "title": "Subcontractors",
+    "subtitle": "Outside companies projects are fully handed off to",
+    "totalCount": "{count} subcontractors total",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "addSubcontractor": "Add subcontractor",
+    "editSubcontractor": "Edit",
+    "deleteSubcontractor": "Delete",
+    "confirmDelete": "Delete this subcontractor? Associated projects will lose their subcontractor link.",
+    "subcontractorSaved": "Subcontractor saved.",
+    "subcontractorCreated": "Subcontractor created.",
+    "subcontractorDeleted": "Subcontractor deleted.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "emptyState": "No subcontractors yet. Add your first subcontractor.",
+    "columns": {
+      "name": "Name",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "price": "Price",
+      "priceLei": "Price (Lei)",
+      "deadline": "Deadline"
+    },
+    "fields": {
+      "name": "Name",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "priceEur": "Price (€)",
+      "priceLei": "Price (Lei)",
+      "deadline": "Deadline",
       "notes": "Notes"
     }
   },
@@ -629,6 +728,11 @@
     "globalContext": "All projects",
     "filterAll": "All categories",
     "filterAllStatuses": "All statuses",
+    "filters": {
+      "search": "Search by name",
+      "category": "Category",
+      "status": "Status"
+    },
     "category": {
       "atr": "ATR",
       "cu": "CU",
@@ -695,21 +799,15 @@
     "deleteUser": "Delete",
     "editTitle": "Edit user",
     "inviteTitle": "Invite user",
-    "inviteDesc": "Create an account with a temporary password and share it with the new user however you like.",
+    "inviteDesc": "Generate a one-time invitation link and share it with the new user however you like.",
     "inviteEmail": "Email address",
     "initialRole": "Initial role",
-    "sendInvite": "Create account",
-    "sendingInvite": "Creating...",
-    "inviteLinkTitle": "Account created",
-    "inviteLinkDesc": "Share these credentials with the invitee. They'll be asked to set their own password and details on first login.",
-    "inviteEmailSentDesc": "An email with these credentials was sent to the invitee. They'll be asked to set their own password and details on first login.",
-    "tempPasswordLabel": "Temporary password",
-    "inviteCredentialsClipboard": "Email: {email}\nTemporary password: {password}",
-    "copyLink": "Copy credentials",
+    "sendInvite": "Generate link",
+    "sendingInvite": "Generating...",
+    "inviteLinkTitle": "Invitation link generated",
+    "inviteLinkDesc": "Copy this link and share it with the invitee. It only works once.",
+    "copyLink": "Copy link",
     "linkCopied": "Copied!",
-    "inviteEmailSubject": "Your Veltol account has been created",
-    "inviteEmailIntro": "An account has been created for you on Veltol. Use the credentials below to log in.",
-    "inviteEmailCta": "Log in to Veltol",
     "done": "Done",
     "cancel": "Cancel",
     "save": "Save",
@@ -785,5 +883,33 @@
   "theme": {
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode"
+  },
+  "maintenance": {
+    "tabLabel": "Maintenance",
+    "breadcrumb": "Maintenance",
+    "title": "Maintenance",
+    "description": "Twice a year — March and October — this project's site needs a maintenance inspection. Check the box once it's done.",
+    "checkSaved": "Saved.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do that.",
+    "period": {
+      "march": "March {year} inspection done",
+      "october": "October {year} inspection done"
+    },
+    "state": {
+      "needsAttention": "Needs attention",
+      "done": "Done",
+      "notDue": "Not due yet"
+    },
+    "remindersEyebrow": "Maintenance",
+    "remindersTitle": "Maintenance reminders",
+    "remindersEmpty": "No maintenance inspections due right now.",
+    "remindersNoResults": "No projects match your search.",
+    "remindersSearchPlaceholder": "Search by project name",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
   }
 }

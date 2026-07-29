@@ -7,11 +7,14 @@ import { createSupabaseProjectsClient } from "@/features/projects/api/supabasePr
 import * as projectService from "@/features/projects/services/projectService";
 import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Project, ProjectManager, ProjectCategory, FinancialType } from "@/features/projects/types";
+import type { Project, ProjectManager, ProjectCategory, FinancialType, ExecutionMode } from "@/features/projects/types";
 import { CONTRACT_TYPES } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
+import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
+import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
 import * as matriceService from "@/features/matrice/services/matriceService";
@@ -83,6 +86,9 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     (c) => formData.get(`contract_type_${c}`) === "true",
   );
 
+  const execution_mode: ExecutionMode =
+    formData.get("execution_mode") === "subcontracted" ? "subcontracted" : "internal";
+
   return {
     name: (formData.get("name") as string).trim(),
     county: str("county"),
@@ -97,14 +103,15 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     contract_type,
     manager_id: str("manager_id"),
     client_id: num("client_id"),
+    execution_mode,
+    subcontractor_id: num("subcontractor_id"),
     current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "",
     progress_pct: formData.has("progress_pct") ? Number(formData.get("progress_pct")) : existing?.progress_pct ?? 0,
     contract_number: str("contract_number"),
     contract_date: str("contract_date"),
     deadline: str("deadline"),
     value_eur: num("value_eur"),
-    value_eur_solar: num("value_eur_solar"),
-    value_eur_bess: num("value_eur_bess"),
+    value_lei: num("value_lei"),
     status: (formData.get("status") as string | null) ?? existing?.status ?? "on_schedule",
     status_manual: formData.get("status_manual") === "true",
     progress_pct_manual: formData.get("progress_pct_manual") === "true",
@@ -144,15 +151,15 @@ export async function createProject(
   formData: FormData,
 ): Promise<ActionState> {
   try {
-    const { supabase } = await requireMutator();
+    const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
     const payload = extractProjectPayload(formData);
-    const { id: newId } = await projectService.createProject(client, payload);
+    const { id: newId } = await projectService.createProject(client, payload, user.id);
     revalidatePath(await getProjectsPath());
 
     try {
       const folder = await createProjectFolder(payload.name, payload.contract_number);
-      await client.linkOneDriveFolder(newId, folder.id, folder.url);
+      await client.linkOneDriveFolder(newId, folder.id, folder.url, user.id);
       return { success: "projectCreated", folderCreated: true, projectId: newId };
     } catch {
       return { success: "projectCreated", folderCreated: false, projectId: newId };
@@ -168,7 +175,7 @@ export async function linkProjectFolder(
   input: string,
 ): Promise<ActionState> {
   try {
-    const { supabase } = await requireMutator();
+    const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
 
     let folderId: string;
@@ -197,7 +204,7 @@ export async function linkProjectFolder(
       folderUrl = input;
     }
 
-    await client.linkOneDriveFolder(projectId, folderId, folderUrl);
+    await client.linkOneDriveFolder(projectId, folderId, folderUrl, user.id);
     const locale = await getLocale();
     revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "folderLinked" };
@@ -212,11 +219,11 @@ export async function updateProject(
   formData: FormData,
 ): Promise<ActionState> {
   try {
-    const { supabase } = await requireMutator();
+    const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
     const existing = await projectService.getProjectById(client, projectId);
-    await projectService.updateProject(client, projectId, extractProjectPayload(formData, existing ?? undefined));
+    await projectService.updateProject(client, projectId, extractProjectPayload(formData, existing ?? undefined), user.id);
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());
     revalidatePath(`/${locale}/projects/${projectId}`);
@@ -247,11 +254,17 @@ export async function getClientRefs(): Promise<ClientRef[]> {
   return clientService.getClientRefs(api);
 }
 
+export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseSubcontractorsClient(supabase);
+  return subcontractorService.getSubcontractorRefs(api);
+}
+
 export async function assignProjectTeam(projectId: number, teamId: number | null): Promise<ActionState> {
   try {
-    const { supabase } = await requireProjectOwner(projectId);
+    const { supabase, user } = await requireProjectOwner(projectId);
     const client = createSupabaseProjectsClient(supabase);
-    await projectService.updateProjectTeam(client, projectId, teamId);
+    await projectService.updateProjectTeam(client, projectId, teamId, user.id);
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());
     revalidatePath(`/${locale}/projects/${projectId}`);

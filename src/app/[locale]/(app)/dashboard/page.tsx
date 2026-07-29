@@ -6,9 +6,11 @@ import { IncomeByMonthChart } from "@/features/dashboard/components/IncomeByMont
 import { IncomeCompareChart } from "@/features/dashboard/components/IncomeCompareChart";
 import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
 import { PhaseDistributionBar } from "@/features/dashboard/components/PhaseDistributionBar";
+import { MaintenanceRemindersCard } from "@/features/dashboard/components/MaintenanceRemindersCard";
+import { AvizRemindersCard } from "@/features/dashboard/components/AvizRemindersCard";
 import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
-import { requireAuth, getProjects, getDashboardStats } from "@/app/[locale]/(app)/dashboard/action";
+import { requireAuth, getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -27,6 +29,8 @@ export default async function DashboardPage() {
 
   const projectsData = await getProjects();
   const { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects, residential, industrial } = await getDashboardStats(projectsData);
+  const maintenanceReminders = await getMaintenanceReminders();
+  const avizReminders = await getAvizReminders();
 
   const kpiCardsReal = [
     { label: t("totalProjectsValue"), value: totalPortfolioValue.toLocaleString("hu-HU"), unit: "EUR", delta: "+" + "12" + t("percentageChange"), deltaPositive: true, featured: true },
@@ -88,6 +92,14 @@ export default async function DashboardPage() {
       />
 
       <DashboardKpiRow cards={kpiCardsReal} icons={kpiRealIcons} />
+
+      {maintenanceReminders.length > 0 && (
+        <MaintenanceRemindersCard reminders={maintenanceReminders} />
+      )}
+
+      {avizReminders.length > 0 && (
+        <AvizRemindersCard reminders={avizReminders} />
+      )}
 
       <DashboardKpiRow cards={kpiCardsByCategory} />
 

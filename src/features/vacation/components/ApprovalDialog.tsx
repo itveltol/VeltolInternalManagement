@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, useEffect, useMemo, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
@@ -12,6 +12,7 @@ import {
   getVacationBalance,
 } from "@/app/[locale]/(app)/vacation/actions";
 import { vacationStatusVariant } from "@/shared/utils/status-variant";
+import { formatDate } from "@/shared/utils/formatDate";
 import { vacationDays } from "../types";
 import type { VacationRequest, VacationBalance } from "../types";
 import type { Holiday } from "@/features/holidays/types";
@@ -25,7 +26,6 @@ interface Props {
 
 export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   const t = useTranslations("vacation");
-  const locale = useLocale();
   const [isPending, startTransition] = useTransition();
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [balance, setBalance] = useState<VacationBalance | null>(null);
@@ -34,13 +34,6 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   useEffect(() => {
     getVacationBalance(request.user_id).then(setBalance);
   }, [request.user_id]);
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "long", day: "numeric" },
-    );
-  }
 
   function personName(p: { first_name: string | null; last_name: string | null } | null) {
     if (!p) return "—";

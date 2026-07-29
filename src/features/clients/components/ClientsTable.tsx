@@ -1,35 +1,36 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterField, FilterDropdown } from "@/shared/components/ui/filter-field";
 import { AddClientDialog } from "./AddClientDialog";
 import { EditClientDialog } from "./EditClientDialog";
 import { deleteClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { useClientsStore } from "../hooks/useClientsStore";
 import { CLIENT_TYPES } from "../types";
 import type { Client, ClientType } from "../types";
+import { cn } from "@/shared/utils/cn";
 
 const PAGE_SIZE = 20;
-
-const SELECT_CLASS =
-  "h-8 rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-[12px] text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 appearance-none";
 
 interface Props {
   clients: Client[];
   canMutate: boolean;
   filterType: ClientType | "";
   onFilterType: (v: ClientType | "") => void;
+  highlightId?: number | null;
 }
 
-export function ClientsTable({ clients, canMutate, filterType, onFilterType }: Props) {
+export function ClientsTable({ clients, canMutate, filterType, onFilterType, highlightId }: Props) {
   const t = useTranslations("clients");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const highlightRowRef = useRef<HTMLTableRowElement>(null);
 
   const {
     isAddDialogOpen, editingClient, deletingId,
@@ -38,13 +39,27 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType }: P
     setDeletingId,
   } = useClientsStore();
 
-  const [page, setPage] = useState(1);
+  const highlightIndex = highlightId != null
+    ? clients.findIndex((c) => c.id === highlightId)
+    : -1;
+  const highlightPage = highlightIndex >= 0
+    ? Math.floor(highlightIndex / PAGE_SIZE) + 1
+    : null;
+
+  const [page, setPage] = useState(highlightPage ?? 1);
   const [lastFilterType, setLastFilterType] = useState(filterType);
+  const [lastHighlightId, setLastHighlightId] = useState(highlightId);
   const pageCount = Math.max(1, Math.ceil(clients.length / PAGE_SIZE));
   // Reset to page 1 whenever the filter changes (derived during render, not
   // an effect), then clamp in case the list itself shrank.
   let currentPage = page;
-  if (filterType !== lastFilterType) {
+  if (highlightId !== lastHighlightId) {
+    setLastHighlightId(highlightId);
+    if (highlightPage !== null) {
+      currentPage = highlightPage;
+      setPage(highlightPage);
+    }
+  } else if (filterType !== lastFilterType) {
     setLastFilterType(filterType);
     currentPage = 1;
     setPage(1);
@@ -53,6 +68,11 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType }: P
     setPage(currentPage);
   }
   const pagedClients = clients.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(() => {
+    if (highlightId == null) return;
+    highlightRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightId, currentPage]);
 
   function handleDelete(clientId: number) {
     if (!confirm(t("confirmDelete"))) return;
@@ -80,17 +100,19 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType }: P
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-3">
-          <select
-            value={filterType}
-            onChange={(e) => onFilterType(e.target.value as ClientType | "")}
-            className={SELECT_CLASS}
-          >
-            <option value="">{t("filterAllTypes")}</option>
-            {CLIENT_TYPES.map((ct) => (
-              <option key={ct} value={ct}>{t(`fields.type_${ct}` as Parameters<typeof t>[0])}</option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-end gap-3 border-b border-border px-6 py-3">
+          <FilterField label={t("filters.type")} htmlFor="filter-client-type">
+            <FilterDropdown
+              id="filter-client-type"
+              value={filterType}
+              onChange={(v) => onFilterType(v as ClientType | "")}
+              allLabel={t("filterAllTypes")}
+              options={CLIENT_TYPES.map((ct) => ({
+                value: ct,
+                label: t(`fields.type_${ct}` as Parameters<typeof t>[0]),
+              }))}
+            />
+          </FilterField>
         </div>
 
         <div className="overflow-x-auto">
@@ -116,7 +138,14 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType }: P
                 </tr>
               ) : (
                 pagedClients.map((client) => (
-                  <tr key={client.id} className="group transition-colors hover:bg-veltol-surface/50">
+                  <tr
+                    key={client.id}
+                    ref={client.id === highlightId ? highlightRowRef : undefined}
+                    className={cn(
+                      "group transition-colors hover:bg-veltol-surface/50",
+                      client.id === highlightId && "bg-veltol-tint/60 hover:bg-veltol-tint/60",
+                    )}
+                  >
                     <td className="px-5 py-3.5">
                       <div className="font-medium text-veltol-fg">{client.name}</div>
                     </td>

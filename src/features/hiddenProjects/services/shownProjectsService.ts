@@ -15,6 +15,22 @@ export async function getShownProjectIds(
   return (data ?? []).map((row) => row.project_id as number);
 }
 
+/** Shown project ids ordered oldest-pinned-first, so callers can evict the front to make room. */
+export async function getShownProjectIdsByAge(
+  supabase: SupabaseClient,
+  userId: string,
+  view: HiddenProjectView,
+): Promise<number[]> {
+  const { data, error } = await supabase
+    .from("shown_projects")
+    .select("project_id")
+    .eq("user_id", userId)
+    .eq("view", view)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row) => row.project_id as number);
+}
+
 export async function showProject(
   supabase: SupabaseClient,
   userId: string,

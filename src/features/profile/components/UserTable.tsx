@@ -12,6 +12,7 @@ import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
 import { useProfileStore } from "../hooks/useProfileStore";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Profile, AppRole } from "../types";
 
 const PAGE_SIZE = 20;
@@ -31,10 +32,6 @@ function medicalExpiryState(date: string | null): "expired" | "soon" | "ok" | nu
   if (diff < 0) return "expired";
   if (diff < 30 * 24 * 60 * 60 * 1000) return "soon";
   return "ok";
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
 function initials(p: Profile) {
@@ -191,7 +188,7 @@ export function UserTable({
                     </td>
 
                     <td className="px-6 py-3 font-mono text-[12px] text-veltol-fgDim">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {formatDate(user.created_at)}
                     </td>
 
                     <td className="px-6 py-3">

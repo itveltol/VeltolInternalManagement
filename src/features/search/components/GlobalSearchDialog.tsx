@@ -62,7 +62,7 @@ export function GlobalSearchDialog() {
     if (item.type === "project") {
       router.push(`/${locale}/projects/${item.id}`);
     } else if (item.type === "client") {
-      router.push(`/${locale}/clients`);
+      router.push(`/${locale}/clients?highlight=${item.id}`);
     } else {
       window.open(item.url, "_blank");
     }

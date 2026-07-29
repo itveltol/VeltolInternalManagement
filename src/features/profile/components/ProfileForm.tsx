@@ -8,6 +8,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { updateProfile } from "@/app/[locale]/(app)/profile/actions";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Profile, AppRole } from "../types";
 
 const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success" | "outline"> = {
@@ -79,7 +80,7 @@ export function ProfileForm({ profile }: { profile: Profile | null }) {
                   {t("joined")}
                 </div>
                 <div className="font-mono text-[12px] text-veltol-fgDim">
-                  {new Date(profile.created_at).toLocaleDateString()}
+                  {formatDate(profile.created_at)}
                 </div>
               </div>
             )}

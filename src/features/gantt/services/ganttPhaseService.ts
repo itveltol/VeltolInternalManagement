@@ -1,6 +1,7 @@
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import { resolveStatus } from "@/features/matrice/services/matriceService";
 import type { Project } from "@/features/projects/types";
+import { DAY_MS, toDayMs } from "@/shared/utils/ganttTimeline";
 import {
   GANTT_PHASE_KEYS,
   GANTT_PHASE_DATE_FIELDS,
@@ -23,12 +24,6 @@ export function ganttPhaseCompletionPct(
   if (nonNa.length === 0) return 0;
   const done = nonNa.filter((a) => resolveStatus(cells, projectId, a.id) === "finalizat");
   return Math.round((done.length / nonNa.length) * 100);
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function toDayMs(dateStr: string): number {
-  return new Date(dateStr + "T00:00:00").getTime();
 }
 
 /** Compare actual progress against the elapsed fraction of the estimated window */

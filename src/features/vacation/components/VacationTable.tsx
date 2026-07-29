@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ClipboardCheck, FileCheck2, Pencil, X } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
@@ -14,6 +14,7 @@ import { canEdit } from "../services/vacationService";
 import { RequestVacationDialog } from "./RequestVacationDialog";
 import { ApprovalDialog } from "./ApprovalDialog";
 import { vacationStatusVariant } from "@/shared/utils/status-variant";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { VacationRequest, VacationStatus, VacationBalance } from "../types";
 import type { Profile } from "@/features/profile/types";
 import type { Holiday } from "@/features/holidays/types";
@@ -31,7 +32,6 @@ interface Props {
 
 export function VacationTable({ requests, isAdmin, currentUserId, balance, employees, holidays }: Props) {
   const t = useTranslations("vacation");
-  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
@@ -48,14 +48,6 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
   const currentPage = Math.min(page, pageCount);
   if (currentPage !== page) setPage(currentPage);
   const pagedRequests = requests.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  function formatDate(iso: string | null) {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "2-digit", day: "2-digit" },
-    );
-  }
 
   function personName(p: { first_name: string | null; last_name: string | null } | null) {
     if (!p) return "—";
@@ -124,10 +116,10 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
                   <tr key={req.id} className="group transition-colors hover:bg-veltol-surface/50">
                     <td className="px-5 py-3.5 text-veltol-fg">{personName(req.requester)}</td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
-                      {formatDate(req.start_date)}
+                      {formatDate(req.start_date) || "—"}
                     </td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
-                      {formatDate(req.end_date)}
+                      {formatDate(req.end_date) || "—"}
                     </td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
                       {vacationDays(req.start_date, req.end_date, holidaySet)}
@@ -138,7 +130,7 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
                       </Badge>
                     </td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgMute">
-                      {formatDate(req.created_at)}
+                      {formatDate(req.created_at) || "—"}
                     </td>
                     <td className="px-5 py-3.5 text-[12px] text-veltol-fgDim">
                       {personName(req.approver)}

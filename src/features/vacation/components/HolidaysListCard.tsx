@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Holiday } from "@/features/holidays/types";
 
 interface Props {
@@ -9,14 +10,6 @@ interface Props {
 
 export function HolidaysListCard({ holidays }: Props) {
   const t = useTranslations("vacation");
-  const locale = useLocale();
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString(
-      locale === "hu" ? "hu-HU" : locale === "ro" ? "ro-RO" : "en-GB",
-      { year: "numeric", month: "2-digit", day: "2-digit" },
-    );
-  }
 
   if (holidays.length === 0) return null;
 

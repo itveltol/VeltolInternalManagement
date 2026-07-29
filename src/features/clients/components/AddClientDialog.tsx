@@ -10,7 +10,7 @@ import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
 import { createClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { CLIENT_TYPES } from "../types";
-import type { ClientType, ClientRef } from "../types";
+import type { ClientType } from "../types";
 import { cn } from "@/shared/utils/cn";
 
 const SELECT_CLASS =
@@ -46,7 +46,7 @@ const PERSON_TARGET = ["cnp", "id_series", "id_number", "reg_address", "contact_
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreated?: (client: ClientRef) => void;
+  onCreated?: (client: { id: number; name: string }) => void;
 }
 
 export function AddClientDialog({ open, onClose, onCreated }: Props) {

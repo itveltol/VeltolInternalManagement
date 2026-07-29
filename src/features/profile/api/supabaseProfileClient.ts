@@ -8,15 +8,6 @@ import type {
 } from "./types";
 import type { Profile, AppRole } from "../types";
 
-// Unambiguous charset (no 0/O, 1/l/I) so a temp password can be read aloud or
-// retyped without confusion.
-const TEMP_PASSWORD_CHARS = "23456789ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
-
-function generateTempPassword(length = 12): string {
-  const bytes = crypto.getRandomValues(new Uint32Array(length));
-  return Array.from(bytes, (byte) => TEMP_PASSWORD_CHARS[byte % TEMP_PASSWORD_CHARS.length]).join("");
-}
-
 export const createSupabaseProfileClient = (
   supabase: SupabaseClient,
   adminClient?: SupabaseClient
@@ -53,21 +44,15 @@ export const createSupabaseProfileClient = (
     if (error) throw new Error(error.message);
   },
 
-  async inviteUser({ email }: InviteUserPayload) {
+  async inviteUser({ email, role, redirectTo }: InviteUserPayload) {
     if (!adminClient) throw new Error("Admin client required for inviteUser");
-    // Create the account with a temp password instead of emailing a one-time
-    // link: invite links are single-use tokens that get silently consumed by
-    // chat-app link previews (WhatsApp/Slack/Teams prefetch URLs to build a
-    // preview card), so the real recipient's click fails with an already-used
-    // token. A temp password has nothing for a prefetch to consume.
-    const tempPassword = generateTempPassword();
-    const { data, error } = await adminClient.auth.admin.createUser({
+    const { data, error } = await adminClient.auth.admin.generateLink({
+      type: "invite",
       email,
-      password: tempPassword,
-      email_confirm: true,
+      options: { redirectTo },
     });
     if (error) throw error;
-    return { userId: data.user.id, tempPassword };
+    return { userId: data.user.id, actionLink: data.properties.action_link };
   },
 
   async upsertProfileRow(userId, email, role: AppRole) {

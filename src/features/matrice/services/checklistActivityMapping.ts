@@ -84,6 +84,16 @@ export function buildDerivedActivityIds(activities: Activity[]): Set<number> {
   return ids;
 }
 
+/** Resolves the checklist item_number linked to a Matrice activity id, given the current activity catalog. */
+export function resolveItemNumberForActivity(activityId: number, activities: Activity[]): number | null {
+  const activity = activities.find((a) => a.id === activityId);
+  if (!activity) return null;
+  const nameToItem = new Map(
+    Object.entries(CHECKLIST_ITEM_TO_ACTIVITY_NAME).map(([item, name]) => [name, Number(item)]),
+  );
+  return nameToItem.get(activity.name) ?? null;
+}
+
 function normalizeLabel(s: string): string {
   return s
     .normalize("NFD")
