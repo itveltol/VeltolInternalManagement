@@ -10,7 +10,6 @@ import {
   activityRowPct,
   isPhaseEnabled,
 } from "../services/matriceService";
-import { buildDerivedActivityIds } from "../services/checklistActivityMapping";
 import { MatriceCell } from "./MatriceCell";
 import { cn } from "@/shared/utils/cn";
 
@@ -109,8 +108,6 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
     }
     return map;
   }, [activities]);
-
-  const derivedActivityIds = useMemo(() => buildDerivedActivityIds(activities), [activities]);
 
   if (projects.length === 0) {
     return (
@@ -252,12 +249,14 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                         {projects.map((p) => {
                           const status = getStatus(p.id, activity.id);
                           const enabled = isPhaseEnabled(p, activity.phase_no);
-                          const derived = derivedActivityIds.has(activity.id);
+                          const appliesToProject =
+                            activity.applies_to === null ||
+                            (p.project_type !== null && activity.applies_to.includes(p.project_type));
                           return (
                             <td
                               key={p.id}
                               className="px-1.5 py-1"
-                              title={enabled && derived ? t("grid.derivedFromChecklist") : undefined}
+                              title={enabled && !appliesToProject ? t("grid.notApplicable") : undefined}
                             >
                               {enabled ? (
                                 <MatriceCell
@@ -271,7 +270,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   onOpenDocuments={onOpenDocuments}
                                   documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
                                   pending={pendingCells?.has(`${p.id}:${activity.id}`)}
-                                  disabled={derived}
+                                  disabled={!appliesToProject}
                                   progressManual={p.progress_pct_manual}
                                   onConfirmAutoProgress={onConfirmAutoProgress}
                                 />

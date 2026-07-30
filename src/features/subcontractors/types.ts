@@ -3,9 +3,6 @@ export interface Subcontractor {
   name: string;
   contact_person: string | null;
   phone: string | null;
-  price_eur: number | null;
-  price_lei: number | null;
-  deadline: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -14,4 +11,38 @@ export interface Subcontractor {
 export interface SubcontractorRef {
   id: number;
   name: string;
+}
+
+export interface ProjectSubcontractorAssignment {
+  id: number;
+  project_id: number;
+  subcontractor_id: number;
+  price_eur: number | null;
+  price_lei: number | null;
+  start_date: string | null;
+  deadline: string | null;
+  notes: string | null;
+  is_current: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubcontractorAssignmentProjectRef {
+  id: number;
+  name: string;
+  current_phase: string;
+}
+
+export interface SubcontractorProjectAssignment {
+  id: number;
+  price_eur: number | null;
+  price_lei: number | null;
+  start_date: string | null;
+  deadline: string | null;
+  is_current: boolean;
+  project: SubcontractorAssignmentProjectRef;
+}
+
+export interface SubcontractorWithProjects extends Subcontractor {
+  assignments: SubcontractorProjectAssignment[];
 }

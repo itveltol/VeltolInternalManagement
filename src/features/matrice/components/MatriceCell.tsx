@@ -24,6 +24,7 @@ interface Props {
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   documentCount?: number;
+  /** True when this activity doesn't apply to the project's type — status can't be hand-edited. */
   disabled?: boolean;
   /** True while this cell's own status change is saving. */
   pending?: boolean;

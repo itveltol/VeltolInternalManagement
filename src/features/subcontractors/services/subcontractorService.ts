@@ -1,7 +1,7 @@
-import type { SubcontractorsApiClient, CreateSubcontractorPayload } from "../api/types";
-import type { Subcontractor, SubcontractorRef } from "../types";
+import type { SubcontractorsApiClient, CreateSubcontractorPayload, UpsertAssignmentPayload } from "../api/types";
+import type { Subcontractor, SubcontractorRef, SubcontractorWithProjects, ProjectSubcontractorAssignment } from "../types";
 
-export async function getSubcontractors(api: SubcontractorsApiClient): Promise<Subcontractor[]> {
+export async function getSubcontractors(api: SubcontractorsApiClient): Promise<SubcontractorWithProjects[]> {
   return api.getSubcontractors();
 }
 
@@ -23,4 +23,12 @@ export async function updateSubcontractor(api: SubcontractorsApiClient, id: numb
 
 export async function deleteSubcontractor(api: SubcontractorsApiClient, id: number): Promise<void> {
   return api.deleteSubcontractor(id);
+}
+
+export async function getCurrentAssignment(api: SubcontractorsApiClient, projectId: number): Promise<ProjectSubcontractorAssignment | null> {
+  return api.getCurrentAssignment(projectId);
+}
+
+export async function upsertCurrentAssignment(api: SubcontractorsApiClient, projectId: number, payload: UpsertAssignmentPayload): Promise<void> {
+  return api.upsertCurrentAssignment(projectId, payload);
 }

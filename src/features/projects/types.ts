@@ -41,7 +41,8 @@ export interface Project {
   team_id: number | null;
   team?: { id: number; name: string } | null;
   execution_mode: ExecutionMode;
-  subcontractor_id: number | null;
+  /** Id of the project's current project_subcontractors assignment row, if any. */
+  subcontractor_assignment_id: number | null;
   subcontractor?: {
     id: number;
     name: string;
@@ -49,6 +50,7 @@ export interface Project {
     phone: string | null;
     price_eur: number | null;
     price_lei: number | null;
+    start_date: string | null;
     deadline: string | null;
   } | null;
   current_phase: ProjectPhase;
@@ -126,3 +128,12 @@ export const PROJECT_TYPES: ProjectType[] = [
   "EMS",
   "SCADA",
 ];
+
+/** Project types that include a BESS (battery) scope of work — single
+ * source of truth for BESS-conditional gating (checklist rows, Matrice
+ * auto-N/A). Do not duplicate this list elsewhere. */
+export const BESS_PROJECT_TYPES: ProjectType[] = ["CEF+BESS", "BESS", "BESS_CEF"];
+
+export function isBessProjectType(type: string | null | undefined): boolean {
+  return type != null && (BESS_PROJECT_TYPES as string[]).includes(type);
+}

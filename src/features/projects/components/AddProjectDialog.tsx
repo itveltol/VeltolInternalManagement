@@ -375,25 +375,23 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   </div>
                 </div>
 
-                {executionMode === "internal" && (
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
-                    <div className="flex gap-6">
-                      {CONTRACT_TYPES.map((c) => (
-                        <label key={c} className="flex cursor-pointer items-center gap-2">
-                          <input
-                            type="checkbox"
-                            name={`contract_type_${c}`}
-                            value="true"
-                            defaultChecked
-                            className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                          />
-                          <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
-                        </label>
-                      ))}
-                    </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
+                  <div className="flex gap-6">
+                    {CONTRACT_TYPES.map((c) => (
+                      <label key={c} className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          name={`contract_type_${c}`}
+                          value="true"
+                          defaultChecked
+                          className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                        />
+                        <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                      </label>
+                    ))}
                   </div>
-                )}
+                </div>
 
                 {fields.project_category === "industrial" && (
                   <div className="space-y-1.5">
@@ -432,24 +430,48 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                 </div>
 
                 {executionMode === "subcontracted" ? (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractor")}</Label>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddSubcontractor(true)}
-                        className="text-[11px] font-medium text-veltol-accent hover:underline"
-                      >
-                        {t("newSubcontractor")}
-                      </button>
+                  <>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractor")}</Label>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddSubcontractor(true)}
+                          className="text-[11px] font-medium text-veltol-accent hover:underline"
+                        >
+                          {t("newSubcontractor")}
+                        </button>
+                      </div>
+                      <SubcontractorCombobox
+                        name="subcontractor_id"
+                        subcontractors={localSubcontractorRefs}
+                        value={selectedSubcontractor}
+                        onValueChange={setSelectedSubcontractor}
+                      />
                     </div>
-                    <SubcontractorCombobox
-                      name="subcontractor_id"
-                      subcontractors={localSubcontractorRefs}
-                      value={selectedSubcontractor}
-                      onValueChange={setSelectedSubcontractor}
-                    />
-                  </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
+                        <Input name="assignment_price_eur" type="number" min="0" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPriceLei")}</Label>
+                        <Input name="assignment_price_lei" type="number" min="0" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorStartDate")}</Label>
+                        <input name="assignment_start_date" type="date" className={SELECT_CLASS} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorDeadline")}</Label>
+                        <input name="assignment_deadline" type="date" className={SELECT_CLASS} />
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

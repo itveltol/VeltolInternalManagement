@@ -15,7 +15,6 @@ export interface CreateProjectPayload {
   manager_id: string | null;
   client_id: number | null;
   execution_mode: ExecutionMode;
-  subcontractor_id: number | null;
   current_phase: string;
   progress_pct: number;
   contract_number: string | null;

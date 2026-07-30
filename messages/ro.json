@@ -143,7 +143,7 @@
       "contractDate": "Data contract",
       "contractType": "Tipul contractului",
       "notes": "Note",
-      "lastModified": "Ultima modificare"
+      "lastModified": "Modificat"
     },
     "fields": {
       "name": "Numele proiectului",
@@ -166,6 +166,7 @@
       "subcontractorPhone": "Telefon",
       "subcontractorPrice": "Preț",
       "subcontractorPriceLei": "Preț (Lei)",
+      "subcontractorStartDate": "Data de început",
       "subcontractorDeadline": "Termen",
       "phase": "Faza curentă",
       "progress": "Progres (%)",
@@ -376,7 +377,7 @@
       "noProjects": "Selectați cel puțin un proiect.",
       "loading": "Se actualizează...",
       "notContracted": "Nu este acoperit de tipul de contract al proiectului",
-      "derivedFromChecklist": "Determinat de progresul din checklist — actualizați-l în checklist-ul proiectului",
+      "notApplicable": "Nu se aplică tipului acestui proiect",
       "expiresOn": "Expiră {date}"
     },
     "status": {
@@ -579,31 +580,30 @@
     "addSubcontractor": "Adaugă subcontractant",
     "editSubcontractor": "Editează",
     "deleteSubcontractor": "Șterge",
-    "confirmDelete": "Ștergeți acest subcontractant? Proiectele asociate vor pierde legătura cu subcontractantul.",
+    "confirmDelete": "Ștergeți acest subcontractant?",
     "subcontractorSaved": "Subcontractant salvat.",
     "subcontractorCreated": "Subcontractant creat.",
     "subcontractorDeleted": "Subcontractant șters.",
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "errorHasProjectHistory": "Acest subcontractant are istoric de proiecte și nu poate fi șters.",
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Salvare...",
     "emptyState": "Nu există subcontractanți. Adăugați primul subcontractant.",
+    "noProjects": "Niciun proiect încă",
+    "current": "Curent",
+    "past": "Anterior",
     "columns": {
       "name": "Nume",
       "contactPerson": "Persoană de contact",
       "phone": "Telefon",
-      "price": "Preț",
-      "priceLei": "Preț (Lei)",
-      "deadline": "Termen"
+      "projects": "Proiecte"
     },
     "fields": {
       "name": "Nume",
       "contactPerson": "Persoană de contact",
       "phone": "Telefon",
-      "priceEur": "Preț (€)",
-      "priceLei": "Preț (Lei)",
-      "deadline": "Termen",
       "notes": "Note"
     }
   },

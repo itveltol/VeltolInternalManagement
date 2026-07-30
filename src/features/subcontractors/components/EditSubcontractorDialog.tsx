@@ -16,9 +16,6 @@ interface SubcontractorFields {
   name: string;
   contact_person: string;
   phone: string;
-  price_eur: string;
-  price_lei: string;
-  deadline: string;
   notes: string;
 }
 
@@ -27,9 +24,6 @@ function seedFields(s: Subcontractor): SubcontractorFields {
     name: s.name,
     contact_person: s.contact_person ?? "",
     phone: s.phone ?? "",
-    price_eur: s.price_eur != null ? String(s.price_eur) : "",
-    price_lei: s.price_lei != null ? String(s.price_lei) : "",
-    deadline: s.deadline ?? "",
     notes: s.notes ?? "",
   };
 }
@@ -85,24 +79,6 @@ export function EditSubcontractorDialog({ subcontractor, open, onClose }: Props)
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phone")}</Label>
                 <Input name="phone" value={fields.phone} onChange={setField("phone")} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.priceEur")}</Label>
-                <Input name="price_eur" type="number" min="0" value={fields.price_eur} onChange={setField("price_eur")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.priceLei")}</Label>
-                <Input name="price_lei" type="number" min="0" value={fields.price_lei} onChange={setField("price_lei")} />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
-                <Input name="deadline" type="date" value={fields.deadline} onChange={setField("deadline")} />
               </div>
             </div>
 

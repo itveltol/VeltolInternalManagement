@@ -143,7 +143,7 @@
       "contractDate": "Szerz. dátum",
       "contractType": "Szerződés típusa",
       "notes": "Megjegyzés",
-      "lastModified": "Utoljára módosítva"
+      "lastModified": "Módosítva"
     },
     "fields": {
       "name": "Projekt neve",
@@ -166,6 +166,7 @@
       "subcontractorPhone": "Telefonszám",
       "subcontractorPrice": "Ár",
       "subcontractorPriceLei": "Ár (Lej)",
+      "subcontractorStartDate": "Kezdés dátuma",
       "subcontractorDeadline": "Határidő",
       "phase": "Jelenlegi fázis",
       "progress": "Haladás (%)",
@@ -376,7 +377,7 @@
       "noProjects": "Válasszon ki legalább egy projektet.",
       "loading": "Frissítés...",
       "notContracted": "Nem része a projekt szerződéstípusának",
-      "derivedFromChecklist": "A checklist alapján automatikusan frissül — módosítsd a projekt checklist-jében",
+      "notApplicable": "Nem alkalmazható a projekt típusára",
       "expiresOn": "Lejár: {date}"
     },
     "status": {
@@ -579,31 +580,30 @@
     "addSubcontractor": "Alvállalkozó hozzáadása",
     "editSubcontractor": "Szerkesztés",
     "deleteSubcontractor": "Törlés",
-    "confirmDelete": "Törli ezt az alvállalkozót? A kapcsolódó projektek elveszítik az alvállalkozói kapcsolatot.",
+    "confirmDelete": "Törli ezt az alvállalkozót?",
     "subcontractorSaved": "Alvállalkozó mentve.",
     "subcontractorCreated": "Alvállalkozó létrehozva.",
     "subcontractorDeleted": "Alvállalkozó törölve.",
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "errorHasProjectHistory": "Ennek az alvállalkozónak projekt előzménye van, nem törölhető.",
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés...",
     "emptyState": "Még nincsenek alvállalkozók. Adja hozzá az elsőt.",
+    "noProjects": "Még nincs projekt",
+    "current": "Jelenlegi",
+    "past": "Korábbi",
     "columns": {
       "name": "Név",
       "contactPerson": "Kapcsolattartó",
       "phone": "Telefonszám",
-      "price": "Ár",
-      "priceLei": "Ár (Lej)",
-      "deadline": "Határidő"
+      "projects": "Projektek"
     },
     "fields": {
       "name": "Név",
       "contactPerson": "Kapcsolattartó",
       "phone": "Telefonszám",
-      "priceEur": "Ár (€)",
-      "priceLei": "Ár (Lej)",
-      "deadline": "Határidő",
       "notes": "Megjegyzés"
     }
   },

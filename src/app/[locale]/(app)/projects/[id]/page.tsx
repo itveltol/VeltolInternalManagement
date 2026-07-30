@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getMaintenanceChecks } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
@@ -11,6 +11,7 @@ import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
 import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
 import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
+import { isBessProjectType } from "@/features/projects/types";
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
@@ -44,8 +45,9 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
 
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
+  const hasBess = isBessProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, ganttMatriceData, maintenanceChecks] =
+  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -53,7 +55,8 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       canMutate ? getProjectManagers() : Promise.resolve([]),
       canMutate ? getClientRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorRefs() : Promise.resolve([]),
-      isGanttTab ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [] }),
+      canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
+      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [] }),
       hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
     ]);
   const { activities, cells } = ganttMatriceData;
@@ -61,7 +64,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
 
   const canAssignTeam = role === "admin" || project.manager_id === user?.id;
 
-  const rows = mergeChecklistRows(records);
+  const rows = mergeChecklistRows(records, hasBess);
   const sections = computeSectionSummaries(rows);
 
   const t = await getTranslations("checklist");
@@ -90,9 +93,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         <span className="text-veltol-fgDim">{project.name}</span>
         <span>/</span>
         <span className="text-veltol-accent">
-          {isSubcontracted
-            ? tProjects("subcontracted")
-            : isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : t("breadcrumbChecklist")}
+          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : t("breadcrumbChecklist")}
         </span>
       </nav>
 
@@ -106,17 +107,14 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             {project.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {isSubcontracted ? (
+            <Badge variant={phaseVariant(project.current_phase)}>
+              {tPhase(project.current_phase)}
+            </Badge>
+            <Badge variant={projectStatusVariant(project.status)}>
+              {tStatus(project.status)}
+            </Badge>
+            {isSubcontracted && (
               <Badge variant="secondary">{tProjects("subcontracted")}</Badge>
-            ) : (
-              <>
-                <Badge variant={phaseVariant(project.current_phase)}>
-                  {tPhase(project.current_phase)}
-                </Badge>
-                <Badge variant={projectStatusVariant(project.status)}>
-                  {tStatus(project.status)}
-                </Badge>
-              </>
             )}
             {project.county && (
               <span className="font-mono text-[11px] text-veltol-fgMute">
@@ -163,87 +161,86 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         managers={managers}
         clientRefs={clientRefs}
         subcontractorRefs={subcontractorRefs}
+        currentAssignment={currentAssignment}
         teams={teams}
         canAssignTeam={canAssignTeam}
       />
 
-      {!isSubcontracted && (
-        <>
-          {/* Tab bar */}
-          <div className="flex gap-1 border-b border-border">
-            {[
-              { key: "checklist", label: tDocs("tab.checklist"), href: `/projects/${projectId}` },
-              { key: "gantt", label: t("gantt.tabLabel"), href: `/projects/${projectId}?tab=gantt` },
-              { key: "documents", label: tDocs("tab.documents"), href: `/projects/${projectId}?tab=documents` },
-              ...(hasMaintenance
-                ? [{ key: "maintenance", label: tMaintenance("tabLabel"), href: `/projects/${projectId}?tab=maintenance` }]
-                : []),
-            ].map(({ key, label, href }) => {
-              const active = key === "documents" ? isDocumentsTab : key === "gantt" ? isGanttTab : key === "maintenance" ? isMaintenanceTab : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab);
-              return (
-                <Link
-                  key={key}
-                  href={href}
-                  className={
-                    active
-                      ? "rounded-t-md border border-b-0 border-veltol-accent/25 bg-veltol-accent/10 px-4 py-2 text-[13px] font-semibold text-veltol-accent"
-                      : "px-4 py-2 text-[13px] text-veltol-fgMute transition-colors hover:text-veltol-fgDim"
-                  }
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
+      {/* Tab bar */}
+      <div className="flex gap-1 border-b border-border">
+          {[
+            ...(isSubcontracted
+              ? []
+              : [{ key: "checklist", label: tDocs("tab.checklist"), href: `/projects/${projectId}` }]),
+            { key: "gantt", label: t("gantt.tabLabel"), href: isSubcontracted ? `/projects/${projectId}` : `/projects/${projectId}?tab=gantt` },
+            { key: "documents", label: tDocs("tab.documents"), href: `/projects/${projectId}?tab=documents` },
+            ...(hasMaintenance
+              ? [{ key: "maintenance", label: tMaintenance("tabLabel"), href: `/projects/${projectId}?tab=maintenance` }]
+              : []),
+          ].map(({ key, label, href }) => {
+            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab);
+            return (
+              <Link
+                key={key}
+                href={href}
+                className={
+                  active
+                    ? "rounded-t-md border border-b-0 border-veltol-accent/25 bg-veltol-accent/10 px-4 py-2 text-[13px] font-semibold text-veltol-accent"
+                    : "px-4 py-2 text-[13px] text-veltol-fgMute transition-colors hover:text-veltol-fgDim"
+                }
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
 
-          {isDocumentsTab ? (
-            <ProjectDocumentsTab
-              documents={projectDocuments}
-              project={project}
-              canMutate={canMutate}
-            />
-          ) : isMaintenanceTab && hasMaintenance ? (
-            <MaintenanceShell
-              projectId={project.id}
-              checks={maintenanceChecks}
-              canMutate={canMutate}
-              todayMs={todayMs}
-            />
-          ) : isGanttTab ? (
-            <ProjectPhaseGanttShell
-              project={project}
-              initialActivities={activities}
-              initialCells={cells}
-              todayMs={todayMs}
-              canMutate={canMutate}
-            />
-          ) : (
-            <>
-              {/* Section summary strip */}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {sections.map((s) => (
-                  <div key={s.phase} className="rounded-lg border border-border bg-card px-3 py-2.5">
-                    <div className="text-[11px] font-medium text-veltol-fgMute">
-                      {t(`phase.${s.phase}`)}
-                    </div>
-                    <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-veltol-surface">
-                      <div
-                        className="h-full rounded-full bg-veltol-accent transition-all duration-700"
-                        style={{ width: `${s.avgPct}%` }}
-                      />
-                    </div>
-                    <div className="mt-1 font-mono tabular-nums text-[11px] text-veltol-fgDim">
-                      {Math.round(s.avgPct)}%
-                    </div>
+        {isDocumentsTab ? (
+          <ProjectDocumentsTab
+            documents={projectDocuments}
+            project={project}
+            canMutate={canMutate}
+          />
+        ) : isMaintenanceTab && hasMaintenance ? (
+          <MaintenanceShell
+            projectId={project.id}
+            checks={maintenanceChecks}
+            canMutate={canMutate}
+            todayMs={todayMs}
+          />
+        ) : isGanttTab || isSubcontracted ? (
+          <ProjectPhaseGanttShell
+            project={project}
+            initialActivities={activities}
+            initialCells={cells}
+            todayMs={todayMs}
+            canMutate={canMutate}
+          />
+        ) : (
+          <>
+            {/* Section summary strip */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {sections.map((s) => (
+                <div key={s.phase} className="rounded-lg border border-border bg-card px-3 py-2.5">
+                  <div className="text-[11px] font-medium text-veltol-fgMute">
+                    {t(`phase.${s.phase}`)}
                   </div>
-                ))}
-              </div>
+                  <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-veltol-surface">
+                    <div
+                      className="h-full rounded-full bg-veltol-accent transition-all duration-700"
+                      style={{ width: `${s.avgPct}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 font-mono tabular-nums text-[11px] text-veltol-fgDim">
+                    {Math.round(s.avgPct)}%
+                  </div>
+                </div>
+              ))}
+            </div>
 
-              <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} />
-            </>
-          )}
-        </>
-      )}
+            <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} />
+          </>
+        )}
     </div>
   );
 }

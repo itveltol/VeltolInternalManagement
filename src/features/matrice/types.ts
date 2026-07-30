@@ -1,4 +1,6 @@
-import type { ContractType } from "@/features/projects/types";
+import type { ContractType, ProjectType } from "@/features/projects/types";
+
+export type { ProjectType };
 
 export type ActivityStatus =
   | 'finalizat'
@@ -7,12 +9,6 @@ export type ActivityStatus =
   | 'blocat'
   | 'neinceput'
   | 'na';
-
-export type ProjectType =
-  | 'CEF'
-  | 'CEF cu BESS'
-  | 'BESS in CEF existent'
-  | 'BESS Stand-alone';
 
 export interface Activity {
   id: number;

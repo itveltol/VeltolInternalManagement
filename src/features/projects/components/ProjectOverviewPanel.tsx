@@ -11,7 +11,7 @@ import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-varian
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
-import type { SubcontractorRef } from "@/features/subcontractors/types";
+import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import type { Team } from "@/features/teams/types";
 
 const LocationPickerMap = dynamic(
@@ -25,11 +25,12 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
+  currentAssignment: ProjectSubcontractorAssignment | null;
   teams: Team[];
   canAssignTeam: boolean;
 }
 
-export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, subcontractorRefs, teams, canAssignTeam }: Props) {
+export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, subcontractorRefs, currentAssignment, teams, canAssignTeam }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -54,50 +55,39 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
 
   const isSubcontracted = project.execution_mode === "subcontracted";
 
-  const fields: Array<{ label: string; value: React.ReactNode }> = isSubcontracted
-    ? [
-        { label: t("fields.projectCategory"), value: tCategory(project.project_category) },
-        ...(project.project_type ? [{ label: t("fields.projectType"), value: tType(project.project_type as Parameters<typeof tType>[0]) }] : []),
-        { label: t("fields.county"), value: project.county ?? "—" },
-        { label: t("fields.siteLocation"), value: project.site_location ?? "—" },
-        { label: t("fields.client"), value: project.client?.name ?? "—" },
-      ]
-    : [
-        { label: t("fields.projectCategory"), value: tCategory(project.project_category) },
-        ...(project.project_type ? [{ label: t("fields.projectType"), value: tType(project.project_type as Parameters<typeof tType>[0]) }] : []),
-        { label: t("fields.county"), value: project.county ?? "—" },
-        { label: t("fields.siteLocation"), value: project.site_location ?? "—" },
-        { label: t("fields.mwSolar"), value: formatMw(project.mw_solar) },
-        { label: t("fields.mwBess"), value: formatMw(project.mw_bess) },
-        { label: t("fields.client"), value: project.client?.name ?? "—" },
-        { label: t("fields.manager"), value: managerName },
-        { label: t("fields.team"), value: project.team?.name ?? "—" },
-        {
-          label: t("fields.contractType"),
-          value: project.contract_type.length > 0
-            ? project.contract_type.map((c) => tContractType(c)).join(", ")
-            : "—",
-        },
-        { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
-        { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
-        { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
-        { label: t("fields.valueEur"), value: formatValue(project.value_eur, "€") },
-        { label: t("fields.valueLei"), value: formatValue(project.value_lei, "Lei") },
-        { label: t("fields.progress"), value: `${project.progress_pct}%` },
-      ];
+  const fields: Array<{ label: string; value: React.ReactNode }> = [
+    { label: t("fields.projectCategory"), value: tCategory(project.project_category) },
+    ...(project.project_type ? [{ label: t("fields.projectType"), value: tType(project.project_type as Parameters<typeof tType>[0]) }] : []),
+    { label: t("fields.county"), value: project.county ?? "—" },
+    { label: t("fields.siteLocation"), value: project.site_location ?? "—" },
+    { label: t("fields.mwSolar"), value: formatMw(project.mw_solar) },
+    { label: t("fields.mwBess"), value: formatMw(project.mw_bess) },
+    { label: t("fields.client"), value: project.client?.name ?? "—" },
+    { label: t("fields.manager"), value: managerName },
+    ...(isSubcontracted ? [] : [{ label: t("fields.team"), value: project.team?.name ?? "—" }]),
+    {
+      label: t("fields.contractType"),
+      value: project.contract_type.length > 0
+        ? project.contract_type.map((c) => tContractType(c)).join(", ")
+        : "—",
+    },
+    ...(isSubcontracted ? [] : [
+      { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
+      { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
+      { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
+      { label: t("fields.valueEur"), value: formatValue(project.value_eur, "€") },
+      { label: t("fields.valueLei"), value: formatValue(project.value_lei, "Lei") },
+    ]),
+    { label: t("fields.progress"), value: `${project.progress_pct}%` },
+  ];
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          {isSubcontracted ? (
-            <Badge variant="secondary">{t("subcontracted")}</Badge>
-          ) : (
-            <>
-              <Badge variant={phaseVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
-              <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
-            </>
-          )}
+          <Badge variant={phaseVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
+          <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
+          {isSubcontracted && <Badge variant="secondary">{t("subcontracted")}</Badge>}
         </div>
         {canMutate && (
           <Button
@@ -150,6 +140,10 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
               <div className="mt-0.5 text-sm text-veltol-fg">{formatValue(project.subcontractor?.price_lei ?? null, "Lei")}</div>
             </div>
             <div>
+              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorStartDate")}</div>
+              <div className="mt-0.5 text-sm text-veltol-fg">{formatDate(project.subcontractor?.start_date ?? null) || "—"}</div>
+            </div>
+            <div>
               <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorDeadline")}</div>
               <div className="mt-0.5 text-sm text-veltol-fg">{formatDate(project.subcontractor?.deadline ?? null) || "—"}</div>
             </div>
@@ -179,6 +173,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
           managers={managers}
           clientRefs={clientRefs}
           subcontractorRefs={subcontractorRefs}
+          currentAssignment={currentAssignment}
           teams={teams}
           canAssignTeam={canAssignTeam}
           onClose={() => setIsEditOpen(false)}

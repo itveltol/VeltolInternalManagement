@@ -20,7 +20,7 @@ import {
 import type { Project, ProjectManager, ProjectCategory, ExecutionMode } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import { ClientCombobox } from "@/features/clients/components/ClientCombobox";
-import type { SubcontractorRef } from "@/features/subcontractors/types";
+import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { SubcontractorCombobox } from "@/features/subcontractors/components/SubcontractorCombobox";
 import type { Team } from "@/features/teams/types";
@@ -42,6 +42,7 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
+  currentAssignment: ProjectSubcontractorAssignment | null;
   teams: Team[];
   canAssignTeam: boolean;
   onClose: () => void;
@@ -52,6 +53,7 @@ export function EditProjectDialog(props: Props) {
   // lands while the dialog is still open (e.g. right after submit) can't
   // change already-uncontrolled fields' defaultValue mid-flight.
   const [project] = useState(props.project);
+  const [currentAssignment] = useState(props.currentAssignment);
   const { open, managers, clientRefs, subcontractorRefs, teams, canAssignTeam, onClose } = props;
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
@@ -82,7 +84,7 @@ export function EditProjectDialog(props: Props) {
     clientRefs.find((c) => c.id === project.client_id) ?? null,
   );
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<SubcontractorRef | null>(
-    subcontractorRefs.find((s) => s.id === project.subcontractor_id) ?? null,
+    subcontractorRefs.find((s) => s.id === currentAssignment?.subcontractor_id) ?? null,
   );
 
   const handleMapChange = useCallback(async (lat: number, lng: number) => {
@@ -229,25 +231,23 @@ export function EditProjectDialog(props: Props) {
               </div>
             </div>
 
-            {executionMode === "internal" && (
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
-                <div className="flex gap-6">
-                  {CONTRACT_TYPES.map((c) => (
-                    <label key={c} className="flex cursor-pointer items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name={`contract_type_${c}`}
-                        value="true"
-                        defaultChecked={project.contract_type.includes(c)}
-                        className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                      />
-                      <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
-                    </label>
-                  ))}
-                </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractType")}</Label>
+              <div className="flex gap-6">
+                {CONTRACT_TYPES.map((c) => (
+                  <label key={c} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name={`contract_type_${c}`}
+                      value="true"
+                      defaultChecked={project.contract_type.includes(c)}
+                      className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                    />
+                    <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                  </label>
+                ))}
               </div>
-            )}
+            </div>
 
             {category === "industrial" && (
               <div className="space-y-1.5">
@@ -272,24 +272,48 @@ export function EditProjectDialog(props: Props) {
             </div>
 
             {executionMode === "subcontracted" ? (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractor")}</Label>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddSubcontractor(true)}
-                    className="text-[11px] font-medium text-veltol-accent hover:underline"
-                  >
-                    {t("newSubcontractor")}
-                  </button>
+              <>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractor")}</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddSubcontractor(true)}
+                      className="text-[11px] font-medium text-veltol-accent hover:underline"
+                    >
+                      {t("newSubcontractor")}
+                    </button>
+                  </div>
+                  <SubcontractorCombobox
+                    name="subcontractor_id"
+                    subcontractors={localSubcontractorRefs}
+                    value={selectedSubcontractor}
+                    onValueChange={setSelectedSubcontractor}
+                  />
                 </div>
-                <SubcontractorCombobox
-                  name="subcontractor_id"
-                  subcontractors={localSubcontractorRefs}
-                  value={selectedSubcontractor}
-                  onValueChange={setSelectedSubcontractor}
-                />
-              </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
+                    <Input name="assignment_price_eur" type="number" min="0" defaultValue={currentAssignment?.price_eur ?? ""} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPriceLei")}</Label>
+                    <Input name="assignment_price_lei" type="number" min="0" defaultValue={currentAssignment?.price_lei ?? ""} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorStartDate")}</Label>
+                    <input name="assignment_start_date" type="date" defaultValue={currentAssignment?.start_date ?? ""} className={SELECT_CLASS} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorDeadline")}</Label>
+                    <input name="assignment_deadline" type="date" defaultValue={currentAssignment?.deadline ?? ""} className={SELECT_CLASS} />
+                  </div>
+                </div>
+              </>
             ) : (
               <>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
