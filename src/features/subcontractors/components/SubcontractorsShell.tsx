@@ -1,10 +1,10 @@
 "use client";
 
 import { SubcontractorsTable } from "./SubcontractorsTable";
-import type { Subcontractor } from "../types";
+import type { SubcontractorWithProjects } from "../types";
 
 interface Props {
-  subcontractors: Subcontractor[];
+  subcontractors: SubcontractorWithProjects[];
   canMutate: boolean;
 }
 

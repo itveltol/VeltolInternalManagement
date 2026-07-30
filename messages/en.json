@@ -143,7 +143,7 @@
       "contractDate": "Contract date",
       "contractType": "Contract type",
       "notes": "Notes",
-      "lastModified": "Last modified"
+      "lastModified": "Modified"
     },
     "fields": {
       "name": "Project name",
@@ -166,6 +166,7 @@
       "subcontractorPhone": "Phone",
       "subcontractorPrice": "Price",
       "subcontractorPriceLei": "Price (Lei)",
+      "subcontractorStartDate": "Start date",
       "subcontractorDeadline": "Deadline",
       "phase": "Current phase",
       "progress": "Progress (%)",
@@ -376,7 +377,7 @@
       "noProjects": "Select at least one project.",
       "loading": "Refreshing...",
       "notContracted": "Not covered by this project's contract type",
-      "derivedFromChecklist": "Driven by checklist progress — update it in the project's checklist",
+      "notApplicable": "Not applicable to this project's type",
       "expiresOn": "Expires {date}"
     },
     "status": {
@@ -579,31 +580,30 @@
     "addSubcontractor": "Add subcontractor",
     "editSubcontractor": "Edit",
     "deleteSubcontractor": "Delete",
-    "confirmDelete": "Delete this subcontractor? Associated projects will lose their subcontractor link.",
+    "confirmDelete": "Delete this subcontractor?",
     "subcontractorSaved": "Subcontractor saved.",
     "subcontractorCreated": "Subcontractor created.",
     "subcontractorDeleted": "Subcontractor deleted.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorHasProjectHistory": "This subcontractor has project history and can't be deleted.",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
     "emptyState": "No subcontractors yet. Add your first subcontractor.",
+    "noProjects": "No projects yet",
+    "current": "Current",
+    "past": "Past",
     "columns": {
       "name": "Name",
       "contactPerson": "Contact person",
       "phone": "Phone",
-      "price": "Price",
-      "priceLei": "Price (Lei)",
-      "deadline": "Deadline"
+      "projects": "Projects"
     },
     "fields": {
       "name": "Name",
       "contactPerson": "Contact person",
       "phone": "Phone",
-      "priceEur": "Price (€)",
-      "priceLei": "Price (Lei)",
-      "deadline": "Deadline",
       "notes": "Notes"
     }
   },

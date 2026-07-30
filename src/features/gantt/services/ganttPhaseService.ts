@@ -72,8 +72,15 @@ export function buildProjectGanttRows(
     const segments: GanttPhaseSegment[] = GANTT_PHASE_KEYS.map((key) => {
       const pct = ganttPhaseCompletionPct(activities, cells, project.id, GANTT_PHASE_MATRICE_RANGE[key]);
       const fields = GANTT_PHASE_DATE_FIELDS[key];
-      const startDate = (project[fields.start] as string | null) ?? null;
-      const endDate = (project[fields.end] as string | null) ?? null;
+      const isSubcontractedExecution = key === "execution" && project.execution_mode === "subcontracted";
+      const startDate =
+        isSubcontractedExecution && project.subcontractor?.start_date
+          ? project.subcontractor.start_date
+          : (project[fields.start] as string | null) ?? null;
+      const endDate =
+        isSubcontractedExecution && project.subcontractor?.deadline
+          ? project.subcontractor.deadline
+          : (project[fields.end] as string | null) ?? null;
       return {
         key,
         pct,

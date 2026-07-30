@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
@@ -12,7 +13,7 @@ import { CONTRACT_TYPES } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
-import type { SubcontractorRef } from "@/features/subcontractors/types";
+import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
@@ -82,9 +83,13 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
   const financial_type: FinancialType =
     formData.get("financial_type") === "finantare" ? "finantare" : "proprii";
 
-  const contract_type = CONTRACT_TYPES.filter(
-    (c) => formData.get(`contract_type_${c}`) === "true",
-  );
+  // Contract-type checkboxes are all-or-nothing on the form — if none were
+  // submitted at all, fall back to the existing value instead of clobbering
+  // it with an empty array.
+  const hasAnyContractTypeField = CONTRACT_TYPES.some((c) => formData.has(`contract_type_${c}`));
+  const contract_type = hasAnyContractTypeField
+    ? CONTRACT_TYPES.filter((c) => formData.get(`contract_type_${c}`) === "true")
+    : existing?.contract_type ?? [];
 
   const execution_mode: ExecutionMode =
     formData.get("execution_mode") === "subcontracted" ? "subcontracted" : "internal";
@@ -104,7 +109,6 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     manager_id: str("manager_id"),
     client_id: num("client_id"),
     execution_mode,
-    subcontractor_id: num("subcontractor_id"),
     current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "",
     progress_pct: formData.has("progress_pct") ? Number(formData.get("progress_pct")) : existing?.progress_pct ?? 0,
     contract_number: str("contract_number"),
@@ -118,6 +122,51 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     notes: str("notes"),
     paid_by: strOrExisting("paid_by", existing?.paid_by ?? null),
   };
+}
+
+/**
+ * Kept entirely separate from extractProjectPayload/createProject/updateProject's
+ * own writes so a bug in one can never silently blank fields owned by the
+ * other (see 20260730000047_backfill_subcontracted_contract_type.sql for the
+ * class of data-loss bug this structure avoids). Only touches
+ * project_subcontractors, and only when the subcontracted branch was actually
+ * rendered and submitted with a subcontractor picked.
+ */
+function extractAssignmentPayload(formData: FormData) {
+  const subcontractorId = Number(formData.get("subcontractor_id"));
+  if (!formData.has("subcontractor_id") || !subcontractorId) return null;
+
+  const str = (key: string) => {
+    const v = formData.get(key) as string | null;
+    return v && v.trim() !== "" ? v.trim() : null;
+  };
+  const num = (key: string) => {
+    const v = formData.get(key) as string | null;
+    if (!v || v.trim() === "") return null;
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  };
+
+  return {
+    subcontractor_id: subcontractorId,
+    price_eur: num("assignment_price_eur"),
+    price_lei: num("assignment_price_lei"),
+    start_date: str("assignment_start_date"),
+    deadline: str("assignment_deadline"),
+    notes: str("assignment_notes"),
+  };
+}
+
+async function upsertAssignmentIfSubcontracted(
+  supabase: SupabaseClient,
+  projectId: number,
+  formData: FormData,
+): Promise<void> {
+  if (formData.get("execution_mode") !== "subcontracted") return;
+  const assignmentPayload = extractAssignmentPayload(formData);
+  if (!assignmentPayload) return;
+  const api = createSupabaseSubcontractorsClient(supabase);
+  await subcontractorService.upsertCurrentAssignment(api, projectId, assignmentPayload);
 }
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
@@ -155,6 +204,7 @@ export async function createProject(
     const client = createSupabaseProjectsClient(supabase);
     const payload = extractProjectPayload(formData);
     const { id: newId } = await projectService.createProject(client, payload, user.id);
+    await upsertAssignmentIfSubcontracted(supabase, newId, formData);
     revalidatePath(await getProjectsPath());
 
     try {
@@ -224,6 +274,7 @@ export async function updateProject(
     const projectId = Number(formData.get("projectId"));
     const existing = await projectService.getProjectById(client, projectId);
     await projectService.updateProject(client, projectId, extractProjectPayload(formData, existing ?? undefined), user.id);
+    await upsertAssignmentIfSubcontracted(supabase, projectId, formData);
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());
     revalidatePath(`/${locale}/projects/${projectId}`);
@@ -258,6 +309,12 @@ export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseSubcontractorsClient(supabase);
   return subcontractorService.getSubcontractorRefs(api);
+}
+
+export async function getSubcontractorAssignment(projectId: number): Promise<ProjectSubcontractorAssignment | null> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseSubcontractorsClient(supabase);
+  return subcontractorService.getCurrentAssignment(api, projectId);
 }
 
 export async function assignProjectTeam(projectId: number, teamId: number | null): Promise<ActionState> {

@@ -10,6 +10,8 @@ import * as projectService from "@/features/projects/services/projectService";
 import { validatePhaseDates } from "@/features/gantt/services/ganttPhaseService";
 import * as shownProjectsService from "@/features/hiddenProjects/services/shownProjectsService";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
+import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
+import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import type { Project } from "@/features/projects/types";
 import type { GanttPhaseKey } from "@/features/gantt/types";
@@ -89,6 +91,48 @@ export async function savePhaseDates(
       start_date: startDate,
       end_date: endDate,
     }, user.id);
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/gantt`);
+    revalidatePath(`/${locale}/projects/${projectId}`);
+    return { success: "saved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+/**
+ * For a subcontracted project, the Gantt "execution" segment's dates come
+ * from the current project_subcontractors assignment, not the project's own
+ * execution_start_date/execution_end_date (see buildProjectGanttRows) — so
+ * editing from the Gantt tab must write there too, or the edit has no visible
+ * effect. Only start_date/deadline are touched; price/notes on the existing
+ * assignment are read back and resubmitted unchanged.
+ */
+export async function saveSubcontractedExecutionDates(
+  projectId: number,
+  startDate: string | null,
+  endDate: string | null,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+
+    const validationError = validatePhaseDates(startDate, endDate);
+    if (validationError) return { error: validationError };
+
+    const api = createSupabaseSubcontractorsClient(supabase);
+    const current = await subcontractorService.getCurrentAssignment(api, projectId);
+    if (!current) return { error: "errorGeneric" };
+
+    await subcontractorService.upsertCurrentAssignment(api, projectId, {
+      subcontractor_id: current.subcontractor_id,
+      price_eur: current.price_eur,
+      price_lei: current.price_lei,
+      start_date: startDate,
+      deadline: endDate,
+      notes: current.notes,
+    });
+
     const locale = await getLocale();
     revalidatePath(`/${locale}/gantt`);
     revalidatePath(`/${locale}/projects/${projectId}`);

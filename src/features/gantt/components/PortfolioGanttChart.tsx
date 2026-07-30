@@ -20,8 +20,103 @@ function hasValidRange(segment: GanttPhaseSegment): boolean {
   return toDayMs(segment.endDate) >= toDayMs(segment.startDate);
 }
 
+/**
+ * Below this width, the window keeps growing regardless of gap size — it
+ * exists so growth doesn't stop too early right after bootstrapping from a
+ * narrow (or zero-width) core, before there's a meaningful span to judge
+ * the next gap against. Chosen as a typical single-phase width.
+ */
+const MIN_SEED_SPAN_MS = 30 * DAY_MS;
+
+/** rangeStart always sits exactly this far before the earliest (non-outlier) phase's own start */
+const RANGE_START_LEAD_MS = 28 * DAY_MS;
+
+interface SegmentBounds {
+  start: number;
+  end: number;
+}
+
+/**
+ * Picks the [rangeStart, rangeEnd] the header should show, in day-ms, given
+ * every valid segment's [start, end] bounds and today.
+ *
+ * Naively spanning every segment's true min/max breaks down when one
+ * segment sits far off from the rest (e.g. a phase scheduled for next year
+ * while everything else is this month): the whole timeline stretches to
+ * reach it and every other segment gets squeezed into a sliver.
+ *
+ * A segment currently in progress (start ≤ today ≤ end) is never clipped —
+ * its full width always counts toward the "core" range, since a partially-
+ * shown active phase would be actively misleading, not just cosmetically
+ * cramped. The core then grows outward, absorbing whichever remaining
+ * segment (past or future) is nearest first, as a whole unit — a segment is
+ * either fully included or fully excluded, never split at just one end.
+ * Growth in a direction stops as soon as the next segment there is farther
+ * away than the range's current span (once that span is at least
+ * MIN_SEED_SPAN_MS, so the very first segment absorbed with no active core
+ * to start from always gets a fair chance): that gap means the dense,
+ * relevant cluster of activity is already captured, and whatever sits
+ * beyond it is an outlier better clipped than allowed to force everything
+ * else to shrink to fit it.
+ *
+ * rangeStart always sits RANGE_START_LEAD_MS before the earliest start date
+ * among the segments the core ends up absorbing — whether that phase
+ * already started (rangeStart lands in the past) or hasn't yet (rangeStart
+ * lands in the future, past today, which is what hides the today-line).
+ */
+function computeRange(segments: SegmentBounds[], todayMs: number): { rangeStart: number; rangeEnd: number } {
+  const active = segments.filter((s) => s.start <= todayMs && s.end >= todayMs);
+  const before = segments
+    .filter((s) => s.end < todayMs)
+    .sort((a, b) => b.end - a.end); // nearest-first (largest end first)
+  const after = segments
+    .filter((s) => s.start > todayMs)
+    .sort((a, b) => a.start - b.start); // nearest-first (smallest start first)
+
+  let min = Math.min(todayMs, ...active.map((s) => s.start));
+  let max = Math.max(todayMs, ...active.map((s) => s.end));
+  let earliestStart = active.length > 0 ? Math.min(...active.map((s) => s.start)) : Infinity;
+  let bi = 0;
+  let ai = 0;
+  let hasCore = active.length > 0;
+
+  while (bi < before.length || ai < after.length) {
+    const span = max - min;
+    const nextBefore = bi < before.length ? before[bi] : null;
+    const nextAfter = ai < after.length ? after[ai] : null;
+    const gapBefore = nextBefore !== null ? min - nextBefore.end : Infinity;
+    const gapAfter = nextAfter !== null ? nextAfter.start - max : Infinity;
+    const gap = Math.min(gapBefore, gapAfter);
+
+    if (hasCore && span >= MIN_SEED_SPAN_MS && gap > span) break;
+    hasCore = true;
+
+    if (gapBefore <= gapAfter) {
+      min = Math.min(min, nextBefore!.start);
+      earliestStart = Math.min(earliestStart, nextBefore!.start);
+      bi++;
+    } else {
+      max = Math.max(max, nextAfter!.end);
+      earliestStart = Math.min(earliestStart, nextAfter!.start);
+      ai++;
+    }
+  }
+
+  const rangeStart = earliestStart - RANGE_START_LEAD_MS;
+  const endPad = Math.max(DAY_MS, (max - rangeStart) * 0.05);
+  return { rangeStart, rangeEnd: max + endPad };
+}
+
 interface Props {
   rows: ProjectGanttRow[];
+  /**
+   * Full set of currently-visible rows used to compute the timeline's date
+   * bounds. Defaults to `rows`. Pass this separately when `rows` is a
+   * paginated subset — otherwise hiding/showing a project on another page
+   * can leave the header's month range unchanged (or change it for the
+   * wrong reason) since it would only ever reflect the current page.
+   */
+  rangeRows?: ProjectGanttRow[];
   todayMs: number;
   onNavigateToPhase: (projectId: number, segment: GanttPhaseSegment) => void;
   onEditDates: (projectId: number, segment: GanttPhaseSegment) => void;
@@ -29,25 +124,27 @@ interface Props {
   pagination?: ReactNode;
 }
 
-export function PortfolioGanttChart({ rows, todayMs, onNavigateToPhase, onEditDates, onHideProject, pagination }: Props) {
+export function PortfolioGanttChart({ rows, rangeRows, todayMs, onNavigateToPhase, onEditDates, onHideProject, pagination }: Props) {
   const t = useTranslations("gantt");
   const [hoveredSegmentKey, setHoveredSegmentKey] = useState<string | null>(null);
 
   const datedSegments = useMemo(
-    () => rows.flatMap((row) => row.segments.filter(hasValidRange).map((segment) => ({ projectId: row.project.id, segment }))),
-    [rows],
+    () =>
+      (rangeRows ?? rows).flatMap((row) =>
+        row.segments.filter(hasValidRange).map((segment) => ({ projectId: row.project.id, segment })),
+      ),
+    [rangeRows, rows],
   );
 
   const { rangeStart, rangeEnd } = useMemo(() => {
     if (datedSegments.length === 0) {
       return { rangeStart: todayMs, rangeEnd: todayMs + 90 * DAY_MS };
     }
-    const starts = datedSegments.map(({ segment }) => toDayMs(segment.startDate!));
-    const ends = datedSegments.map(({ segment }) => toDayMs(segment.endDate!) + DAY_MS);
-    const min = Math.min(...starts, todayMs);
-    const max = Math.max(...ends, todayMs);
-    const pad = Math.max(DAY_MS, (max - min) * 0.05);
-    return { rangeStart: min - pad, rangeEnd: max + pad };
+    const segmentBounds = datedSegments.map(({ segment }) => ({
+      start: toDayMs(segment.startDate!),
+      end: toDayMs(segment.endDate!) + DAY_MS,
+    }));
+    return computeRange(segmentBounds, todayMs);
   }, [datedSegments, todayMs]);
 
   const totalSpan = Math.max(DAY_MS, rangeEnd - rangeStart);
@@ -159,7 +256,7 @@ export function PortfolioGanttChart({ rows, todayMs, onNavigateToPhase, onEditDa
             <div className="flex w-64 shrink-0 items-center gap-2 border-r border-border px-4 py-4">
               <div className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold text-veltol-fg">{project.name}</span>
-                {project.team?.name && (
+                {project.execution_mode !== "subcontracted" && project.team?.name && (
                   <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.team.name}</span>
                 )}
                 {project.project_type && (

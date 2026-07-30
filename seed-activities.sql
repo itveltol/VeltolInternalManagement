@@ -1,5 +1,5 @@
 -- Seed: matrice_status activity catalog (extracted from Matrice Status sheet)
--- project_type values: CEF | CEF cu BESS | BESS in CEF existent | BESS Stand-alone
+-- project_type values: CEF | CEF+BESS | BESS | BESS_CEF | EMS | SCADA
 insert into activities (phase_no, phase_name, name, sort_order, is_section_header, applies_to) values
   (1, 'Racordare (ATR)', 'Aviz Tehnic de Racordare - ATR', 1, false, null),
   (1, 'Racordare (ATR)', 'Studiu de Soluție', 2, false, null),
@@ -32,7 +32,7 @@ insert into activities (phase_no, phase_name, name, sort_order, is_section_heade
   (6, 'Autorizație de Construcție', 'Autorizație de Construcție - AC', 29, false, null),
   (7, 'Anunțare Începere Lucrări', 'Anunțare Instituții Începere Lucrări (Primărie + ISCE)', 30, false, null),
   (8, 'Oferte și Comandă Materiale', 'Oferte și Comandă Materiale', 31, true, null),
-  (8, 'Oferte și Comandă Materiale', 'BESS', 32, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
+  (8, 'Oferte și Comandă Materiale', 'BESS', 32, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
   (8, 'Oferte și Comandă Materiale', 'Inverter', 33, false, null),
   (8, 'Oferte și Comandă Materiale', 'HyManager', 34, false, null),
   (8, 'Oferte și Comandă Materiale', 'Panouri Fotovoltaice', 35, false, null),
@@ -75,14 +75,14 @@ insert into activities (phase_no, phase_name, name, sort_order, is_section_heade
   (9, 'Execuție', 'Amplasare Transformatoare + Macara', 72, false, null),
   (9, 'Execuție', 'Cablare Posturi Trafo', 73, false, null),
   (9, 'Execuție', 'Verificări Înaintea Recepției', 74, false, null),
-  (10, 'Montaj BESS', 'Montaj BESS', 75, true, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Împrejmuire', 76, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Iluminat', 77, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Sistem de camere', 78, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Fundație', 79, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Închiriere macara', 80, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Cablare', 81, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
-  (10, 'Montaj BESS', 'Racord', 82, false, array['CEF cu BESS','BESS in CEF existent','BESS Stand-alone']::project_type[]),
+  (10, 'Montaj BESS', 'Montaj BESS', 75, true, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Împrejmuire', 76, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Iluminat', 77, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Sistem de camere', 78, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Fundație', 79, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Închiriere macara', 80, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Cablare', 81, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
+  (10, 'Montaj BESS', 'Racord', 82, false, array['CEF+BESS','BESS','BESS_CEF']::project_type[]),
   (11, 'Documentare & Recepție', 'Documentare & Recepție', 83, true, null),
   (11, 'Documentare & Recepție', 'Autorizația de Înființare ANRE (AI)', 84, false, null),
   (11, 'Documentare & Recepție', 'PRE (POD + Contract Furnizare + AI)', 85, false, null),

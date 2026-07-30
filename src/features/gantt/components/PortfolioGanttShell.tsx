@@ -82,6 +82,14 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
     [pageProjects, activities, cells, todayMs],
   );
 
+  // Timeline bounds must reflect every currently-shown project, not just the
+  // page being rendered — otherwise hiding a project on another page leaves
+  // the header's month range stuck (or shifts it for the wrong reason).
+  const rangeRows = useMemo(
+    () => buildProjectGanttRows(visibleProjects, activities, cells, todayMs),
+    [visibleProjects, activities, cells, todayMs],
+  );
+
   function handleRemove(projectId: number) {
     setShownIds((prev) => prev.filter((id) => id !== projectId));
     startTransition(async () => {
@@ -131,6 +139,7 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
 
       <PortfolioGanttChart
         rows={rows}
+        rangeRows={rangeRows}
         todayMs={todayMs}
         onNavigateToPhase={(projectId) => {
           startTransition(async () => {

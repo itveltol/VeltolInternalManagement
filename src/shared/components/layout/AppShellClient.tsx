@@ -56,7 +56,7 @@ export function AppShellClient({
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar onMenuClick={() => setNavOpen(true)} />
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[1360px] mx-auto p-4 sm:px-[30px] sm:py-[30px] md:px-10 md:py-10">
+          <div className="max-w-[1360px] mx-auto p-4 sm:px-5 sm:py-[30px] md:px-6 md:py-10 lg:px-8">
             {children}
           </div>
         </main>

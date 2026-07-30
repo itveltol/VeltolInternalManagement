@@ -111,18 +111,22 @@ export function ProjectsTable({
     return Math.round(diff / 86_400_000);
   }
 
+  function abbreviatedName(first: string | null | undefined, last: string | null | undefined) {
+    const firstInitial = first ? `${first[0]}.` : "";
+    const lastInitial = last ? `${last[0]}.` : "";
+    return [firstInitial, lastInitial].filter(Boolean).join("");
+  }
+
   function managerName(project: Project) {
     const m = project.manager;
     if (!m) return "—";
-    const name = [m.first_name, m.last_name].filter(Boolean).join(" ");
-    return name || "—";
+    return abbreviatedName(m.first_name, m.last_name) || "—";
   }
 
   function updatedByName(project: Project) {
     const u = project.updated_by_user;
     if (!u) return "—";
-    const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
-    return name || "—";
+    return abbreviatedName(u.first_name, u.last_name) || "—";
   }
 
   function handleDelete(projectId: number) {
@@ -138,7 +142,7 @@ export function ProjectsTable({
   return (
     <>
       <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border px-4 py-4">
           <div>
             <span className="text-[14px] font-medium text-veltol-fgDim">
               {t("totalCount", { count: projects.length })}
@@ -152,7 +156,7 @@ export function ProjectsTable({
           )}
         </div>
 
-        <div className="flex flex-wrap items-end gap-3 border-b border-border px-6 py-3">
+        <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-3">
           <FilterField label={t("filters.phase")} htmlFor="filter-phase">
             <FilterMultiDropdown
               id="filter-phase"

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
-import { savePhaseDates } from "@/app/[locale]/(app)/gantt/actions";
+import { savePhaseDates, saveSubcontractedExecutionDates } from "@/app/[locale]/(app)/gantt/actions";
 import { validatePhaseDates } from "../services/ganttPhaseService";
 import { GANTT_PHASE_DATE_FIELDS, type GanttPhaseKey } from "../types";
 import type { Project } from "@/features/projects/types";
@@ -22,9 +22,10 @@ interface Props {
 
 export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
   const t = useTranslations("gantt");
+  const isSubcontractedExecution = phaseKey === "execution" && project.execution_mode === "subcontracted";
   const fields = GANTT_PHASE_DATE_FIELDS[phaseKey];
-  const initialStartDate = (project[fields.start] as string | null) ?? "";
-  const initialEndDate = (project[fields.end] as string | null) ?? "";
+  const initialStartDate = (isSubcontractedExecution ? project.subcontractor?.start_date : (project[fields.start] as string | null)) ?? "";
+  const initialEndDate = (isSubcontractedExecution ? project.subcontractor?.deadline : (project[fields.end] as string | null)) ?? "";
 
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
@@ -49,12 +50,9 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
     }
 
     startTransition(async () => {
-      const result = await savePhaseDates(
-        project.id,
-        phaseKey,
-        startDate || null,
-        endDate || null,
-      );
+      const result = isSubcontractedExecution
+        ? await saveSubcontractedExecutionDates(project.id, startDate || null, endDate || null)
+        : await savePhaseDates(project.id, phaseKey, startDate || null, endDate || null);
       if (result?.error) {
         setError(result.error);
         return;

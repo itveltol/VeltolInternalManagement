@@ -2,24 +2,82 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProjectsApiClient, CreateProjectPayload } from "./types";
 import type { Project, ProjectManager } from "../types";
 
+const PROJECT_SELECT =
+  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), updated_by_user:profiles!updated_by(first_name, last_name)";
+
+interface CurrentAssignmentRow {
+  project_id: number;
+  price_eur: number | null;
+  price_lei: number | null;
+  start_date: string | null;
+  deadline: string | null;
+  subcontractor: {
+    id: number;
+    name: string;
+    contact_person: string | null;
+    phone: string | null;
+  } | null;
+}
+
+/** Attaches each project's current (is_current = true) subcontractor assignment, flattened into the shape read-side consumers already expect. */
+async function withCurrentAssignments(
+  supabase: SupabaseClient,
+  projects: Project[],
+): Promise<Project[]> {
+  if (projects.length === 0) return projects;
+
+  const { data, error } = await supabase
+    .from("project_subcontractors")
+    .select("id, project_id, price_eur, price_lei, start_date, deadline, subcontractor:subcontractors(id, name, contact_person, phone)")
+    .in("project_id", projects.map((p) => p.id))
+    .eq("is_current", true);
+  if (error) throw new Error(error.message);
+
+  const byProjectId = new Map(
+    ((data ?? []) as unknown as (CurrentAssignmentRow & { id: number })[]).map((row) => [row.project_id, row]),
+  );
+
+  return projects.map((project) => {
+    const assignment = byProjectId.get(project.id);
+    return {
+      ...project,
+      subcontractor_assignment_id: assignment?.id ?? null,
+      subcontractor: assignment
+        ? {
+            id: assignment.subcontractor!.id,
+            name: assignment.subcontractor!.name,
+            contact_person: assignment.subcontractor!.contact_person,
+            phone: assignment.subcontractor!.phone,
+            price_eur: assignment.price_eur,
+            price_lei: assignment.price_lei,
+            start_date: assignment.start_date,
+            deadline: assignment.deadline,
+          }
+        : null,
+    };
+  }) as Project[];
+}
+
 export const createSupabaseProjectsClient = (supabase: SupabaseClient): ProjectsApiClient => ({
   async getProjects() {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), subcontractor:subcontractors!subcontractor_id(id, name, contact_person, phone, price_eur, price_lei, deadline), updated_by_user:profiles!updated_by(first_name, last_name)")
+      .select(PROJECT_SELECT)
       .order("id");
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown as Project[];
+    return withCurrentAssignments(supabase, (data ?? []) as unknown as Project[]);
   },
 
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")
-      .select("*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), subcontractor:subcontractors!subcontractor_id(id, name, contact_person, phone, price_eur, price_lei, deadline), updated_by_user:profiles!updated_by(first_name, last_name)")
+      .select(PROJECT_SELECT)
       .eq("id", id)
       .single();
     if (error) return null;
-    return (data ?? null) as unknown as Project | null;
+    if (!data) return null;
+    const [project] = await withCurrentAssignments(supabase, [data as unknown as Project]);
+    return project ?? null;
   },
 
   async getProjectManagers() {

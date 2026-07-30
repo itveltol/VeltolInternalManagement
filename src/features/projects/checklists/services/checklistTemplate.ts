@@ -112,11 +112,13 @@ function computePct(planTotal: number | null, realizat: number | null, isSection
 
 export function mergeChecklistRows(
   records: ChecklistItemRecord[],
+  hasBess: boolean,
 ): ChecklistRow[] {
+  const template = hasBess ? CHECKLIST_TEMPLATE : PV_TEMPLATE;
   const recordMap = new Map(records.map((r) => [r.item_number, r]));
-  const templateNumbers = new Set(CHECKLIST_TEMPLATE.map((tmpl) => tmpl.number));
+  const templateNumbers = new Set(template.map((tmpl) => tmpl.number));
 
-  const templateRows = CHECKLIST_TEMPLATE.map((tmpl) => {
+  const templateRows = template.map((tmpl) => {
     const record = recordMap.get(tmpl.number) ?? null;
 
     // DB values take precedence over static template defaults

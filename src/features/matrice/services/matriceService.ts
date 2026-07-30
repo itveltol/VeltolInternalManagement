@@ -7,11 +7,12 @@ import type { ContractType } from '@/features/projects/types';
  * GANTT_PHASE_MATRICE_RANGE (planning=1-7, execution=8-10, autorizare=11-12):
  * these are workflow stages, contract_type is which services are contracted —
  * this bridges the two so excluded services can be grayed out, not deleted.
+ * Phases 8-12 are all gated on "executie" — 11-12 (autorizare) are
+ * execution-stage work, not a maintenance contract service.
  */
 export function contractTypeForPhase(phaseNo: number): ContractType {
   if (phaseNo <= 7) return 'proiectare';
-  if (phaseNo <= 10) return 'executie';
-  return 'mentenanta';
+  return 'executie';
 }
 
 /** Whether a project's contract currently covers the given phase's service */

@@ -19,7 +19,7 @@ import type { Team } from "@/features/teams/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
-import type { SubcontractorRef } from "@/features/subcontractors/types";
+import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 
@@ -95,6 +95,12 @@ export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseSubcontractorsClient(supabase);
   return subcontractorService.getSubcontractorRefs(api);
+}
+
+export async function getSubcontractorAssignment(projectId: number): Promise<ProjectSubcontractorAssignment | null> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseSubcontractorsClient(supabase);
+  return subcontractorService.getCurrentAssignment(api, projectId);
 }
 
 export async function getChecklistRecords(projectId: number) {
