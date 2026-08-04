@@ -774,6 +774,7 @@
     "saveProfile": "Salvează modificările",
     "saving": "Salvare...",
     "profileSaved": "Modificări salvate.",
+    "passwordEyebrow": "SECURITATE",
     "passwordTitle": "Schimbare parolă",
     "passwordDesc": "Alegeți o parolă puternică — cel puțin 8 caractere.",
     "newPassword": "Parolă nouă",
@@ -785,6 +786,7 @@
     "passwordTooShort": "Parola trebuie să aibă cel puțin 8 caractere.",
     "adminEyebrow": "ECHIPĂ · UTILIZATORI",
     "adminTitle": "Membrii echipei",
+    "searchPlaceholder": "Caută după nume sau e-mail",
     "inviteUser": "Invită utilizator",
     "colUser": "Utilizator",
     "colPhone": "Telefon",
@@ -956,7 +958,12 @@
     },
     "cancel": "Anulare",
     "save": "Salvare",
-    "saving": "Se salvează..."
+    "saving": "Se salvează...",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    }
   },
   "boundaries": {
     "error": {

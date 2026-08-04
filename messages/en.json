@@ -774,6 +774,7 @@
     "saveProfile": "Save changes",
     "saving": "Saving...",
     "profileSaved": "Changes saved.",
+    "passwordEyebrow": "SECURITY",
     "passwordTitle": "Change password",
     "passwordDesc": "Choose a strong password — at least 8 characters.",
     "newPassword": "New password",
@@ -785,6 +786,7 @@
     "passwordTooShort": "Password must be at least 8 characters.",
     "adminEyebrow": "TEAM · USERS",
     "adminTitle": "Team members",
+    "searchPlaceholder": "Search by name or email",
     "inviteUser": "Invite user",
     "colUser": "User",
     "colPhone": "Phone",
@@ -956,7 +958,12 @@
     },
     "cancel": "Cancel",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
   },
   "boundaries": {
     "error": {
