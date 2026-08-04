@@ -11,7 +11,6 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { ACTIVITY_STATUS_VALUES, STATUS_COLOR, STATUS_DOT_COLOR, type ActivityStatus } from "../types";
 import { AvizExpiryDialog } from "./AvizExpiryDialog";
-import { AutoProgressWarningDialog } from "./AutoProgressWarningDialog";
 import { cn } from "@/shared/utils/cn";
 
 interface Props {
@@ -28,17 +27,13 @@ interface Props {
   disabled?: boolean;
   /** True while this cell's own status change is saving. */
   pending?: boolean;
-  /** False if the project is still in "auto" progress mode — first edit prompts a confirm. */
-  progressManual?: boolean;
-  onConfirmAutoProgress?: (projectId: number) => void;
 }
 
-export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", isAviz, expiresAt, onChangeStatus, onOpenDocuments, documentCount = 0, disabled, pending, progressManual = true, onConfirmAutoProgress }: Props) {
+export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", isAviz, expiresAt, onChangeStatus, onOpenDocuments, documentCount = 0, disabled, pending }: Props) {
   const t = useTranslations("matrice");
   const tDocs = useTranslations("documents");
   const isDisabled = disabled || pending;
   const [pendingExpiryPrompt, setPendingExpiryPrompt] = useState(false);
-  const [pendingAutoProgressStatus, setPendingAutoProgressStatus] = useState<ActivityStatus | null>(null);
 
   function applyStatus(s: ActivityStatus) {
     if (s === "finalizat" && isAviz) {
@@ -46,22 +41,6 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
       return;
     }
     onChangeStatus(projectId, activityId, s);
-  }
-
-  function handleSelectStatus(s: ActivityStatus) {
-    if (!progressManual) {
-      setPendingAutoProgressStatus(s);
-      return;
-    }
-    applyStatus(s);
-  }
-
-  function handleConfirmAutoProgress() {
-    const s = pendingAutoProgressStatus;
-    setPendingAutoProgressStatus(null);
-    if (s === null) return;
-    onConfirmAutoProgress?.(projectId);
-    applyStatus(s);
   }
 
   function handleConfirmExpiry(newExpiresAt: string) {
@@ -91,7 +70,7 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
         {ACTIVITY_STATUS_VALUES.map((s) => (
           <DropdownMenuItem
             key={s}
-            onClick={() => handleSelectStatus(s)}
+            onClick={() => applyStatus(s)}
             className={cn(
               "cursor-pointer text-[13px] font-medium",
               s === status && "font-bold",
@@ -133,11 +112,6 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
         onCancel={() => setPendingExpiryPrompt(false)}
       />
     )}
-    <AutoProgressWarningDialog
-      open={pendingAutoProgressStatus !== null}
-      onConfirm={handleConfirmAutoProgress}
-      onCancel={() => setPendingAutoProgressStatus(null)}
-    />
     </div>
   );
 });

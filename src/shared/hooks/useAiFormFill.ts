@@ -46,7 +46,6 @@ export function useAiFormFill(config: AiFillConfig): UseAiFormFillReturn {
 
           res = await fetch("/api/ai/fill", {
             method: "POST",
-            headers: { "x-veltol-ai": "1" },
             body: fd,
           });
         } else {
@@ -54,7 +53,6 @@ export function useAiFormFill(config: AiFillConfig): UseAiFormFillReturn {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-veltol-ai": "1",
             },
             body: JSON.stringify({
               formType: config.formType,

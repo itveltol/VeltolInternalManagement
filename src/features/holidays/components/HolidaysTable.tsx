@@ -3,12 +3,14 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { createHoliday, deleteHoliday } from "@/app/[locale]/(app)/settings/actions";
 import { formatDate } from "@/shared/utils/formatDate";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import type { Holiday } from "../types";
 
 const INPUT_CLASS =
@@ -23,6 +25,7 @@ interface Props {
 export function HolidaysTable({ holidays }: Props) {
   const t = useTranslations("settings");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [state, formAction, pending] = useActionState(createHoliday, null);
 
@@ -33,13 +36,19 @@ export function HolidaysTable({ holidays }: Props) {
   const pagedHolidays = holidays.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   useEffect(() => {
-    if (state?.success) router.refresh();
+    if (state?.success) {
+      toast.success(t(state.success as "holidayCreated"));
+      router.refresh();
+    }
   }, [state?.success]);
 
-  function handleDelete(id: number) {
-    if (!confirm(t("confirmDeleteHoliday"))) return;
+  async function handleDelete(id: number) {
+    const ok = await confirm({ title: t("confirmDeleteHoliday"), confirmLabel: t("delete") });
+    if (!ok) return;
     startTransition(async () => {
-      await deleteHoliday(id);
+      const result = await deleteHoliday(id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "holidayDeleted"));
       router.refresh();
     });
   }

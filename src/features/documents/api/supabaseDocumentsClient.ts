@@ -69,11 +69,13 @@ export const createSupabaseDocumentsClient = (supabase: SupabaseClient): Documen
   },
 
   async updateDocument(id, payload: UpdateDocumentPayload) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('documents')
       .update(payload)
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
     if (error) throw new Error(error.message);
+    if (!data || data.length === 0) throw new Error('Document update affected 0 rows');
   },
 
   async deleteDocument(id) {

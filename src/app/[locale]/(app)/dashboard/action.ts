@@ -1,8 +1,8 @@
 "use server";
 
-import { getSessionUser } from "@/core/supabase/session";
+import { requireAuth } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
-import type { ProjectPhase, ContractType, ProjectCategory } from "@/features/projects/types";
+import type { ProjectPhase, ContractType, ProjectCategory, ProjectStatus } from "@/features/projects/types";
 import { buildMaintenanceCycles } from "@/features/projects/maintenance/services/maintenanceService";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import { buildAvizReminders } from "@/features/matrice/services/avizReminderService";
@@ -20,6 +20,7 @@ export type DashboardProject = {
   current_phase: ProjectPhase;
   contract_type: ContractType[];
   project_category: ProjectCategory;
+  status: ProjectStatus;
   value_eur: number | null;
   contract_date: string | null;
   deadline: string | null;
@@ -41,11 +42,6 @@ export type DashboardStats = {
   industrial: CategoryStats;
 };
 
-export async function requireAuth() {
-  const { supabase, user } = await getSessionUser();
-  return { supabase, user };
-}
-
 export async function getProjects(): Promise<DashboardProject[]> {
   await requireAuth();
   // Dashboard is a portfolio-wide overview and should show every project to
@@ -55,7 +51,7 @@ export async function getProjects(): Promise<DashboardProject[]> {
   const supabase = createAdminClient();
   const { data: projects, error } = await supabase
     .from("projects")
-    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, deadline, value_eur, contract_date, created_at")
+    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, status, deadline, value_eur, contract_date, created_at")
     .order("created_at", { ascending: true });
   if (error) console.error("[dashboard debug] projects query error:", error);
   return projects ?? [];
@@ -75,7 +71,7 @@ export async function getDashboardStats(projects: DashboardProject[]): Promise<D
     totalPortfolioValue: projects.reduce((acc, p) => acc + (p.value_eur ?? 0), 0),
     totalCapacity: projects.reduce((acc, p) => acc + (p.mw_solar ?? 0), 0),
     totalProjects: projects.length,
-    totalFinishedProjects: 0,
+    totalFinishedProjects: projects.filter((p) => p.status === "completed").length,
     residential: getCategoryStats(projects, "residential"),
     industrial: getCategoryStats(projects, "industrial"),
   };

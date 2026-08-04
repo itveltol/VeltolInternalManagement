@@ -21,7 +21,8 @@
     "delivery": "Szállítás",
     "site": "Építési helyszín",
     "pontaj": "Személyzet · Jelenlét",
-    "gantt": "Gantt"
+    "gantt": "Gantt",
+    "situations": "Szituációk"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -128,7 +129,6 @@
       "status": "Állapot",
       "deadline": "Határidő",
       "value": "Érték",
-      "valueLei": "Érték (Lej)",
       "phase": "Fázis",
       "progress": "Haladás",
       "generalStatus": "Státusz",
@@ -165,7 +165,7 @@
       "subcontractorContactPerson": "Kapcsolattartó",
       "subcontractorPhone": "Telefonszám",
       "subcontractorPrice": "Ár",
-      "subcontractorPriceLei": "Ár (Lej)",
+      "currency": "Pénznem",
       "subcontractorStartDate": "Kezdés dátuma",
       "subcontractorDeadline": "Határidő",
       "phase": "Jelenlegi fázis",
@@ -173,8 +173,8 @@
       "contractNumber": "Szerződésszám",
       "contractDate": "Szerződés dátuma",
       "deadline": "Végső határidő",
-      "valueEur": "Érték (€)",
-      "valueLei": "Érték (Lej)",
+      "value": "Érték",
+      "refreshRate": "Frissítés a mai árfolyamra",
       "status": "Általános státusz",
       "notes": "Megjegyzés"
     },
@@ -362,6 +362,9 @@
     "eyebrowSub": "ÁLLAPOT MÁTRIX",
     "title": "Állapot Mátrix",
     "subtitle": "Tevékenységek × projektek állapotmátrix — kövesd a leadandókat és a haladást ügyfelenként.",
+    "errorMaxProjects": "Legfeljebb 5 projekt jeleníthető meg — távolíts el egyet, hogy másikat adhass hozzá.",
+    "errorGeneric": "Valami hiba történt. A cella visszaállt.",
+    "cellSaved": "Mentve.",
     "picker": {
       "label": "PROJEKTEK",
       "shownCount": "{count} kiválasztva",
@@ -397,12 +400,6 @@
       "description": "„{activity}” egy időszakos engedély — add meg a lejárati dátumát, hogy megújítási emlékeztetőt küldhessünk.",
       "dateLabel": "Lejárati dátum",
       "confirm": "Mentés",
-      "cancel": "Mégse"
-    },
-    "autoProgressWarning": {
-      "title": "Áttérés manuális haladásra?",
-      "description": "A projekt haladása jelenleg automatikusan van beállítva, a Matrice/checklist alapján számítva. A manuális módosítás átállítja manuális haladásra.",
-      "confirm": "OK",
       "cancel": "Mégse"
     },
     "avizReminders": {
@@ -532,6 +529,7 @@
     "clientDeleted": "Ügyfél törölve.",
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "errorValidation": "Ellenőrizd a kijelölt mezőket — a CNP, CUI, cégjegyzékszám, email és telefon formátumának megfelelőnek kell lennie.",
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés...",
@@ -629,6 +627,7 @@
     "removeMember": "Eltávolítás",
     "confirmRemoveMember": "Eltávolítja ezt a tagot a csapatból?",
     "memberAdded": "Tag hozzáadva.",
+    "memberAddPartialFailure": "{count} tag hozzáadása nem sikerült.",
     "memberRemoved": "Tag eltávolítva.",
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
@@ -680,6 +679,7 @@
     "documentDeleted": "Dokumentum törölve.",
     "errorGeneric": "Valami hiba történt.",
     "errorNotAllowed": "Nincs jogosultsága ehhez.",
+    "errorValidation": "Érvénytelen dokumentum-kapcsolat típus.",
     "emptyState": "Még nincs dokumentum.",
     "openDocument": "Megnyitás",
     "openProjectFolder": "Projektmappa megnyitása",
@@ -863,6 +863,7 @@
     "save": "Mentés",
     "saving": "Mentés...",
     "errorGeneric": "Hiba történt. Kérjük, próbáld újra.",
+    "errorMaxProjects": "Legfeljebb 5 projekt jeleníthető meg — távolíts el egyet, hogy másikat adhass hozzá.",
     "errorNotAllowed": "Nincs jogosultságod ehhez a művelethez.",
     "picker": {
       "label": "PROJEKTEK",
@@ -911,5 +912,66 @@
       "next": "Következő",
       "pageOf": "{page}. oldal / {total}"
     }
+  },
+  "situations": {
+    "tabLabel": "Szituációk",
+    "breadcrumb": "Szituációk",
+    "eyebrow": "SZITUÁCIÓK · ÖSSZES",
+    "title": "Szituációk",
+    "emptyState": "Még nincs szituáció. Adja hozzá az elsőt.",
+    "noResults": "Nincs a keresésnek megfelelő projekt.",
+    "searchPlaceholder": "Keresés projekt neve szerint",
+    "totalCount": "{count} szituáció összesen",
+    "addSituation": "Szituáció hozzáadása",
+    "editSituation": "Átnevezés",
+    "deleteSituation": "Törlés",
+    "confirmDelete": "Törli ezt a szituációt?",
+    "fields": {
+      "name": "Név",
+      "project": "Projekt"
+    },
+    "selectProjectPlaceholder": "Projektek keresése...",
+    "selectProjectClear": "Kiválasztott projekt törlése",
+    "selectProjectNoResults": "Nincs egyező projekt.",
+    "status": {
+      "draft": "Vázlat",
+      "final": "Végleges"
+    },
+    "finalize": "Véglegesítés",
+    "finalizeConfirmTitle": "Véglegesíti ezt a szituációt?",
+    "finalizeConfirmBody": "Véglegesítés után a százalékos készültség és a számlázható összeg lezáródik a jelenlegi értékre. A későbbi checklist-haladás már nem változtatja meg ennek a szituációnak a számait. Ez nem vonható vissza.",
+    "finalizeConfirmButton": "Véglegesítés",
+    "situationCreated": "Szituáció létrehozva.",
+    "situationSaved": "Szituáció mentve.",
+    "situationDeleted": "Szituáció törölve.",
+    "situationFinalized": "Szituáció véglegesítve.",
+    "errorGeneric": "Valami hiba történt.",
+    "errorNotAllowed": "Nincs jogosultsága ehhez a művelethez.",
+    "columns": {
+      "project": "Projekt",
+      "date": "Dátum",
+      "pct": "Készültség %",
+      "amountEur": "Összeg (EUR)",
+      "amountLei": "Összeg (lej)"
+    },
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés..."
+  },
+  "boundaries": {
+    "error": {
+      "title": "Váratlan hiba történt",
+      "description": "Hiba történt a oldal betöltése közben.",
+      "retry": "Próbáld újra"
+    },
+    "notFound": {
+      "title": "Az oldal nem található",
+      "description": "A keresett oldal nem létezik, vagy áthelyezték.",
+      "backToDashboard": "Vissza a kezdőlapra"
+    }
+  },
+  "common": {
+    "cancel": "Mégse",
+    "confirm": "Megerősítés"
   }
 }

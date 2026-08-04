@@ -1,4 +1,4 @@
-import type { Subcontractor, SubcontractorRef, SubcontractorWithProjects, ProjectSubcontractorAssignment } from "../types";
+import type { Subcontractor, SubcontractorRef, SubcontractorWithProjects, ProjectSubcontractorAssignment, Currency } from "../types";
 
 export interface CreateSubcontractorPayload {
   name: string;
@@ -11,6 +11,9 @@ export interface UpsertAssignmentPayload {
   subcontractor_id: number;
   price_eur: number | null;
   price_lei: number | null;
+  currency: Currency;
+  /** EUR->RON rate to lock in when this assignment row is first created; ignored when updating an existing row in place. */
+  conversion_rate: number | null;
   start_date: string | null;
   deadline: string | null;
   notes: string | null;

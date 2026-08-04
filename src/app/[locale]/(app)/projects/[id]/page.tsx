@@ -4,7 +4,7 @@ import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
-import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
+import { mergeChecklistRows, computeSectionSummaries, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
 import { ProjectPhaseGanttShell } from "@/features/gantt/components/ProjectPhaseGanttShell";
 import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
@@ -74,13 +74,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const tDocs = await getTranslations("documents");
   const tMaintenance = await getTranslations("maintenance");
 
-  const leafPcts = rows
-    .filter((r) => !r.isSection && r.pct !== null)
-    .map((r) => r.pct as number);
-  const overallPct =
-    leafPcts.length > 0
-      ? Math.round(leafPcts.reduce((a, b) => a + b, 0) / leafPcts.length)
-      : 0;
+  const overallPct = computeOverallPct(rows);
 
   return (
     <div className="space-y-8">

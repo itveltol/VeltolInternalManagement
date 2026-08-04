@@ -38,7 +38,6 @@ export interface MatrixProject {
   name: string;
   project_type: ProjectType | null;
   contract_type: ContractType[];
-  progress_pct_manual: boolean;
 }
 
 /** Resolved cell for the matrix grid (missing DB row → 'neinceput') */

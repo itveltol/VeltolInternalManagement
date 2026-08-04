@@ -10,6 +10,8 @@ import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterDropdown, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
+import { toast } from "sonner";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { phaseVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -18,6 +20,7 @@ import type { Project, ProjectManager, ProjectType, ProjectPhase, ProjectCategor
 import type { SortDir } from "./ProjectsShell";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
+import { formatConvertedCurrency } from "@/shared/utils/currency";
 
 const PAGE_SIZE = 20;
 
@@ -34,6 +37,7 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
+  exchangeRate: number | null;
   filterPhase: ProjectPhase[];
   onFilterPhase: (v: ProjectPhase[]) => void;
   filterCategory: ProjectCategory | "";
@@ -54,6 +58,7 @@ export function ProjectsTable({
   managers,
   clientRefs,
   subcontractorRefs,
+  exchangeRate,
   filterPhase,
   onFilterPhase,
   filterCategory,
@@ -74,6 +79,7 @@ export function ProjectsTable({
   const tContractType = useTranslations("contractType");
   const locale = useLocale();
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -129,11 +135,14 @@ export function ProjectsTable({
     return abbreviatedName(u.first_name, u.last_name) || "—";
   }
 
-  function handleDelete(projectId: number) {
-    if (!confirm(`${t("confirmDelete")}`)) return;
+  async function handleDelete(projectId: number) {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteProject") });
+    if (!ok) return;
     setDeletingId(projectId);
     startTransition(async () => {
-      await deleteProject(projectId);
+      const result = await deleteProject(projectId);
+      if (result?.error) toast.error(t(result.error as "errorNotAllowed" | "errorGeneric"));
+      else if (result?.success) toast.success(t(result.success as "projectDeleted"));
       setDeletingId(null);
       router.refresh();
     });
@@ -227,7 +236,7 @@ export function ProjectsTable({
                   t("columns.id"), t("columns.project"), t("columns.county"),
                   t("columns.contractType"),
                   t("columns.phase"), t("columns.progress"),
-                  t("columns.deadline"), t("columns.value"), t("columns.valueLei"),
+                  t("columns.deadline"), t("columns.value"),
                   t("columns.manager"), t("columns.client"), t("columns.lastModified"), "",
                 ].map((col, i) => (
                   <th key={i} className="px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
@@ -239,7 +248,7 @@ export function ProjectsTable({
             <tbody className="divide-y divide-border">
               {projects.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-3 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={11} className="px-3 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
                   </td>
                 </tr>
@@ -315,6 +324,13 @@ export function ProjectsTable({
                       const valueLei = project.execution_mode === "subcontracted"
                         ? project.subcontractor?.price_lei ?? null
                         : project.value_lei;
+                      const currency = project.execution_mode === "subcontracted"
+                        ? project.subcontractor?.currency ?? "EUR"
+                        : project.currency;
+                      const sourceValue = currency === "EUR" ? valueEur : valueLei;
+                      const conversionRate = project.execution_mode === "subcontracted"
+                        ? project.subcontractor?.conversion_rate ?? null
+                        : project.conversion_rate;
                       return (
                         <>
                           <td className="px-3 py-3">
@@ -332,14 +348,16 @@ export function ProjectsTable({
                             })()}
                           </td>
 
-                          <td className="px-3 py-3 font-semibold tabular-nums whitespace-nowrap text-veltol-fg">
-                            {valueEur != null ? new Intl.NumberFormat("hu-HU").format(valueEur) : "—"}
-                            {valueEur != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">€</span>}
-                          </td>
-
-                          <td className="px-3 py-3 font-semibold tabular-nums whitespace-nowrap text-veltol-fg">
-                            {valueLei != null ? new Intl.NumberFormat("hu-HU").format(valueLei) : "—"}
-                            {valueLei != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">Lei</span>}
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <div className="font-semibold tabular-nums text-veltol-fg">
+                              {sourceValue != null ? new Intl.NumberFormat("hu-HU").format(sourceValue) : "—"}
+                              {sourceValue != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">{currency === "EUR" ? "€" : "Lei"}</span>}
+                            </div>
+                            {sourceValue != null && (
+                              <div className="tabular-nums text-[11px] font-medium text-veltol-fgMute">
+                                {formatConvertedCurrency(sourceValue, currency, conversionRate)}
+                              </div>
+                            )}
                           </td>
                         </>
                       );
@@ -396,6 +414,7 @@ export function ProjectsTable({
         managers={managers}
         clientRefs={clientRefs}
         subcontractorRefs={subcontractorRefs}
+        exchangeRate={exchangeRate}
         onClose={() => {
           closeAddDialog();
           router.refresh();

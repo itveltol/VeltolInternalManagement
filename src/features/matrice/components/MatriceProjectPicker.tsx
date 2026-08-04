@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
 import type { MatrixProject } from "../types";
@@ -28,6 +29,7 @@ interface Props {
 export function MatriceProjectPicker({ pickableProjects, onAdd, disabled, maxProjects, shownCount }: Props) {
   const t = useTranslations("matrice");
   const filter = useComboboxFilter({ multiple: true });
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -37,9 +39,15 @@ export function MatriceProjectPicker({ pickableProjects, onAdd, disabled, maxPro
       <Combobox
         items={pickableProjects}
         value={[]}
+        open={open}
+        onOpenChange={(next) => setOpen(next && !disabled)}
         onValueChange={(next: MatrixProject[]) => {
           const added = next[next.length - 1];
           if (added) onAdd(added.id);
+          // Close explicitly first so the popup finishes its own close
+          // transition before the input is disabled by the cap being hit,
+          // instead of the input going inert mid-interaction.
+          setOpen(false);
         }}
         itemToStringLabel={(p) => p.name}
         filter={filter.contains}

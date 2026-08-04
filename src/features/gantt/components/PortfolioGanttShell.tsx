@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import type { Project } from "@/features/projects/types";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import type { GanttPhaseSegment } from "../types";
@@ -104,6 +105,7 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
       const result = await showGanttProject(projectId);
       if (result?.error) {
         setShownIds((prev) => prev.filter((id) => id !== projectId));
+        toast.error(result.error === "errorMaxProjects" ? t("errorMaxProjects") : t("errorGeneric"));
       }
     });
   }

@@ -19,3 +19,18 @@ export const getUserProfileRole = cache(async () => {
     .single();
   return { supabase, user, role: profile?.role ?? null };
 });
+
+export async function requireAuth() {
+  const { supabase, user } = await getSessionUser();
+  if (!user) throw new Error("Unauthenticated");
+  return { supabase, user };
+}
+
+export async function requireMutator() {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (!["admin", "project_manager"].includes(role ?? "")) {
+    throw new Error("Forbidden");
+  }
+  return { supabase, user };
+}

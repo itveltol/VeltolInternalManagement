@@ -12,7 +12,9 @@ import { AddSubcontractorDialog } from "./AddSubcontractorDialog";
 import { EditSubcontractorDialog } from "./EditSubcontractorDialog";
 import { deleteSubcontractorAction } from "@/app/[locale]/(app)/subcontractors/actions";
 import { useSubcontractorsStore } from "../hooks/useSubcontractorsStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { formatDate } from "@/shared/utils/formatDate";
+import { formatCurrency, formatConvertedCurrency } from "@/shared/utils/currency";
 import type { SubcontractorWithProjects } from "../types";
 
 const PAGE_SIZE = 20;
@@ -25,6 +27,7 @@ interface Props {
 export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
   const t = useTranslations("subcontractors");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<{ id: number; message: string } | null>(null);
 
@@ -41,13 +44,9 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
   if (currentPage !== page) setPage(currentPage);
   const pagedSubcontractors = subcontractors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  function formatPrice(v: number | null, currency: string) {
-    if (v == null) return "—";
-    return `${new Intl.NumberFormat("hu-HU").format(v)} ${currency}`;
-  }
-
-  function handleDelete(subcontractorId: number) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDelete(subcontractorId: number) {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteSubcontractor") });
+    if (!ok) return;
     setDeleteError(null);
     setDeletingId(subcontractorId);
     startTransition(async () => {
@@ -129,7 +128,9 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
                                 {a.is_current ? t("current") : t("past")}
                               </Badge>
                               <span className="font-mono text-[11px] text-veltol-fgMute">
-                                {formatPrice(a.price_eur, "€")} · {formatPrice(a.price_lei, "Lei")}
+                                {formatCurrency(a.currency === "EUR" ? a.price_eur : a.price_lei, a.currency === "EUR" ? "EUR" : "lei")}
+                                {" "}
+                                {formatConvertedCurrency(a.currency === "EUR" ? a.price_eur : a.price_lei, a.currency, a.conversion_rate)}
                               </span>
                               <span className="font-mono text-[11px] text-veltol-fgMute">
                                 {formatDate(a.start_date) || "—"} → {formatDate(a.deadline) || "—"}

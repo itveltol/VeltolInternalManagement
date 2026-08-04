@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
+import { CurrencyAmountInput } from "@/shared/components/ui/currency-amount-input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
@@ -86,10 +87,11 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
+  exchangeRate: number | null;
   onClose: () => void;
 }
 
-export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs, onClose }: Props) {
+export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs, exchangeRate, onClose }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -110,7 +112,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
   const [localClientRefs, setLocalClientRefs] = useState<ClientRef[]>(clientRefs);
   const [showAddClient, setShowAddClient] = useState(false);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("internal");
-  const [progressManual, setProgressManual] = useState(false);
   const [statusManual, setStatusManual] = useState(false);
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<SubcontractorRef | null>(null);
   const [localSubcontractorRefs, setLocalSubcontractorRefs] = useState<SubcontractorRef[]>(subcontractorRefs);
@@ -242,7 +243,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
               </div>
 
               <form action={action} className="mt-6 space-y-4">
-                <input type="hidden" name="progress_pct_manual" value={progressManual ? "true" : "false"} />
                 <input type="hidden" name="status_manual" value={statusManual ? "true" : "false"} />
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
@@ -450,15 +450,13 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
-                        <Input name="assignment_price_eur" type="number" min="0" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPriceLei")}</Label>
-                        <Input name="assignment_price_lei" type="number" min="0" />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
+                      <CurrencyAmountInput
+                        amountName="assignment_price"
+                        currencyName="assignment_currency"
+                        rate={exchangeRate}
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -474,32 +472,13 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   </>
                 ) : (
                   <>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
-                        <select name="current_phase" defaultValue="planning" className={SELECT_CLASS}>
-                          {PROJECT_PHASES.map((p) => (
-                            <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
-                          <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
-                            <input
-                              type="checkbox"
-                              checked={progressManual}
-                              onChange={(e) => setProgressManual(e.target.checked)}
-                              className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                            />
-                            <span className="font-mono text-[10px] text-veltol-fgDim">
-                              {progressManual ? t("autoManual.manual") : t("autoManual.auto")}
-                            </span>
-                          </label>
-                        </div>
-                        <Input name="progress_pct" type="number" min="0" max="100" defaultValue="0" disabled={!progressManual} />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phase")}</Label>
+                      <select name="current_phase" defaultValue="planning" className={SELECT_CLASS}>
+                        {PROJECT_PHASES.map((p) => (
+                          <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -525,15 +504,13 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEur")}</Label>
-                        <Input name="value_eur" type="number" min="0" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueLei")}</Label>
-                        <Input name="value_lei" type="number" min="0" />
-                      </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
+                      <CurrencyAmountInput
+                        amountName="value_amount"
+                        currencyName="currency"
+                        rate={exchangeRate}
+                      />
                     </div>
 
                     <div className="space-y-1.5">

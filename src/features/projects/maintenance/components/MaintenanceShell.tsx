@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
 import { setMaintenanceCheckAction } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { buildMaintenanceCycles } from "../services/maintenanceService";
@@ -32,7 +33,8 @@ export function MaintenanceShell({ projectId, checks, canMutate, todayMs }: Prop
 
   function handleToggle(year: number, period: "march" | "october", checked: boolean) {
     startTransition(async () => {
-      await setMaintenanceCheckAction(projectId, year, period, checked);
+      const result = await setMaintenanceCheckAction(projectId, year, period, checked);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
       router.refresh();
     });
   }

@@ -3,6 +3,7 @@
 import { useTransition, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -43,7 +44,9 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   function handleApprove() {
     setAction("approve");
     startTransition(async () => {
-      await approveVacationRequest(request.id);
+      const result = await approveVacationRequest(request.id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "requestApproved"));
       onClose();
     });
   }
@@ -51,7 +54,9 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   function handleReject() {
     setAction("reject");
     startTransition(async () => {
-      await rejectVacationRequest(request.id);
+      const result = await rejectVacationRequest(request.id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "requestRejected"));
       onClose();
     });
   }

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -12,6 +13,7 @@ import { AddTeamDialog } from "./AddTeamDialog";
 import { EditTeamDialog } from "./EditTeamDialog";
 import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useTeamsStore } from "../hooks/useTeamsStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Team } from "../types";
 import type { ProfileRef } from "./TeamMemberPicker";
@@ -33,6 +35,7 @@ interface Props {
 export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
   const t = useTranslations("teams");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -48,11 +51,14 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
   if (currentPage !== page) setPage(currentPage);
   const pagedTeams = teams.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  function handleDelete(teamId: number) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDelete(teamId: number) {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteTeam") });
+    if (!ok) return;
     setDeletingId(teamId);
     startTransition(async () => {
-      await deleteTeamAction(teamId);
+      const result = await deleteTeamAction(teamId);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "teamDeleted"));
       setDeletingId(null);
       router.refresh();
     });

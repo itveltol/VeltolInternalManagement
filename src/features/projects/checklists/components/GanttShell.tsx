@@ -3,12 +3,14 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { GanttChart } from "./GanttChart";
 import { AddCustomTaskDialog } from "./AddCustomTaskDialog";
 import { ScheduleTaskDialog } from "./ScheduleTaskDialog";
 import { deleteCustomTaskAction, unscheduleChecklistItemAction } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { useGanttStore } from "../hooks/useGanttStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import type { ChecklistRow } from "@/features/projects/checklists/types";
 import type { Team } from "@/features/teams/types";
 
@@ -22,6 +24,7 @@ interface Props {
 export function GanttShell({ rows, projectId, teams, canMutate }: Props) {
   const t = useTranslations("checklist");
   const router = useRouter();
+  const confirm = useConfirm();
   const [, startTransition] = useTransition();
 
   const {
@@ -30,24 +33,30 @@ export function GanttShell({ rows, projectId, teams, canMutate }: Props) {
     openScheduleDialog, closeScheduleDialog,
   } = useGanttStore();
 
-  function handleDelete(row: ChecklistRow) {
-    if (!confirm(t("gantt.confirmDeleteTask"))) return;
+  async function handleDelete(row: ChecklistRow) {
+    const ok = await confirm({ title: t("gantt.confirmDeleteTask"), confirmLabel: t("gantt.deleteTask") });
+    if (!ok) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.set("project_id", String(projectId));
       fd.set("item_number", String(row.number));
-      await deleteCustomTaskAction(null, fd);
+      const result = await deleteCustomTaskAction(null, fd);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "gantt.taskDeleted"));
       router.refresh();
     });
   }
 
-  function handleUnschedule(row: ChecklistRow) {
-    if (!confirm(t("gantt.confirmUnscheduleTask"))) return;
+  async function handleUnschedule(row: ChecklistRow) {
+    const ok = await confirm({ title: t("gantt.confirmUnscheduleTask"), confirmLabel: t("gantt.unscheduleTask") });
+    if (!ok) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.set("project_id", String(projectId));
       fd.set("item_number", String(row.number));
-      await unscheduleChecklistItemAction(null, fd);
+      const result = await unscheduleChecklistItemAction(null, fd);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "gantt.taskUnscheduled"));
       router.refresh();
     });
   }

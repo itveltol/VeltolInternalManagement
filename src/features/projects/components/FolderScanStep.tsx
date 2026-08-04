@@ -99,7 +99,6 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-veltol-ai": "1",
         },
         body: JSON.stringify({
           fileNames,

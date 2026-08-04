@@ -3,7 +3,9 @@
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { useDocumentsStore } from "../hooks/useDocumentsStore";
 import { deleteDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import type { Document, DocumentLinkedType } from "../types";
@@ -31,11 +33,15 @@ export function DocumentList({
   const { openAddDialog } = useDocumentsStore();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const confirm = useConfirm();
 
-  function handleDelete(id: number) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDelete(id: number) {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("delete") });
+    if (!ok) return;
     startTransition(async () => {
-      await deleteDocumentAction(id, projectId ?? undefined);
+      const result = await deleteDocumentAction(id, projectId ?? undefined);
+      if (result?.error) toast.error(t(result.error as "errorGeneric"));
+      else if (result?.success) toast.success(t(result.success as "documentDeleted"));
       router.refresh();
     });
   }

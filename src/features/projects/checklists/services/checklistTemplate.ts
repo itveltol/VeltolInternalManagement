@@ -154,6 +154,19 @@ export function mergeChecklistRows(
   return [...templateRows, ...customRows];
 }
 
+/**
+ * Unweighted average of leaf checklist rows' pct — the project's overall
+ * completion. Rows with no pct yet (no plan_total/realizat logged) count as
+ * 0, not excluded — otherwise a handful of finished items with the rest of
+ * the template untouched would average to 100% instead of mostly-incomplete.
+ */
+export function computeOverallPct(rows: ChecklistRow[]): number {
+  const leaves = rows.filter((r) => !r.isSection);
+  if (leaves.length === 0) return 0;
+  const sum = leaves.reduce((a, r) => a + (r.pct ?? 0), 0);
+  return Math.round(sum / leaves.length);
+}
+
 export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] {
   const ordered: ChecklistPhase[] = [
     "structura",

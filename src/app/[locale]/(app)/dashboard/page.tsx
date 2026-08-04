@@ -10,7 +10,8 @@ import { MaintenanceRemindersCard } from "@/features/dashboard/components/Mainte
 import { AvizRemindersCard } from "@/features/dashboard/components/AvizRemindersCard";
 import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
-import { requireAuth, getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
+import { getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
+import { requireAuth } from "@/core/supabase/session";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -33,10 +34,10 @@ export default async function DashboardPage() {
   const avizReminders = await getAvizReminders();
 
   const kpiCardsReal = [
-    { label: t("totalProjectsValue"), value: totalPortfolioValue.toLocaleString("hu-HU"), unit: "EUR", delta: "+" + "12" + t("percentageChange"), deltaPositive: true, featured: true },
-    { label: t("totalCapacity"), value: totalCapacity.toLocaleString("hu-HU"), unit: "MW", delta: "+" + "5" + t("percentageChange"), deltaPositive: true, featured: false },
-    { label: t("totalProjects"), value: totalProjects.toString(), unit: "", delta: "+" + "3" + t("percentageChange"), deltaPositive: true, featured: false },
-    { label: t("totalFinishedProjects"), value: totalFinishedProjects.toString(), unit: "", delta: "+" + "2" + t("percentageChange"), deltaPositive: true, featured: false },
+    { label: t("totalProjectsValue"), value: totalPortfolioValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: true },
+    { label: t("totalCapacity"), value: totalCapacity.toLocaleString("hu-HU"), unit: "MW", delta: "", deltaPositive: true, featured: false },
+    { label: t("totalProjects"), value: totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
+    { label: t("totalFinishedProjects"), value: totalFinishedProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
   ];
 
   const kpiRealIcons = {

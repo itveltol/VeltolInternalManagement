@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProjectsApiClient, CreateProjectPayload } from "./types";
-import type { Project, ProjectManager } from "../types";
+import type { Project, ProjectManager, Currency } from "../types";
 
 const PROJECT_SELECT =
   "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), updated_by_user:profiles!updated_by(first_name, last_name)";
@@ -9,6 +9,8 @@ interface CurrentAssignmentRow {
   project_id: number;
   price_eur: number | null;
   price_lei: number | null;
+  currency: Currency;
+  conversion_rate: number | null;
   start_date: string | null;
   deadline: string | null;
   subcontractor: {
@@ -28,7 +30,7 @@ async function withCurrentAssignments(
 
   const { data, error } = await supabase
     .from("project_subcontractors")
-    .select("id, project_id, price_eur, price_lei, start_date, deadline, subcontractor:subcontractors(id, name, contact_person, phone)")
+    .select("id, project_id, price_eur, price_lei, currency, conversion_rate, start_date, deadline, subcontractor:subcontractors(id, name, contact_person, phone)")
     .in("project_id", projects.map((p) => p.id))
     .eq("is_current", true);
   if (error) throw new Error(error.message);
@@ -50,6 +52,8 @@ async function withCurrentAssignments(
             phone: assignment.subcontractor!.phone,
             price_eur: assignment.price_eur,
             price_lei: assignment.price_lei,
+            currency: assignment.currency,
+            conversion_rate: assignment.conversion_rate,
             start_date: assignment.start_date,
             deadline: assignment.deadline,
           }
@@ -101,6 +105,10 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   },
 
   async updateProject(id, payload: CreateProjectPayload, userId) {
+    // conversion_rate is locked in permanently at creation and is only ever
+    // included here as the caller's explicit choice (see extractProjectPayload
+    // in projects/actions.ts) — either the unchanged existing rate, or a
+    // freshly-fetched one if the user hit "refresh to today's rate".
     const { error } = await supabase
       .from("projects")
       .update({ ...payload, updated_by: userId })

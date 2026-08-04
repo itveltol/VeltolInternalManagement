@@ -205,3 +205,172 @@
     @apply font-sans;
   }
 }
+
+/* ─── Toasts (sonner, fully restyled to match Veltol surfaces) ─── */
+:root {
+  --v-toast-duration: 4000ms;
+}
+
+[data-sonner-toaster] {
+  --width: 336px;
+}
+
+.v-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 14px 14px 14px;
+  border-radius: var(--radius-card);
+  background: var(--v-card);
+  border: 1px solid var(--v-line);
+  box-shadow: var(--v-shadow-card);
+  overflow: hidden;
+  font-family: var(--font-sans), sans-serif;
+}
+
+.v-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0 !important;
+}
+
+.v-toast-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--v-grey);
+}
+
+.v-toast-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.16;
+}
+
+.v-toast-dot--success { background: var(--v-success); color: var(--v-success); }
+.v-toast-dot--warning { background: var(--v-warning); color: var(--v-warning); }
+.v-toast-dot--error   { background: var(--v-danger);  color: var(--v-danger); }
+.v-toast-dot--info    { background: var(--v-blue);    color: var(--v-blue); }
+
+.v-toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+/* sonner puts a single-argument toast.success("message") into the title
+   slot, with no separate title copy — so the mono-label status word is
+   generated ahead of it via ::before on the content wrapper, matching the
+   uppercase-eyebrow convention used across the app's page headers. The
+   real message text (sonner's [data-title] node) then reads as body copy. */
+.v-toast-content::before {
+  content: "Note";
+  display: block;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v-faint);
+  line-height: 1.3;
+}
+
+.v-toast--success .v-toast-content::before { content: "Saved"; color: var(--v-success); }
+.v-toast--warning .v-toast-content::before { content: "Attention"; color: var(--v-warning); }
+.v-toast--error .v-toast-content::before { content: "Failed"; color: var(--v-danger); }
+.v-toast--info .v-toast-content::before { content: "Note"; color: var(--v-blue); }
+
+.v-toast-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--v-ink);
+}
+
+.v-toast-description {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--v-ink-2);
+}
+
+.v-toast-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  transform: none !important;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--v-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.v-toast-close:hover {
+  background: var(--v-hover);
+  color: var(--v-ink-2);
+}
+
+.v-toast-action {
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 26px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--v-blue);
+  color: #ffffff;
+}
+
+/* Progress rail: a slim, state-tinted timer along the toast's bottom edge —
+   the same "time remaining" language as the rest of the app's live-dot
+   motif, rather than sonner's default swipe-only affordance. */
+.v-toast::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--v-grey);
+  opacity: 0.35;
+  transform-origin: left;
+  animation: v-toast-drain var(--v-toast-duration) linear forwards;
+}
+
+.v-toast:hover::after {
+  animation-play-state: paused;
+}
+
+.v-toast--success::after { background: var(--v-success); }
+.v-toast--warning::after { background: var(--v-warning); }
+.v-toast--error::after   { background: var(--v-danger); }
+.v-toast--info::after    { background: var(--v-blue); }
+
+@keyframes v-toast-drain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-toast::after {
+    animation: none;
+    opacity: 0;
+  }
+}

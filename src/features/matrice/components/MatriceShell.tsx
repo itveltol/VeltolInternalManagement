@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import type { MatrixData, MatrixProject, MatrixCell, ActivityStatus } from "../types";
 import { MatriceProjectPicker } from "./MatriceProjectPicker";
 import { MatriceGrid } from "./MatriceGrid";
@@ -12,7 +13,6 @@ import {
   getMatrixData,
   showMatriceProject,
   unshowMatriceProject,
-  setProjectProgressManual,
   syncChecklistFromMatriceCell,
 } from "@/app/[locale]/(app)/matrice-status/actions";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
@@ -91,6 +91,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
       if (result?.error) {
         // Server rejected it (cap reached elsewhere/race): roll back optimistic add.
         setShownIds((prev) => prev.filter((id) => id !== projectId));
+        toast.error(result.error === "errorMaxProjects" ? t("errorMaxProjects") : t("errorGeneric"));
       }
     });
   }
@@ -126,6 +127,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           // Rollback: refetch
           const fresh = await getMatrixData(visibleIds);
           setData(fresh);
+          toast.error(t("errorGeneric"));
           return;
         }
         await syncChecklistFromMatriceCell(projectId, activityId, status, data.activities);
@@ -136,18 +138,6 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           return next;
         });
       }
-    });
-  }
-
-  function handleConfirmAutoProgress(projectId: number) {
-    setData((prev) => ({
-      ...prev,
-      projects: prev.projects.map((p) =>
-        p.id === projectId ? { ...p, progress_pct_manual: true } : p,
-      ),
-    }));
-    startTransition(async () => {
-      await setProjectProgressManual(projectId);
     });
   }
 
@@ -189,7 +179,6 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
           onHideProject={handleRemoveProject}
-          onConfirmAutoProgress={handleConfirmAutoProgress}
           docCounts={docCounts}
           pendingCells={pendingCells}
         />

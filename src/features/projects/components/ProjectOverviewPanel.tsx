@@ -9,6 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { EditProjectDialog } from "./EditProjectDialog";
 import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
+import { formatConvertedCurrency } from "@/shared/utils/currency";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
@@ -45,6 +46,17 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
     return `${new Intl.NumberFormat("hu-HU").format(v)} ${currency}`;
   }
 
+  function formatSourceValueWithConversion(v: number | null, currency: "EUR" | "RON", conversionRate: number | null) {
+    if (v == null) return "—";
+    const converted = formatConvertedCurrency(v, currency, conversionRate);
+    return (
+      <>
+        {formatValue(v, currency === "EUR" ? "€" : "Lei")}
+        <span className="ml-1.5 text-veltol-fgMute">{converted}</span>
+      </>
+    );
+  }
+
   function formatMw(v: number | null) {
     return v != null ? `${v} MW` : "—";
   }
@@ -75,8 +87,14 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
       { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
       { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
       { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
-      { label: t("fields.valueEur"), value: formatValue(project.value_eur, "€") },
-      { label: t("fields.valueLei"), value: formatValue(project.value_lei, "Lei") },
+      {
+        label: t("fields.value"),
+        value: formatSourceValueWithConversion(
+          project.currency === "EUR" ? project.value_eur : project.value_lei,
+          project.currency,
+          project.conversion_rate,
+        ),
+      },
     ]),
     { label: t("fields.progress"), value: `${project.progress_pct}%` },
   ];
@@ -133,11 +151,15 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
             </div>
             <div>
               <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{formatValue(project.subcontractor?.price_eur ?? null, "€")}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPriceLei")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{formatValue(project.subcontractor?.price_lei ?? null, "Lei")}</div>
+              <div className="mt-0.5 text-sm text-veltol-fg">
+                {formatSourceValueWithConversion(
+                  project.subcontractor
+                    ? (project.subcontractor.currency === "EUR" ? project.subcontractor.price_eur : project.subcontractor.price_lei)
+                    : null,
+                  project.subcontractor?.currency ?? "EUR",
+                  project.subcontractor?.conversion_rate ?? null,
+                )}
+              </div>
             </div>
             <div>
               <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorStartDate")}</div>

@@ -3,12 +3,14 @@
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ClipboardCheck, FileCheck2, Pencil, X } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { cancelVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
 import { useVacationStore } from "../hooks/useVacationStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { vacationDays } from "../types";
 import { canEdit } from "../services/vacationService";
 import { RequestVacationDialog } from "./RequestVacationDialog";
@@ -33,6 +35,7 @@ interface Props {
 export function VacationTable({ requests, isAdmin, currentUserId, balance, employees, holidays }: Props) {
   const t = useTranslations("vacation");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
@@ -55,10 +58,13 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
     return name || "—";
   }
 
-  function handleCancel(id: number) {
-    if (!confirm(t("confirmCancel"))) return;
+  async function handleCancel(id: number) {
+    const ok = await confirm({ title: t("confirmCancel") });
+    if (!ok) return;
     startTransition(async () => {
-      await cancelVacationRequest(id);
+      const result = await cancelVacationRequest(id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric"));
+      else if (result?.success) toast.success(t(result.success as "requestCancelled"));
       router.refresh();
     });
   }

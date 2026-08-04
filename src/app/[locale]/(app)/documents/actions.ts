@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
@@ -7,6 +8,8 @@ import { createSupabaseDocumentsClient } from "@/features/documents/api/supabase
 import * as documentService from "@/features/documents/services/documentService";
 import type { Document, DocumentCategory, DocumentStatus } from "@/features/documents/types";
 import type { GetDocumentsFilter } from "@/features/documents/api/types";
+
+const linkedTypeSchema = z.enum(["project", "client", "matrice_cell", "checklist_item"]);
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -72,11 +75,13 @@ export async function createDocumentAction(
     const version   = intOrDefault(formData.get("version"), 1);
 
     if (!name || !url || !linkedType || !linkedId) return { error: "errorGeneric" };
+    const linkedTypeResult = linkedTypeSchema.safeParse(linkedType);
+    if (!linkedTypeResult.success) return { error: "errorValidation" };
 
     await documentService.createDocument(api, {
       name,
       url,
-      linked_type: linkedType as never,
+      linked_type: linkedTypeResult.data,
       linked_id: linkedId,
       project_id: projectId,
       is_renewable: isRenewable,

@@ -128,6 +128,8 @@ export async function saveSubcontractedExecutionDates(
       subcontractor_id: current.subcontractor_id,
       price_eur: current.price_eur,
       price_lei: current.price_lei,
+      currency: current.currency,
+      conversion_rate: current.conversion_rate,
       start_date: startDate,
       deadline: endDate,
       notes: current.notes,
