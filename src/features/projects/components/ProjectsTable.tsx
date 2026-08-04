@@ -229,7 +229,7 @@ export function ProjectsTable({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-[14px]">
+          <table className="w-full min-w-max text-[14px]">
             <thead>
               <tr className="border-b border-border">
                 {[
@@ -239,7 +239,14 @@ export function ProjectsTable({
                   t("columns.deadline"), t("columns.value"),
                   t("columns.manager"), t("columns.client"), t("columns.lastModified"), "",
                 ].map((col, i) => (
-                  <th key={i} className="px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute">
+                  <th
+                    key={i}
+                    className={
+                      i === 3 || i === 9
+                        ? "max-w-[90px] px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] whitespace-normal text-veltol-fgMute"
+                        : "px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute"
+                    }
+                  >
                     {col}
                   </th>
                 ))}
@@ -365,7 +372,7 @@ export function ProjectsTable({
 
                     <td className="px-3 py-3 text-[13px] font-medium text-veltol-fgDim">{managerName(project)}</td>
 
-                    <td className="px-3 py-3 text-[13px] font-medium text-veltol-fgDim">
+                    <td className="max-w-[110px] px-3 py-3 text-[13px] font-medium text-veltol-fgDim">
                       {project.client?.name ?? "—"}
                     </td>
 

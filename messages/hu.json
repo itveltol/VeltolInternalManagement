@@ -122,7 +122,7 @@
       "pageOf": "{page}. oldal / {total}"
     },
     "columns": {
-      "id": "Azonosító",
+      "id": "ID",
       "project": "Projekt",
       "location": "Helyszín",
       "capacity": "Kapacitás",
