@@ -774,6 +774,7 @@
     "saveProfile": "Adatok mentése",
     "saving": "Mentés...",
     "profileSaved": "Adatok mentve.",
+    "passwordEyebrow": "BIZTONSÁG",
     "passwordTitle": "Jelszócsere",
     "passwordDesc": "Erős jelszót válasszon — legalább 8 karakter.",
     "newPassword": "Új jelszó",
@@ -785,6 +786,7 @@
     "passwordTooShort": "A jelszónak legalább 8 karakternek kell lennie.",
     "adminEyebrow": "CSAPAT · FELHASZNÁLÓK",
     "adminTitle": "Csapattagok",
+    "searchPlaceholder": "Keresés név vagy e-mail alapján",
     "inviteUser": "Felhasználó meghívása",
     "colUser": "Felhasználó",
     "colPhone": "Telefon",
@@ -956,7 +958,12 @@
     },
     "cancel": "Mégse",
     "save": "Mentés",
-    "saving": "Mentés..."
+    "saving": "Mentés...",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    }
   },
   "boundaries": {
     "error": {

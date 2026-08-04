@@ -9,6 +9,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
 import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
@@ -64,10 +65,23 @@ export function UserTable({
   } = useProfileStore();
 
   const [page, setPage] = useState(1);
-  const pageCount = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const [search, setSearch] = useState("");
+
+  const filtered = users.filter((u) => {
+    const name = `${u.first_name ?? ""} ${u.last_name ?? ""}`.toLowerCase();
+    const query = search.trim().toLowerCase();
+    return name.includes(query) || (u.email ?? "").toLowerCase().includes(query);
+  });
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   if (currentPage !== page) setPage(currentPage);
-  const pagedUsers = users.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pagedUsers = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   async function handleDelete(userId: string) {
     const ok = await confirm({ title: `${t("deleteUser")}?`, confirmLabel: t("deleteUser") });
@@ -95,9 +109,21 @@ export function UserTable({
               {t("adminTitle")}
             </h2>
           </div>
-          <Button onClick={openInviteDialog} variant="outline">
-            {t("inviteUser")}
-          </Button>
+          <div className="flex items-center gap-3">
+            <FilterField label={t("searchPlaceholder")} htmlFor="users-search">
+              <FilterInput
+                id="users-search"
+                type="search"
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="w-56"
+              />
+            </FilterField>
+            <Button onClick={openInviteDialog} variant="outline">
+              {t("inviteUser")}
+            </Button>
+          </div>
         </div>
 
         {/* Table */}

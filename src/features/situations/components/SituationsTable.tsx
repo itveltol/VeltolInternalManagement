@@ -7,6 +7,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
+import { Pagination } from "@/shared/components/ui/pagination";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatCurrency } from "@/shared/utils/currency";
 import { deleteSituationAction } from "@/app/[locale]/(app)/situations/actions";
@@ -17,6 +18,8 @@ import { CreateSituationDialog } from "./CreateSituationDialog";
 import { RenameSituationDialog } from "./RenameSituationDialog";
 import type { Situation, SituationWithProject } from "../types";
 import type { Project } from "@/features/projects/types";
+
+const PAGE_SIZE = 20;
 
 interface Props {
   situations: SituationWithProject[];
@@ -31,6 +34,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
   const [isPending, startTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<{ id: number; message: string } | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const {
     isAddDialogOpen, editingSituation, deletingId,
@@ -42,6 +46,16 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
   const filtered = situations.filter((s) =>
     s.project.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  if (currentPage !== page) setPage(currentPage);
+  const pagedSituations = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
 
   async function handleDelete(situationId: number) {
     const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteSituation") });
@@ -77,7 +91,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
                 id="situations-search"
                 type="search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder={t("searchPlaceholder")}
                 className="w-48"
               />
@@ -116,7 +130,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
                   </td>
                 </tr>
               ) : (
-                filtered.map((situation) => {
+                pagedSituations.map((situation) => {
                   const isFinal = situation.status === "final";
                   const siblings = situations.filter((s) => s.project_id === situation.project_id);
                   const previous = findPreviousFinalized(siblings, situation.id);
@@ -183,6 +197,15 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          onPageChange={setPage}
+          prevLabel={t("pagination.prev")}
+          nextLabel={t("pagination.next")}
+          pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+        />
       </div>
 
       <CreateSituationDialog

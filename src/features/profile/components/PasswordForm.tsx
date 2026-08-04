@@ -12,12 +12,14 @@ export function PasswordForm() {
   const [state, action, pending] = useActionState(changePassword, null);
 
   return (
-    <div
-      className="overflow-hidden rounded-xl border border-border bg-card px-8 py-8"
-      style={{ background: "rgba(6, 10, 18, 0.6)" }}
-    >
-      <div className="mb-6 text-[11px] font-medium text-veltol-fgMute">
-        {t("passwordTitle")}
+    <div className="overflow-hidden rounded-xl border border-border bg-card px-8 py-8">
+      <div className="mb-6">
+        <div className="text-[11px] font-medium text-veltol-fgMute">
+          {t("passwordEyebrow")}
+        </div>
+        <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">
+          {t("passwordTitle")}
+        </h2>
       </div>
 
       <form action={action} className="max-w-sm space-y-4">
