@@ -20,12 +20,11 @@ interface Props {
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   onHideProject: (projectId: number) => void;
-  onConfirmAutoProgress: (projectId: number) => void;
   docCounts?: Map<string, number>;
   pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, onConfirmAutoProgress, docCounts = new Map(), pendingCells }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, docCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
   const phases = useMemo(
@@ -271,8 +270,6 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
                                   pending={pendingCells?.has(`${p.id}:${activity.id}`)}
                                   disabled={!appliesToProject}
-                                  progressManual={p.progress_pct_manual}
-                                  onConfirmAutoProgress={onConfirmAutoProgress}
                                 />
                               ) : (
                                 <div

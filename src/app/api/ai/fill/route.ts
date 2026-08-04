@@ -1,7 +1,10 @@
 import Anthropic, { toFile } from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionUser } from "@/core/supabase/session";
 
 const anthropic = new Anthropic();
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 type FormType = "client" | "project";
 type Locale = "en" | "hu" | "ro";
@@ -142,8 +145,9 @@ function parseJson(text: string): Record<string, unknown> {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-veltol-ai") !== "1") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { user } = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const contentType = req.headers.get("content-type") ?? "";
@@ -175,6 +179,9 @@ export async function POST(req: NextRequest) {
 
     const fileEntry = formData.get("file");
     if (fileEntry instanceof File && fileEntry.size > 0) {
+      if (fileEntry.size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: "File too large" }, { status: 413 });
+      }
       file = fileEntry;
     }
   } else {

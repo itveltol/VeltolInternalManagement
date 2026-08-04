@@ -21,7 +21,8 @@
     "delivery": "Livrare",
     "site": "Construcție · Șantier",
     "pontaj": "Personal · Pontaj",
-    "gantt": "Gantt"
+    "gantt": "Gantt",
+    "situations": "Situații"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -128,7 +129,6 @@
       "status": "Status",
       "deadline": "Termen",
       "value": "Valoare",
-      "valueLei": "Valoare (Lei)",
       "phase": "Fază",
       "progress": "Progres",
       "generalStatus": "Status",
@@ -165,7 +165,7 @@
       "subcontractorContactPerson": "Persoană de contact",
       "subcontractorPhone": "Telefon",
       "subcontractorPrice": "Preț",
-      "subcontractorPriceLei": "Preț (Lei)",
+      "currency": "Moneda",
       "subcontractorStartDate": "Data de început",
       "subcontractorDeadline": "Termen",
       "phase": "Faza curentă",
@@ -173,8 +173,8 @@
       "contractNumber": "Numărul contractului",
       "contractDate": "Data contractului",
       "deadline": "Termen final",
-      "valueEur": "Valoare (€)",
-      "valueLei": "Valoare (Lei)",
+      "value": "Valoare",
+      "refreshRate": "Actualizează la cursul de azi",
       "status": "Status general",
       "notes": "Note"
     },
@@ -362,6 +362,9 @@
     "eyebrowSub": "MATRICE STATUS",
     "title": "Matrice Status",
     "subtitle": "Matrice de stare activități × proiecte — urmărește livrabilele și progresul pentru fiecare client.",
+    "errorMaxProjects": "Maximum 5 proiecte — elimină unul pentru a adăuga altul.",
+    "errorGeneric": "A apărut o eroare. Celula a fost revenită.",
+    "cellSaved": "Salvat.",
     "picker": {
       "label": "PROIECTE",
       "shownCount": "{count} selectate",
@@ -397,12 +400,6 @@
       "description": "„{activity}” este un aviz periodic — setează data expirării pentru a putea trimite un reminder de reînnoire.",
       "dateLabel": "Data expirării",
       "confirm": "Salvează",
-      "cancel": "Anulează"
-    },
-    "autoProgressWarning": {
-      "title": "Treci la progres manual?",
-      "description": "Progresul acestui proiect este setat momentan pe automat, calculat din completarea Matrice/checklist. Modificarea manuală va trece proiectul pe progres manual.",
-      "confirm": "OK",
       "cancel": "Anulează"
     },
     "avizReminders": {
@@ -532,6 +529,7 @@
     "clientDeleted": "Client șters.",
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "errorValidation": "Verificați câmpurile evidențiate — CNP, CUI, numărul de înregistrare, email și telefon trebuie să respecte formatul corect.",
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Salvare...",
@@ -629,6 +627,7 @@
     "removeMember": "Elimină",
     "confirmRemoveMember": "Eliminați acest membru din echipă?",
     "memberAdded": "Membru adăugat.",
+    "memberAddPartialFailure": "{count} membru(i) nu au putut fi adăugați.",
     "memberRemoved": "Membru eliminat.",
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
@@ -680,6 +679,7 @@
     "documentDeleted": "Document șters.",
     "errorGeneric": "Ceva a mers greșit.",
     "errorNotAllowed": "Nu ai permisiunea să faci asta.",
+    "errorValidation": "Tip de legătură document invalid.",
     "emptyState": "Niciun document deocamdată.",
     "openDocument": "Deschide",
     "openProjectFolder": "Deschide dosarul proiectului",
@@ -863,6 +863,7 @@
     "save": "Salvează",
     "saving": "Se salvează...",
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
+    "errorMaxProjects": "Maximum 5 proiecte — elimină unul pentru a adăuga altul.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
     "picker": {
       "label": "PROIECTE",
@@ -911,5 +912,66 @@
       "next": "Următor",
       "pageOf": "Pagina {page} din {total}"
     }
+  },
+  "situations": {
+    "tabLabel": "Situații",
+    "breadcrumb": "Situații",
+    "eyebrow": "SITUAȚII · TOATE",
+    "title": "Situații",
+    "emptyState": "Nu există încă situații. Adăugați prima situație.",
+    "noResults": "Niciun proiect nu corespunde căutării.",
+    "searchPlaceholder": "Căutare după numele proiectului",
+    "totalCount": "{count} situații în total",
+    "addSituation": "Adăugare situație",
+    "editSituation": "Redenumire",
+    "deleteSituation": "Ștergere",
+    "confirmDelete": "Ștergeți această situație?",
+    "fields": {
+      "name": "Nume",
+      "project": "Proiect"
+    },
+    "selectProjectPlaceholder": "Căutare proiecte...",
+    "selectProjectClear": "Șterge proiectul selectat",
+    "selectProjectNoResults": "Niciun proiect corespunzător.",
+    "status": {
+      "draft": "Ciornă",
+      "final": "Finală"
+    },
+    "finalize": "Finalizare",
+    "finalizeConfirmTitle": "Finalizați această situație?",
+    "finalizeConfirmBody": "După finalizare, procentul de execuție și suma de facturat sunt blocate la valorile curente. Progresul ulterior al listei de verificare nu va mai modifica cifrele acestei situații. Această acțiune nu poate fi anulată.",
+    "finalizeConfirmButton": "Finalizare",
+    "situationCreated": "Situație creată.",
+    "situationSaved": "Situație salvată.",
+    "situationDeleted": "Situație ștearsă.",
+    "situationFinalized": "Situație finalizată.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu aveți permisiunea de a face asta.",
+    "columns": {
+      "project": "Proiect",
+      "date": "Data",
+      "pct": "% finalizat",
+      "amountEur": "Sumă (EUR)",
+      "amountLei": "Sumă (lei)"
+    },
+    "cancel": "Anulare",
+    "save": "Salvare",
+    "saving": "Se salvează..."
+  },
+  "boundaries": {
+    "error": {
+      "title": "A apărut o eroare",
+      "description": "A apărut o eroare neașteptată la încărcarea acestei pagini.",
+      "retry": "Încearcă din nou"
+    },
+    "notFound": {
+      "title": "Pagina nu a fost găsită",
+      "description": "Pagina căutată nu există sau a fost mutată.",
+      "backToDashboard": "Înapoi la panou"
+    }
+  },
+  "common": {
+    "cancel": "Anulează",
+    "confirm": "Confirmă"
   }
 }

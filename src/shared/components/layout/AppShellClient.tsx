@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Sidebar } from "@/shared/components/layout/sidebar";
 import { Topbar } from "@/shared/components/layout/topbar";
 import { MobileNavDrawer } from "@/shared/components/layout/MobileNavDrawer";
+import { Toaster } from "@/shared/components/ui/sonner";
+import { ConfirmProvider } from "@/shared/components/ui/confirm-dialog";
 
 const SIDEBAR_COLLAPSED_KEY = "veltol:sidebar-collapsed";
 
@@ -40,27 +42,30 @@ export function AppShellClient({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        displayName={displayName}
-        initials={initials}
-        collapsed={collapsed}
-        onToggleCollapsed={toggleCollapsed}
-      />
-      <MobileNavDrawer
-        open={navOpen}
-        onOpenChange={setNavOpen}
-        displayName={displayName}
-        initials={initials}
-      />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar onMenuClick={() => setNavOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[1360px] mx-auto p-4 sm:px-5 sm:py-[30px] md:px-6 md:py-10 lg:px-8">
-            {children}
-          </div>
-        </main>
+    <ConfirmProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar
+          displayName={displayName}
+          initials={initials}
+          collapsed={collapsed}
+          onToggleCollapsed={toggleCollapsed}
+        />
+        <MobileNavDrawer
+          open={navOpen}
+          onOpenChange={setNavOpen}
+          displayName={displayName}
+          initials={initials}
+        />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Topbar onMenuClick={() => setNavOpen(true)} />
+          <main className="flex-1 overflow-y-auto">
+            <div className="max-w-[1360px] mx-auto p-4 sm:px-5 sm:py-[30px] md:px-6 md:py-10 lg:px-8">
+              {children}
+            </div>
+          </main>
+        </div>
+        <Toaster />
       </div>
-    </div>
+    </ConfirmProvider>
   );
 }

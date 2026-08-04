@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -12,6 +13,7 @@ import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
 import { useProfileStore } from "../hooks/useProfileStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Profile, AppRole } from "../types";
 
@@ -50,6 +52,7 @@ export function UserTable({
 }) {
   const t = useTranslations("profile");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -66,11 +69,14 @@ export function UserTable({
   if (currentPage !== page) setPage(currentPage);
   const pagedUsers = users.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  function handleDelete(userId: string) {
-    if (!confirm(`${t("deleteUser")}?`)) return;
+  async function handleDelete(userId: string) {
+    const ok = await confirm({ title: `${t("deleteUser")}?`, confirmLabel: t("deleteUser") });
+    if (!ok) return;
     setDeletingId(userId);
     startTransition(async () => {
-      await deleteUser(userId);
+      const result = await deleteUser(userId);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAdmin" | "errorSelfDelete"));
+      else if (result?.success) toast.success(t(result.success as "userDeleted"));
       setDeletingId(null);
       router.refresh();
     });

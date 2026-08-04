@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -10,6 +11,7 @@ import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { deleteDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import { useDocumentsStore } from "../hooks/useDocumentsStore";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Document, DocumentLinkedType, DocumentStatus, DocumentCategory } from "../types";
 import { DOCUMENT_CATEGORIES, DOCUMENT_STATUSES } from "../types";
@@ -74,6 +76,7 @@ export function DocumentsTable({
 }: Props) {
   const t = useTranslations("documents");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const { openEditDialog } = useDocumentsStore();
 
@@ -94,10 +97,13 @@ export function DocumentsTable({
   }
   const pagedDocuments = documents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  function handleDelete(doc: Document) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDelete(doc: Document) {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("delete") });
+    if (!ok) return;
     startTransition(async () => {
-      await deleteDocumentAction(doc.id, doc.project_id ?? undefined);
+      const result = await deleteDocumentAction(doc.id, doc.project_id ?? undefined);
+      if (result?.error) toast.error(t(result.error as "errorGeneric"));
+      else if (result?.success) toast.success(t(result.success as "documentDeleted"));
       router.refresh();
     });
   }

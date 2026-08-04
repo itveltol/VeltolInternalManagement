@@ -1,6 +1,6 @@
 "use server";
 
-import { getSessionUser } from "@/core/supabase/session";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
@@ -17,6 +17,15 @@ export type ActionState = { error?: string; success?: string } | null;
 async function requireAuth() {
   const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
+  return { supabase, user };
+}
+
+async function requireMutator() {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user) throw new Error("Unauthenticated");
+  if (!["admin", "project_manager"].includes(role ?? "")) {
+    throw new Error("Forbidden");
+  }
   return { supabase, user };
 }
 
@@ -82,34 +91,11 @@ export async function setCellStatus(
   expiresAt?: string | null,
 ): Promise<ActionState> {
   try {
-    const { supabase, user } = await requireAuth();
+    const { supabase, user } = await requireMutator();
     const client = createSupabaseMatriceClient(supabase);
     await matriceService.setCellStatus(client, projectId, activityId, status, user.id, expiresAt);
     const locale = await getLocale();
     revalidatePath(`/${locale}/matrice-status`);
-    return { success: "saved" };
-  } catch {
-    return { error: "errorGeneric" };
-  }
-}
-
-/**
- * Opts a project out of automatic progress calculation — called once, the
- * first time someone edits a Matrice cell while the project is still in
- * "auto" mode (see AutoProgressWarningDialog). Mirrors flipping the same
- * progress_pct_manual flag as the Edit Project "Manual" toggle.
- */
-export async function setProjectProgressManual(projectId: number): Promise<ActionState> {
-  try {
-    const { supabase } = await requireAuth();
-    const { error } = await supabase
-      .from("projects")
-      .update({ progress_pct_manual: true })
-      .eq("id", projectId);
-    if (error) throw new Error(error.message);
-    const locale = await getLocale();
-    revalidatePath(`/${locale}/matrice-status`);
-    revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "saved" };
   } catch {
     return { error: "errorGeneric" };
@@ -133,7 +119,7 @@ export async function syncChecklistFromMatriceCell(
   const itemNumber = resolveItemNumberForActivity(activityId, activities);
   if (itemNumber === null) return;
 
-  const { supabase } = await requireAuth();
+  const { supabase } = await requireMutator();
   const checklistClient = createSupabaseChecklistClient(supabase);
   const records = await checklistService.getChecklistRecords(checklistClient, projectId);
   const record = records.find((r) => r.item_number === itemNumber);

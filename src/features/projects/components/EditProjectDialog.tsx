@@ -5,9 +5,10 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
+import { CurrencyAmountInput } from "@/shared/components/ui/currency-amount-input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
-import { updateProject, assignProjectTeam, reverseGeocode } from "@/app/[locale]/(app)/projects/actions";
+import { updateProject, assignProjectTeam, reverseGeocode, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
 import {
   PROJECT_PHASES,
   PROJECT_STATUSES,
@@ -66,7 +67,6 @@ export function EditProjectDialog(props: Props) {
 
   const [state, action, pending] = useActionState(updateProject, null);
   const [category, setCategory] = useState<ProjectCategory>(project.project_category);
-  const [progressManual, setProgressManual] = useState(project.progress_pct_manual);
   const [statusManual, setStatusManual] = useState(project.status_manual);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>(project.execution_mode);
   const [localSubcontractorRefs, setLocalSubcontractorRefs] = useState<SubcontractorRef[]>(subcontractorRefs);
@@ -292,15 +292,17 @@ export function EditProjectDialog(props: Props) {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
-                    <Input name="assignment_price_eur" type="number" min="0" defaultValue={currentAssignment?.price_eur ?? ""} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPriceLei")}</Label>
-                    <Input name="assignment_price_lei" type="number" min="0" defaultValue={currentAssignment?.price_lei ?? ""} />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</Label>
+                  <CurrencyAmountInput
+                    amountName="assignment_price"
+                    currencyName="assignment_currency"
+                    defaultAmount={currentAssignment?.currency === "RON" ? currentAssignment?.price_lei : currentAssignment?.price_eur}
+                    defaultCurrency={currentAssignment?.currency ?? "EUR"}
+                    rate={currentAssignment?.conversion_rate ?? null}
+                    onRefreshRate={getExchangeRate}
+                    refreshLabel={t("fields.refreshRate")}
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -326,29 +328,10 @@ export function EditProjectDialog(props: Props) {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
-                      <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
-                        <input
-                          type="checkbox"
-                          checked={progressManual}
-                          onChange={(e) => setProgressManual(e.target.checked)}
-                          className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                        />
-                        <span className="font-mono text-[10px] text-veltol-fgDim">
-                          {progressManual ? t("autoManual.manual") : t("autoManual.auto")}
-                        </span>
-                      </label>
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.progress")}</Label>
+                    <div className="flex h-9 items-center px-1 font-mono text-[13px] text-veltol-fg">
+                      {project.progress_pct}%
                     </div>
-                    <input type="hidden" name="progress_pct_manual" value={progressManual ? "true" : "false"} />
-                    <Input
-                      name="progress_pct"
-                      type="number"
-                      min="0"
-                      max="100"
-                      defaultValue={project.progress_pct}
-                      disabled={!progressManual}
-                    />
                   </div>
                 </div>
 
@@ -370,15 +353,17 @@ export function EditProjectDialog(props: Props) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueEur")}</Label>
-                    <Input name="value_eur" type="number" min="0" defaultValue={project.value_eur ?? ""} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.valueLei")}</Label>
-                    <Input name="value_lei" type="number" min="0" defaultValue={project.value_lei ?? ""} />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
+                  <CurrencyAmountInput
+                    amountName="value_amount"
+                    currencyName="currency"
+                    defaultAmount={project.currency === "RON" ? project.value_lei : project.value_eur}
+                    defaultCurrency={project.currency}
+                    rate={project.conversion_rate}
+                    onRefreshRate={getExchangeRate}
+                    refreshLabel={t("fields.refreshRate")}
+                  />
                 </div>
 
                 <div className="space-y-1.5">

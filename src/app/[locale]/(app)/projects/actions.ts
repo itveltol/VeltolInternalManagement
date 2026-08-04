@@ -8,7 +8,7 @@ import { createSupabaseProjectsClient } from "@/features/projects/api/supabasePr
 import * as projectService from "@/features/projects/services/projectService";
 import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Project, ProjectManager, ProjectCategory, FinancialType, ExecutionMode } from "@/features/projects/types";
+import type { Project, ProjectManager, ProjectCategory, FinancialType, ExecutionMode, Currency } from "@/features/projects/types";
 import { CONTRACT_TYPES } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
@@ -21,6 +21,8 @@ import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatr
 import * as matriceService from "@/features/matrice/services/matriceService";
 import { buildDerivedActivityIds } from "@/features/matrice/services/checklistActivityMapping";
 import type { ActivityStatus } from "@/features/matrice/types";
+import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
+import { getTodaysRate } from "@/features/exchangeRates/services/exchangeRateService";
 
 export type ActionState = {
   error?: string;
@@ -61,7 +63,7 @@ async function requireProjectOwner(projectId: number) {
   return { supabase, user };
 }
 
-function extractProjectPayload(formData: FormData, existing?: Project) {
+function extractProjectPayload(formData: FormData, existing: Project | undefined, conversionRate: number | null) {
   const str = (key: string) => {
     const v = formData.get(key) as string | null;
     return v && v.trim() !== "" ? v.trim() : null;
@@ -94,6 +96,12 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
   const execution_mode: ExecutionMode =
     formData.get("execution_mode") === "subcontracted" ? "subcontracted" : "internal";
 
+  // The form only exposes a single amount + currency toggle; route it into
+  // whichever of value_eur/value_lei matches the chosen currency so the
+  // other stays null rather than holding a stale manually-entered value.
+  const currency: Currency = formData.get("currency") === "RON" ? "RON" : "EUR";
+  const value_amount = num("value_amount");
+
   return {
     name: (formData.get("name") as string).trim(),
     county: str("county"),
@@ -110,15 +118,16 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
     client_id: num("client_id"),
     execution_mode,
     current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "",
-    progress_pct: formData.has("progress_pct") ? Number(formData.get("progress_pct")) : existing?.progress_pct ?? 0,
+    progress_pct: existing?.progress_pct ?? 0,
     contract_number: str("contract_number"),
     contract_date: str("contract_date"),
     deadline: str("deadline"),
-    value_eur: num("value_eur"),
-    value_lei: num("value_lei"),
+    value_eur: currency === "EUR" ? value_amount : null,
+    value_lei: currency === "RON" ? value_amount : null,
+    currency,
+    conversion_rate: conversionRate,
     status: (formData.get("status") as string | null) ?? existing?.status ?? "on_schedule",
     status_manual: formData.get("status_manual") === "true",
-    progress_pct_manual: formData.get("progress_pct_manual") === "true",
     notes: str("notes"),
     paid_by: strOrExisting("paid_by", existing?.paid_by ?? null),
   };
@@ -132,7 +141,7 @@ function extractProjectPayload(formData: FormData, existing?: Project) {
  * project_subcontractors, and only when the subcontracted branch was actually
  * rendered and submitted with a subcontractor picked.
  */
-function extractAssignmentPayload(formData: FormData) {
+function extractAssignmentPayload(formData: FormData, conversionRate: number | null) {
   const subcontractorId = Number(formData.get("subcontractor_id"));
   if (!formData.has("subcontractor_id") || !subcontractorId) return null;
 
@@ -147,10 +156,15 @@ function extractAssignmentPayload(formData: FormData) {
     return isNaN(n) ? null : n;
   };
 
+  const currency = formData.get("assignment_currency") === "RON" ? "RON" as const : "EUR" as const;
+  const price_amount = num("assignment_price");
+
   return {
     subcontractor_id: subcontractorId,
-    price_eur: num("assignment_price_eur"),
-    price_lei: num("assignment_price_lei"),
+    price_eur: currency === "EUR" ? price_amount : null,
+    price_lei: currency === "RON" ? price_amount : null,
+    currency,
+    conversion_rate: conversionRate,
     start_date: str("assignment_start_date"),
     deadline: str("assignment_deadline"),
     notes: str("assignment_notes"),
@@ -163,9 +177,22 @@ async function upsertAssignmentIfSubcontracted(
   formData: FormData,
 ): Promise<void> {
   if (formData.get("execution_mode") !== "subcontracted") return;
-  const assignmentPayload = extractAssignmentPayload(formData);
-  if (!assignmentPayload) return;
   const api = createSupabaseSubcontractorsClient(supabase);
+  const currentAssignment = await subcontractorService.getCurrentAssignment(api, projectId);
+
+  // A genuinely new assignment row (new project, or reassignment to a
+  // different subcontractor) always locks in today's rate. An in-place edit
+  // of the existing assignment keeps its own rate frozen unless the user
+  // explicitly hit "refresh to today's rate".
+  const subcontractorId = Number(formData.get("subcontractor_id"));
+  const isNewRow = !currentAssignment || currentAssignment.subcontractor_id !== subcontractorId;
+  const explicitRefresh = formData.get("assignment_price_refresh_rate") === "true";
+  const conversionRate = isNewRow || explicitRefresh
+    ? (await getExchangeRate()) ?? currentAssignment?.conversion_rate ?? null
+    : currentAssignment?.conversion_rate ?? null;
+
+  const assignmentPayload = extractAssignmentPayload(formData, conversionRate);
+  if (!assignmentPayload) return;
   await subcontractorService.upsertCurrentAssignment(api, projectId, assignmentPayload);
 }
 
@@ -195,6 +222,15 @@ export async function getProjectManagers(): Promise<ProjectManager[]> {
   return projectService.getProjectManagers(client);
 }
 
+/** Today's EUR→RON reference rate for the "≈ converted amount" display, or
+ * null if BNR's feed is unreachable and nothing has been cached yet. */
+export async function getExchangeRate(): Promise<number | null> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseExchangeRatesClient(supabase);
+  const rate = await getTodaysRate(client);
+  return rate?.eurRon ?? null;
+}
+
 export async function createProject(
   _prev: ActionState,
   formData: FormData,
@@ -202,7 +238,9 @@ export async function createProject(
   try {
     const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
-    const payload = extractProjectPayload(formData);
+    const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
+    const rate = await getTodaysRate(exchangeRateClient);
+    const payload = extractProjectPayload(formData, undefined, rate?.eurRon ?? null);
     const { id: newId } = await projectService.createProject(client, payload, user.id);
     await upsertAssignmentIfSubcontracted(supabase, newId, formData);
     revalidatePath(await getProjectsPath());
@@ -273,7 +311,13 @@ export async function updateProject(
     const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
     const existing = await projectService.getProjectById(client, projectId);
-    await projectService.updateProject(client, projectId, extractProjectPayload(formData, existing ?? undefined), user.id);
+    // conversion_rate stays frozen on edit unless the user explicitly hit
+    // "refresh to today's rate" (CurrencyAmountInput's hidden flag).
+    const conversionRate = formData.get("value_amount_refresh_rate") === "true"
+      ? (await getExchangeRate()) ?? existing?.conversion_rate ?? null
+      : existing?.conversion_rate ?? null;
+    const payload = extractProjectPayload(formData, existing ?? undefined, conversionRate);
+    await projectService.updateProject(client, projectId, payload, user.id);
     await upsertAssignmentIfSubcontracted(supabase, projectId, formData);
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());

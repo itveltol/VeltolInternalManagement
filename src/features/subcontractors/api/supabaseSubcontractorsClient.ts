@@ -8,7 +8,7 @@ import type {
 } from "../types";
 
 const ASSIGNMENTS_SELECT =
-  "assignments:project_subcontractors(id, price_eur, price_lei, start_date, deadline, is_current, project:projects(id, name, current_phase))";
+  "assignments:project_subcontractors(id, price_eur, price_lei, currency, conversion_rate, start_date, deadline, is_current, project:projects(id, name, current_phase))";
 
 export const createSupabaseSubcontractorsClient = (supabase: SupabaseClient): SubcontractorsApiClient => ({
   async getSubcontractors() {
@@ -77,12 +77,39 @@ export const createSupabaseSubcontractorsClient = (supabase: SupabaseClient): Su
   },
 
   async upsertCurrentAssignment(projectId, payload: UpsertAssignmentPayload) {
-    const { error: deactivateError } = await supabase
+    const { data: currentRow, error: currentError } = await supabase
       .from("project_subcontractors")
-      .update({ is_current: false })
+      .select("id, subcontractor_id")
       .eq("project_id", projectId)
-      .eq("is_current", true);
-    if (deactivateError) throw new Error(deactivateError.message);
+      .eq("is_current", true)
+      .maybeSingle();
+    if (currentError) throw new Error(currentError.message);
+
+    // Same subcontractor as before: update the existing row in place so
+    // routine edits (e.g. Gantt date changes) don't manufacture new history
+    // rows. Only a genuine reassignment to a different subcontractor should
+    // deactivate the old row and insert a new one.
+    if (currentRow && currentRow.subcontractor_id === payload.subcontractor_id) {
+      // conversion_rate is locked in permanently when the row is first
+      // created and is only ever included here as the caller's explicit
+      // choice (see extractAssignmentPayload in projects/actions.ts) — either
+      // the unchanged existing rate, or a freshly-fetched one if the user
+      // hit "refresh to today's rate".
+      const { error: updateError } = await supabase
+        .from("project_subcontractors")
+        .update(payload)
+        .eq("id", currentRow.id);
+      if (updateError) throw new Error(updateError.message);
+      return;
+    }
+
+    if (currentRow) {
+      const { error: deactivateError } = await supabase
+        .from("project_subcontractors")
+        .update({ is_current: false })
+        .eq("id", currentRow.id);
+      if (deactivateError) throw new Error(deactivateError.message);
+    }
 
     const { error: insertError } = await supabase
       .from("project_subcontractors")

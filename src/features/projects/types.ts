@@ -21,6 +21,8 @@ export type ContractType = "proiectare" | "executie" | "mentenanta" | "racordare
 
 export type ExecutionMode = "internal" | "subcontracted";
 
+export type Currency = "EUR" | "RON";
+
 export interface Project {
   id: number;
   name: string;
@@ -50,6 +52,10 @@ export interface Project {
     phone: string | null;
     price_eur: number | null;
     price_lei: number | null;
+    /** Which of price_eur/price_lei was actually entered; the other is derived from conversion_rate. */
+    currency: Currency;
+    /** EUR->RON rate on the day this assignment was created; locked in permanently, never recomputed. */
+    conversion_rate: number | null;
     start_date: string | null;
     deadline: string | null;
   } | null;
@@ -60,11 +66,13 @@ export interface Project {
   deadline: string | null;
   value_eur: number | null;
   value_lei: number | null;
+  /** Which of value_eur/value_lei was actually entered; the other is derived from conversion_rate. */
+  currency: Currency;
+  /** EUR->RON rate on the day this project was created; locked in permanently, never recomputed. */
+  conversion_rate: number | null;
   status: ProjectStatus;
   /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
   status_manual: boolean;
-  /** When false, `progress_pct` is recomputed from Matrice/checklist progress on the next relevant change. */
-  progress_pct_manual: boolean;
   notes: string | null;
   paid_by: string | null;
   onedrive_folder_id: string | null;

@@ -256,9 +256,13 @@ export function PortfolioGanttChart({ rows, rangeRows, todayMs, onNavigateToPhas
             <div className="flex w-64 shrink-0 items-center gap-2 border-r border-border px-4 py-4">
               <div className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold text-veltol-fg">{project.name}</span>
-                {project.execution_mode !== "subcontracted" && project.team?.name && (
-                  <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.team.name}</span>
-                )}
+                {project.execution_mode === "subcontracted"
+                  ? project.subcontractor?.name && (
+                      <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.subcontractor.name}</span>
+                    )
+                  : project.team?.name && (
+                      <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.team.name}</span>
+                    )}
                 {project.project_type && (
                   <span className="font-mono text-[9px] uppercase tracking-wide text-veltol-fgMute">
                     {project.project_type}
@@ -324,13 +328,13 @@ export function PortfolioGanttChart({ rows, rangeRows, todayMs, onNavigateToPhas
                             >
                               {!segment.disabled && (
                                 <div
-                                  className="absolute inset-y-0 right-0 bg-black/20"
-                                  style={{ width: `${Math.min(100, Math.max(0, (100 - segment.pct) * 1.5))}%` }}
+                                  className="absolute inset-y-0 left-0 bg-white/30"
+                                  style={{ width: `${Math.min(100, Math.max(0, segment.pct))}%` }}
                                 />
                               )}
                               {!segment.disabled && (
-                                <span className="relative truncate px-3 font-mono text-[10px] font-semibold uppercase tracking-wide text-white">
-                                  {t(`phase.${segment.key}`)}
+                                <span className="relative truncate px-3 font-mono text-[10px] font-semibold uppercase tracking-wide text-white drop-shadow">
+                                  {t(`phase.${segment.key}`)} · <span className="tabular-nums">{segment.pct}%</span>
                                 </span>
                               )}
                               {!segment.disabled && segment.variance === "behind" && (

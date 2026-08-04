@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { FilterField, FilterDropdown } from "@/shared/components/ui/filter-field";
 import { AddClientDialog } from "./AddClientDialog";
 import { EditClientDialog } from "./EditClientDialog";
@@ -29,6 +31,7 @@ interface Props {
 export function ClientsTable({ clients, canMutate, filterType, onFilterType, highlightId }: Props) {
   const t = useTranslations("clients");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const highlightRowRef = useRef<HTMLTableRowElement>(null);
 
@@ -74,11 +77,17 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
     highlightRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightId, currentPage]);
 
-  function handleDelete(clientId: number) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDelete(clientId: number) {
+    const ok = await confirm({
+      title: t("confirmDelete"),
+      confirmLabel: t("deleteClient"),
+    });
+    if (!ok) return;
     setDeletingId(clientId);
     startTransition(async () => {
-      await deleteClientAction(clientId);
+      const result = await deleteClientAction(clientId);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "clientDeleted"));
       setDeletingId(null);
       router.refresh();
     });

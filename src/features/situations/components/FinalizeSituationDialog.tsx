@@ -1,0 +1,52 @@
+"use client";
+
+import { useTransition } from "react";
+import { useTranslations } from "next-intl";
+import { Dialog } from "@base-ui/react/dialog";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { finalizeSituationAction } from "@/app/[locale]/(app)/situations/actions";
+
+interface Props {
+  situationId: number;
+  projectId: number;
+  open: boolean;
+  onClose: () => void;
+  onFinalized: () => void;
+}
+
+export function FinalizeSituationDialog({ situationId, projectId, open, onClose, onFinalized }: Props) {
+  const t = useTranslations("situations");
+  const [isPending, startTransition] = useTransition();
+
+  function handleConfirm() {
+    startTransition(async () => {
+      const result = await finalizeSituationAction(situationId, projectId);
+      if (!result?.error) onFinalized();
+    });
+  }
+
+  return (
+    <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
+        <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-5 shadow-2xl sm:p-8">
+          <Dialog.Title className="text-xl font-semibold text-veltol-fg">
+            {t("finalizeConfirmTitle")}
+          </Dialog.Title>
+          <p className="mt-3 text-sm text-veltol-fgDim">
+            {t("finalizeConfirmBody")}
+          </p>
+
+          <div className="flex justify-end gap-3 pt-6">
+            <Dialog.Close render={<Button type="button" variant="outline">{t("cancel")}</Button>} />
+            <Button type="button" disabled={isPending} onClick={handleConfirm}>
+              {isPending ? <Loader2 className="animate-spin" /> : null}
+              {t("finalizeConfirmButton")}
+            </Button>
+          </div>
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
@@ -10,6 +11,7 @@ import { TeamMemberPicker } from "./TeamMemberPicker";
 import { EditTeamDialog } from "./EditTeamDialog";
 import { addTeamMemberAction, removeTeamMemberAction } from "@/app/[locale]/(app)/teams/[id]/actions";
 import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import type { Team, TeamMember } from "../types";
 import type { ProfileRef } from "./TeamMemberPicker";
 
@@ -30,6 +32,7 @@ function memberInitials(m: TeamMember): string {
 export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props) {
   const t = useTranslations("teams");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [isEditOpen, setEditOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -41,26 +44,37 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
     const newIds = ids.filter((id) => !memberIds.includes(id));
     if (newIds.length === 0) return;
     startTransition(async () => {
-      await Promise.all(newIds.map((id) => addTeamMemberAction(team.id, id)));
+      const results = await Promise.all(newIds.map((id) => addTeamMemberAction(team.id, id)));
+      const failures = results.filter((r) => r?.error).length;
+      if (failures > 0) {
+        toast.error(failures === newIds.length ? t("errorGeneric") : t("memberAddPartialFailure", { count: failures }));
+      } else {
+        toast.success(t("memberAdded"));
+      }
       router.refresh();
     });
   }
 
-  function handleRemove(userId: string) {
-    if (!confirm(t("confirmRemoveMember"))) return;
+  async function handleRemove(userId: string) {
+    const ok = await confirm({ title: t("confirmRemoveMember"), confirmLabel: t("removeMember") });
+    if (!ok) return;
     setRemovingId(userId);
     startTransition(async () => {
-      await removeTeamMemberAction(team.id, userId);
+      const result = await removeTeamMemberAction(team.id, userId);
+      if (result?.error) toast.error(t(result.error as "errorGeneric"));
+      else if (result?.success) toast.success(t(result.success as "memberRemoved"));
       setRemovingId(null);
       router.refresh();
     });
   }
 
-  function handleDeleteTeam() {
-    if (!confirm(t("confirmDelete"))) return;
+  async function handleDeleteTeam() {
+    const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteTeam") });
+    if (!ok) return;
     startTransition(async () => {
-      await deleteTeamAction(team.id);
-      router.push("/teams");
+      const result = await deleteTeamAction(team.id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else router.push("/teams");
     });
   }
 

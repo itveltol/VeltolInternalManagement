@@ -4,7 +4,7 @@ import { createAdminClient } from "@/core/supabase/admin";
 import { buildAvizReminders } from "@/features/matrice/services/avizReminderService";
 import type { Activity, MatrixCell, MatrixProject } from "@/features/matrice/types";
 
-type ProjectRow = { id: number; name: string; project_type: MatrixProject["project_type"]; contract_type: MatrixProject["contract_type"]; progress_pct_manual: boolean; manager_id: string | null };
+type ProjectRow = { id: number; name: string; project_type: MatrixProject["project_type"]; contract_type: MatrixProject["contract_type"]; manager_id: string | null };
 type ManagerRow = { id: string; email: string; first_name: string | null; last_name: string | null };
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   const [{ data: activities, error: activitiesError }, { data: projects, error: projectsError }] = await Promise.all([
     supabase.from("activities").select("*").eq("is_aviz", true),
-    supabase.from("projects").select("id, name, project_type, contract_type, progress_pct_manual, manager_id"),
+    supabase.from("projects").select("id, name, project_type, contract_type, manager_id"),
   ]);
   if (activitiesError) {
     return NextResponse.json({ error: activitiesError.message }, { status: 500 });

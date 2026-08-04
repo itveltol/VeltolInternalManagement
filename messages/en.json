@@ -21,7 +21,8 @@
     "delivery": "Delivery",
     "site": "Construction · Site",
     "pontaj": "Personnel · Pontaj",
-    "gantt": "Gantt"
+    "gantt": "Gantt",
+    "situations": "Situations"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -128,7 +129,6 @@
       "status": "Status",
       "deadline": "Deadline",
       "value": "Value",
-      "valueLei": "Value (Lei)",
       "phase": "Phase",
       "progress": "Progress",
       "generalStatus": "Status",
@@ -165,7 +165,7 @@
       "subcontractorContactPerson": "Contact person",
       "subcontractorPhone": "Phone",
       "subcontractorPrice": "Price",
-      "subcontractorPriceLei": "Price (Lei)",
+      "currency": "Currency",
       "subcontractorStartDate": "Start date",
       "subcontractorDeadline": "Deadline",
       "phase": "Current phase",
@@ -173,8 +173,8 @@
       "contractNumber": "Contract number",
       "contractDate": "Contract date",
       "deadline": "Final deadline",
-      "valueEur": "Value (€)",
-      "valueLei": "Value (Lei)",
+      "value": "Value",
+      "refreshRate": "Refresh to today's rate",
       "status": "General status",
       "notes": "Notes"
     },
@@ -362,6 +362,9 @@
     "eyebrowSub": "MATRICE STATUS",
     "title": "Matrice Status",
     "subtitle": "Activities × projects status matrix — track deliverables and progress for each client.",
+    "errorMaxProjects": "Maximum of 5 projects — remove one to add another.",
+    "errorGeneric": "Something went wrong. The cell was reverted.",
+    "cellSaved": "Saved.",
     "picker": {
       "label": "PROJECTS",
       "shownCount": "{count} selected",
@@ -397,12 +400,6 @@
       "description": "\"{activity}\" is a periodic permit — set its expiry date so a renewal reminder can be sent.",
       "dateLabel": "Expiry date",
       "confirm": "Save",
-      "cancel": "Cancel"
-    },
-    "autoProgressWarning": {
-      "title": "Switch to manual progress?",
-      "description": "This project's progress is currently set to automatic, calculated from Matrice/checklist completion. Changing this manually will switch it to manual progress.",
-      "confirm": "OK",
       "cancel": "Cancel"
     },
     "avizReminders": {
@@ -532,6 +529,7 @@
     "clientDeleted": "Client deleted.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorValidation": "Please check the highlighted fields — CNP, CUI, J-number, email, and phone must match the expected format.",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
@@ -629,6 +627,7 @@
     "removeMember": "Remove",
     "confirmRemoveMember": "Remove this member from the team?",
     "memberAdded": "Member added.",
+    "memberAddPartialFailure": "{count} member(s) could not be added.",
     "memberRemoved": "Member removed.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
@@ -680,6 +679,7 @@
     "documentDeleted": "Document deleted.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorValidation": "Invalid document link type.",
     "emptyState": "No documents yet.",
     "openDocument": "Open",
     "openProjectFolder": "Open project folder",
@@ -864,6 +864,7 @@
     "saving": "Saving...",
     "errorGeneric": "Something went wrong. Please try again.",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorMaxProjects": "Maximum of 5 projects — remove one to add another.",
     "picker": {
       "label": "PROJECTS",
       "empty": "No projects available.",
@@ -911,5 +912,66 @@
       "next": "Next",
       "pageOf": "Page {page} of {total}"
     }
+  },
+  "situations": {
+    "tabLabel": "Situations",
+    "breadcrumb": "Situations",
+    "eyebrow": "SITUATIONS · ALL",
+    "title": "Situations",
+    "emptyState": "No situations yet. Add your first situation.",
+    "noResults": "No projects match your search.",
+    "searchPlaceholder": "Search by project name",
+    "totalCount": "{count} situations total",
+    "addSituation": "Add situation",
+    "editSituation": "Rename",
+    "deleteSituation": "Delete",
+    "confirmDelete": "Delete this situation?",
+    "fields": {
+      "name": "Name",
+      "project": "Project"
+    },
+    "selectProjectPlaceholder": "Search projects...",
+    "selectProjectClear": "Clear selected project",
+    "selectProjectNoResults": "No matching projects.",
+    "status": {
+      "draft": "Draft",
+      "final": "Final"
+    },
+    "finalize": "Finalize",
+    "finalizeConfirmTitle": "Finalize this situation?",
+    "finalizeConfirmBody": "Once finalized, the percentage complete and billable amount are locked to their current values. Later checklist progress won't change this situation's numbers. This can't be undone.",
+    "finalizeConfirmButton": "Finalize",
+    "situationCreated": "Situation created.",
+    "situationSaved": "Situation saved.",
+    "situationDeleted": "Situation deleted.",
+    "situationFinalized": "Situation finalized.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "columns": {
+      "project": "Project",
+      "date": "Date",
+      "pct": "% complete",
+      "amountEur": "Amount (EUR)",
+      "amountLei": "Amount (lei)"
+    },
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "boundaries": {
+    "error": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred while loading this page.",
+      "retry": "Try again"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you're looking for doesn't exist or may have been moved.",
+      "backToDashboard": "Back to dashboard"
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   }
 }

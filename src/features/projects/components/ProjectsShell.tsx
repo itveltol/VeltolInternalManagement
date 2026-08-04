@@ -12,11 +12,12 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
+  exchangeRate: number | null;
 }
 
 export type SortDir = "asc" | "desc" | null;
 
-export function ProjectsShell({ projects, canMutate, managers, clientRefs, subcontractorRefs }: Props) {
+export function ProjectsShell({ projects, canMutate, managers, clientRefs, subcontractorRefs, exchangeRate }: Props) {
   const [filterPhase, setFilterPhase] = useState<ProjectPhase[]>([]);
   const [filterCategory, setFilterCategory] = useState<ProjectCategory | "">("");
   const [filterContractType, setFilterContractType] = useState<ContractType[]>([]);
@@ -59,6 +60,7 @@ export function ProjectsShell({ projects, canMutate, managers, clientRefs, subco
       managers={managers}
       clientRefs={clientRefs}
       subcontractorRefs={subcontractorRefs}
+      exchangeRate={exchangeRate}
       filterPhase={filterPhase}
       onFilterPhase={setFilterPhase}
       filterCategory={filterCategory}

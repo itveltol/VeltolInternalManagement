@@ -1,15 +1,53 @@
 "use server";
 
+import { z } from "zod";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
 import type { Client, ClientRef } from "@/features/clients/types";
+import { parseFormData } from "@/shared/utils/parseFormData";
 
 export type ActionState =
   | { error?: string; success?: string; client?: { id: number; name: string } }
   | null;
+
+// Trim first, then treat "" as absent — matches the previous str() helper's
+// behavior so blank optional fields keep saving as null, not "".
+const optionalTrimmed = () =>
+  z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
+    z.string().nullable(),
+  );
+
+const clientSchema = z.object({
+  type: z.enum(["company", "person"]).default("company"),
+  name: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(1)),
+  cui: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
+    z.string().regex(/^RO\d{7,10}$/).nullable(),
+  ),
+  j_number: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
+    z.string().regex(/^J\d{1,2}\/\d+\/\d{4}$/).nullable(),
+  ),
+  legal_rep: optionalTrimmed(),
+  cnp: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
+    z.string().regex(/^\d{13}$/).nullable(),
+  ),
+  id_series: optionalTrimmed(),
+  id_number: optionalTrimmed(),
+  reg_address: optionalTrimmed(),
+  contact_person: optionalTrimmed(),
+  email: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
+    z.email().nullable(),
+  ),
+  phone: optionalTrimmed(),
+  notes: optionalTrimmed(),
+});
 
 async function getClientsPath() {
   const locale = await getLocale();
@@ -31,28 +69,6 @@ async function requireMutator() {
   return { supabase, user };
 }
 
-function extractClientPayload(formData: FormData) {
-  const str = (key: string) => {
-    const v = formData.get(key) as string | null;
-    return v && v.trim() !== "" ? v.trim() : null;
-  };
-  return {
-    type: (formData.get("type") as string) || "company",
-    name: ((formData.get("name") as string) ?? "").trim(),
-    cui: str("cui"),
-    j_number: str("j_number"),
-    legal_rep: str("legal_rep"),
-    cnp: str("cnp"),
-    id_series: str("id_series"),
-    id_number: str("id_number"),
-    reg_address: str("reg_address"),
-    contact_person: str("contact_person"),
-    email: str("email"),
-    phone: str("phone"),
-    notes: str("notes"),
-  };
-}
-
 export async function getClients(): Promise<Client[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseClientsClient(supabase);
@@ -71,11 +87,12 @@ export async function createClientAction(
 ): Promise<ActionState> {
   try {
     const { supabase } = await requireMutator();
+    const parsed = parseFormData(clientSchema, formData);
+    if (!parsed.success) return { error: parsed.error };
     const api = createSupabaseClientsClient(supabase);
-    const payload = extractClientPayload(formData);
-    const result = await clientService.createClient(api, payload);
+    const result = await clientService.createClient(api, parsed.data);
     revalidatePath(await getClientsPath());
-    return { success: "clientCreated", client: { id: result.id, name: payload.name } };
+    return { success: "clientCreated", client: { id: result.id, name: parsed.data.name } };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
@@ -88,9 +105,11 @@ export async function updateClientAction(
 ): Promise<ActionState> {
   try {
     const { supabase } = await requireMutator();
+    const parsed = parseFormData(clientSchema, formData);
+    if (!parsed.success) return { error: parsed.error };
     const api = createSupabaseClientsClient(supabase);
     const clientId = Number(formData.get("clientId"));
-    await clientService.updateClient(api, clientId, extractClientPayload(formData));
+    await clientService.updateClient(api, clientId, parsed.data);
     revalidatePath(await getClientsPath());
     return { success: "clientSaved" };
   } catch (e: unknown) {

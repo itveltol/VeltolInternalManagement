@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionUser } from "@/core/supabase/session";
 
 const anthropic = new Anthropic();
 
@@ -95,8 +96,9 @@ function toMatriceSuggestions(raw: unknown): MatriceSuggestion[] {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.headers.get("x-veltol-ai") !== "1") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { user } = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let fileNames: string[];
