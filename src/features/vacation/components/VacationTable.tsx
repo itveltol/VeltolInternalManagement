@@ -8,6 +8,11 @@ import { ClipboardCheck, FileCheck2, Pencil, X } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { cancelVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
 import { useVacationStore } from "../hooks/useVacationStore";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
@@ -75,8 +80,8 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <div>
             <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: requests.length })}
@@ -85,9 +90,9 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
           <Button onClick={openAddDialog} variant="outline">
             {t("requestVacation")}
           </Button>
-        </div>
+        </TableToolbar>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -193,7 +198,74 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {requests.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : (
+          <DataCardList>
+            {pagedRequests.map((req) => (
+              <DataCard key={req.id}>
+                <DataCardHeader>
+                  <DataCardTitle>{personName(req.requester)}</DataCardTitle>
+                  <DataCardBadgeSlot>
+                    <Badge variant={vacationStatusVariant(req.status)}>
+                      {t(`status_${req.status}` as Parameters<typeof t>[0])}
+                    </Badge>
+                  </DataCardBadgeSlot>
+                </DataCardHeader>
+
+                <DataCardBody>
+                  <DataCardField label={t("columns.startDate")}>{formatDate(req.start_date) || "—"}</DataCardField>
+                  <DataCardField label={t("columns.endDate")}>{formatDate(req.end_date) || "—"}</DataCardField>
+                  <DataCardField label={t("columns.days")}>
+                    {vacationDays(req.start_date, req.end_date, holidaySet)}
+                  </DataCardField>
+                  <DataCardField label={t("columns.requestedOn")}>{formatDate(req.created_at) || "—"}</DataCardField>
+                  <DataCardField label={t("columns.approvedBy")} full>{personName(req.approver)}</DataCardField>
+                </DataCardBody>
+
+                {(canEdit(req, currentUserId) ||
+                  (isAdmin && req.status === "pending") ||
+                  (req.status === "approved" && (isAdmin || req.user_id === currentUserId))) && (
+                  <DataCardFooter className="flex-wrap">
+                    {canEdit(req, currentUserId) && (
+                      <>
+                        <Button variant="outline" className="flex-1" onClick={() => openEditDialog(req)}>
+                          <Pencil data-icon="inline-start" /> {t("edit")}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          disabled={isPending}
+                          onClick={() => handleCancel(req.id)}
+                        >
+                          <X data-icon="inline-start" /> {t("cancel")}
+                        </Button>
+                      </>
+                    )}
+                    {isAdmin && req.status === "pending" && (
+                      <Button variant="outline" className="flex-1" onClick={() => openApprovalDialog(req)}>
+                        <ClipboardCheck data-icon="inline-start" /> {t("review")}
+                      </Button>
+                    )}
+                    {req.status === "approved" &&
+                      (isAdmin || req.user_id === currentUserId) && (
+                        <Button
+                          variant="ghost"
+                          className="flex-1"
+                          disabled={isPending}
+                          onClick={() => handleGenerate(req.id)}
+                        >
+                          <FileCheck2 data-icon="inline-start" /> {t("generateDocument")}
+                        </Button>
+                      )}
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -203,7 +275,7 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <RequestVacationDialog
         open={isAddDialogOpen}

@@ -8,6 +8,8 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import { DataCardList, DataCard, DataCardField, DataCardFooter } from "@/shared/components/ui/data-card";
 import { createHoliday, deleteHoliday } from "@/app/[locale]/(app)/settings/actions";
 import { formatDate } from "@/shared/utils/formatDate";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
@@ -54,12 +56,12 @@ export function HolidaysTable({ holidays }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="border-b border-border px-6 py-4">
+    <TableShell>
+      <TableToolbar>
         <span className="text-xs font-medium text-veltol-fgMute">{t("officialHolidays")}</span>
-      </div>
+      </TableToolbar>
 
-      <form action={formAction} className="flex flex-wrap items-end gap-3 border-b border-border px-6 py-4">
+      <form action={formAction} className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-4 md:px-6">
         <div className="space-y-1.5">
           <Label className="text-[11px] font-medium text-veltol-fgMute">{t("date")}</Label>
           <input name="date" type="date" required className={INPUT_CLASS} />
@@ -74,10 +76,10 @@ export function HolidaysTable({ holidays }: Props) {
       </form>
 
       {state?.error && (
-        <p className="px-6 pt-3 text-sm text-veltol-red">{t(state.error as Parameters<typeof t>[0])}</p>
+        <p className="px-4 pt-3 text-sm text-veltol-red md:px-6">{t(state.error as Parameters<typeof t>[0])}</p>
       )}
 
-      <div className="overflow-x-auto">
+      <TableDesktopView>
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border">
@@ -121,7 +123,30 @@ export function HolidaysTable({ holidays }: Props) {
             )}
           </tbody>
         </table>
-      </div>
+      </TableDesktopView>
+
+      {holidays.length === 0 ? (
+        <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+      ) : (
+        <DataCardList>
+          {pagedHolidays.map((holiday) => (
+            <DataCard key={holiday.id}>
+              <DataCardField label={t("date")}>{formatDate(holiday.date)}</DataCardField>
+              <p className="text-[14px] font-medium text-veltol-fg">{holiday.name}</p>
+              <DataCardFooter>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  disabled={isPending}
+                  onClick={() => handleDelete(holiday.id)}
+                >
+                  <Trash2 data-icon="inline-start" /> {t("delete")}
+                </Button>
+              </DataCardFooter>
+            </DataCard>
+          ))}
+        </DataCardList>
+      )}
 
       <Pagination
         page={currentPage}
@@ -131,6 +156,6 @@ export function HolidaysTable({ holidays }: Props) {
         nextLabel={t("pagination.next")}
         pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
       />
-    </div>
+    </TableShell>
   );
 }

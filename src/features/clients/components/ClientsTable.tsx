@@ -10,6 +10,11 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { FilterField, FilterDropdown } from "@/shared/components/ui/filter-field";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { AddClientDialog } from "./AddClientDialog";
 import { EditClientDialog } from "./EditClientDialog";
 import { deleteClientAction } from "@/app/[locale]/(app)/clients/actions";
@@ -34,6 +39,7 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const highlightRowRef = useRef<HTMLTableRowElement>(null);
+  const highlightCardRef = useRef<HTMLDivElement>(null);
 
   const {
     isAddDialogOpen, editingClient, deletingId,
@@ -75,6 +81,7 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
   useEffect(() => {
     if (highlightId == null) return;
     highlightRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    highlightCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [highlightId, currentPage]);
 
   async function handleDelete(clientId: number) {
@@ -95,8 +102,8 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <div>
             <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: clients.length })}
@@ -107,9 +114,9 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
               {t("addClient")}
             </Button>
           )}
-        </div>
+        </TableToolbar>
 
-        <div className="flex flex-wrap items-end gap-3 border-b border-border px-6 py-3">
+        <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-3 md:px-6">
           <FilterField label={t("filters.type")} htmlFor="filter-client-type">
             <FilterDropdown
               id="filter-client-type"
@@ -124,7 +131,7 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
           </FilterField>
         </div>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -215,7 +222,57 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {clients.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : (
+          <DataCardList>
+            {pagedClients.map((client) => (
+              <DataCard
+                key={client.id}
+                ref={client.id === highlightId ? highlightCardRef : undefined}
+                className={cn(client.id === highlightId && "bg-veltol-tint/60")}
+              >
+                <DataCardHeader>
+                  <DataCardTitle>{client.name}</DataCardTitle>
+                  <DataCardBadgeSlot>
+                    <Badge variant={client.type === "company" ? "info" : "secondary"}>
+                      {t(`fields.type_${client.type}` as Parameters<typeof t>[0])}
+                    </Badge>
+                  </DataCardBadgeSlot>
+                </DataCardHeader>
+
+                <DataCardBody>
+                  <DataCardField label={t("columns.taxId")}>
+                    {client.type === "company" ? (client.cui ?? "—") : (client.cnp ?? "—")}
+                  </DataCardField>
+                  <DataCardField label={t("columns.phone")}>{client.phone ?? "—"}</DataCardField>
+                  <DataCardField label={t("columns.contact")}>{client.contact_person ?? "—"}</DataCardField>
+                  <DataCardField label={t("columns.email")}>{client.email ?? "—"}</DataCardField>
+                  <DataCardField label={t("columns.address")} full>{client.reg_address ?? "—"}</DataCardField>
+                </DataCardBody>
+
+                {canMutate && (
+                  <DataCardFooter>
+                    <Button variant="outline" className="flex-1" onClick={() => openEditDialog(client)}>
+                      <Pencil data-icon="inline-start" /> {t("editClient")}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={isPending && deletingId === client.id}
+                      onClick={() => handleDelete(client.id)}
+                    >
+                      {isPending && deletingId === client.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                      {t("deleteClient")}
+                    </Button>
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -225,7 +282,7 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <AddClientDialog
         open={isAddDialogOpen}

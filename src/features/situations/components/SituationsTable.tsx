@@ -8,6 +8,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatCurrency } from "@/shared/utils/currency";
 import { deleteSituationAction } from "@/app/[locale]/(app)/situations/actions";
@@ -80,8 +85,8 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <span className="text-xs font-medium text-veltol-fgMute">
             {t("totalCount", { count: situations.length })}
           </span>
@@ -103,9 +108,9 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
               </Button>
             )}
           </div>
-        </div>
+        </TableToolbar>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -196,7 +201,70 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {situations.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : filtered.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("noResults")}</p>
+        ) : (
+          <DataCardList>
+            {pagedSituations.map((situation) => {
+              const isFinal = situation.status === "final";
+              const siblings = situations.filter((s) => s.project_id === situation.project_id);
+              const previous = findPreviousFinalized(siblings, situation.id);
+              const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
+              return (
+                <DataCard key={situation.id} onClick={() => openSituation(situation.id)}>
+                  <DataCardHeader>
+                    <div className="min-w-0">
+                      <DataCardTitle>{situation.project.name}</DataCardTitle>
+                      <p className="mt-0.5 truncate text-[12px] text-veltol-fgDim">{situation.name}</p>
+                    </div>
+                    <DataCardBadgeSlot>
+                      <Badge variant={isFinal ? "success" : "secondary"}>{t(`status.${situation.status}`)}</Badge>
+                    </DataCardBadgeSlot>
+                  </DataCardHeader>
+
+                  <DataCardBody>
+                    <DataCardField label={t("columns.date")}>{formatDate(situation.created_at)}</DataCardField>
+                    <DataCardField label={t("columns.pct")}>
+                      {figures.pct != null ? `${Math.round(figures.pct)}%` : "—"}
+                    </DataCardField>
+                    <DataCardField label={t("columns.amountEur")}>{formatCurrency(figures.amountEur, "EUR")}</DataCardField>
+                    <DataCardField label={t("columns.amountLei")}>{formatCurrency(figures.amountLei, "lei")}</DataCardField>
+                  </DataCardBody>
+
+                  {canMutate && (
+                    <DataCardFooter className="flex-col items-stretch gap-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => openEditDialog(editableSituation(situation))}
+                        >
+                          <Pencil data-icon="inline-start" /> {t("editSituation")}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          disabled={isPending && deletingId === situation.id}
+                          onClick={() => handleDelete(situation.id)}
+                        >
+                          {isPending && deletingId === situation.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                          {t("deleteSituation")}
+                        </Button>
+                      </div>
+                      {deleteError?.id === situation.id && (
+                        <p className="text-center text-[11px] text-veltol-red">{deleteError.message}</p>
+                      )}
+                    </DataCardFooter>
+                  )}
+                </DataCard>
+              );
+            })}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -206,7 +274,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <CreateSituationDialog
         projects={projects}

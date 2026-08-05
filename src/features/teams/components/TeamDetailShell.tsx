@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { TeamMemberPicker } from "./TeamMemberPicker";
 import { EditTeamDialog } from "./EditTeamDialog";
 import { addTeamMemberAction, removeTeamMemberAction } from "@/app/[locale]/(app)/teams/[id]/actions";
@@ -80,8 +85,8 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <div>
             <div className="text-[11px] font-medium text-veltol-fgMute">{t("detailEyebrow")}</div>
             <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">
@@ -98,9 +103,9 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
               </Button>
             </div>
           )}
-        </div>
+        </TableToolbar>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -156,10 +161,52 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {members.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyMembers")}</p>
+        ) : (
+          <DataCardList>
+            {members.map((m) => (
+              <DataCard key={m.user_id}>
+                <DataCardHeader>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
+                        {memberInitials(m)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <DataCardTitle>
+                      {`${m.profile?.first_name ?? ""} ${m.profile?.last_name ?? ""}`.trim() || "—"}
+                    </DataCardTitle>
+                  </div>
+                  <DataCardBadgeSlot>
+                    <Badge variant="secondary">{m.profile?.role}</Badge>
+                  </DataCardBadgeSlot>
+                </DataCardHeader>
+
+                <DataCardField label={t("columns.email")}>{m.profile?.email}</DataCardField>
+
+                {canMutate && (
+                  <DataCardFooter>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={isPending && removingId === m.user_id}
+                      onClick={() => handleRemove(m.user_id)}
+                    >
+                      {isPending && removingId === m.user_id ? "..." : t("removeMember")}
+                    </Button>
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
+        )}
 
         {canMutate && (
-          <div className="border-t border-border px-6 py-4">
+          <div className="border-t border-border px-4 py-4 md:px-6">
             <TeamMemberPicker
               allProfiles={availableProfiles}
               selectedIds={[]}
@@ -167,7 +214,7 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
             />
           </div>
         )}
-      </div>
+      </TableShell>
 
       {isEditOpen && (
         <EditTeamDialog

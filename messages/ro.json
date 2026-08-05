@@ -854,6 +854,8 @@
     "loading": "Se actualizează...",
     "emptyState": "Selectați cel puțin un proiect.",
     "notContracted": "Nu este acoperit de tipul de contract al proiectului",
+    "notScheduled": "Neprogramat",
+    "invalidRange": "Data de sfârșit este înainte de data de început",
     "phase": {
       "planning": "Proiectare",
       "execution": "Execuție",

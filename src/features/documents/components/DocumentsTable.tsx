@@ -9,6 +9,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterDropdown, FilterInput } from "@/shared/components/ui/filter-field";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { deleteDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import { useDocumentsStore } from "../hooks/useDocumentsStore";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
@@ -47,6 +52,16 @@ function statusVariant(status: DocumentStatus | null) {
     case "rejected":
     case "expired":    return "bg-veltol-red/15 text-veltol-red border-veltol-red/20";
     default:           return "bg-white/5 text-veltol-fgMute border-border";
+  }
+}
+
+function statusBadgeVariant(status: DocumentStatus | null): "success" | "info" | "secondary" | "destructive" {
+  switch (status) {
+    case "obtained":   return "success";
+    case "submitted":  return "info";
+    case "rejected":
+    case "expired":    return "destructive";
+    default:           return "secondary";
   }
 }
 
@@ -109,9 +124,9 @@ export function DocumentsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
+    <TableShell>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-4">
+      <TableToolbar>
         <span className="text-xs font-medium text-veltol-fgMute">
           {t("totalCount", { count: documents.length })}
         </span>
@@ -145,9 +160,9 @@ export function DocumentsTable({
             />
           </FilterField>
         </div>
-      </div>
+      </TableToolbar>
 
-      <div className="overflow-x-auto">
+      <TableDesktopView>
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border">
@@ -292,7 +307,98 @@ export function DocumentsTable({
             )}
           </tbody>
         </table>
-      </div>
+      </TableDesktopView>
+
+      {documents.length === 0 ? (
+        <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+      ) : (
+        <DataCardList>
+          {pagedDocuments.map((doc) => {
+            const expiry = expiryState(doc.expires_at, doc.status);
+            return (
+              <DataCard key={doc.id}>
+                <DataCardHeader>
+                  <div className="min-w-0">
+                    <DataCardTitle className="font-mono text-[13px] text-veltol-accent">
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
+                        {doc.name}
+                      </a>
+                      {doc.version > 1 && (
+                        <span className="ml-1.5 font-mono text-[10px] text-veltol-fgMute">v{doc.version}</span>
+                      )}
+                    </DataCardTitle>
+                  </div>
+                  {doc.status && (
+                    <DataCardBadgeSlot>
+                      <Badge variant={statusBadgeVariant(doc.status)} className="font-mono text-[9px] uppercase tracking-wide">
+                        {t(`status.${doc.status}`)}
+                      </Badge>
+                    </DataCardBadgeSlot>
+                  )}
+                </DataCardHeader>
+
+                <DataCardBody>
+                  <DataCardField label={t("columns.category")}>
+                    {doc.category ? t(`category.${doc.category}`) : "—"}
+                  </DataCardField>
+                  <DataCardField label={t("columns.responsible")}>{fullName(doc.responsible)}</DataCardField>
+                  <DataCardField label={t("columns.linkedTo")} full>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={linkedTypeVariant(doc.linked_type)} className="font-mono text-[9px]">
+                        {t(`linkedType.${doc.linked_type}`)}
+                      </Badge>
+                      {doc.project && <span>{doc.project.name}</span>}
+                    </div>
+                  </DataCardField>
+                  <DataCardField label={t("columns.expiry")} full>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {doc.is_renewable && (
+                        <Badge variant="secondary" className="font-mono text-[9px]">{t("renewable")}</Badge>
+                      )}
+                      {doc.expires_at ? (
+                        <span className={
+                          expiry === "expired" ? "text-veltol-red" :
+                          expiry === "soon"    ? "text-veltol-orange" : undefined
+                        }>
+                          {expiry === "expired" ? t("expired") : t("expiresOn", { date: formatDate(doc.expires_at) })}
+                        </span>
+                      ) : (
+                        !doc.is_renewable && "—"
+                      )}
+                    </div>
+                  </DataCardField>
+                </DataCardBody>
+
+                <DataCardFooter>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    nativeButton={false}
+                    render={<a href={doc.url} target="_blank" rel="noopener noreferrer" />}
+                  >
+                    <ExternalLink data-icon="inline-start" /> {t("openDocument")}
+                  </Button>
+                  {canMutate && (
+                    <>
+                      <Button variant="outline" className="flex-1" onClick={() => openEditDialog(doc)}>
+                        <Pencil data-icon="inline-start" /> {t("edit")}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={isPending}
+                        onClick={() => handleDelete(doc)}
+                      >
+                        <Trash2 data-icon="inline-start" /> {t("delete")}
+                      </Button>
+                    </>
+                  )}
+                </DataCardFooter>
+              </DataCard>
+            );
+          })}
+        </DataCardList>
+      )}
 
       <Pagination
         page={currentPage}
@@ -302,6 +408,6 @@ export function DocumentsTable({
         nextLabel={t("pagination.next")}
         pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
       />
-    </div>
+    </TableShell>
   );
 }

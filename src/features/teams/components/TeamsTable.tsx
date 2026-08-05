@@ -9,6 +9,11 @@ import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { AddTeamDialog } from "./AddTeamDialog";
 import { EditTeamDialog } from "./EditTeamDialog";
 import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
@@ -24,6 +29,10 @@ function leadInitials(team: Team): string {
   const f = team.lead?.first_name?.[0] ?? "";
   const l = team.lead?.last_name?.[0] ?? "";
   return (f + l).toUpperCase() || "?";
+}
+
+function leadName(team: Team): string {
+  return `${team.lead?.first_name ?? ""} ${team.lead?.last_name ?? ""}`.trim() || "—";
 }
 
 interface Props {
@@ -66,8 +75,8 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <div>
             <span className="text-xs font-medium text-veltol-fgMute">
               {t("totalCount", { count: teams.length })}
@@ -78,9 +87,9 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
               {t("addTeam")}
             </Button>
           )}
-        </div>
+        </TableToolbar>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -165,7 +174,61 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {teams.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : (
+          <DataCardList>
+            {pagedTeams.map((team) => (
+              <DataCard key={team.id}>
+                <DataCardHeader>
+                  <Link href={`/teams/${team.id}`} className="min-w-0">
+                    <DataCardTitle className="text-veltol-fg hover:text-veltol-accent">{team.name}</DataCardTitle>
+                  </Link>
+                </DataCardHeader>
+
+                <DataCardBody>
+                  <DataCardField label={t("columns.lead")}>
+                    {team.lead_id ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6 shrink-0">
+                          <AvatarFallback className="grad-blue text-[9px] font-bold text-white">
+                            {leadInitials(team)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{leadName(team)}</span>
+                      </div>
+                    ) : (
+                      "—"
+                    )}
+                  </DataCardField>
+                  <DataCardField label={t("columns.members")}>
+                    {t("memberCount", { count: team.member_count ?? 0 })}
+                  </DataCardField>
+                  <DataCardField label={t("columns.created")}>{formatDate(team.created_at)}</DataCardField>
+                </DataCardBody>
+
+                {canMutate && (
+                  <DataCardFooter>
+                    <Button variant="outline" className="flex-1" onClick={() => openEditDialog(team)}>
+                      <Pencil data-icon="inline-start" /> {t("editTeam")}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={isPending && deletingId === team.id}
+                      onClick={() => handleDelete(team.id)}
+                    >
+                      {isPending && deletingId === team.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                      {t("deleteTeam")}
+                    </Button>
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -175,7 +238,7 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <AddTeamDialog
         open={isAddDialogOpen}

@@ -8,6 +8,11 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterDropdown, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle, DataCardSubtitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { deleteProject } from "@/app/[locale]/(app)/projects/actions";
 import { toast } from "sonner";
@@ -135,6 +140,26 @@ export function ProjectsTable({
     return abbreviatedName(u.first_name, u.last_name) || "—";
   }
 
+  function projectFigures(project: Project) {
+    const deadline = project.execution_mode === "subcontracted"
+      ? project.subcontractor?.deadline ?? null
+      : project.deadline;
+    const valueEur = project.execution_mode === "subcontracted"
+      ? project.subcontractor?.price_eur ?? null
+      : project.value_eur;
+    const valueLei = project.execution_mode === "subcontracted"
+      ? project.subcontractor?.price_lei ?? null
+      : project.value_lei;
+    const currency = project.execution_mode === "subcontracted"
+      ? project.subcontractor?.currency ?? "EUR"
+      : project.currency;
+    const sourceValue = currency === "EUR" ? valueEur : valueLei;
+    const conversionRate = project.execution_mode === "subcontracted"
+      ? project.subcontractor?.conversion_rate ?? null
+      : project.conversion_rate;
+    return { deadline, sourceValue, currency, conversionRate };
+  }
+
   async function handleDelete(projectId: number) {
     const ok = await confirm({ title: t("confirmDelete"), confirmLabel: t("deleteProject") });
     if (!ok) return;
@@ -150,8 +175,8 @@ export function ProjectsTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-        <div className="flex items-center justify-between border-b border-border px-4 py-4">
+      <TableShell>
+        <TableToolbar>
           <div>
             <span className="text-[14px] font-medium text-veltol-fgDim">
               {t("totalCount", { count: projects.length })}
@@ -163,7 +188,7 @@ export function ProjectsTable({
               {t("addProject")}
             </Button>
           )}
-        </div>
+        </TableToolbar>
 
         <div className="flex flex-wrap items-end gap-3 border-b border-border px-4 py-3">
           <FilterField label={t("filters.phase")} htmlFor="filter-phase">
@@ -228,7 +253,7 @@ export function ProjectsTable({
           </Button>
         </div>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full min-w-max text-[14px]">
             <thead>
               <tr className="border-b border-border">
@@ -322,22 +347,7 @@ export function ProjectsTable({
                     </td>
 
                     {(() => {
-                      const deadline = project.execution_mode === "subcontracted"
-                        ? project.subcontractor?.deadline ?? null
-                        : project.deadline;
-                      const valueEur = project.execution_mode === "subcontracted"
-                        ? project.subcontractor?.price_eur ?? null
-                        : project.value_eur;
-                      const valueLei = project.execution_mode === "subcontracted"
-                        ? project.subcontractor?.price_lei ?? null
-                        : project.value_lei;
-                      const currency = project.execution_mode === "subcontracted"
-                        ? project.subcontractor?.currency ?? "EUR"
-                        : project.currency;
-                      const sourceValue = currency === "EUR" ? valueEur : valueLei;
-                      const conversionRate = project.execution_mode === "subcontracted"
-                        ? project.subcontractor?.conversion_rate ?? null
-                        : project.conversion_rate;
+                      const { deadline, sourceValue, currency, conversionRate } = projectFigures(project);
                       return (
                         <>
                           <td className="px-3 py-3">
@@ -404,7 +414,112 @@ export function ProjectsTable({
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {projects.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : (
+          <DataCardList>
+            {pagedProjects.map((project) => {
+              const { deadline, sourceValue, currency, conversionRate } = projectFigures(project);
+              const d = deadline ? daysLeft(deadline) : null;
+              const daysColor = d === null ? undefined : d < 0 ? "text-veltol-red" : d <= 7 ? "text-veltol-orange" : "text-veltol-fgMute";
+              const daysLabel = d === null ? null : d < 0
+                ? t("daysOverdue", { count: Math.abs(d) })
+                : d === 0
+                  ? t("daysLeftToday")
+                  : t("daysLeft", { count: d });
+              return (
+                <DataCard key={project.id} onClick={() => router.push(`/${locale}/projects/${project.id}`)}>
+                  <DataCardHeader>
+                    <div className="min-w-0">
+                      <DataCardTitle>{project.name}</DataCardTitle>
+                      <DataCardSubtitle>
+                        {project.project_category && tCategory(project.project_category)}
+                        {project.project_category !== "residential" && project.project_type && (
+                          <> · {tType(project.project_type as ProjectType).replace("+", " + ")}</>
+                        )}
+                      </DataCardSubtitle>
+                    </div>
+                    <DataCardBadgeSlot>
+                      {project.execution_mode === "subcontracted" ? (
+                        <Badge variant="secondary" dot>{t("subcontracted")}</Badge>
+                      ) : (
+                        <Badge variant={phaseVariant(project.current_phase)} dot>{tPhase(project.current_phase)}</Badge>
+                      )}
+                    </DataCardBadgeSlot>
+                  </DataCardHeader>
+
+                  <div className="flex flex-wrap gap-1">
+                    {project.contract_type.map((c) => (
+                      <div
+                        key={c}
+                        title={tContractType(c)}
+                        className="flex size-5 items-center justify-center rounded-full text-[9px] font-bold text-white"
+                        style={{ backgroundColor: DISCIPLINE_COLORS[c] }}
+                      >
+                        {c.charAt(0).toUpperCase()}
+                      </div>
+                    ))}
+                  </div>
+
+                  {project.execution_mode !== "subcontracted" && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--v-line-2)]">
+                        <div
+                          className="h-full rounded-full bg-veltol-accent transition-all"
+                          style={{ width: `${project.progress_pct}%` }}
+                        />
+                      </div>
+                      <span className="tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgMute">{project.progress_pct}%</span>
+                    </div>
+                  )}
+
+                  <DataCardBody>
+                    <DataCardField label={t("columns.county")}>{project.county ?? "—"}</DataCardField>
+                    {project.execution_mode === "subcontracted" && (
+                      <DataCardField label={t("columns.progress")}>{project.subcontractor?.name ?? "—"}</DataCardField>
+                    )}
+                    <DataCardField label={t("columns.deadline")}>
+                      {formatDate(deadline) || "—"}
+                      {daysLabel && <span className={`ml-1 ${daysColor}`}>({daysLabel})</span>}
+                    </DataCardField>
+                    <DataCardField label={t("columns.value")}>
+                      {sourceValue != null ? (
+                        <>
+                          {new Intl.NumberFormat("hu-HU").format(sourceValue)}{" "}
+                          {currency === "EUR" ? "€" : "Lei"}
+                          <span className="ml-1 text-veltol-fgMute">
+                            {formatConvertedCurrency(sourceValue, currency, conversionRate)}
+                          </span>
+                        </>
+                      ) : "—"}
+                    </DataCardField>
+                    <DataCardField label={t("columns.manager")}>{managerName(project)}</DataCardField>
+                    <DataCardField label={t("columns.client")}>{project.client?.name ?? "—"}</DataCardField>
+                    <DataCardField label={t("columns.lastModified")} full>
+                      {updatedByName(project)} · {formatDate(project.updated_at) || "—"}
+                    </DataCardField>
+                  </DataCardBody>
+
+                  {canMutate && (
+                    <DataCardFooter>
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={isPending && deletingId === project.id}
+                        onClick={() => handleDelete(project.id)}
+                      >
+                        {isPending && deletingId === project.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                        {t("deleteProject")}
+                      </Button>
+                    </DataCardFooter>
+                  )}
+                </DataCard>
+              );
+            })}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -414,7 +529,7 @@ export function ProjectsTable({
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <AddProjectDialog
         open={isAddDialogOpen}
