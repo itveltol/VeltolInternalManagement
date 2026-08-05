@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { MatrixData, MatrixProject, MatrixCell, ActivityStatus } from "../types";
 import { MatriceProjectPicker } from "./MatriceProjectPicker";
 import { MatriceGrid } from "./MatriceGrid";
+import { MatriceMobileView } from "./MatriceMobileView";
 import { MatriceLegend } from "./MatriceLegend";
 import { DocumentsPopover } from "@/features/documents/components/DocumentsPopover";
 import {
@@ -33,6 +34,11 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
   const [docsPopover, setDocsPopover] = useState<{ projectId: number; activityId: number } | null>(null);
   const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(initialData.projects[0]?.id ?? null);
+
+  const mobileSelectedProjectId = data.projects.some((p) => p.id === selectedProjectId)
+    ? selectedProjectId!
+    : data.projects[0]?.id ?? null;
 
   const visibleIds = useMemo(
     () => allProjects.map((p) => p.id).filter((id) => shownIds.includes(id)),
@@ -171,7 +177,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
       </div>
 
       {/* Matrix */}
-      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
+      <div className="hidden overflow-hidden rounded-card border border-border bg-card shadow-card md:block">
         <MatriceGrid
           activities={data.activities}
           cells={data.cells}
@@ -182,6 +188,23 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           docCounts={docCounts}
           pendingCells={pendingCells}
         />
+      </div>
+
+      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card md:hidden">
+        {mobileSelectedProjectId != null && (
+          <MatriceMobileView
+            activities={data.activities}
+            cells={data.cells}
+            projects={data.projects}
+            selectedProjectId={mobileSelectedProjectId}
+            onSelectProject={setSelectedProjectId}
+            onChangeStatus={handleChangeStatus}
+            onOpenDocuments={handleOpenDocuments}
+            onHideProject={handleRemoveProject}
+            docCounts={docCounts}
+            pendingCells={pendingCells}
+          />
+        )}
       </div>
 
       {docsPopover && (() => {

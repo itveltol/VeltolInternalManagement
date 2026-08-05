@@ -7,6 +7,11 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardTitle,
+  DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { Link } from "@/i18n/navigation";
 import { AddSubcontractorDialog } from "./AddSubcontractorDialog";
 import { EditSubcontractorDialog } from "./EditSubcontractorDialog";
@@ -62,8 +67,8 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <TableShell>
+        <TableToolbar>
           <span className="text-xs font-medium text-veltol-fgMute">
             {t("totalCount", { count: subcontractors.length })}
           </span>
@@ -73,9 +78,9 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
               {t("addSubcontractor")}
             </Button>
           )}
-        </div>
+        </TableToolbar>
 
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
@@ -172,7 +177,75 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
               )}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {subcontractors.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
+        ) : (
+          <DataCardList>
+            {pagedSubcontractors.map((sub) => (
+              <DataCard key={sub.id}>
+                <DataCardTitle>{sub.name}</DataCardTitle>
+
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  <DataCardField label={t("columns.contactPerson")}>{sub.contact_person ?? "—"}</DataCardField>
+                  <DataCardField label={t("columns.phone")}>{sub.phone ?? "—"}</DataCardField>
+                  <DataCardField label={t("columns.projects")} full>
+                    {sub.assignments.length === 0 ? (
+                      t("noProjects")
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {sub.assignments.map((a) => (
+                          <div key={a.id} className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/projects/${a.project.id}`}
+                              className="text-[12px] font-medium text-veltol-accent hover:underline"
+                            >
+                              {a.project.name}
+                            </Link>
+                            <Badge variant={a.is_current ? "default" : "secondary"}>
+                              {a.is_current ? t("current") : t("past")}
+                            </Badge>
+                            <span className="font-mono text-[11px] text-veltol-fgMute">
+                              {formatCurrency(a.currency === "EUR" ? a.price_eur : a.price_lei, a.currency === "EUR" ? "EUR" : "lei")}
+                              {" "}
+                              {formatConvertedCurrency(a.currency === "EUR" ? a.price_eur : a.price_lei, a.currency, a.conversion_rate)}
+                            </span>
+                            <span className="font-mono text-[11px] text-veltol-fgMute">
+                              {formatDate(a.start_date) || "—"} → {formatDate(a.deadline) || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </DataCardField>
+                </div>
+
+                {canMutate && (
+                  <DataCardFooter className="flex-col items-stretch gap-2">
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={() => openEditDialog(sub)}>
+                        <Pencil data-icon="inline-start" /> {t("editSubcontractor")}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={isPending && deletingId === sub.id}
+                        onClick={() => handleDelete(sub.id)}
+                      >
+                        {isPending && deletingId === sub.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                        {t("deleteSubcontractor")}
+                      </Button>
+                    </div>
+                    {deleteError?.id === sub.id && (
+                      <p className="text-center text-[11px] text-veltol-red">{deleteError.message}</p>
+                    )}
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -182,7 +255,7 @@ export function SubcontractorsTable({ subcontractors, canMutate }: Props) {
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       <AddSubcontractorDialog
         open={isAddDialogOpen}

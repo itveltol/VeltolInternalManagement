@@ -11,6 +11,7 @@ import { GANTT_PHASE_KEYS, GANTT_PHASE_COLOR } from "../types";
 import { buildProjectGanttRows } from "../services/ganttPhaseService";
 import { GanttProjectPicker } from "./GanttProjectPicker";
 import { PortfolioGanttChart } from "./PortfolioGanttChart";
+import { GanttMobileView } from "./GanttMobileView";
 import { PhaseDateDialog } from "./PhaseDateDialog";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { getGanttMatriceData, showGanttProject, unshowGanttProject } from "@/app/[locale]/(app)/gantt/actions";
@@ -112,6 +113,26 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
 
   const editingProject = editing ? allProjects.find((p) => p.id === editing.projectId) ?? null : null;
 
+  function handleNavigateToPhase(projectId: number) {
+    startTransition(async () => {
+      await pinMatriceProject(projectId);
+      router.push("/matrice-status");
+    });
+  }
+
+  function renderPagination() {
+    return (
+      <Pagination
+        page={currentPage}
+        pageCount={pageCount}
+        onPageChange={setPage}
+        prevLabel={t("pagination.prev")}
+        nextLabel={t("pagination.next")}
+        pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
@@ -139,29 +160,27 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
         {isPending && <span className="font-mono text-[10px] text-veltol-fgMute">{t("loading")}</span>}
       </div>
 
-      <PortfolioGanttChart
-        rows={rows}
-        rangeRows={rangeRows}
-        todayMs={todayMs}
-        onNavigateToPhase={(projectId) => {
-          startTransition(async () => {
-            await pinMatriceProject(projectId);
-            router.push("/matrice-status");
-          });
-        }}
-        onEditDates={(projectId, segment) => setEditing({ projectId, segment })}
-        onHideProject={handleRemove}
-        pagination={
-          <Pagination
-            page={currentPage}
-            pageCount={pageCount}
-            onPageChange={setPage}
-            prevLabel={t("pagination.prev")}
-            nextLabel={t("pagination.next")}
-            pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
-          />
-        }
-      />
+      <div className="hidden md:block">
+        <PortfolioGanttChart
+          rows={rows}
+          rangeRows={rangeRows}
+          todayMs={todayMs}
+          onNavigateToPhase={(projectId) => handleNavigateToPhase(projectId)}
+          onEditDates={(projectId, segment) => setEditing({ projectId, segment })}
+          onHideProject={handleRemove}
+          pagination={renderPagination()}
+        />
+      </div>
+
+      <div className="md:hidden">
+        <GanttMobileView
+          rows={rows}
+          onNavigateToPhase={(projectId) => handleNavigateToPhase(projectId)}
+          onEditDates={(projectId, segment) => setEditing({ projectId, segment })}
+          onHideProject={handleRemove}
+          pagination={renderPagination()}
+        />
+      </div>
 
       {editing && editingProject && (
         <PhaseDateDialog

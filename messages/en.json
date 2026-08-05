@@ -854,6 +854,8 @@
     "loading": "Refreshing...",
     "emptyState": "Select at least one project.",
     "notContracted": "Not covered by this project's contract type",
+    "notScheduled": "Not scheduled",
+    "invalidRange": "End date is before start date",
     "phase": {
       "planning": "Planning",
       "execution": "Execution",

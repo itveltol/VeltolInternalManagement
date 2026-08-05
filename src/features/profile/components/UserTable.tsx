@@ -10,6 +10,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle, DataCardSubtitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
 import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
@@ -42,6 +47,19 @@ function initials(p: Profile) {
   const l = p.last_name?.[0] ?? "";
   if (f || l) return (f + l).toUpperCase();
   return (p.email?.[0] ?? "?").toUpperCase();
+}
+
+function toUserRow(user: Profile, currentUserId: string) {
+  return {
+    isMe: user.id === currentUserId,
+    displayName: user.first_name || user.last_name
+      ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim()
+      : "—",
+    initials: initials(user),
+    medicalState: medicalExpiryState(user.medical_exam_expires_at),
+    medicalDateLabel: user.medical_exam_expires_at ? formatDate(user.medical_exam_expires_at) : "—",
+    joinedLabel: formatDate(user.created_at),
+  };
 }
 
 export function UserTable({
@@ -98,9 +116,9 @@ export function UserTable({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <TableShell>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <TableToolbar>
           <div>
             <div className="text-[11px] font-medium text-veltol-fgMute">
               {t("adminEyebrow")}
@@ -124,10 +142,10 @@ export function UserTable({
               {t("inviteUser")}
             </Button>
           </div>
-        </div>
+        </TableToolbar>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <TableDesktopView>
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
@@ -250,7 +268,83 @@ export function UserTable({
               })}
             </tbody>
           </table>
-        </div>
+        </TableDesktopView>
+
+        {pagedUsers.length === 0 ? null : (
+          <DataCardList>
+            {pagedUsers.map((user) => {
+              const row = toUserRow(user, currentUserId);
+              return (
+                <DataCard key={user.id}>
+                  <DataCardHeader>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
+                          {row.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <DataCardTitle className="flex items-center gap-1.5">
+                          {row.displayName}
+                          {row.isMe && (
+                            <span className="font-mono text-[10px] text-veltol-fgMute">{t("youLabel")}</span>
+                          )}
+                        </DataCardTitle>
+                        <DataCardSubtitle className="font-mono">{user.email}</DataCardSubtitle>
+                      </div>
+                    </div>
+                    <DataCardBadgeSlot>
+                      <Badge variant={ROLE_VARIANT[user.role]}>{t(`role_${user.role}`)}</Badge>
+                    </DataCardBadgeSlot>
+                  </DataCardHeader>
+
+                  <DataCardBody>
+                    <DataCardField label={t("colPhone")}>{user.phone ?? "—"}</DataCardField>
+                    <DataCardField label={t("colJoined")}>{row.joinedLabel}</DataCardField>
+                    <DataCardField label={t("colMedicalExam")} full>
+                      <span className={
+                        row.medicalState === "expired" ? "font-semibold text-veltol-red" :
+                        row.medicalState === "soon" ? "font-semibold text-veltol-orange" : undefined
+                      }>
+                        {row.medicalDateLabel}
+                        {row.medicalState === "expired" && (
+                          <span className="ml-1.5 rounded bg-veltol-red/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-veltol-red">
+                            {t("medicalExpired")}
+                          </span>
+                        )}
+                        {row.medicalState === "soon" && (
+                          <span className="ml-1.5 rounded bg-veltol-orange/10 px-1 py-0.5 text-[9px] uppercase tracking-wide text-veltol-orange">
+                            {t("medicalExpiringSoon")}
+                          </span>
+                        )}
+                      </span>
+                    </DataCardField>
+                  </DataCardBody>
+
+                  <DataCardFooter>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      disabled={row.isMe}
+                      onClick={() => openEditUser(user)}
+                    >
+                      <Pencil data-icon="inline-start" /> {t("editUser")}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={row.isMe || (isPending && deletingId === user.id)}
+                      onClick={() => handleDelete(user.id)}
+                    >
+                      {isPending && deletingId === user.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                      {t("deleteUser")}
+                    </Button>
+                  </DataCardFooter>
+                </DataCard>
+              );
+            })}
+          </DataCardList>
+        )}
 
         <Pagination
           page={currentPage}
@@ -260,7 +354,7 @@ export function UserTable({
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
-      </div>
+      </TableShell>
 
       {editingUser && (
         <EditUserDialog

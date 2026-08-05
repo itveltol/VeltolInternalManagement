@@ -9,6 +9,12 @@ import { useChecklistStore } from "../hooks/useChecklistStore";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { AddDocumentDialog } from "@/features/documents/components/AddDocumentDialog";
 import { formatDate } from "@/shared/utils/formatDate";
+import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
+import {
+  DataCardList, DataCard, DataCardHeader, DataCardTitle,
+  DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
+} from "@/shared/components/ui/data-card";
+import { Button } from "@/shared/components/ui/button";
 import type { ChecklistRow, ChecklistPhase } from "@/features/projects/checklists/types";
 
 interface Props {
@@ -208,8 +214,8 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
   const sectionPctMap = new Map<ChecklistPhase, number>(sections.map((s) => [s.phase, s.avgPct]));
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card" ref={tableRef}>
-      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+    <TableShell ref={tableRef}>
+      <TableToolbar>
         <span className="text-xs font-medium text-veltol-fgMute">
           {t("totalActivities", { count: rows.filter((r) => !r.isSection).length })}
         </span>
@@ -218,9 +224,9 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
             {t("unsavedChanges", { count: dirtySet.size })}
           </span>
         )}
-      </div>
+      </TableToolbar>
 
-      <div className="overflow-x-auto">
+      <TableDesktopView>
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-border">
@@ -281,9 +287,52 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
             })}
           </tbody>
         </table>
-      </div>
+      </TableDesktopView>
+
+      <DataCardList>
+        {rows.map((row) => {
+          if (row.isSection) {
+            const sectionPct = sectionPctMap.get(row.phase as ChecklistPhase) ?? 0;
+            return (
+              <div key={row.rowKey} className="relative overflow-hidden bg-veltol-surface/40 px-4 py-2.5">
+                <div
+                  className="absolute left-0 top-0 w-[3px] bg-veltol-accent transition-all duration-700"
+                  style={{ height: `${sectionPct}%` }}
+                />
+                <div className="flex items-center gap-3 pl-3">
+                  <span className="font-mono text-[10px] text-veltol-accent">{row.cod}</span>
+                  <span className="text-[13px] font-semibold tracking-wide text-veltol-fg">{row.activitate}</span>
+                  <span className="ml-auto font-mono tabular-nums text-[11px] text-veltol-fgMute">{Math.round(sectionPct)}%</span>
+                  <div className="h-0.5 w-16 overflow-hidden rounded-full bg-veltol-surface">
+                    <div
+                      className="h-full rounded-full bg-veltol-accent transition-all duration-700"
+                      style={{ width: `${sectionPct}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <ChecklistDataCard
+              key={row.rowKey}
+              row={row}
+              projectId={projectId}
+              canMutate={canMutate}
+              onFieldChange={handleFieldChange}
+              onBlur={handleBlur}
+              onTodayValueChange={updateTodayValue}
+              onTodayBlur={handleTodayBlur}
+              onToggleHistory={toggleHistory}
+              onToggleDocs={toggleDocs}
+            />
+          );
+        })}
+      </DataCardList>
+
       <AddDocumentDialog />
-    </div>
+    </TableShell>
   );
 }
 
@@ -491,5 +540,180 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
         </tr>
       )}
     </React.Fragment>
+  );
+});
+
+const ChecklistDataCard = memo(function ChecklistDataCard({
+  row, projectId, canMutate,
+  onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
+}: ChecklistDataRowProps) {
+  const t = useTranslations("checklist");
+  const tDocs = useTranslations("documents");
+
+  const state = useChecklistStore((s) => s.rowState[row.number]);
+  const isDirty = useChecklistStore((s) => s.dirtySet.has(row.number));
+
+  const planTotal = parseInt(state?.plan_total ?? "", 10);
+  const realizat = row.record?.realizat ?? null;
+  const livePct =
+    !isNaN(planTotal) && planTotal > 0 && realizat != null
+      ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
+      : row.pct;
+  const targetZi = (() => {
+    const pt = parseInt(state?.plan_total ?? "", 10);
+    const z = parseInt(state?.zile ?? "", 10);
+    if (!isNaN(pt) && !isNaN(z) && z > 0) return Math.round(pt / z);
+    return row.target_zi ?? "—";
+  })();
+
+  return (
+    <>
+      <DataCard>
+        <DataCardHeader>
+          <div className="min-w-0">
+            <div className="font-mono text-[10px] text-veltol-fgMute">{row.cod} · {row.number}</div>
+            <DataCardTitle>{row.activitate}</DataCardTitle>
+          </div>
+          <DataCardBadgeSlot>
+            <PctCell pct={livePct} />
+          </DataCardBadgeSlot>
+        </DataCardHeader>
+
+        <DataCardBody>
+          <DataCardField label={t("columns.plan_total")}>
+            {canMutate ? (
+              <NumInput
+                value={state?.plan_total ?? ""}
+                onChange={(v) => onFieldChange(row.number, "plan_total", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving"}
+              />
+            ) : (row.plan_total ?? "—")}
+          </DataCardField>
+
+          <DataCardField label={t("columns.zile")}>
+            {canMutate ? (
+              <NumInput
+                value={state?.zile ?? ""}
+                onChange={(v) => onFieldChange(row.number, "zile", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving"}
+              />
+            ) : (row.zile ?? "—")}
+          </DataCardField>
+
+          <DataCardField label={t("columns.target_zi")}>{targetZi}</DataCardField>
+          <DataCardField label={t("columns.realizat")}>{row.record?.realizat ?? "—"}</DataCardField>
+
+          {canMutate && (
+            <DataCardField label={t("columns.today")} full>
+              <div className="flex items-center gap-1.5">
+                {state?.todayStatus === "saved" && <span className="text-[10px] text-veltol-green">✓</span>}
+                {state?.todayStatus === "error" && <span className="text-[10px] text-veltol-red">✗</span>}
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={state?.todayValue ?? ""}
+                  onChange={(e) => onTodayValueChange(row.number, e.target.value)}
+                  onBlur={() => onTodayBlur(row.number, row)}
+                  placeholder="0"
+                  disabled={state?.todayStatus === "saving" || !row.record?.id}
+                  title={!row.record?.id ? "Save the row first" : undefined}
+                  className={[
+                    INPUT_BASE,
+                    "border-border placeholder:text-veltol-fgMute/40",
+                    !row.record?.id ? "cursor-not-allowed opacity-30" : "",
+                  ].filter(Boolean).join(" ")}
+                />
+              </div>
+            </DataCardField>
+          )}
+        </DataCardBody>
+
+        <DataCardFooter>
+          <Button
+            variant="outline"
+            className="flex-1"
+            disabled={state?.historyLoading}
+            onClick={() => onToggleHistory(row.number, row)}
+          >
+            {state?.historyLoading ? <Loader2 className="animate-spin" data-icon="inline-start" /> : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" data-icon="inline-start">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            )}
+            {t("history.title")}
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1"
+            disabled={state?.docsLoading}
+            onClick={() => onToggleDocs(row.number, row)}
+          >
+            {state?.docsLoading ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Paperclip data-icon="inline-start" />}
+            {tDocs("attachDocuments")}
+          </Button>
+        </DataCardFooter>
+      </DataCard>
+
+      {state?.docsOpen && (
+        <div className="border-t border-border bg-veltol-surface/20 px-4 py-3">
+          <div className="w-full rounded-lg border border-border bg-veltol-bg p-4 shadow-xl">
+            <div className="mb-3 text-[11px] font-medium text-veltol-fgMute">
+              {tDocs("attachDocuments")} — {row.activitate}
+            </div>
+            {state.docsLoading ? (
+              <p className="font-mono text-[11px] text-veltol-fgMute">{tDocs("loadingDocuments")}</p>
+            ) : (
+              <DocumentList
+                documents={state.docsRecords ?? []}
+                linkedType="checklist_item"
+                linkedId={row.record?.id ? String(row.record.id) : ""}
+                projectId={projectId}
+                contextLabel={row.activitate}
+                canMutate={canMutate && !!row.record?.id}
+                compact
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {state?.historyOpen && (
+        <div className="border-t border-border bg-veltol-surface/20 px-4 py-3">
+          <div className="w-full rounded-lg border border-border bg-veltol-bg p-3 shadow-xl">
+            <div className="mb-2 text-[11px] font-medium text-veltol-fgMute">
+              {t("history.title")} — {row.activitate}
+            </div>
+            {state.historyLoading ? (
+              <p className="py-2 text-center font-mono text-[11px] text-veltol-fgMute">{t("history.loading")}</p>
+            ) : state.historyRecords && state.historyRecords.length > 0 ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="pb-1.5 text-left font-mono text-[9px] uppercase tracking-[0.14em] text-veltol-fgMute">{t("history.colDate")}</th>
+                    <th className="pb-1.5 text-right font-mono text-[9px] uppercase tracking-[0.14em] text-veltol-fgMute">{t("history.colDone")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {state.historyRecords.map((rec) => (
+                    <tr key={rec.id}>
+                      <td className="py-1.5 font-mono text-[11px] text-veltol-fgDim">{formatDate(rec.log_date + "T00:00:00")}</td>
+                      <td className="py-1.5 text-right font-mono tabular-nums text-[12px] text-veltol-fg">{rec.realizat}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="py-2 text-center font-mono text-[11px] text-veltol-fgMute">{t("history.empty")}</p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 });

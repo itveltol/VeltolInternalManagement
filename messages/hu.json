@@ -854,6 +854,8 @@
     "loading": "Frissítés...",
     "emptyState": "Válassz ki legalább egy projektet.",
     "notContracted": "Nem része a projekt szerződéstípusának",
+    "notScheduled": "Nincs beütemezve",
+    "invalidRange": "A záró dátum a kezdő dátum előtt van",
     "phase": {
       "planning": "Tervezés",
       "execution": "Kivitelezés",
