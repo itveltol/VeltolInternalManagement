@@ -163,7 +163,6 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
                   required
                   value={fields.name}
                   onChange={setField("name")}
-                  placeholder={clientType === "company" ? "Acme S.R.L." : "Ion Popescu"}
                 />
               </div>
             </div>
@@ -172,11 +171,11 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
-                  <Input name="cui" value={fields.cui} onChange={setField("cui")} placeholder="RO12345678" className={aiClass("cui")} />
+                  <Input name="cui" value={fields.cui} onChange={setField("cui")} className={aiClass("cui")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.jNumber")}</Label>
-                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} placeholder="J40/123/2020" className={aiClass("j_number")} />
+                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} className={aiClass("j_number")} />
                 </div>
               </div>
             )}
@@ -184,7 +183,7 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
             {clientType === "company" && (
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.legalRep")}</Label>
-                <Input name="legal_rep" value={fields.legal_rep} onChange={setField("legal_rep")} placeholder="Ion Popescu" className={aiClass("legal_rep")} />
+                <Input name="legal_rep" value={fields.legal_rep} onChange={setField("legal_rep")} className={aiClass("legal_rep")} />
               </div>
             )}
 
@@ -192,15 +191,15 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cnp")}</Label>
-                  <Input name="cnp" value={fields.cnp} onChange={setField("cnp")} placeholder="1234567890123" maxLength={13} className={aiClass("cnp")} />
+                  <Input name="cnp" value={fields.cnp} onChange={setField("cnp")} maxLength={13} className={aiClass("cnp")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.idSeries")}</Label>
-                  <Input name="id_series" value={fields.id_series} onChange={setField("id_series")} placeholder="AB" maxLength={2} className={aiClass("id_series")} />
+                  <Input name="id_series" value={fields.id_series} onChange={setField("id_series")} maxLength={2} className={aiClass("id_series")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.idNumber")}</Label>
-                  <Input name="id_number" value={fields.id_number} onChange={setField("id_number")} placeholder="123456" maxLength={6} className={aiClass("id_number")} />
+                  <Input name="id_number" value={fields.id_number} onChange={setField("id_number")} maxLength={6} className={aiClass("id_number")} />
                 </div>
               </div>
             )}
@@ -211,7 +210,6 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
                 name="reg_address"
                 value={fields.reg_address}
                 onChange={setField("reg_address")}
-                placeholder={clientType === "company" ? "Str. Exemple nr. 1, București" : "Str. Exemple nr. 1, Cluj-Napoca"}
                 className={aiClass("reg_address")}
               />
             </div>
@@ -219,17 +217,17 @@ export function AddClientDialog({ open, onClose, onCreated }: Props) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contactPerson")}</Label>
-                <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} placeholder="Maria Ionescu" className={aiClass("contact_person")} />
+                <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} className={aiClass("contact_person")} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phone")}</Label>
-                <Input name="phone" value={fields.phone} onChange={setField("phone")} placeholder="+40 700 000 000" className={aiClass("phone")} />
+                <Input name="phone" value={fields.phone} onChange={setField("phone")} className={aiClass("phone")} />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.email")}</Label>
-              <Input name="email" type="email" value={fields.email} onChange={setField("email")} placeholder="contact@example.ro" className={aiClass("email")} />
+              <Input name="email" type="email" value={fields.email} onChange={setField("email")} className={aiClass("email")} />
             </div>
 
             <div className="space-y-1.5">

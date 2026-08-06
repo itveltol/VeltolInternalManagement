@@ -28,6 +28,7 @@ import type { SubcontractorRef } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { SubcontractorCombobox } from "@/features/subcontractors/components/SubcontractorCombobox";
 import { FolderScanStep } from "./FolderScanStep";
+import { AddressCombobox } from "./AddressCombobox";
 import { cn } from "@/shared/utils/cn";
 
 const LocationPickerMap = dynamic(
@@ -281,11 +282,18 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.siteLocation")}</Label>
-                    <Input
-                      name="site_location"
+                    <input type="hidden" name="site_location" value={fields.site_location} />
+                    <AddressCombobox
                       value={fields.site_location}
-                      onChange={setField("site_location")}
-                      className={aiClass("site_location")}
+                      onValueChange={(v) => setFields((f) => ({ ...f, site_location: v }))}
+                      onLocationSelect={(lat, lng, label) =>
+                        setFields((f) => ({
+                          ...f,
+                          site_location: label,
+                          site_lat: String(lat),
+                          site_lng: String(lng),
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -429,6 +437,31 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   />
                 </div>
 
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
+                    <Input
+                      name="contract_number"
+                      value={fields.contract_number}
+                      onChange={setField("contract_number")}
+                      className={aiClass("contract_number")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
+                    <input name="contract_date" type="date" className={SELECT_CLASS} />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
+                  <CurrencyAmountInput
+                    amountName="value_amount"
+                    currencyName="currency"
+                    rate={exchangeRate}
+                  />
+                </div>
+
                 {executionMode === "subcontracted" ? (
                   <>
                     <div className="space-y-1.5">
@@ -483,34 +516,9 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
-                        <Input
-                          name="contract_number"
-                          value={fields.contract_number}
-                          onChange={setField("contract_number")}
-                          className={aiClass("contract_number")}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
-                        <input name="contract_date" type="date" className={SELECT_CLASS} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="space-y-1.5">
                         <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
                         <input name="deadline" type="date" className={SELECT_CLASS} />
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
-                      <CurrencyAmountInput
-                        amountName="value_amount"
-                        currencyName="currency"
-                        rate={exchangeRate}
-                      />
                     </div>
 
                     <div className="space-y-1.5">

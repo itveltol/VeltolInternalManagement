@@ -176,11 +176,11 @@ export function EditClientDialog({ client, open, onClose }: Props) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
-                  <Input name="cui" value={fields.cui} onChange={setField("cui")} placeholder="RO12345678" className={aiClass("cui")} />
+                  <Input name="cui" value={fields.cui} onChange={setField("cui")} className={aiClass("cui")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.jNumber")}</Label>
-                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} placeholder="J40/123/2020" className={aiClass("j_number")} />
+                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} className={aiClass("j_number")} />
                 </div>
               </div>
             )}
