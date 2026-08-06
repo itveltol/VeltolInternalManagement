@@ -24,6 +24,7 @@ import { ClientCombobox } from "@/features/clients/components/ClientCombobox";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { SubcontractorCombobox } from "@/features/subcontractors/components/SubcontractorCombobox";
+import { AddressCombobox } from "./AddressCombobox";
 import type { Team } from "@/features/teams/types";
 
 const LocationPickerMap = dynamic(
@@ -146,10 +147,15 @@ export function EditProjectDialog(props: Props) {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.siteLocation")}</Label>
-                <Input
-                  name="site_location"
+                <input type="hidden" name="site_location" value={siteLocation} />
+                <AddressCombobox
                   value={siteLocation}
-                  onChange={(e) => setSiteLocation(e.target.value)}
+                  onValueChange={setSiteLocation}
+                  onLocationSelect={(lat, lng, label) => {
+                    setSiteLocation(label);
+                    setSiteLat(lat);
+                    setSiteLng(lng);
+                  }}
                 />
               </div>
             </div>
@@ -271,6 +277,30 @@ export function EditProjectDialog(props: Props) {
               />
             </div>
 
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
+                <Input name="contract_number" defaultValue={project.contract_number ?? ""} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
+                <input name="contract_date" type="date" defaultValue={project.contract_date ?? ""} className={SELECT_CLASS} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
+              <CurrencyAmountInput
+                amountName="value_amount"
+                currencyName="currency"
+                defaultAmount={project.currency === "RON" ? project.value_lei : project.value_eur}
+                defaultCurrency={project.currency}
+                rate={project.conversion_rate}
+                onRefreshRate={getExchangeRate}
+                refreshLabel={t("fields.refreshRate")}
+              />
+            </div>
+
             {executionMode === "subcontracted" ? (
               <>
                 <div className="space-y-1.5">
@@ -337,33 +367,9 @@ export function EditProjectDialog(props: Props) {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractNumber")}</Label>
-                    <Input name="contract_number" defaultValue={project.contract_number ?? ""} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contractDate")}</Label>
-                    <input name="contract_date" type="date" defaultValue={project.contract_date ?? ""} className={SELECT_CLASS} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
                     <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.deadline")}</Label>
                     <input name="deadline" type="date" defaultValue={project.deadline ?? ""} className={SELECT_CLASS} />
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.value")}</Label>
-                  <CurrencyAmountInput
-                    amountName="value_amount"
-                    currencyName="currency"
-                    defaultAmount={project.currency === "RON" ? project.value_lei : project.value_eur}
-                    defaultCurrency={project.currency}
-                    rate={project.conversion_rate}
-                    onRefreshRate={getExchangeRate}
-                    refreshLabel={t("fields.refreshRate")}
-                  />
                 </div>
 
                 <div className="space-y-1.5">

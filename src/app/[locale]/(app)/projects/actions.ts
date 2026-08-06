@@ -117,7 +117,7 @@ function extractProjectPayload(formData: FormData, existing: Project | undefined
     manager_id: str("manager_id"),
     client_id: num("client_id"),
     execution_mode,
-    current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "",
+    current_phase: (formData.get("current_phase") as string | null) ?? existing?.current_phase ?? "planning",
     progress_pct: existing?.progress_pct ?? 0,
     contract_number: str("contract_number"),
     contract_date: str("contract_date"),
@@ -207,6 +207,27 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
     return data.display_name ?? null;
   } catch {
     return null;
+  }
+}
+
+export interface AddressSuggestion {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+export async function searchAddress(query: string): Promise<AddressSuggestion[]> {
+  if (query.trim().length < 3) return [];
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=ro&limit=6&q=${encodeURIComponent(query)}`,
+      { headers: { "User-Agent": "VeltolInternalManagement/1.0" } },
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+    return data.map((d) => ({ label: d.display_name, lat: Number(d.lat), lng: Number(d.lon) }));
+  } catch {
+    return [];
   }
 }
 

@@ -22,7 +22,8 @@
     "site": "Construcție · Șantier",
     "pontaj": "Personal · Pontaj",
     "gantt": "Gantt",
-    "situations": "Situații"
+    "situations": "Situații",
+    "suppliers": "Furnizori"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -72,6 +73,9 @@
     "clientSearchPlaceholder": "Caută clienți...",
     "clientSearchNoResults": "Niciun client găsit.",
     "clientSearchNone": "—",
+    "addressSearchPlaceholder": "Caută adresă în România...",
+    "addressSearchNoResults": "Nicio adresă găsită.",
+    "addressSearchLoading": "Se caută...",
     "newSubcontractor": "+ Subcontractant nou",
     "subcontractorSearchPlaceholder": "Caută subcontractanți...",
     "subcontractorSearchNoResults": "Niciun subcontractant găsit.",
@@ -982,5 +986,105 @@
   "common": {
     "cancel": "Anulează",
     "confirm": "Confirmă"
+  },
+  "suppliers": {
+    "eyebrow": "FURNIZORI · TOȚI",
+    "title": "Furnizori",
+    "subtitle": "Furnizori de echipamente și materiale pentru proiecte",
+    "totalCount": "{count} furnizori total",
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Următor",
+      "pageOf": "Pagina {page} din {total}"
+    },
+    "addSupplier": "Adaugă furnizor",
+    "editSupplier": "Editează",
+    "deleteSupplier": "Șterge",
+    "confirmDelete": "Ștergeți acest furnizor?",
+    "supplierSaved": "Furnizor salvat.",
+    "supplierCreated": "Furnizor creat.",
+    "supplierDeleted": "Furnizor șters.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "errorHasReferences": "Acest furnizor are înregistrări asociate și nu poate fi șters.",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Salvare...",
+    "emptyState": "Nu există furnizori. Adăugați primul furnizor.",
+    "columns": {
+      "name": "Nume",
+      "cui": "CUI",
+      "contactPerson": "Persoană de contact",
+      "phone": "Telefon",
+      "email": "Email"
+    },
+    "fields": {
+      "name": "Nume",
+      "cui": "CUI",
+      "regCom": "Reg. Com.",
+      "contactPerson": "Persoană de contact",
+      "email": "Email",
+      "phone": "Telefon",
+      "address": "Adresă",
+      "iban": "IBAN",
+      "notes": "Note"
+    }
+  },
+  "financiar": {
+    "tabLabel": "Financiar",
+    "breadcrumb": "Financiar",
+    "kpi": {
+      "contractValue": "Valoare contract",
+      "budget": "Buget",
+      "marginBudgeted": "Marjă bugetată",
+      "committed": "Angajat",
+      "actual": "Realizat",
+      "receivable": "De încasat",
+      "belowThreshold": "Sub prag",
+      "healthy": "OK"
+    },
+    "devizTitle": "Deviz",
+    "devizTotal": "Total: {amount}",
+    "devizEmptyState": "Nu există linii de deviz. Adăugați prima linie.",
+    "addBudgetLine": "Adaugă linie deviz",
+    "editBudgetLine": "Editează linie deviz",
+    "editLine": "Editează",
+    "deleteLine": "Șterge",
+    "confirmDeleteLine": "Ștergeți această linie de deviz?",
+    "lineSaved": "Linie de deviz salvată.",
+    "lineDeleted": "Linie de deviz ștearsă.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "errorValidation": "Verificați câmpurile completate.",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Salvare...",
+    "columns": {
+      "description": "Descriere",
+      "qty": "Cant.",
+      "unit": "U.M.",
+      "unitPrice": "Preț unitar",
+      "amount": "Valoare"
+    },
+    "fields": {
+      "costCategory": "Categorie de cost",
+      "selectCategory": "Selectează categoria",
+      "description": "Descriere",
+      "qty": "Cantitate",
+      "unit": "Unitate de măsură",
+      "unitPlaceholder": "buc, ml, kWp, ...",
+      "phaseNo": "Fază (opțional)",
+      "unitPrice": "Preț unitar",
+      "refreshRate": "Actualizează la cursul de azi"
+    },
+    "category": {
+      "equipment": "Echipamente",
+      "labor": "Manoperă",
+      "subcontractor": "Subcontractori",
+      "transport": "Transport & logistică",
+      "machinery": "Utilaje/închiriere",
+      "permits": "Avize & taxe",
+      "other": "Diverse/neprevăzute"
+    }
   }
 }

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getProjectFinancials } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeSectionSummaries, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
@@ -11,6 +11,8 @@ import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
 import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
 import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
+import { FinanciarShell } from "@/features/finance/components/FinanciarShell";
+import { contractValueEur } from "@/features/finance/services/marginService";
 import { isBessProjectType } from "@/features/projects/types";
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
@@ -39,15 +41,19 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const isDocumentsTab = tab === "documents";
   const isGanttTab = tab === "gantt";
   const isMaintenanceTab = tab === "maintenance";
+  const isFinanciarTab = tab === "financiar";
 
   const project = await getProject(projectId);
   if (!project) notFound();
+
+  const canReadFinancials =
+    role === "admin" || role === "finance" || project.manager_id === user?.id;
 
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
   const hasBess = isBessProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks] =
+  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, financials] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -58,6 +64,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
       isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [] }),
       hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
+      isFinanciarTab && canReadFinancials ? getProjectFinancials(projectId) : Promise.resolve(null),
     ]);
   const { activities, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -73,6 +80,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const tProjects = await getTranslations("projects");
   const tDocs = await getTranslations("documents");
   const tMaintenance = await getTranslations("maintenance");
+  const tFinanciar = await getTranslations("financiar");
 
   const overallPct = computeOverallPct(rows);
 
@@ -87,7 +95,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         <span className="text-veltol-fgDim">{project.name}</span>
         <span>/</span>
         <span className="text-veltol-accent">
-          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : t("breadcrumbChecklist")}
+          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isFinanciarTab ? tFinanciar("breadcrumb") : t("breadcrumbChecklist")}
         </span>
       </nav>
 
@@ -171,8 +179,11 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             ...(hasMaintenance
               ? [{ key: "maintenance", label: tMaintenance("tabLabel"), href: `/projects/${projectId}?tab=maintenance` }]
               : []),
+            ...(canReadFinancials
+              ? [{ key: "financiar", label: tFinanciar("tabLabel"), href: `/projects/${projectId}?tab=financiar` }]
+              : []),
           ].map(({ key, label, href }) => {
-            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab);
+            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "financiar" ? isFinanciarTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab && !isFinanciarTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab && !isFinanciarTab);
             return (
               <Link
                 key={key}
@@ -201,6 +212,15 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             checks={maintenanceChecks}
             canMutate={canMutate}
             todayMs={todayMs}
+          />
+        ) : isFinanciarTab && canReadFinancials && financials ? (
+          <FinanciarShell
+            projectId={project.id}
+            contractValueEur={contractValueEur(project.currency, project.value_eur, project.value_lei, project.conversion_rate)}
+            categories={financials.categories}
+            lines={financials.lines}
+            exchangeRate={financials.exchangeRate}
+            canMutate={canMutate}
           />
         ) : isGanttTab || isSubcontracted ? (
           <ProjectPhaseGanttShell

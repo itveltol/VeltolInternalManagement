@@ -322,3 +322,22 @@ export async function getLinkedDocuments(linkedType: string, linkedId: string) {
   const api = createSupabaseDocumentsClient(supabase);
   return getDocumentsByLinkedId(api, linkedType, linkedId);
 }
+
+export async function getProjectFinancials(projectId: number) {
+  const { supabase } = await requireAuth();
+  const { createSupabaseFinanceClient } = await import("@/features/finance/api/supabaseFinanceClient");
+  const { createSupabaseExchangeRatesClient } = await import("@/features/exchangeRates/api/supabaseExchangeRatesClient");
+  const { getTodaysRate } = await import("@/features/exchangeRates/services/exchangeRateService");
+  const financeService = await import("@/features/finance/services/financeService");
+
+  const api = createSupabaseFinanceClient(supabase);
+  const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
+
+  const [categories, lines, rate] = await Promise.all([
+    financeService.getCostCategories(api),
+    financeService.getBudgetLines(api, projectId),
+    getTodaysRate(exchangeRateClient),
+  ]);
+
+  return { categories, lines, exchangeRate: rate?.eurRon ?? null };
+}

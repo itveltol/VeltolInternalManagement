@@ -22,7 +22,8 @@
     "site": "Construction · Site",
     "pontaj": "Personnel · Pontaj",
     "gantt": "Gantt",
-    "situations": "Situations"
+    "situations": "Situations",
+    "suppliers": "Suppliers"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -72,6 +73,9 @@
     "clientSearchPlaceholder": "Search clients...",
     "clientSearchNoResults": "No matching clients.",
     "clientSearchNone": "—",
+    "addressSearchPlaceholder": "Search address in Romania...",
+    "addressSearchNoResults": "No matching addresses.",
+    "addressSearchLoading": "Searching...",
     "newSubcontractor": "+ New subcontractor",
     "subcontractorSearchPlaceholder": "Search subcontractors...",
     "subcontractorSearchNoResults": "No matching subcontractors.",
@@ -982,5 +986,105 @@
   "common": {
     "cancel": "Cancel",
     "confirm": "Confirm"
+  },
+  "suppliers": {
+    "eyebrow": "SUPPLIERS · ALL",
+    "title": "Suppliers",
+    "subtitle": "Equipment and material suppliers for projects",
+    "totalCount": "{count} suppliers total",
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    },
+    "addSupplier": "Add supplier",
+    "editSupplier": "Edit",
+    "deleteSupplier": "Delete",
+    "confirmDelete": "Delete this supplier?",
+    "supplierSaved": "Supplier saved.",
+    "supplierCreated": "Supplier created.",
+    "supplierDeleted": "Supplier deleted.",
+    "errorGeneric": "An error occurred.",
+    "errorNotAllowed": "You don't have permission for this action.",
+    "errorHasReferences": "This supplier has associated records and cannot be deleted.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "emptyState": "No suppliers yet. Add the first one.",
+    "columns": {
+      "name": "Name",
+      "cui": "Tax ID",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "fields": {
+      "name": "Name",
+      "cui": "Tax ID",
+      "regCom": "Reg. no.",
+      "contactPerson": "Contact person",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "iban": "IBAN",
+      "notes": "Notes"
+    }
+  },
+  "financiar": {
+    "tabLabel": "Financial",
+    "breadcrumb": "Financial",
+    "kpi": {
+      "contractValue": "Contract value",
+      "budget": "Budget",
+      "marginBudgeted": "Budgeted margin",
+      "committed": "Committed",
+      "actual": "Actual",
+      "receivable": "Receivable",
+      "belowThreshold": "Below threshold",
+      "healthy": "Healthy"
+    },
+    "devizTitle": "Budget lines",
+    "devizTotal": "Total: {amount}",
+    "devizEmptyState": "No budget lines yet. Add the first one.",
+    "addBudgetLine": "Add budget line",
+    "editBudgetLine": "Edit budget line",
+    "editLine": "Edit",
+    "deleteLine": "Delete",
+    "confirmDeleteLine": "Delete this budget line?",
+    "lineSaved": "Budget line saved.",
+    "lineDeleted": "Budget line deleted.",
+    "errorGeneric": "An error occurred.",
+    "errorNotAllowed": "You don't have permission for this action.",
+    "errorValidation": "Please check the filled fields.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "columns": {
+      "description": "Description",
+      "qty": "Qty",
+      "unit": "Unit",
+      "unitPrice": "Unit price",
+      "amount": "Amount"
+    },
+    "fields": {
+      "costCategory": "Cost category",
+      "selectCategory": "Select category",
+      "description": "Description",
+      "qty": "Quantity",
+      "unit": "Unit",
+      "unitPlaceholder": "pcs, m, kWp, ...",
+      "phaseNo": "Phase (optional)",
+      "unitPrice": "Unit price",
+      "refreshRate": "Refresh to today's rate"
+    },
+    "category": {
+      "equipment": "Equipment",
+      "labor": "Labor",
+      "subcontractor": "Subcontractors",
+      "transport": "Transport & logistics",
+      "machinery": "Machinery/rental",
+      "permits": "Permits & fees",
+      "other": "Other/contingency"
+    }
   }
 }

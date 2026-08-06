@@ -83,18 +83,18 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         ? project.contract_type.map((c) => tContractType(c)).join(", ")
         : "—",
     },
+    { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
+    { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
+    {
+      label: t("fields.value"),
+      value: formatSourceValueWithConversion(
+        project.currency === "EUR" ? project.value_eur : project.value_lei,
+        project.currency,
+        project.conversion_rate,
+      ),
+    },
     ...(isSubcontracted ? [] : [
-      { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
-      { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
       { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
-      {
-        label: t("fields.value"),
-        value: formatSourceValueWithConversion(
-          project.currency === "EUR" ? project.value_eur : project.value_lei,
-          project.currency,
-          project.conversion_rate,
-        ),
-      },
     ]),
     { label: t("fields.progress"), value: `${project.progress_pct}%` },
   ];

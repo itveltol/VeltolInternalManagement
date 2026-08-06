@@ -18,6 +18,7 @@ import {
   Loader2,
   Bell,
   Receipt,
+  Truck,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
@@ -66,6 +67,7 @@ export function NavContent({
         { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
         { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
         { href: `/${locale}/subcontractors`, label: t("subcontractors"), icon: HardHat },
+        { href: `/${locale}/suppliers`, label: t("suppliers"), icon: Truck },
         { href: `/${locale}/situations`, label: t("situations"), icon: Receipt },
         { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
         { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },

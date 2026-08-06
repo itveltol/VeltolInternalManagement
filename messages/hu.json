@@ -22,7 +22,8 @@
     "site": "Építési helyszín",
     "pontaj": "Személyzet · Jelenlét",
     "gantt": "Gantt",
-    "situations": "Szituációk"
+    "situations": "Szituációk",
+    "suppliers": "Beszállítók"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -72,6 +73,9 @@
     "clientSearchPlaceholder": "Ügyfél keresése...",
     "clientSearchNoResults": "Nincs találat.",
     "clientSearchNone": "—",
+    "addressSearchPlaceholder": "Cím keresése Romániában...",
+    "addressSearchNoResults": "Nincs találat.",
+    "addressSearchLoading": "Keresés...",
     "newSubcontractor": "+ Új alvállalkozó",
     "subcontractorSearchPlaceholder": "Alvállalkozó keresése...",
     "subcontractorSearchNoResults": "Nincs találat.",
@@ -982,5 +986,105 @@
   "common": {
     "cancel": "Mégse",
     "confirm": "Megerősítés"
+  },
+  "suppliers": {
+    "eyebrow": "BESZÁLLÍTÓK · ÖSSZES",
+    "title": "Beszállítók",
+    "subtitle": "Berendezés- és anyagbeszállítók a projektekhez",
+    "totalCount": "{count} beszállító összesen",
+    "pagination": {
+      "prev": "Előző",
+      "next": "Következő",
+      "pageOf": "{page}. oldal / {total}"
+    },
+    "addSupplier": "Beszállító hozzáadása",
+    "editSupplier": "Szerkesztés",
+    "deleteSupplier": "Törlés",
+    "confirmDelete": "Törli ezt a beszállítót?",
+    "supplierSaved": "Beszállító elmentve.",
+    "supplierCreated": "Beszállító létrehozva.",
+    "supplierDeleted": "Beszállító törölve.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Nincs jogosultsága ehhez a művelethez.",
+    "errorHasReferences": "Ennek a beszállítónak kapcsolódó rekordjai vannak, nem törölhető.",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "emptyState": "Nincsenek beszállítók. Adja hozzá az elsőt.",
+    "columns": {
+      "name": "Név",
+      "cui": "Adószám",
+      "contactPerson": "Kapcsolattartó",
+      "phone": "Telefon",
+      "email": "Email"
+    },
+    "fields": {
+      "name": "Név",
+      "cui": "Adószám",
+      "regCom": "Cégjegyzékszám",
+      "contactPerson": "Kapcsolattartó",
+      "email": "Email",
+      "phone": "Telefon",
+      "address": "Cím",
+      "iban": "IBAN",
+      "notes": "Megjegyzések"
+    }
+  },
+  "financiar": {
+    "tabLabel": "Pénzügy",
+    "breadcrumb": "Pénzügy",
+    "kpi": {
+      "contractValue": "Szerződéses érték",
+      "budget": "Büdzsé",
+      "marginBudgeted": "Tervezett margó",
+      "committed": "Elkötelezett",
+      "actual": "Tényleges",
+      "receivable": "Kintlévőség",
+      "belowThreshold": "Küszöb alatt",
+      "healthy": "Rendben"
+    },
+    "devizTitle": "Deviz",
+    "devizTotal": "Összesen: {amount}",
+    "devizEmptyState": "Nincsenek deviz-sorok. Adja hozzá az elsőt.",
+    "addBudgetLine": "Deviz-sor hozzáadása",
+    "editBudgetLine": "Deviz-sor szerkesztése",
+    "editLine": "Szerkesztés",
+    "deleteLine": "Törlés",
+    "confirmDeleteLine": "Törli ezt a deviz-sort?",
+    "lineSaved": "Deviz-sor elmentve.",
+    "lineDeleted": "Deviz-sor törölve.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Nincs jogosultsága ehhez a művelethez.",
+    "errorValidation": "Ellenőrizze a kitöltött mezőket.",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "columns": {
+      "description": "Leírás",
+      "qty": "Menny.",
+      "unit": "Menny. egys.",
+      "unitPrice": "Egységár",
+      "amount": "Érték"
+    },
+    "fields": {
+      "costCategory": "Költségkategória",
+      "selectCategory": "Válasszon kategóriát",
+      "description": "Leírás",
+      "qty": "Mennyiség",
+      "unit": "Mennyiségi egység",
+      "unitPlaceholder": "db, fm, kWp, ...",
+      "phaseNo": "Fázis (opcionális)",
+      "unitPrice": "Egységár",
+      "refreshRate": "Frissítés a mai árfolyamra"
+    },
+    "category": {
+      "equipment": "Berendezések",
+      "labor": "Munkadíj",
+      "subcontractor": "Alvállalkozók",
+      "transport": "Szállítás és logisztika",
+      "machinery": "Gépek/bérlés",
+      "permits": "Engedélyek és díjak",
+      "other": "Egyéb/előre nem látott"
+    }
   }
 }
