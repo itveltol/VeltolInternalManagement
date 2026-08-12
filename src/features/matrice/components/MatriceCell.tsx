@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, Paperclip } from "lucide-react";
+import { Loader2, Paperclip, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,16 +22,19 @@ interface Props {
   expiresAt?: string | null;
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
+  onOpenDiscussion: (projectId: number, activityId: number) => void;
   documentCount?: number;
+  discussionCount?: number;
   /** True when this activity doesn't apply to the project's type — status can't be hand-edited. */
   disabled?: boolean;
   /** True while this cell's own status change is saving. */
   pending?: boolean;
 }
 
-export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", isAviz, expiresAt, onChangeStatus, onOpenDocuments, documentCount = 0, disabled, pending }: Props) {
+export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", isAviz, expiresAt, onChangeStatus, onOpenDocuments, onOpenDiscussion, documentCount = 0, discussionCount = 0, disabled, pending }: Props) {
   const t = useTranslations("matrice");
   const tDocs = useTranslations("documents");
+  const tComms = useTranslations("comms");
   const isDisabled = disabled || pending;
   const [pendingExpiryPrompt, setPendingExpiryPrompt] = useState(false);
 
@@ -96,12 +99,23 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onOpenDocuments(projectId, activityId); }}
-      title={tDocs("attachDocuments")}
-      className="flex items-center gap-0.5 rounded p-0.5 text-veltol-faint transition-colors hover:text-veltol-fgMute"
+      aria-label={tDocs("attachDocuments")}
+      className="flex min-h-8 min-w-8 items-center justify-center gap-0.5 rounded p-1.5 text-veltol-faint transition-colors hover:bg-veltol-hover hover:text-veltol-fgMute"
     >
       <Paperclip className="h-3 w-3" />
       {documentCount > 0 && (
         <span className="text-[10px] font-semibold text-veltol-primary">{documentCount}</span>
+      )}
+    </button>
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onOpenDiscussion(projectId, activityId); }}
+      aria-label={tComms("discussion")}
+      className="flex min-h-8 min-w-8 items-center justify-center gap-0.5 rounded p-1.5 text-veltol-faint transition-colors hover:bg-veltol-hover hover:text-veltol-fgMute"
+    >
+      <MessageSquare className="h-3 w-3" />
+      {discussionCount > 0 && (
+        <span className="text-[10px] font-semibold text-veltol-primary">{discussionCount}</span>
       )}
     </button>
     {isAviz && (

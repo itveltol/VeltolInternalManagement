@@ -12,6 +12,7 @@ import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOver
 import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
 import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
 import { FinanciarShell } from "@/features/finance/components/FinanciarShell";
+import { NoteThread } from "@/features/comms/components/NoteThread";
 import { contractValueEur } from "@/features/finance/services/marginService";
 import { isBessProjectType } from "@/features/projects/types";
 import { Badge } from "@/shared/components/ui/badge";
@@ -42,6 +43,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const isGanttTab = tab === "gantt";
   const isMaintenanceTab = tab === "maintenance";
   const isFinanciarTab = tab === "financiar";
+  const isComunicareTab = tab === "comunicare";
 
   const project = await getProject(projectId);
   if (!project) notFound();
@@ -81,6 +83,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const tDocs = await getTranslations("documents");
   const tMaintenance = await getTranslations("maintenance");
   const tFinanciar = await getTranslations("financiar");
+  const tComms = await getTranslations("comms");
 
   const overallPct = computeOverallPct(rows);
 
@@ -95,7 +98,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         <span className="text-veltol-fgDim">{project.name}</span>
         <span>/</span>
         <span className="text-veltol-accent">
-          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isFinanciarTab ? tFinanciar("breadcrumb") : t("breadcrumbChecklist")}
+          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isFinanciarTab ? tFinanciar("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist")}
         </span>
       </nav>
 
@@ -182,8 +185,9 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             ...(canReadFinancials
               ? [{ key: "financiar", label: tFinanciar("tabLabel"), href: `/projects/${projectId}?tab=financiar` }]
               : []),
+            { key: "comunicare", label: tComms("tabLabel"), href: `/projects/${projectId}?tab=comunicare` },
           ].map(({ key, label, href }) => {
-            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "financiar" ? isFinanciarTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab && !isFinanciarTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab && !isFinanciarTab);
+            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "financiar" ? isFinanciarTab : key === "comunicare" ? isComunicareTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab && !isFinanciarTab && !isComunicareTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab && !isFinanciarTab && !isComunicareTab);
             return (
               <Link
                 key={key}
@@ -222,6 +226,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             exchangeRate={financials.exchangeRate}
             canMutate={canMutate}
           />
+        ) : isComunicareTab ? (
+          <div className="rounded-card border border-border bg-card p-5 shadow-card">
+            <NoteThread
+              anchor={{ projectId: project.id }}
+              anchorLabel={`${tComms("anchorProject")} · ${project.name}`}
+            />
+          </div>
         ) : isGanttTab || isSubcontracted ? (
           <ProjectPhaseGanttShell
             project={project}

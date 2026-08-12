@@ -1086,5 +1086,56 @@
       "permits": "Permits & fees",
       "other": "Other/contingency"
     }
+  },
+  "comms": {
+    "tabLabel": "Communication",
+    "breadcrumb": "Communication",
+    "eyebrow": "MY BOARD",
+    "title": "My board",
+    "subtitle": "Notes, questions, decisions and risks across your projects.",
+    "forMe": {
+      "title": "For me",
+      "empty": "Nothing new. The day is fine."
+    },
+    "anchorPersonal": "Personal",
+    "anchorProject": "Project",
+    "discussion": "Discussion",
+    "unknownAuthor": "User",
+    "loadingThread": "Loading discussion...",
+    "emptyThread": "No messages yet.",
+    "noReplies": "No replies yet.",
+    "backToList": "Back to list",
+    "markResolved": "Mark as resolved",
+    "kind": {
+      "note": "Note",
+      "announcement": "Announcement",
+      "question": "Question",
+      "decision": "Decision",
+      "risk": "Risk"
+    },
+    "visibility": {
+      "private": "Private",
+      "team": "Team",
+      "project": "Project",
+      "company": "Company"
+    },
+    "composer": {
+      "anchorLabel": "What this is about",
+      "kindLabel": "Type",
+      "visibilityLabel": "Visibility",
+      "bodyPlaceholder": "Write a note...",
+      "replyPlaceholder": "Write a reply...",
+      "publish": "Publish",
+      "reply": "Reply",
+      "saving": "Saving..."
+    },
+    "noteCreated": "Note added.",
+    "noteStatusUpdated": "Status updated.",
+    "noteDeleted": "Note deleted.",
+    "notePinned": "Pinned.",
+    "noteUnpinned": "Unpinned.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do that.",
+    "errorValidation": "Invalid data."
   }
 }

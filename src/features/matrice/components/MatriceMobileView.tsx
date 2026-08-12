@@ -16,14 +16,16 @@ interface Props {
   onSelectProject: (projectId: number) => void;
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
+  onOpenDiscussion: (projectId: number, activityId: number) => void;
   onHideProject: (projectId: number) => void;
   docCounts?: Map<string, number>;
+  discussionCounts?: Map<string, number>;
   pendingCells?: Set<string>;
 }
 
 export function MatriceMobileView({
   activities, cells, projects, selectedProjectId, onSelectProject,
-  onChangeStatus, onOpenDocuments, onHideProject, docCounts = new Map(), pendingCells,
+  onChangeStatus, onOpenDocuments, onOpenDiscussion, onHideProject, docCounts = new Map(), discussionCounts = new Map(), pendingCells,
 }: Props) {
   const t = useTranslations("matrice");
 
@@ -183,7 +185,9 @@ export function MatriceMobileView({
                             expiresAt={getExpiresAt(activity.id)}
                             onChangeStatus={onChangeStatus}
                             onOpenDocuments={onOpenDocuments}
+                            onOpenDiscussion={onOpenDiscussion}
                             documentCount={docCounts.get(`${selectedProject.id}:${activity.id}`) ?? 0}
+                            discussionCount={discussionCounts.get(`${selectedProject.id}:${activity.id}`) ?? 0}
                             pending={pendingCells?.has(`${selectedProject.id}:${activity.id}`)}
                             disabled={!appliesToProject}
                           />

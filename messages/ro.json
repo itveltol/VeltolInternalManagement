@@ -1086,5 +1086,56 @@
       "permits": "Avize & taxe",
       "other": "Diverse/neprevăzute"
     }
+  },
+  "comms": {
+    "tabLabel": "Comunicare",
+    "breadcrumb": "Comunicare",
+    "eyebrow": "PANOUL MEU",
+    "title": "Panoul meu",
+    "subtitle": "Notițe, întrebări, decizii și riscuri legate de proiectele tale.",
+    "forMe": {
+      "title": "Pentru mine",
+      "empty": "Nimic nou. Ziua e în regulă."
+    },
+    "anchorPersonal": "Personal",
+    "anchorProject": "Proiect",
+    "discussion": "Discuție",
+    "unknownAuthor": "Utilizator",
+    "loadingThread": "Se încarcă discuția...",
+    "emptyThread": "Niciun mesaj încă.",
+    "noReplies": "Niciun răspuns încă.",
+    "backToList": "Înapoi la listă",
+    "markResolved": "Marchează ca rezolvat",
+    "kind": {
+      "note": "Notiță",
+      "announcement": "Anunț",
+      "question": "Întrebare",
+      "decision": "Decizie",
+      "risk": "Risc"
+    },
+    "visibility": {
+      "private": "Privat",
+      "team": "Echipă",
+      "project": "Proiect",
+      "company": "Companie"
+    },
+    "composer": {
+      "anchorLabel": "Unde se referă",
+      "kindLabel": "Tip",
+      "visibilityLabel": "Vizibilitate",
+      "bodyPlaceholder": "Scrie o notiță...",
+      "replyPlaceholder": "Scrie un răspuns...",
+      "publish": "Publică",
+      "reply": "Răspunde",
+      "saving": "Se salvează..."
+    },
+    "noteCreated": "Notiță adăugată.",
+    "noteStatusUpdated": "Status actualizat.",
+    "noteDeleted": "Notiță ștearsă.",
+    "notePinned": "Fixat.",
+    "noteUnpinned": "Defixat.",
+    "errorGeneric": "Ceva a mers greșit.",
+    "errorNotAllowed": "Nu ai permisiunea să faci asta.",
+    "errorValidation": "Date invalide."
   }
 }

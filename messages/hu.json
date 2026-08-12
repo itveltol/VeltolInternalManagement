@@ -1086,5 +1086,56 @@
       "permits": "Engedélyek és díjak",
       "other": "Egyéb/előre nem látott"
     }
+  },
+  "comms": {
+    "tabLabel": "Kommunikáció",
+    "breadcrumb": "Kommunikáció",
+    "eyebrow": "SAJÁT PANEL",
+    "title": "Panoul meu",
+    "subtitle": "Jegyzetek, kérdések, döntések és kockázatok a projektjeidhez.",
+    "forMe": {
+      "title": "Nekem szól",
+      "empty": "Nincs semmi új. A nap rendben van."
+    },
+    "anchorPersonal": "Személyes",
+    "anchorProject": "Projekt",
+    "discussion": "Beszélgetés",
+    "unknownAuthor": "Felhasználó",
+    "loadingThread": "Beszélgetés betöltése...",
+    "emptyThread": "Még nincs üzenet.",
+    "noReplies": "Még nincs válasz.",
+    "backToList": "Vissza a listához",
+    "markResolved": "Megjelölés megoldottként",
+    "kind": {
+      "note": "Jegyzet",
+      "announcement": "Közlemény",
+      "question": "Kérdés",
+      "decision": "Döntés",
+      "risk": "Kockázat"
+    },
+    "visibility": {
+      "private": "Privát",
+      "team": "Csapat",
+      "project": "Projekt",
+      "company": "Cég"
+    },
+    "composer": {
+      "anchorLabel": "Mire vonatkozik",
+      "kindLabel": "Típus",
+      "visibilityLabel": "Láthatóság",
+      "bodyPlaceholder": "Írj egy jegyzetet...",
+      "replyPlaceholder": "Írj egy választ...",
+      "publish": "Közzététel",
+      "reply": "Válasz",
+      "saving": "Mentés..."
+    },
+    "noteCreated": "Jegyzet hozzáadva.",
+    "noteStatusUpdated": "Státusz frissítve.",
+    "noteDeleted": "Jegyzet törölve.",
+    "notePinned": "Kitűzve.",
+    "noteUnpinned": "Kitűzés visszavonva.",
+    "errorGeneric": "Valami hiba történt.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "errorValidation": "Érvénytelen adatok."
   }
 }
