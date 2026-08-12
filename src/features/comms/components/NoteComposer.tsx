@@ -84,7 +84,7 @@ export function NoteComposer({ fixedAnchor, fixedAnchorLabel, parentId, onSucces
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
               {t("composer.visibilityLabel")}
             </label>
-            <Select name="visibility" defaultValue="project">
+            <Select name="visibility" defaultValue={fixedAnchor ? "project" : "private"}>
               <option value="private">{t("visibility.private")}</option>
               <option value="team">{t("visibility.team")}</option>
               <option value="project">{t("visibility.project")}</option>

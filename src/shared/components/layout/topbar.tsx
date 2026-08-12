@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { LanguageSwitcher } from "@/shared/components/language-switcher";
 import { ThemeSwitcher } from "@/shared/components/theme-switcher";
 import { InlineSearchBar } from "@/features/search/components/InlineSearchBar";
+import { NotificationBell } from "@/features/comms/components/NotificationBell";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
@@ -29,13 +30,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
           <ThemeSwitcher />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-[38px] w-[38px] text-veltol-fgMute hover:bg-veltol-hover hover:text-veltol-fg"
-          >
-            <Bell className="h-4 w-4" />
-          </Button>
+          <NotificationBell />
         </div>
       </div>
 

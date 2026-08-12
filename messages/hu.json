@@ -23,7 +23,9 @@
     "pontaj": "Személyzet · Jelenlét",
     "gantt": "Gantt",
     "situations": "Szituációk",
-    "suppliers": "Beszállítók"
+    "suppliers": "Beszállítók",
+    "comunicareGroup": "KOMMUNIKÁCIÓ",
+    "board": "Saját panel"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -833,13 +835,14 @@
   },
   "search": {
     "title": "Globális keresés",
-    "placeholder": "Projektek, ügyfelek, dokumentumok keresése...",
+    "placeholder": "Keresés projektek, ügyfelek, dokumentumok, jegyzetek között...",
     "groupProjects": "Projektek",
     "groupClients": "Ügyfelek",
     "groupDocuments": "Dokumentumok",
     "empty": "Nincs találat: \"{query}\".",
     "minChars": "Legalább 2 karaktert írj be a kereséshez.",
-    "loading": "Keresés..."
+    "loading": "Keresés...",
+    "groupNotes": "Jegyzetek"
   },
   "projectType": {
     "CEF": "CEF — Napelem park",
@@ -1136,6 +1139,31 @@
     "noteUnpinned": "Kitűzés visszavonva.",
     "errorGeneric": "Valami hiba történt.",
     "errorNotAllowed": "Nincs jogosultságod ehhez.",
-    "errorValidation": "Érvénytelen adatok."
+    "errorValidation": "Érvénytelen adatok.",
+    "notifications": {
+      "title": "Értesítések",
+      "markAllRead": "Összes megjelölése olvasottként",
+      "empty": "Nincs értesítés.",
+      "group": {
+        "today": "Ma",
+        "thisWeek": "Ezen a héten",
+        "older": "Régebbi"
+      },
+      "type": {
+        "mention": "megemlített téged",
+        "reply": "válaszolt a jegyzetedre",
+        "ack_required": "visszaigazolást igényel",
+        "due_soon": "határideje közeleg",
+        "aviz_expiring": "engedély lejár",
+        "maintenance_due": "karbantartás esedékes",
+        "vacation_request": "szabadságkérelem",
+        "system": "rendszerértesítés"
+      }
+    },
+    "filters": {
+      "allKinds": "Minden típus",
+      "unreadOnly": "Csak olvasatlan",
+      "openOnly": "Csak nyitott"
+    }
   }
 }

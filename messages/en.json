@@ -23,7 +23,9 @@
     "pontaj": "Personnel · Pontaj",
     "gantt": "Gantt",
     "situations": "Situations",
-    "suppliers": "Suppliers"
+    "suppliers": "Suppliers",
+    "comunicareGroup": "COMMUNICATION",
+    "board": "My board"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -833,13 +835,14 @@
   },
   "search": {
     "title": "Global Search",
-    "placeholder": "Search projects, clients, documents...",
+    "placeholder": "Search projects, clients, documents, notes...",
     "groupProjects": "Projects",
     "groupClients": "Clients",
     "groupDocuments": "Documents",
     "empty": "No results for \"{query}\".",
     "minChars": "Type at least 2 characters to search.",
-    "loading": "Searching..."
+    "loading": "Searching...",
+    "groupNotes": "Notes"
   },
   "projectType": {
     "CEF": "CEF — Solar farm",
@@ -1136,6 +1139,31 @@
     "noteUnpinned": "Unpinned.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do that.",
-    "errorValidation": "Invalid data."
+    "errorValidation": "Invalid data.",
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Mark all read",
+      "empty": "No notifications.",
+      "group": {
+        "today": "Today",
+        "thisWeek": "This week",
+        "older": "Older"
+      },
+      "type": {
+        "mention": "mentioned you",
+        "reply": "replied to your note",
+        "ack_required": "requires acknowledgement",
+        "due_soon": "is due soon",
+        "aviz_expiring": "permit expiring",
+        "maintenance_due": "maintenance due",
+        "vacation_request": "vacation request",
+        "system": "system notification"
+      }
+    },
+    "filters": {
+      "allKinds": "All kinds",
+      "unreadOnly": "Unread only",
+      "openOnly": "Open only"
+    }
   }
 }

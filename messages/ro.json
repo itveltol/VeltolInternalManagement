@@ -23,7 +23,9 @@
     "pontaj": "Personal · Pontaj",
     "gantt": "Gantt",
     "situations": "Situații",
-    "suppliers": "Furnizori"
+    "suppliers": "Furnizori",
+    "comunicareGroup": "COMUNICARE",
+    "board": "Panoul meu"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -833,13 +835,14 @@
   },
   "search": {
     "title": "Căutare globală",
-    "placeholder": "Caută proiecte, clienți, documente...",
+    "placeholder": "Caută proiecte, clienți, documente, notițe...",
     "groupProjects": "Proiecte",
     "groupClients": "Clienți",
     "groupDocuments": "Documente",
     "empty": "Niciun rezultat pentru \"{query}\".",
     "minChars": "Introduceți cel puțin 2 caractere pentru a căuta.",
-    "loading": "Se caută..."
+    "loading": "Se caută...",
+    "groupNotes": "Notițe"
   },
   "projectType": {
     "CEF": "CEF — Parc solar",
@@ -1136,6 +1139,31 @@
     "noteUnpinned": "Defixat.",
     "errorGeneric": "Ceva a mers greșit.",
     "errorNotAllowed": "Nu ai permisiunea să faci asta.",
-    "errorValidation": "Date invalide."
+    "errorValidation": "Date invalide.",
+    "notifications": {
+      "title": "Notificări",
+      "markAllRead": "Marchează toate ca citite",
+      "empty": "Nicio notificare.",
+      "group": {
+        "today": "Astăzi",
+        "thisWeek": "Săptămâna asta",
+        "older": "Mai vechi"
+      },
+      "type": {
+        "mention": "te-a menționat",
+        "reply": "a răspuns la notița ta",
+        "ack_required": "necesită confirmare",
+        "due_soon": "are termen apropiat",
+        "aviz_expiring": "aviz expiră",
+        "maintenance_due": "mentenanță scadentă",
+        "vacation_request": "cerere de concediu",
+        "system": "notificare sistem"
+      }
+    },
+    "filters": {
+      "allKinds": "Toate tipurile",
+      "unreadOnly": "Doar necitite",
+      "openOnly": "Doar deschise"
+    }
   }
 }
