@@ -35,7 +35,6 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             className="relative h-[38px] w-[38px] text-veltol-fgMute hover:bg-veltol-hover hover:text-veltol-fg"
           >
             <Bell className="h-4 w-4" />
-            <span className="absolute right-2 top-2 size-1.5 rounded-full bg-[var(--v-warning)]" />
           </Button>
         </div>
       </div>
