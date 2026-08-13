@@ -20,6 +20,7 @@ export type DashboardProject = {
   current_phase: ProjectPhase;
   contract_type: ContractType[];
   project_category: ProjectCategory;
+  project_type: string | null;
   status: ProjectStatus;
   value_eur: number | null;
   contract_date: string | null;
@@ -51,7 +52,7 @@ export async function getProjects(): Promise<DashboardProject[]> {
   const supabase = createAdminClient();
   const { data: projects, error } = await supabase
     .from("projects")
-    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, status, deadline, value_eur, contract_date, created_at")
+    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, project_type, status, deadline, value_eur, contract_date, created_at")
     .order("created_at", { ascending: true });
   if (error) console.error("[dashboard debug] projects query error:", error);
   return projects ?? [];
@@ -84,21 +85,14 @@ export type MaintenanceReminder = {
   period: "march" | "october";
 };
 
-export async function getMaintenanceReminders(): Promise<MaintenanceReminder[]> {
+export async function getMaintenanceReminders(projects: DashboardProject[]): Promise<MaintenanceReminder[]> {
   await requireAuth();
+
+  const maintenanceProjects = projects.filter((p) => p.contract_type.includes("mentenanta"));
+  if (maintenanceProjects.length === 0) return [];
+
   const supabase = createAdminClient();
-
-  const { data: projects, error: projectsError } = await supabase
-    .from("projects")
-    .select("id, name, contract_type")
-    .contains("contract_type", ["mentenanta"]);
-  if (projectsError) {
-    console.error("[dashboard debug] maintenance projects query error:", projectsError);
-    return [];
-  }
-  if (!projects || projects.length === 0) return [];
-
-  const projectIds = projects.map((p) => p.id as number);
+  const projectIds = maintenanceProjects.map((p) => p.id);
   const { data: checks, error: checksError } = await supabase
     .from("project_maintenance_checks")
     .select("*")
@@ -117,7 +111,7 @@ export async function getMaintenanceReminders(): Promise<MaintenanceReminder[]> 
   }
 
   const reminders: MaintenanceReminder[] = [];
-  for (const project of projects as { id: number; name: string }[]) {
+  for (const project of maintenanceProjects) {
     const cycles = buildMaintenanceCycles(checksByProject.get(project.id) ?? [], today);
     for (const cycle of cycles) {
       if (cycle.state === "needsAttention") {
@@ -128,26 +122,25 @@ export async function getMaintenanceReminders(): Promise<MaintenanceReminder[]> 
   return reminders;
 }
 
-export async function getAvizReminders(): Promise<AvizReminder[]> {
+export async function getAvizReminders(projects: DashboardProject[]): Promise<AvizReminder[]> {
   await requireAuth();
   const supabase = createAdminClient();
 
-  const [{ data: activities, error: activitiesError }, { data: cells, error: cellsError }, { data: projects, error: projectsError }] =
+  const [{ data: activities, error: activitiesError }, { data: cells, error: cellsError }] =
     await Promise.all([
       supabase.from("activities").select("*").eq("is_aviz", true),
       supabase.from("project_activity_status").select("project_id, activity_id, status, note, expires_at").eq("status", "finalizat").not("expires_at", "is", null),
-      supabase.from("projects").select("id, name, project_type, contract_type"),
     ]);
 
-  if (activitiesError || cellsError || projectsError) {
-    console.error("[dashboard debug] aviz reminders query error:", activitiesError ?? cellsError ?? projectsError);
+  if (activitiesError || cellsError) {
+    console.error("[dashboard debug] aviz reminders query error:", activitiesError ?? cellsError);
     return [];
   }
 
   return buildAvizReminders(
     (activities ?? []) as Activity[],
     (cells ?? []) as MatrixCell[],
-    (projects ?? []) as MatrixProject[],
+    projects as MatrixProject[],
     new Date(),
   );
 }

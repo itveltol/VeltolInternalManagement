@@ -1,4 +1,10 @@
-import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, Notification } from "../types";
+import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, NoteVisibility, Notification } from "../types";
+
+export interface MentionScope {
+  visibility: NoteVisibility;
+  projectId: number | null;
+  teamId: number | null;
+}
 
 export interface NotesFilter {
   projectId?: number;
@@ -34,7 +40,7 @@ export interface CommsApiClient {
   insertMentions(noteId: number, profileIds: string[]): Promise<void>;
   setNoteStatus(noteId: number, status: NoteStatus): Promise<void>;
   deleteNote(noteId: number): Promise<void>;
-  getMentionCandidates(): Promise<MentionCandidate[]>;
+  getMentionCandidates(scope: MentionScope): Promise<MentionCandidate[]>;
   getPersonalPinNoteIds(profileId: string): Promise<number[]>;
   getContextPinNoteIds(projectId: number): Promise<number[]>;
   setPersonalPin(noteId: number, profileId: string, pinned: boolean): Promise<void>;

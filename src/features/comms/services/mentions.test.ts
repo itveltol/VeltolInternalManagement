@@ -38,8 +38,8 @@ describe("parseMentionHandles", () => {
 
 describe("resolveMentionedProfileIds", () => {
   const candidates: MentionCandidate[] = [
-    { id: "user-ana", handle: "ana" },
-    { id: "user-radu", handle: "radu" },
+    { id: "user-ana", handle: "ana", name: "Ana" },
+    { id: "user-radu", handle: "radu", name: "Radu" },
   ];
 
   it("resolves a known handle to its profile id", () => {

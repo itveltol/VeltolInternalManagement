@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { Project } from "@/features/projects/types";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
+import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 import type { GanttPhaseSegment } from "../types";
 import { GANTT_PHASE_KEYS, GANTT_PHASE_COLOR } from "../types";
 import { buildProjectGanttRows } from "../services/ganttPhaseService";
@@ -25,10 +26,18 @@ interface Props {
   initialShownIds: number[];
   initialActivities: Activity[];
   initialCells: MatrixCell[];
+  initialChecklistRecordsByProjectId: Record<number, ChecklistItemRecord[]>;
   todayMs: number;
 }
 
-export function PortfolioGanttShell({ allProjects, initialShownIds, initialActivities, initialCells, todayMs }: Props) {
+export function PortfolioGanttShell({
+  allProjects,
+  initialShownIds,
+  initialActivities,
+  initialCells,
+  initialChecklistRecordsByProjectId,
+  todayMs,
+}: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,6 +46,9 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
   const [page, setPage] = useState(1);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [cells, setCells] = useState<MatrixCell[]>(initialCells);
+  const [checklistRecordsByProjectId, setChecklistRecordsByProjectId] = useState<Record<number, ChecklistItemRecord[]>>(
+    initialChecklistRecordsByProjectId,
+  );
   const [editing, setEditing] = useState<{ projectId: number; segment: GanttPhaseSegment } | null>(null);
 
   const visibleIds = useMemo(
@@ -54,6 +66,7 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
       const fresh = await getGanttMatriceData(visibleIds);
       setActivities(fresh.activities);
       setCells(fresh.cells);
+      setChecklistRecordsByProjectId(fresh.checklistRecordsByProjectId);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleIds]);
@@ -80,16 +93,16 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
   );
 
   const rows = useMemo(
-    () => buildProjectGanttRows(pageProjects, activities, cells, todayMs),
-    [pageProjects, activities, cells, todayMs],
+    () => buildProjectGanttRows(pageProjects, activities, cells, todayMs, checklistRecordsByProjectId),
+    [pageProjects, activities, cells, todayMs, checklistRecordsByProjectId],
   );
 
   // Timeline bounds must reflect every currently-shown project, not just the
   // page being rendered — otherwise hiding a project on another page leaves
   // the header's month range stuck (or shifts it for the wrong reason).
   const rangeRows = useMemo(
-    () => buildProjectGanttRows(visibleProjects, activities, cells, todayMs),
-    [visibleProjects, activities, cells, todayMs],
+    () => buildProjectGanttRows(visibleProjects, activities, cells, todayMs, checklistRecordsByProjectId),
+    [visibleProjects, activities, cells, todayMs, checklistRecordsByProjectId],
   );
 
   function handleRemove(projectId: number) {
@@ -186,6 +199,7 @@ export function PortfolioGanttShell({ allProjects, initialShownIds, initialActiv
         <PhaseDateDialog
           project={editingProject}
           phaseKey={editing.segment.key}
+          segment={editing.segment}
           open
           onClose={() => {
             setEditing(null);

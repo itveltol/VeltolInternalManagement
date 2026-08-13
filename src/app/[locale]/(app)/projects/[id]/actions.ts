@@ -17,7 +17,6 @@ import type { Project, ProjectManager } from "@/features/projects/types";
 import type { DailyLogRecord } from "@/features/projects/checklists/types";
 import type { Team } from "@/features/teams/types";
 import type { ClientRef } from "@/features/clients/types";
-import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
@@ -63,12 +62,6 @@ function intOrNull(raw: FormDataEntryValue | null): number | null {
   return isNaN(n) ? null : n;
 }
 
-function strOrNull(raw: FormDataEntryValue | null): string | null {
-  if (raw === null) return null;
-  const s = (raw as string).trim();
-  return s === "" ? null : s;
-}
-
 export async function getProject(projectId: number): Promise<Project | null> {
   await requireAuth();
   // "projects: scoped select" RLS only allows admins or the assigned manager
@@ -80,21 +73,18 @@ export async function getProject(projectId: number): Promise<Project | null> {
 }
 
 export async function getProjectManagers(): Promise<ProjectManager[]> {
-  const { supabase } = await requireAuth();
-  const client = createSupabaseProjectsClient(supabase);
-  return projectService.getProjectManagers(client);
+  await requireAuth();
+  return projectService.getCachedProjectManagers();
 }
 
 export async function getClientRefs(): Promise<ClientRef[]> {
-  const { supabase } = await requireAuth();
-  const api = createSupabaseClientsClient(supabase);
-  return clientService.getClientRefs(api);
+  await requireAuth();
+  return clientService.getCachedClientRefs();
 }
 
 export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
-  const { supabase } = await requireAuth();
-  const api = createSupabaseSubcontractorsClient(supabase);
-  return subcontractorService.getSubcontractorRefs(api);
+  await requireAuth();
+  return subcontractorService.getCachedSubcontractorRefs();
 }
 
 export async function getSubcontractorAssignment(projectId: number): Promise<ProjectSubcontractorAssignment | null> {
@@ -116,6 +106,7 @@ export async function upsertChecklistItem(
   try {
     const { supabase } = await requireMutator();
     const client = createSupabaseChecklistClient(supabase);
+    const projectsClient = createSupabaseProjectsClient(supabase);
 
     const projectId = Number(formData.get("project_id"));
     const itemNumber = Number(formData.get("item_number"));
@@ -125,7 +116,17 @@ export async function upsertChecklistItem(
     const zile = intOrNull(formData.get("zile"));
     const notes = (formData.get("notes") as string | null) || null;
 
-    await checklistService.upsertChecklistItem(client, { projectId, itemNumber, plan_total, zile, notes });
+    let persons_allocated = intOrNull(formData.get("persons_allocated"));
+    if (persons_allocated !== null) {
+      const project = await projectService.getProjectById(projectsClient, projectId);
+      const teamMemberCount = project?.team ? await getTeamMemberCount(supabase, project.team.id) : 0;
+      persons_allocated = Math.min(Math.max(0, persons_allocated), teamMemberCount);
+    }
+    const units_per_person_day = intOrNull(formData.get("units_per_person_day"));
+
+    await checklistService.upsertChecklistItem(client, {
+      projectId, itemNumber, plan_total, zile, persons_allocated, units_per_person_day, notes,
+    });
 
     revalidatePath(await getChecklistPath(projectId));
     await revalidateDerivedViews(projectId);
@@ -134,6 +135,12 @@ export async function upsertChecklistItem(
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
+}
+
+async function getTeamMemberCount(supabase: Parameters<typeof createSupabaseTeamsClient>[0], teamId: number): Promise<number> {
+  const client = createSupabaseTeamsClient(supabase);
+  const team = await teamService.getTeamById(client, teamId);
+  return team?.member_count ?? 0;
 }
 
 export async function logTodayRealizat(
@@ -167,116 +174,10 @@ export async function getDailyLog(itemId: number): Promise<DailyLogRecord[]> {
   return checklistService.getDailyLog(client, itemId);
 }
 
-export async function getTeamsForGantt(): Promise<Team[]> {
+export async function getTeamsForProject(): Promise<Team[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseTeamsClient(supabase);
   return teamService.getTeams(client);
-}
-
-export async function scheduleChecklistItemAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  try {
-    const { supabase } = await requireMutator();
-    const client = createSupabaseChecklistClient(supabase);
-
-    const projectId = Number(formData.get("project_id"));
-    const itemNumber = Number(formData.get("item_number"));
-    if (!projectId || !itemNumber) return { error: "errorGeneric" };
-
-    const start_date = strOrNull(formData.get("start_date"));
-    const end_date = strOrNull(formData.get("end_date"));
-    const team_id = intOrNull(formData.get("team_id"));
-
-    await checklistService.scheduleChecklistItem(client, {
-      projectId, itemNumber, start_date, end_date, team_id,
-    });
-
-    revalidatePath(await getChecklistPath(projectId));
-    return { success: "taskScheduled" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
-  }
-}
-
-export async function unscheduleChecklistItemAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  try {
-    const { supabase } = await requireMutator();
-    const client = createSupabaseChecklistClient(supabase);
-
-    const projectId = Number(formData.get("project_id"));
-    const itemNumber = Number(formData.get("item_number"));
-    if (!projectId || !itemNumber) return { error: "errorGeneric" };
-
-    await checklistService.scheduleChecklistItem(client, {
-      projectId, itemNumber, start_date: null, end_date: null, team_id: null,
-    });
-
-    revalidatePath(await getChecklistPath(projectId));
-    return { success: "taskUnscheduled" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
-  }
-}
-
-export async function createCustomTaskAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  try {
-    const { supabase } = await requireMutator();
-    const client = createSupabaseChecklistClient(supabase);
-
-    const projectId = Number(formData.get("project_id"));
-    const name = ((formData.get("name") as string) ?? "").trim();
-    const phase = ((formData.get("phase") as string) ?? "").trim();
-    if (!projectId || !name) return { error: "errorGeneric" };
-
-    const plan_total = intOrNull(formData.get("plan_total"));
-    const zile = intOrNull(formData.get("zile"));
-    const start_date = strOrNull(formData.get("start_date"));
-    const end_date = strOrNull(formData.get("end_date"));
-    const team_id = intOrNull(formData.get("team_id"));
-
-    await checklistService.createCustomTask(client, {
-      projectId, name, phase, plan_total, zile, start_date, end_date, team_id,
-    });
-
-    revalidatePath(await getChecklistPath(projectId));
-    return { success: "taskCreated" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    if (e instanceof Error && e.message === "customTaskLimitReached") return { error: "errorCustomTaskLimit" };
-    return { error: "errorGeneric" };
-  }
-}
-
-export async function deleteCustomTaskAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  try {
-    const { supabase } = await requireMutator();
-    const client = createSupabaseChecklistClient(supabase);
-
-    const projectId = Number(formData.get("project_id"));
-    const itemNumber = Number(formData.get("item_number"));
-    if (!projectId || !itemNumber) return { error: "errorGeneric" };
-
-    await checklistService.deleteCustomTask(client, projectId, itemNumber);
-
-    revalidatePath(await getChecklistPath(projectId));
-    return { success: "taskDeleted" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
-  }
 }
 
 export async function getMaintenanceChecks(projectId: number) {

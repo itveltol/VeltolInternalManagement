@@ -1,5 +1,6 @@
 import path from "path";
 import os from "os";
+import { getGraphToken } from "./graph";
 
 export interface FolderItem {
   name: string;
@@ -12,28 +13,6 @@ const MAX_SCAN_DEPTH = 3;
 function buildFolderName(name: string, contractNumber: string | null): string {
   const raw = contractNumber ? `${contractNumber} - ${name}` : name;
   return raw.replace(/\//g, "-").replace(/\\/g, "-");
-}
-
-async function getGraphToken(): Promise<string> {
-  const tenantId = process.env.AZURE_TENANT_ID!;
-  const clientId = process.env.AZURE_CLIENT_ID!;
-  const clientSecret = process.env.AZURE_CLIENT_SECRET!;
-  const tokenRes = await fetch(
-    `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret,
-        scope: "https://graph.microsoft.com/.default",
-      }),
-    },
-  );
-  if (!tokenRes.ok) throw new Error("Failed to fetch Azure token");
-  const { access_token } = (await tokenRes.json()) as { access_token: string };
-  return access_token;
 }
 
 async function walkOneDriveFolder(
@@ -139,7 +118,10 @@ async function createOneDriveFolder(
       body: JSON.stringify({ name: folderName, folder: {}, "@microsoft.graph.conflictBehavior": "rename" }),
     },
   );
-  if (!createRes.ok) throw new Error("Failed to create OneDrive folder");
+  if (!createRes.ok) {
+    const body = await createRes.text();
+    throw new Error(`Failed to create OneDrive folder (${createRes.status}): ${body}`);
+  }
   const item = (await createRes.json()) as { id: string; webUrl: string };
   return { id: item.id, url: item.webUrl };
 }

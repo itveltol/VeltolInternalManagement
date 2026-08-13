@@ -1,0 +1,477 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
+import { Input } from "@/shared/components/ui/input";
+import { CurrencyAmountInput } from "@/shared/components/ui/currency-amount-input";
+import { FormField } from "@/shared/components/ui/form-field";
+import { Select, SELECT_CLASS } from "@/shared/components/ui/select";
+import {
+  PROJECT_PHASES,
+  PROJECT_STATUSES,
+  PROJECT_TYPES,
+  PROJECT_CATEGORIES,
+  CONTRACT_TYPES,
+  FINANCIAL_TYPES,
+  EXECUTION_MODES,
+} from "../types";
+import type { ContractType } from "../types";
+import type { ClientRef } from "@/features/clients/types";
+import { ClientCombobox } from "@/features/clients/components/ClientCombobox";
+import type { SubcontractorRef } from "@/features/subcontractors/types";
+import { SubcontractorCombobox } from "@/features/subcontractors/components/SubcontractorCombobox";
+import { AddressCombobox } from "./AddressCombobox";
+import type { ProjectFieldsState } from "./projectFormState";
+import { cn } from "@/shared/utils/cn";
+
+const LocationPickerMap = dynamic(
+  () => import("@/shared/components/ui/location-picker-map").then((m) => m.LocationPickerMap),
+  { ssr: false },
+);
+
+const TEXTAREA_CLASS =
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
+
+interface CurrencyFieldDefaults {
+  amount: number | null;
+  currency: "EUR" | "RON";
+  rate: number | null;
+  onRefreshRate?: () => Promise<number | null>;
+  refreshLabel?: string;
+}
+
+interface Props {
+  fields: ProjectFieldsState;
+  onFieldChange: (key: keyof ProjectFieldsState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onCategoryChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onExecutionModeChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onFinancialTypeChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  statusManual: boolean;
+  onStatusManualChange: (manual: boolean) => void;
+  onSiteLocationChange: (value: string) => void;
+  onLocationSelect: (lat: number, lng: number, label: string) => void;
+  onMapChange: (lat: number, lng: number) => Promise<void>;
+
+  managers: { id: string; first_name: string | null; last_name: string | null }[];
+  contractTypeDefaults?: ContractType[];
+
+  clientRefs: ClientRef[];
+  selectedClient: ClientRef | null;
+  onClientChange: (client: ClientRef | null) => void;
+  /** Add dialog only — Edit has no "quick create client" affordance. */
+  onNewClient?: () => void;
+
+  subcontractorRefs: SubcontractorRef[];
+  selectedSubcontractor: SubcontractorRef | null;
+  onSubcontractorChange: (subcontractor: SubcontractorRef | null) => void;
+  onNewSubcontractor: () => void;
+  /** Prefill + refresh-rate wiring for the subcontractor price field (edit-mode only). */
+  assignmentPriceDefaults?: CurrencyFieldDefaults;
+
+  /** Rate shown for the "≈ converted" preview on the value field when there's no prefill (add-mode). */
+  exchangeRate: number | null;
+  /** Prefill + refresh-rate wiring for the project value field (edit-mode only). */
+  valueDefaults?: CurrencyFieldDefaults;
+
+  defaultManagerId?: string;
+  defaultPhase?: string;
+  defaultStatus?: string;
+  defaultContractDate?: string;
+  defaultDeadline?: string;
+  defaultAssignmentStartDate?: string;
+  defaultAssignmentDeadline?: string;
+  progressReadout?: number;
+
+  aiClass?: (key: keyof ProjectFieldsState) => string;
+  team?: React.ReactNode;
+}
+
+/**
+ * Field JSX shared by AddProjectDialog and EditProjectDialog — the two
+ * dialogs differ only in where field values/defaults come from (blank state
+ * vs an existing Project) and in a few dialog-specific extras (AI-fill ring
+ * styling, the read-only progress readout, team assignment) passed as props.
+ */
+export function ProjectFormFields({
+  fields,
+  onFieldChange,
+  onCategoryChange,
+  onExecutionModeChange,
+  onFinancialTypeChange,
+  statusManual,
+  onStatusManualChange,
+  onSiteLocationChange,
+  onLocationSelect,
+  onMapChange,
+  managers,
+  contractTypeDefaults,
+  clientRefs,
+  selectedClient,
+  onClientChange,
+  onNewClient,
+  subcontractorRefs,
+  selectedSubcontractor,
+  onSubcontractorChange,
+  onNewSubcontractor,
+  assignmentPriceDefaults,
+  exchangeRate,
+  valueDefaults,
+  defaultManagerId = "",
+  defaultPhase = "planning",
+  defaultStatus = "on_schedule",
+  defaultContractDate,
+  defaultDeadline,
+  defaultAssignmentStartDate,
+  defaultAssignmentDeadline,
+  progressReadout,
+  aiClass = () => "",
+  team,
+}: Props) {
+  const t = useTranslations("projects");
+  const tPhase = useTranslations("projectPhase");
+  const tStatus = useTranslations("projectStatus");
+  const tType = useTranslations("projectType");
+  const tCategory = useTranslations("projectCategory");
+  const tContractType = useTranslations("contractType");
+  const tFinancialType = useTranslations("financialType");
+  const tExecutionMode = useTranslations("executionMode");
+
+  return (
+    <>
+      <input type="hidden" name="status_manual" value={statusManual ? "true" : "false"} />
+
+      <FormField label={t("fields.name")} required>
+        <Input
+          name="name"
+          required
+          value={fields.name}
+          onChange={onFieldChange("name")}
+          className={aiClass("name")}
+        />
+      </FormField>
+
+      <FormField label={t("fields.executionMode")}>
+        <Select name="execution_mode" value={fields.execution_mode} onChange={onExecutionModeChange}>
+          {EXECUTION_MODES.map((m) => (
+            <option key={m} value={m} className="bg-card">{tExecutionMode(m)}</option>
+          ))}
+        </Select>
+      </FormField>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label={t("fields.projectCategory")}>
+          <Select name="project_category" value={fields.project_category} onChange={onCategoryChange}>
+            {PROJECT_CATEGORIES.map((c) => (
+              <option key={c} value={c} className="bg-card">{tCategory(c)}</option>
+            ))}
+          </Select>
+        </FormField>
+
+        {fields.execution_mode === "internal" && (
+          <FormField label={t("fields.manager")} required>
+            <Select name="manager_id" defaultValue={defaultManagerId} required>
+              <option value="" className="bg-card">—</option>
+              {managers.map((m) => (
+                <option key={m.id} value={m.id} className="bg-card">
+                  {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+        )}
+      </div>
+
+
+      {fields.project_category === "industrial" && (
+        <FormField label={t("fields.projectType")} required>
+          <Select
+            name="project_type"
+            value={fields.project_type}
+            onChange={onFieldChange("project_type")}
+            className={aiClass("project_type")}
+            required
+          >
+            <option value="" className="bg-card">—</option>
+            {PROJECT_TYPES.map((pt) => (
+              <option key={pt} value={pt} className="bg-card">{tType(pt)}</option>
+            ))}
+          </Select>
+        </FormField>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label={t("fields.mwSolar")} required>
+          <Input
+            name="mw_solar"
+            type="number"
+            step="0.001"
+            min="0"
+            required
+            value={fields.mw_solar}
+            onChange={onFieldChange("mw_solar")}
+            className={aiClass("mw_solar")}
+          />
+        </FormField>
+        <FormField label={t("fields.mwBess")} required>
+          <Input
+            name="mw_bess"
+            type="number"
+            step="0.001"
+            min="0"
+            required
+            value={fields.mw_bess}
+            onChange={onFieldChange("mw_bess")}
+            className={aiClass("mw_bess")}
+          />
+        </FormField>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label={t("fields.county")} required>
+          <Input
+            name="county"
+            required
+            value={fields.county}
+            onChange={onFieldChange("county")}
+            className={aiClass("county")}
+          />
+        </FormField>
+        <FormField label={t("fields.siteLocation")} required>
+          <input type="hidden" name="site_location" value={fields.site_location} />
+          <AddressCombobox
+            value={fields.site_location}
+            onValueChange={onSiteLocationChange}
+            onLocationSelect={onLocationSelect}
+          />
+        </FormField>
+      </div>
+
+      <FormField label={t("fields.pinLocation")} required>
+        <input type="hidden" name="site_lat" value={fields.site_lat} />
+        <input type="hidden" name="site_lng" value={fields.site_lng} />
+        <LocationPickerMap
+          lat={fields.site_lat ? Number(fields.site_lat) : null}
+          lng={fields.site_lng ? Number(fields.site_lng) : null}
+          onChange={onMapChange}
+        />
+      </FormField>
+
+      {team}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label={t("fields.financialType")}>
+          <Select name="financial_type" value={fields.financial_type} onChange={onFinancialTypeChange}>
+            {FINANCIAL_TYPES.map((ft) => (
+              <option key={ft} value={ft} className="bg-card">{tFinancialType(ft)}</option>
+            ))}
+          </Select>
+        </FormField>
+      </div>
+
+      <FormField label={t("fields.contractType")}>
+        <div className="flex gap-6">
+          {CONTRACT_TYPES.map((c) => (
+            <label key={c} className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                name={`contract_type_${c}`}
+                value="true"
+                defaultChecked={contractTypeDefaults ? contractTypeDefaults.includes(c) : true}
+                className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+              />
+              <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+            </label>
+          ))}
+        </div>
+      </FormField>
+
+      <FormField
+        required
+        label={
+          onNewClient ? (
+            <div className="flex w-full items-center justify-between">
+              <span>{t("fields.client")}</span>
+              <button
+                type="button"
+                onClick={onNewClient}
+                className="text-[11px] font-medium text-veltol-accent hover:underline"
+              >
+                {t("newClient")}
+              </button>
+            </div>
+          ) : (
+            t("fields.client")
+          )
+        }
+      >
+        <ClientCombobox
+          name="client_id"
+          clients={clientRefs}
+          value={selectedClient}
+          onValueChange={onClientChange}
+        />
+      </FormField>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <FormField label={t("fields.contractNumber")} required={fields.execution_mode === "internal"}>
+          <Input
+            name="contract_number"
+            required={fields.execution_mode === "internal"}
+            value={fields.contract_number}
+            onChange={onFieldChange("contract_number")}
+            className={aiClass("contract_number")}
+          />
+        </FormField>
+        <FormField label={t("fields.contractDate")} required={fields.execution_mode === "internal"}>
+          <input
+            name="contract_date"
+            type="date"
+            required={fields.execution_mode === "internal"}
+            defaultValue={defaultContractDate}
+            className={SELECT_CLASS}
+          />
+        </FormField>
+      </div>
+
+      <FormField label={t("fields.value")} required>
+        <CurrencyAmountInput
+          amountName="value_amount"
+          currencyName="currency"
+          required
+          defaultAmount={valueDefaults?.amount}
+          defaultCurrency={valueDefaults?.currency}
+          rate={valueDefaults?.rate ?? exchangeRate}
+          onRefreshRate={valueDefaults?.onRefreshRate}
+          refreshLabel={valueDefaults?.refreshLabel}
+        />
+      </FormField>
+
+      {fields.execution_mode === "subcontracted" ? (
+        <>
+          <FormField
+            required
+            label={
+              <div className="flex w-full items-center justify-between">
+                <span>{t("fields.subcontractor")}</span>
+                <button
+                  type="button"
+                  onClick={onNewSubcontractor}
+                  className="text-[11px] font-medium text-veltol-accent hover:underline"
+                >
+                  {t("newSubcontractor")}
+                </button>
+              </div>
+            }
+          >
+            <SubcontractorCombobox
+              name="subcontractor_id"
+              subcontractors={subcontractorRefs}
+              value={selectedSubcontractor}
+              onValueChange={onSubcontractorChange}
+            />
+          </FormField>
+
+          <FormField label={t("fields.subcontractorPrice")} required>
+            <CurrencyAmountInput
+              amountName="assignment_price"
+              currencyName="assignment_currency"
+              required
+              defaultAmount={assignmentPriceDefaults?.amount}
+              defaultCurrency={assignmentPriceDefaults?.currency}
+              rate={assignmentPriceDefaults?.rate ?? exchangeRate}
+              onRefreshRate={assignmentPriceDefaults?.onRefreshRate}
+              refreshLabel={assignmentPriceDefaults?.refreshLabel}
+            />
+          </FormField>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label={t("fields.subcontractorStartDate")} required>
+              <input
+                name="assignment_start_date"
+                type="date"
+                required
+                defaultValue={defaultAssignmentStartDate}
+                className={SELECT_CLASS}
+              />
+            </FormField>
+            <FormField label={t("fields.subcontractorDeadline")} required>
+              <input
+                name="assignment_deadline"
+                type="date"
+                required
+                defaultValue={defaultAssignmentDeadline}
+                className={SELECT_CLASS}
+              />
+            </FormField>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label={t("fields.phase")}>
+              <Select name="current_phase" defaultValue={defaultPhase}>
+                {PROJECT_PHASES.map((p) => (
+                  <option key={p} value={p} className="bg-card">{tPhase(p)}</option>
+                ))}
+              </Select>
+            </FormField>
+            {progressReadout != null && (
+              <FormField label={t("fields.progress")}>
+                <div className="flex h-9 items-center px-1 font-mono text-[13px] text-veltol-fg">
+                  {progressReadout}%
+                </div>
+              </FormField>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField label={t("fields.deadline")} required>
+              <input
+                name="deadline"
+                type="date"
+                required
+                defaultValue={defaultDeadline}
+                className={SELECT_CLASS}
+              />
+            </FormField>
+          </div>
+
+          <FormField
+            label={
+              <div className="flex w-full items-center justify-between">
+                <span>{t("fields.status")}</span>
+                <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                  <input
+                    type="checkbox"
+                    checked={statusManual}
+                    onChange={(e) => onStatusManualChange(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                  />
+                  <span className="font-mono text-[10px] text-veltol-fgDim">
+                    {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
+                  </span>
+                </label>
+              </div>
+            }
+          >
+            <Select name="status" defaultValue={defaultStatus} disabled={!statusManual}>
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
+              ))}
+            </Select>
+          </FormField>
+        </>
+      )}
+
+      <FormField label={t("fields.notes")}>
+        <textarea
+          name="notes"
+          rows={3}
+          className={cn(TEXTAREA_CLASS, aiClass("notes"))}
+          value={fields.notes}
+          onChange={onFieldChange("notes")}
+        />
+      </FormField>
+    </>
+  );
+}

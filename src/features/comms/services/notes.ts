@@ -1,4 +1,4 @@
-import type { Note, NoteThread } from "../types";
+import type { AckReceipt, AckSummary, Note, NoteThread } from "../types";
 
 export function assembleThreads(notes: Note[]): NoteThread[] {
   const roots: Note[] = [];
@@ -85,11 +85,27 @@ export function isDueSoon(dueDate: string | null, now: Date): boolean {
   return due >= startOfToday && due < startOfDayAfter;
 }
 
+export function summarizeAcks(receipts: AckReceipt[]): AckSummary {
+  const confirmed = receipts
+    .filter((r) => r.acknowledged_at !== null)
+    .sort((a, b) => new Date(a.acknowledged_at as string).getTime() - new Date(b.acknowledged_at as string).getTime());
+  const unconfirmed = receipts
+    .filter((r) => r.acknowledged_at === null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return { total: receipts.length, acknowledged: confirmed.length, confirmed, unconfirmed };
+}
+
+export function canSendReminder(lastReminderAt: string | null, now: Date): boolean {
+  if (!lastReminderAt) return true;
+  return new Date(lastReminderAt).getTime() <= now.getTime() - 24 * 60 * 60 * 1000;
+}
+
 export function anchorLabel(
   note: Pick<Note, "project_id" | "project_name" | "activity_id" | "activity_name" | "is_personal">,
 ): { scope: "project" | "matrice" | "personal"; text: string | null } {
   if (note.activity_id !== null && note.project_id !== null) {
-    return { scope: "matrice", text: note.activity_name };
+    const text = note.project_name ? `${note.project_name} · ${note.activity_name}` : note.activity_name;
+    return { scope: "matrice", text };
   }
   if (note.project_id !== null) {
     return { scope: "project", text: note.project_name };

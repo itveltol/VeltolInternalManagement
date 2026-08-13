@@ -10,6 +10,10 @@ export function getSituationsForProject(api: SituationsApiClient, projectId: num
   return api.getSituationsForProject(projectId);
 }
 
+export function getAllFinalizedSituations(api: SituationsApiClient): Promise<Situation[]> {
+  return api.getAllFinalizedSituations();
+}
+
 export function createSituation(api: SituationsApiClient, payload: CreateSituationPayload) {
   return api.createSituation(payload);
 }

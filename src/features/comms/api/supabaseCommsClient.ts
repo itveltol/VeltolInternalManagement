@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ActivityEventFilter, CommsApiClient, NotesFilter, NotesPageFilter } from "./types";
+import type { ActivityEventFilter, CommsApiClient, MentionScope, NotesFilter, NotesPageFilter } from "./types";
 import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, Notification } from "../types";
 
 const ACTIVITY_EVENT_SELECT =
@@ -66,41 +66,37 @@ export const createSupabaseCommsClient = (supabase: SupabaseClient): CommsApiCli
     return (data ?? []).map(toNote);
   },
 
-  async createNote(authorId: string, payload: CreateNotePayload) {
-    const { data, error } = await supabase
-      .from("notes")
-      .insert({
-        author_id: authorId,
-        kind: payload.kind,
-        title: payload.title ?? null,
-        body: payload.body,
-        color: payload.color ?? null,
-        visibility: payload.visibility,
-        parent_id: payload.parentId ?? null,
-        due_date: payload.dueDate ?? null,
-        requires_ack: payload.requiresAck ?? false,
-        ack_deadline: payload.ackDeadline ?? null,
-        is_personal: payload.anchor.isPersonal ?? false,
-        project_id: payload.anchor.projectId ?? null,
-        activity_id: payload.anchor.activityId ?? null,
-        situation_id: payload.anchor.situationId ?? null,
-        client_id: payload.anchor.clientId ?? null,
-        subcontractor_id: payload.anchor.subcontractorId ?? null,
-        supplier_id: payload.anchor.supplierId ?? null,
-        document_id: payload.anchor.documentId ?? null,
-        team_id: payload.anchor.teamId ?? null,
-      })
-      .select("id")
-      .single();
+  async createNote(_authorId: string, payload: CreateNotePayload) {
+    const { data, error } = await supabase.rpc("create_note", {
+      p_kind: payload.kind,
+      p_title: payload.title ?? null,
+      p_body: payload.body,
+      p_color: payload.color ?? null,
+      p_visibility: payload.visibility,
+      p_parent_id: payload.parentId ?? null,
+      p_due_date: payload.dueDate ?? null,
+      p_requires_ack: payload.requiresAck ?? false,
+      p_ack_deadline: payload.ackDeadline ?? null,
+      p_is_personal: payload.anchor.isPersonal ?? false,
+      p_project_id: payload.anchor.projectId ?? null,
+      p_activity_id: payload.anchor.activityId ?? null,
+      p_situation_id: payload.anchor.situationId ?? null,
+      p_client_id: payload.anchor.clientId ?? null,
+      p_subcontractor_id: payload.anchor.subcontractorId ?? null,
+      p_supplier_id: payload.anchor.supplierId ?? null,
+      p_document_id: payload.anchor.documentId ?? null,
+      p_team_id: payload.anchor.teamId ?? null,
+    });
     if (error) throw new Error(error.message);
-    return { id: data.id as number };
+    return { id: data as number };
   },
 
   async insertMentions(noteId: number, profileIds: string[]) {
     if (profileIds.length === 0) return;
-    const { error } = await supabase
-      .from("note_mentions")
-      .insert(profileIds.map((profileId) => ({ note_id: noteId, profile_id: profileId })));
+    const { error } = await supabase.rpc("insert_note_mentions", {
+      p_note_id: noteId,
+      p_profile_ids: profileIds,
+    });
     if (error) throw new Error(error.message);
   },
 
@@ -114,17 +110,22 @@ export const createSupabaseCommsClient = (supabase: SupabaseClient): CommsApiCli
     if (error) throw new Error(error.message);
   },
 
-  async getMentionCandidates() {
-    const { data, error } = await supabase.from("profiles").select("id, first_name, last_name, email");
+  async getMentionCandidates(scope: MentionScope) {
+    const { data, error } = await supabase.rpc("get_mention_candidates", {
+      p_visibility: scope.visibility,
+      p_project_id: scope.projectId,
+      p_team_id: scope.teamId,
+    });
     if (error) throw new Error(error.message);
-    return (data ?? []).map(
-      (p): MentionCandidate => ({
-        id: p.id as string,
-        handle:
-          ([p.first_name, p.last_name].filter(Boolean).join("") as string) ||
-          (p.email as string).split("@")[0],
-      }),
-    );
+    type CandidateRow = { id: string; first_name: string | null; last_name: string | null; email: string };
+    return ((data ?? []) as CandidateRow[]).map((p): MentionCandidate => {
+      const fullName = [p.first_name, p.last_name].filter(Boolean).join(" ");
+      return {
+        id: p.id,
+        handle: [p.first_name, p.last_name].filter(Boolean).join("") || p.email.split("@")[0],
+        name: fullName || p.email,
+      };
+    });
   },
 
   async getPersonalPinNoteIds(profileId: string) {

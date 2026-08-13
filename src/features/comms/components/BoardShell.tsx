@@ -15,9 +15,18 @@ interface Props {
   initialNotifications: Notification[];
   personalPinnedIds: number[];
   now: string;
+  projectOptions: { id: number; name: string }[];
+  teamOptions: { id: number; name: string }[];
 }
 
-export function BoardShell({ initialNotes, initialNotifications, personalPinnedIds, now }: Props) {
+export function BoardShell({
+  initialNotes,
+  initialNotifications,
+  personalPinnedIds,
+  now,
+  projectOptions,
+  teamOptions,
+}: Props) {
   const t = useTranslations("comms");
   const [notes, setNotes] = useState(initialNotes);
   const [notifications, setNotifications] = useState(initialNotifications);
@@ -56,6 +65,8 @@ export function BoardShell({ initialNotes, initialNotifications, personalPinnedI
       {composing && (
         <div className="rounded-card border border-border bg-card p-4 shadow-card">
           <NoteComposer
+            projectOptions={projectOptions}
+            teamOptions={teamOptions}
             onSuccess={() => {
               setComposing(false);
               reload();

@@ -41,7 +41,7 @@ export interface Project {
   client_id: number | null;
   client?: { id: number; name: string } | null;
   team_id: number | null;
-  team?: { id: number; name: string } | null;
+  team?: { id: number; name: string; member_count: number } | null;
   execution_mode: ExecutionMode;
   /** Id of the project's current project_subcontractors assignment row, if any. */
   subcontractor_assignment_id: number | null;
@@ -70,6 +70,8 @@ export interface Project {
   currency: Currency;
   /** EUR->RON rate on the day this project was created; locked in permanently, never recomputed. */
   conversion_rate: number | null;
+  /** Percent VAT for this contract's centralizer figures; net values (value_eur/value_lei, situations, budget lines) are unaffected. Default 21; 0 allowed for reverse charge/export. */
+  vat_rate: number;
   status: ProjectStatus;
   /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
   status_manual: boolean;

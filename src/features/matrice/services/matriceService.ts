@@ -1,6 +1,23 @@
+import { unstable_cache } from 'next/cache';
+import { createAdminClient } from '@/core/supabase/admin';
+import { createSupabaseMatriceClient } from '../api/supabaseMatriceClient';
 import type { MatriceApiClient } from '../api/types';
 import type { Activity, MatrixCell, MatrixData, ActivityStatus, MatrixProject } from '../types';
 import type { ContractType } from '@/features/projects/types';
+
+// `activities` is a near-static workflow taxonomy (~28 rows, no CRUD UI) with
+// a uniform "authenticated select" RLS policy, so it's safe and worthwhile to
+// cache globally rather than re-querying it on every Matrice/Gantt/project
+// page load. No updateTag/revalidateTag call site exists yet since nothing in the app
+// currently mutates this table.
+export const getCachedActivities = unstable_cache(
+  async (): Promise<Activity[]> => {
+    const client = createSupabaseMatriceClient(createAdminClient());
+    return client.getActivities();
+  },
+  ['matrice-activities'],
+  { tags: ['activities'] },
+);
 
 /**
  * Matrice phase_no ranges rolled up to the contract's service scope, mirroring
@@ -25,7 +42,7 @@ export async function getMatrix(
   projectIds: number[],
 ): Promise<MatrixData> {
   const [activities, cells, projects] = await Promise.all([
-    client.getActivities(),
+    getCachedActivities(),
     client.getCells(projectIds),
     client.getProjects(projectIds),
   ]);

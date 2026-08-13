@@ -12,9 +12,12 @@ import * as shownProjectsService from "@/features/hiddenProjects/services/shownP
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
+import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
+import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import type { Project } from "@/features/projects/types";
 import type { GanttPhaseKey } from "@/features/gantt/types";
+import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -61,14 +64,24 @@ export async function unshowGanttProject(projectId: number): Promise<void> {
 
 export async function getGanttMatriceData(
   projectIds: number[],
-): Promise<{ activities: Activity[]; cells: MatrixCell[] }> {
+): Promise<{
+  activities: Activity[];
+  cells: MatrixCell[];
+  checklistRecordsByProjectId: Record<number, ChecklistItemRecord[]>;
+}> {
   const { supabase } = await requireAuth();
-  const client = createSupabaseMatriceClient(supabase);
-  const [activities, cells] = await Promise.all([
-    client.getActivities(),
-    client.getCells(projectIds),
+  const matriceClient = createSupabaseMatriceClient(supabase);
+  const checklistClient = createSupabaseChecklistClient(supabase);
+  const [activities, cells, checklistRecords] = await Promise.all([
+    matriceService.getCachedActivities(),
+    matriceClient.getCells(projectIds),
+    checklistService.getChecklistRecordsForProjects(checklistClient, projectIds),
   ]);
-  return { activities, cells };
+  return {
+    activities,
+    cells,
+    checklistRecordsByProjectId: checklistService.groupChecklistRecordsByProjectId(checklistRecords),
+  };
 }
 
 export async function savePhaseDates(

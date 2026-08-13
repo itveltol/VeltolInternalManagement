@@ -11,7 +11,7 @@ import { resolveMentionedProfileIds } from "@/features/comms/services/mentions";
 import { mergeFeed } from "@/features/comms/services/activityFeed";
 import { ackRatePct } from "@/features/comms/services/metrics";
 import type { CommsMetrics, CreateNotePayload, FeedItem, Note, NoteStatus, Notification } from "@/features/comms/types";
-import type { NotesFilter } from "@/features/comms/api/types";
+import type { MentionScope, NotesFilter } from "@/features/comms/api/types";
 
 const TIMELINE_PAGE_SIZE = 20;
 
@@ -60,6 +60,20 @@ export async function getNotes(filter: NotesFilter): Promise<Note[]> {
   return api.getNotes(filter);
 }
 
+export async function getBoardProjectOptions(): Promise<{ id: number; name: string }[]> {
+  const { supabase } = await requireAuth();
+  const { data, error } = await supabase.from("projects").select("id, name").order("name");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function getBoardTeamOptions(): Promise<{ id: number; name: string }[]> {
+  const { supabase } = await requireAuth();
+  const { data, error } = await supabase.from("teams").select("id, name").order("name");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function getNoteThread(rootId: number): Promise<Note[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseCommsClient(supabase);
@@ -96,7 +110,26 @@ export async function createNoteAction(_prev: ActionState, formData: FormData): 
     const api = createSupabaseCommsClient(supabase);
     const { id } = await api.createNote(user.id, payload);
 
-    const candidates = await api.getMentionCandidates();
+    // A reply's own row carries no anchor (schema forces project/team/personal
+    // to null on replies) — its real scope for mention purposes is the root
+    // note's, same as can_read_note()/insert_note_mentions resolve it.
+    let mentionScope = {
+      visibility: payload.visibility,
+      projectId: payload.anchor.projectId ?? null,
+      teamId: payload.anchor.teamId ?? null,
+    };
+    if (payload.parentId != null) {
+      const { data: root } = await supabase
+        .from("notes")
+        .select("visibility, project_id, team_id")
+        .eq("id", payload.parentId)
+        .single();
+      if (root) {
+        mentionScope = { visibility: root.visibility, projectId: root.project_id, teamId: root.team_id };
+      }
+    }
+
+    const candidates = await api.getMentionCandidates(mentionScope);
     const mentionedIds = resolveMentionedProfileIds(payload.body, candidates, user.id);
     await api.insertMentions(id, mentionedIds);
 
@@ -178,10 +211,10 @@ export async function markNotificationsReadAction(notificationIds?: number[]): P
   await api.markNotificationsRead(user.id, notificationIds);
 }
 
-export async function getMentionCandidatesAction() {
+export async function getMentionCandidatesAction(scope: MentionScope) {
   const { supabase } = await requireAuth();
   const api = createSupabaseCommsClient(supabase);
-  return api.getMentionCandidates();
+  return api.getMentionCandidates(scope);
 }
 
 export async function getContextPinNoteIdsAction(projectId: number): Promise<number[]> {

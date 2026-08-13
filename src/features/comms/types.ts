@@ -114,6 +114,7 @@ export interface UpdateNoteStatusPayload {
 export interface MentionCandidate {
   id: string;
   handle: string;
+  name: string;
 }
 
 export interface AckReceipt {

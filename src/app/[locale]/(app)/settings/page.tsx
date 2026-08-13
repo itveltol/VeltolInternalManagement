@@ -1,8 +1,9 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getHolidays } from "./actions";
+import { getHolidays, getEmailDigestEnabled } from "./actions";
 import { HolidaysTable } from "@/features/holidays/components/HolidaysTable";
+import { EmailDigestToggle } from "@/features/comms/components/EmailDigestToggle";
 
 export default async function SettingsPage() {
   const { user, role } = await getUserProfileRole();
@@ -12,11 +13,11 @@ export default async function SettingsPage() {
     redirect(`/${locale}/login`);
   }
 
-  if (role !== "admin") {
-    redirect(`/${locale}/dashboard`);
-  }
-
-  const holidays = await getHolidays();
+  const isAdmin = role === "admin";
+  const [holidays, emailDigestEnabled] = await Promise.all([
+    isAdmin ? getHolidays() : Promise.resolve([]),
+    getEmailDigestEnabled(),
+  ]);
   const t = await getTranslations("settings");
 
   return (
@@ -28,7 +29,9 @@ export default async function SettingsPage() {
         </h1>
       </div>
 
-      <HolidaysTable holidays={holidays} />
+      <EmailDigestToggle initialEnabled={emailDigestEnabled} />
+
+      {isAdmin && <HolidaysTable holidays={holidays} />}
     </div>
   );
 }

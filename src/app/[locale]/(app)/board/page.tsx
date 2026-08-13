@@ -4,7 +4,7 @@ import { getUserProfileRole } from "@/core/supabase/session";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 import { BoardShell } from "@/features/comms/components/BoardShell";
 import { MetricsStrip } from "@/features/comms/components/MetricsStrip";
-import { getNotes, getNotifications, getCommsMetrics } from "./actions";
+import { getNotes, getNotifications, getCommsMetrics, getBoardProjectOptions, getBoardTeamOptions } from "./actions";
 
 export default async function BoardPage() {
   const { supabase, user } = await getUserProfileRole();
@@ -15,11 +15,13 @@ export default async function BoardPage() {
   }
 
   const api = createSupabaseCommsClient(supabase);
-  const [notes, notifications, personalPinnedIds, metrics] = await Promise.all([
+  const [notes, notifications, personalPinnedIds, metrics, projectOptions, teamOptions] = await Promise.all([
     getNotes({}),
     getNotifications(),
     api.getPersonalPinNoteIds(user!.id),
     getCommsMetrics(),
+    getBoardProjectOptions(),
+    getBoardTeamOptions(),
   ]);
 
   const t = await getTranslations("comms");
@@ -42,6 +44,8 @@ export default async function BoardPage() {
         initialNotifications={notifications}
         personalPinnedIds={personalPinnedIds}
         now={now}
+        projectOptions={projectOptions}
+        teamOptions={teamOptions}
       />
     </div>
   );

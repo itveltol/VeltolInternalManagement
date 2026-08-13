@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
@@ -30,9 +30,15 @@ interface Props {
   situations: SituationWithProject[];
   projects: Project[];
   canMutate: boolean;
+  /** Scopes the table to one contract — level 2 of the centralizer
+   * drill-down. When set, the project-name search is hidden (redundant when
+   * already scoped to one project), new situations are created pre-bound to
+   * this project, and a back button returns to the centralizer. */
+  projectFilter?: Project | null;
+  onBack?: () => void;
 }
 
-export function SituationsTable({ situations, projects, canMutate }: Props) {
+export function SituationsTable({ situations, projects, canMutate, projectFilter = null, onBack }: Props) {
   const t = useTranslations("situations");
   const router = useRouter();
   const confirm = useConfirm();
@@ -48,9 +54,10 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
     setDeletingId, openSituation,
   } = useSituationsStore();
 
-  const filtered = situations.filter((s) =>
-    s.project.name.toLowerCase().includes(search.trim().toLowerCase()),
-  );
+  const scoped = projectFilter ? situations.filter((s) => s.project_id === projectFilter.id) : situations;
+  const filtered = projectFilter
+    ? scoped
+    : scoped.filter((s) => s.project.name.toLowerCase().includes(search.trim().toLowerCase()));
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -85,22 +92,30 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
 
   return (
     <>
+      {projectFilter && onBack && (
+        <Button variant="outline" size="sm" onClick={onBack} className="mb-4">
+          <ArrowLeft data-icon="inline-start" />
+          {t("centralizer.title")}
+        </Button>
+      )}
       <TableShell>
         <TableToolbar>
           <span className="text-xs font-medium text-veltol-fgMute">
-            {t("totalCount", { count: situations.length })}
+            {projectFilter ? (projectFilter.contract_number ?? projectFilter.name) : t("totalCount", { count: scoped.length })}
           </span>
           <div className="flex items-center gap-3">
-            <FilterField label={t("searchPlaceholder")} htmlFor="situations-search">
-              <FilterInput
-                id="situations-search"
-                type="search"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="w-48"
-              />
-            </FilterField>
+            {!projectFilter && (
+              <FilterField label={t("searchPlaceholder")} htmlFor="situations-search">
+                <FilterInput
+                  id="situations-search"
+                  type="search"
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder={t("searchPlaceholder")}
+                  className="w-48"
+                />
+              </FilterField>
+            )}
             {canMutate && (
               <Button onClick={openAddDialog} variant="outline">
                 <Plus data-icon="inline-start" />
@@ -122,7 +137,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {situations.length === 0 ? (
+              {scoped.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
@@ -278,6 +293,7 @@ export function SituationsTable({ situations, projects, canMutate }: Props) {
 
       <CreateSituationDialog
         projects={projects}
+        defaultProject={projectFilter}
         open={isAddDialogOpen}
         onClose={() => {
           closeAddDialog();

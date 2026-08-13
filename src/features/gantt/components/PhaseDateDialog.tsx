@@ -7,8 +7,9 @@ import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { savePhaseDates, saveSubcontractedExecutionDates } from "@/app/[locale]/(app)/gantt/actions";
 import { validatePhaseDates } from "../services/ganttPhaseService";
-import { GANTT_PHASE_DATE_FIELDS, type GanttPhaseKey } from "../types";
+import { GANTT_PHASE_DATE_FIELDS, type GanttPhaseKey, type GanttPhaseSegment } from "../types";
 import type { Project } from "@/features/projects/types";
+import { DAY_MS, toDayMs, addDays } from "@/shared/utils/ganttTimeline";
 
 const INPUT_CLASS =
   "h-9 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 disabled:cursor-not-allowed disabled:opacity-50";
@@ -16,16 +17,20 @@ const INPUT_CLASS =
 interface Props {
   project: Project;
   phaseKey: GanttPhaseKey;
+  segment: GanttPhaseSegment;
   open: boolean;
   onClose: () => void;
 }
 
-export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
+export function PhaseDateDialog({ project, phaseKey, segment, open, onClose }: Props) {
   const t = useTranslations("gantt");
   const isSubcontractedExecution = phaseKey === "execution" && project.execution_mode === "subcontracted";
+  const isChecklistDerivedExecution = phaseKey === "execution" && !isSubcontractedExecution;
   const fields = GANTT_PHASE_DATE_FIELDS[phaseKey];
   const initialStartDate = (isSubcontractedExecution ? project.subcontractor?.start_date : (project[fields.start] as string | null)) ?? "";
-  const initialEndDate = (isSubcontractedExecution ? project.subcontractor?.deadline : (project[fields.end] as string | null)) ?? "";
+  const initialEndDate = isChecklistDerivedExecution
+    ? segment.endDate ?? ""
+    : (isSubcontractedExecution ? project.subcontractor?.deadline : (project[fields.end] as string | null)) ?? "";
 
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
@@ -39,20 +44,35 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialStartDate, initialEndDate, phaseKey, project.id]);
 
+  // Duration is fixed (derived from the checklist); as the PM edits the
+  // start date, the displayed end date is recomputed at render time, not
+  // stored in state, so it always stays in sync without a round trip.
+  const durationDays =
+    isChecklistDerivedExecution && segment.startDate && segment.endDate
+      ? Math.round((toDayMs(segment.endDate) - toDayMs(segment.startDate)) / DAY_MS) + 1
+      : null;
+  const displayEndDate = isChecklistDerivedExecution
+    ? startDate && durationDays != null && durationDays > 0
+      ? addDays(startDate, durationDays - 1)
+      : ""
+    : endDate;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const validationError = validatePhaseDates(startDate || null, endDate || null);
-    if (validationError) {
-      setError(validationError);
-      return;
+    if (!isChecklistDerivedExecution) {
+      const validationError = validatePhaseDates(startDate || null, endDate || null);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
     }
 
     startTransition(async () => {
       const result = isSubcontractedExecution
         ? await saveSubcontractedExecutionDates(project.id, startDate || null, endDate || null)
-        : await savePhaseDates(project.id, phaseKey, startDate || null, endDate || null);
+        : await savePhaseDates(project.id, phaseKey, startDate || null, isChecklistDerivedExecution ? null : (endDate || null));
       if (result?.error) {
         setError(result.error);
         return;
@@ -78,7 +98,7 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
                 <input
                   type="date"
                   value={startDate}
-                  max={endDate || undefined}
+                  max={displayEndDate || undefined}
                   onChange={(e) => setStartDate(e.target.value)}
                   className={INPUT_CLASS}
                 />
@@ -87,13 +107,21 @@ export function PhaseDateDialog({ project, phaseKey, open, onClose }: Props) {
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("endDate")}</Label>
                 <input
                   type="date"
-                  value={endDate}
+                  value={displayEndDate}
                   min={startDate || undefined}
                   onChange={(e) => setEndDate(e.target.value)}
+                  disabled={isChecklistDerivedExecution}
+                  title={isChecklistDerivedExecution ? t("executionEndDateReadOnly") : undefined}
                   className={INPUT_CLASS}
                 />
               </div>
             </div>
+
+            {isChecklistDerivedExecution && (
+              <p className="text-[11px] text-veltol-fgMute">
+                {t("computedFromChecklist", { days: durationDays ?? 0 })}
+              </p>
+            )}
 
             {error && (
               <p className="text-sm text-veltol-red">{t(error as Parameters<typeof t>[0])}</p>

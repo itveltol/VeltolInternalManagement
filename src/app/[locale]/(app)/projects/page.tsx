@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProjects, getProjectManagers, getClientRefs, getSubcontractorRefs, getExchangeRate } from "./actions";
+import { getProjectsPage, getProjectManagers, getClientRefs, getSubcontractorRefs, getExchangeRate } from "./actions";
 import { ProjectsShell } from "@/features/projects/components/ProjectsShell";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -14,8 +14,8 @@ export default async function ProjectsPage() {
   }
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
-  const [projects, managers, clientRefs, subcontractorRefs, exchangeRate] = await Promise.all([
-    getProjects(),
+  const [{ projects, totalCount }, managers, clientRefs, subcontractorRefs, exchangeRate] = await Promise.all([
+    getProjectsPage({ page: 1 }),
     canMutate ? getProjectManagers() : Promise.resolve([]),
     canMutate ? getClientRefs() : Promise.resolve([]),
     canMutate ? getSubcontractorRefs() : Promise.resolve([]),
@@ -32,7 +32,8 @@ export default async function ProjectsPage() {
       />
 
       <ProjectsShell
-        projects={projects}
+        initialProjects={projects}
+        initialTotalCount={totalCount}
         canMutate={canMutate}
         managers={managers}
         clientRefs={clientRefs}

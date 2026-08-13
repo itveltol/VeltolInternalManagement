@@ -63,3 +63,29 @@ export async function deleteHoliday(id: number): Promise<ActionState> {
     return { error: "errorGeneric" };
   }
 }
+
+export async function getEmailDigestEnabled(): Promise<boolean> {
+  const { supabase, user } = await requireAuth();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("email_digest_enabled")
+    .eq("id", user.id)
+    .single();
+  if (error) throw new Error(error.message);
+  return data.email_digest_enabled as boolean;
+}
+
+export async function setEmailDigestEnabledAction(enabled: boolean): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireAuth();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ email_digest_enabled: enabled })
+      .eq("id", user.id);
+    if (error) throw new Error(error.message);
+    revalidatePath(await getSettingsPath());
+    return { success: "emailDigestUpdated" };
+  } catch {
+    return { error: "errorGeneric" };
+  }
+}

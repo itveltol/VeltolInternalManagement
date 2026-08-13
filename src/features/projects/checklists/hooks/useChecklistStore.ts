@@ -4,9 +4,13 @@ import type { Document } from "@/features/documents/types";
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+export type EditableField = "plan_total" | "zile" | "persons_allocated" | "units_per_person_day";
+
 export interface RowUIState {
   plan_total: string;
   zile: string;
+  persons_allocated: string;
+  units_per_person_day: string;
   todayValue: string;
   status: SaveStatus;
   todayStatus: SaveStatus;
@@ -22,7 +26,7 @@ interface ChecklistStore {
   rowState: Record<number, RowUIState>;
   dirtySet: Set<number>;
   initRows: (rows: ChecklistRow[]) => void;
-  updateField: (itemNumber: number, field: "plan_total" | "zile", value: string) => void;
+  updateField: (itemNumber: number, field: EditableField, value: string) => void;
   markDirty: (itemNumber: number) => void;
   clearDirty: (itemNumber: number) => void;
   setRowStatus: (itemNumber: number, status: SaveStatus) => void;
@@ -48,6 +52,8 @@ export const useChecklistStore = create<ChecklistStore>()((set) => ({
         init[row.number] = {
           plan_total: row.plan_total != null ? String(row.plan_total) : "",
           zile: row.zile != null ? String(row.zile) : "",
+          persons_allocated: row.persons_allocated != null ? String(row.persons_allocated) : "",
+          units_per_person_day: row.units_per_person_day != null ? String(row.units_per_person_day) : "",
           todayValue: "",
           status: "idle",
           todayStatus: "idle",

@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="hu" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kommunikációs modul — MA vs. HOLNAP · Veltol Internal Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --v-bg:#0d1b2b; --v-card:#122236; --v-popover:#182c43; --v-surface:#1f3651; --v-border:#2b4769;
+  --v-primary:#225ba0; --v-primary-hi:#2e70c2; --v-bright:#42adfa; --v-accent:#2bace3; --v-accent-hi:#58c1ea;
+  --v-green:#5fba6a; --v-orange:#f5882a; --v-red:#e0525f;
+  --v-fg:#EDF0F7; --v-fg-dim:#9AA3C0; --v-fg-mute:#616D93;
+  --sans:"Exo 2",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--v-bg); color:var(--v-fg); font-family:var(--sans);
+  font-size:14px; line-height:1.5; padding:28px 20px 64px;
+}
+.wrap{max-width:1240px;margin:0 auto}
+
+/* ---------- typography ---------- */
+.eyebrow{font-size:11px;font-weight:600;color:var(--v-fg-mute);letter-spacing:.04em}
+h1{font-size:30px;font-weight:600;letter-spacing:-.02em;margin-top:4px}
+.lede{color:var(--v-fg-dim);font-size:14px;margin-top:8px;max-width:78ch}
+h2{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+code{font-family:var(--mono);font-size:.86em;color:var(--v-accent-hi);
+  background:rgba(43,172,227,.09);border:1px solid rgba(43,172,227,.2);
+  padding:.06em .34em;border-radius:4px;white-space:nowrap}
+code.n{color:var(--v-fg-dim);background:rgba(154,163,192,.07);border-color:rgba(154,163,192,.18)}
+code.o{color:#ffb066;background:rgba(245,136,42,.1);border-color:rgba(245,136,42,.26)}
+
+/* ---------- shell ---------- */
+header{border-bottom:1px solid var(--v-border);padding-bottom:22px;margin-bottom:26px}
+.quote{
+  margin-top:18px;border-left:2px solid var(--v-orange);padding:2px 0 2px 14px;
+  color:var(--v-fg-dim);font-size:13px;font-style:italic;max-width:92ch
+}
+.quote b{color:var(--v-fg);font-style:normal;font-weight:600}
+
+section{margin-bottom:34px}
+.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.sec-no{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--v-bg);
+  background:var(--v-accent);border-radius:5px;padding:3px 7px;letter-spacing:.05em;flex:0 0 auto
+}
+.sec-no.bad{background:var(--v-red);color:#fff}
+.sec-no.ok{background:var(--v-green);color:#08120a}
+.sec-sub{color:var(--v-fg-dim);font-size:13px;margin:0 0 16px}
+
+.panel{background:var(--v-card);border:1px solid var(--v-border);border-radius:14px;padding:20px}
+.panel.bad{border-color:rgba(224,82,95,.4)}
+.panel.ok{border-color:rgba(95,186,106,.32)}
+
+/* ---------- generic boxes ---------- */
+.box{
+  background:var(--v-surface);border:1px solid var(--v-border);border-radius:9px;
+  padding:9px 11px;font-size:12.5px;line-height:1.35
+}
+.box .bt{font-weight:600;font-size:12.5px;display:block}
+.box .bd{color:var(--v-fg-dim);font-size:11.5px;margin-top:3px;display:block;line-height:1.4}
+.box.dim{background:var(--v-popover);color:var(--v-fg-dim)}
+.box.dashed{border-style:dashed;background:transparent}
+.box.red{border-color:rgba(224,82,95,.5);background:rgba(224,82,95,.09)}
+.box.red .bt{color:#ff8e97}
+.box.grn{border-color:rgba(95,186,106,.45);background:rgba(95,186,106,.08)}
+.box.grn .bt{color:#8fd898}
+.box.acc{border-color:rgba(43,172,227,.45);background:rgba(43,172,227,.09)}
+.box.acc .bt{color:var(--v-accent-hi)}
+.box.orn{border-color:rgba(245,136,42,.45);background:rgba(245,136,42,.09)}
+.box.orn .bt{color:#ffb066}
+
+.tag{
+  display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:700;
+  letter-spacing:.07em;padding:2px 5px;border-radius:4px;vertical-align:1px;margin-left:6px
+}
+.tag.f1{background:rgba(43,172,227,.16);color:var(--v-accent-hi)}
+.tag.f2{background:rgba(66,173,250,.14);color:#7cc8fb}
+.tag.f3{background:rgba(154,163,192,.14);color:var(--v-fg-dim)}
+.tag.f4{background:rgba(154,163,192,.1);color:var(--v-fg-mute)}
+.tag.new{background:rgba(95,186,106,.16);color:#8fd898}
+
+/* ---------- arrows / connectors ---------- */
+.arrow-d{text-align:center;color:var(--v-fg-mute);font-size:15px;line-height:1;padding:7px 0}
+.arrow-d.acc{color:var(--v-accent)}
+.arrow-d.red{color:var(--v-red)}
+.arrow-lbl{
+  text-align:center;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  color:var(--v-fg-mute);text-transform:uppercase;padding-bottom:3px
+}
+
+/* ---------- MA panel ---------- */
+.today{display:grid;grid-template-columns:1fr 30px 1fr;gap:0;align-items:start}
+@media(max-width:860px){.today{grid-template-columns:1fr}.today .divider{display:none}}
+.divider{position:relative;align-self:stretch;min-height:120px}
+.divider::before{
+  content:"";position:absolute;left:50%;top:8px;bottom:8px;width:0;
+  border-left:2px dashed rgba(224,82,95,.55)
+}
+.divider span{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg);
+  font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;
+  color:#ff8e97;background:var(--v-card);padding:4px 6px;white-space:nowrap
+}
+.col-h{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+  color:var(--v-fg-mute);text-transform:uppercase;margin-bottom:9px
+}
+.src-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+@media(max-width:520px){.src-grid{grid-template-columns:1fr}}
+.funnel{
+  margin-top:0;background:rgba(224,82,95,.1);border:1px solid rgba(224,82,95,.45);
+  border-radius:9px;padding:11px;text-align:center
+}
+.funnel .ft{font-weight:600;font-size:13px;color:#ff8e97}
+.funnel .fd{font-size:11.5px;color:var(--v-fg-dim);margin-top:4px}
+.leaks{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:0}
+@media(max-width:640px){.leaks{grid-template-columns:1fr}}
+.outcome{
+  margin-top:0;text-align:center;border:1px solid var(--v-red);
+  background:rgba(224,82,95,.16);border-radius:9px;padding:11px
+}
+.outcome .ot{font-weight:700;font-size:14px;color:#ff8e97;font-style:italic}
+.outcome .od{font-size:11.5px;color:var(--v-fg-dim);margin-top:4px}
+
+/* ---------- pipeline ---------- */
+.stage{
+  display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:stretch
+}
+@media(max-width:720px){.stage{grid-template-columns:1fr;gap:6px}}
+.stage-no{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding-top:2px
+}
+@media(max-width:720px){.stage-no{flex-direction:row;justify-content:flex-start}}
+.stage-no b{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--v-bg);
+  background:var(--v-accent);border-radius:50%;width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto
+}
+.stage-no i{
+  font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.07em;
+  color:var(--v-fg-mute);text-transform:uppercase;text-align:center;line-height:1.25
+}
+.stage-body{padding-bottom:4px}
+.stage-title{font-weight:600;font-size:13.5px;margin-bottom:5px}
+.stage-note{color:var(--v-fg-dim);font-size:11.5px;margin-top:6px;line-height:1.45}
+.link{
+  height:14px;margin-left:47px;border-left:2px solid rgba(43,172,227,.42)
+}
+@media(max-width:720px){.link{margin-left:10px}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+@media(max-width:720px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+.gate{
+  display:flex;align-items:center;gap:10px;background:rgba(95,186,106,.08);
+  border:1px solid rgba(95,186,106,.42);border-radius:9px;padding:9px 11px
+}
+.gate .lk{font-size:16px;flex:0 0 auto;line-height:1}
+.gate .gt{font-weight:600;font-size:12.5px;color:#8fd898}
+.gate .gd{color:var(--v-fg-dim);font-size:11.5px;margin-top:2px;line-height:1.4}
+
+/* ---------- state machine ---------- */
+.states{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.st{
+  font-family:var(--mono);font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px;
+  border:1px solid var(--v-border);background:var(--v-surface)
+}
+.st.open{border-color:rgba(245,136,42,.5);background:rgba(245,136,42,.11);color:#ffb066}
+.st.res{border-color:rgba(95,186,106,.5);background:rgba(95,186,106,.1);color:#8fd898}
+.st.arc{color:var(--v-fg-mute)}
+.st-ar{color:var(--v-fg-mute);font-size:13px}
+
+/* ---------- resolve table ---------- */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{
+  text-align:left;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--v-fg-mute);padding:0 10px 8px;border-bottom:1px solid var(--v-border);
+  vertical-align:bottom
+}
+tbody td{padding:11px 10px;border-bottom:1px solid rgba(43,71,105,.5);vertical-align:top;line-height:1.45}
+tbody tr:last-child td{border-bottom:0}
+td.bad{color:#ff8e97;font-weight:600;width:20%}
+td.mech{color:var(--v-fg);width:44%}
+td.proof{color:#8fd898;width:36%}
+td.proof .pm{color:var(--v-fg-dim);font-weight:400;display:block;margin-top:2px;font-size:11.5px}
+.tbl-scroll{overflow-x:auto}
+@media(max-width:760px){table{min-width:660px}}
+
+/* ---------- phases ---------- */
+.phases{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:900px){.phases{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.phases{grid-template-columns:1fr}}
+.ph{
+  background:var(--v-surface);border:1px solid var(--v-border);border-radius:10px;
+  padding:11px;display:flex;flex-direction:column;gap:6px;position:relative
+}
+.ph.hero{border-color:var(--v-green);background:rgba(95,186,106,.09)}
+.ph.later{background:var(--v-popover);border-style:dashed}
+.ph .pn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--v-fg-mute)}
+.ph .pt{font-weight:600;font-size:13px;line-height:1.25}
+.ph .pe{font-family:var(--mono);font-size:10.5px;color:var(--v-accent-hi)}
+.ph .pu{font-size:11.5px;color:var(--v-fg-dim);line-height:1.4;margin-top:auto;padding-top:4px}
+.ph.hero .pu{color:#8fd898;font-weight:500}
+.ph .flag{
+  position:absolute;top:-9px;right:9px;font-family:var(--mono);font-size:9px;font-weight:700;
+  letter-spacing:.06em;background:var(--v-green);color:#08120a;padding:2px 6px;border-radius:4px
+}
+
+/* ---------- rules / footer ---------- */
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:720px){.rules{grid-template-columns:1fr}}
+.rule{display:flex;gap:9px;align-items:flex-start;background:var(--v-surface);
+  border:1px solid var(--v-border);border-radius:9px;padding:9px 11px}
+.rule .rn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--v-orange);flex:0 0 auto;padding-top:1px}
+.rule .rt{font-size:12.5px;line-height:1.4}
+.rule .rt b{font-weight:600}
+.rule .rt span{color:var(--v-fg-dim);display:block;font-size:11.5px;margin-top:2px}
+
+.legend{
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:20px;padding-top:16px;
+  border-top:1px solid var(--v-border);font-size:11.5px;color:var(--v-fg-dim)
+}
+.legend div{display:flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;border:1px solid var(--v-border);flex:0 0 auto}
+.sw.acc{background:rgba(43,172,227,.28);border-color:var(--v-accent)}
+.sw.grn{background:rgba(95,186,106,.24);border-color:var(--v-green)}
+.sw.orn{background:rgba(245,136,42,.24);border-color:var(--v-orange)}
+.sw.red{background:rgba(224,82,95,.24);border-color:var(--v-red)}
+.sw.dsh{background:transparent;border-style:dashed;border-color:var(--v-fg-mute)}
+footer{margin-top:30px;padding-top:16px;border-top:1px solid var(--v-border);
+  color:var(--v-fg-mute);font-size:11.5px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media print{
+  body{background:#fff;color:#111;padding:0}
+  .panel,.box,.ph,.rule,.funnel,.gate{background:#fff!important;border-color:#bbb!important}
+  h1,h2,.stage-title,.box .bt{color:#111!important}
+  section{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">VELTOL INTERNAL MANAGEMENT · KOMMUNIKÁCIÓS MODUL</div>
+  <h1>MA vs. HOLNAP — mi történik és miért oldja meg</h1>
+  <p class="lede">
+    Az adatút két állapota, ugyanazokkal az emberekkel és ugyanazzal az információmennyiséggel.
+    A különbség nem a szorgalom, hanem hogy az információnak van-e <b>címe</b>, <b>állapota</b> és <b>felelőse</b>.
+    Kísérő dokumentum: <code class="n">PLAN-modul-comunicare.md</code>
+  </p>
+  <div class="quote">
+    „din persoane, echipa se formează prin comunicație… cel mai mare risc se pare, este din lipsa de comunicație,
+    <b>cum creștem, crește nivelul de informații, negestionate pe canale, crește haosul</b>"
+  </div>
+</header>
+
+<!-- ============================================================ 1. MA -->
+<section>
+  <div class="sec-head">
+    <span class="sec-no bad">MA</span>
+    <h2>A hiba anatómiája — nem hangerő-probléma, hanem címzés-probléma</h2>
+  </div>
+  <p class="sec-sub">
+    Az app <b>tudja</b> a tényeket, az emberek <b>máshol</b> beszélnek, és a kettő között nincs átjáró.
+    Ez a rés a „haos" tényleges forrása.
+  </p>
+
+  <div class="panel bad">
+    <div class="today">
+
+      <!-- EMBERI OLDAL -->
+      <div>
+        <div class="col-h">Emberi oldal — ahol az információ keletkezik</div>
+        <div class="src-grid">
+          <div class="box"><span class="bt">Projektvezető</span><span class="bd">határidő csúszik, alvállalkozó nem jött</span></div>
+          <div class="box"><span class="bt">Terepi dolgozó</span><span class="bd">helyszíni probléma, hiányzó anyag</span></div>
+          <div class="box"><span class="bt">Vezetőség</span><span class="bd">döntés, prioritás, új szabály</span></div>
+          <div class="box"><span class="bt">Kliens / alvállalkozó</span><span class="bd">telefonos megállapodás</span></div>
+        </div>
+
+        <div class="arrow-d red">&#9660;</div>
+
+        <div class="funnel">
+          <div class="ft">WhatsApp csoport · szóban · telefonon</div>
+          <div class="fd">egyetlen idősorrendbe olvasztva, projektfüggetlenül</div>
+        </div>
+
+        <div class="arrow-d red">&#9660;</div>
+
+        <div class="leaks">
+          <div class="box red"><span class="bt">Nincs CÍM</span><span class="bd">melyik projekt? melyik aktivitás? — nem derül ki, és két hét múlva nem visszakereshető</span></div>
+          <div class="box red"><span class="bt">Nincs ÁLLAPOT</span><span class="bd">elolvasta? egyetért? megtette? — „írtam a csoportba" nem állapot</span></div>
+          <div class="box red"><span class="bt">Nincs FELELŐS</span><span class="bd">20 embernek szól, tehát senkinek; nincs határidő és nincs nyugtázás</span></div>
+        </div>
+
+        <div class="arrow-d red">&#9660;</div>
+
+        <div class="outcome">
+          <div class="ot">„crește haosul"</div>
+          <div class="od">a hangerő lineárisan nő a projektszámmal, a rendezettség nem — a döntés két ember fejében marad</div>
+        </div>
+      </div>
+
+      <!-- SZAKADÉK -->
+      <div class="divider"><span>NINCS ÁTJÁRÓ</span></div>
+
+      <!-- RENDSZER OLDAL -->
+      <div>
+        <div class="col-h">Rendszer-oldal — ami már ma is létezik az appban</div>
+        <div class="src-grid">
+          <div class="box dim"><span class="bt">projects</span><span class="bd">fázis, határidő, érték, manager_id</span></div>
+          <div class="box dim"><span class="bt">project_activity_status</span><span class="bd">~95 aktivitás × projekt, cellánként státusz</span></div>
+          <div class="box dim"><span class="bt">situations</span><span class="bd">haladási elszámolás</span></div>
+          <div class="box dim"><span class="bt">documents</span><span class="bd">avizok, lejáratok</span></div>
+          <div class="box dim"><span class="bt">gantt · teams · vacation</span><span class="bd">ütemezés, csapatok, szabadság</span></div>
+          <div class="box dim"><span class="bt">cron: aviz + mentenanță</span><span class="bd">automatikus figyelmeztetés</span></div>
+        </div>
+
+        <div class="arrow-d">&#9660;</div>
+
+        <div class="box dashed" style="text-align:center">
+          <span class="bt" style="color:var(--v-fg-dim)">…csak e-mailbe megy</span>
+          <span class="bd">a <code class="n">topbar.tsx</code> harangja <b>onClick nélkül</b> van, alatta állandó, semmihez nem kötött pötty — a felhasználó ide fog kattintani, és nem kap semmit</span>
+        </div>
+
+        <div class="arrow-d">&#9660;</div>
+
+        <div class="box red" style="text-align:center">
+          <span class="bt">Két bejövő doboz = nulla bejövő doboz</span>
+          <span class="bd">a rendszer tudása és az emberi beszélgetés soha nem találkozik; egyik sem kereshető a másikkal együtt</span>
+        </div>
+
+        <div style="margin-top:11px" class="box dim">
+          <span class="bt" style="color:var(--v-fg-dim)">A matrice cellának <b>már ma van</b> egy <code class="n">note</code> mezője</span>
+          <span class="bd">egysoros, szál nélkül, értesítés nélkül, kereshetetlenül — a helyes ösztön, félbehagyva. Ez a modul magja: pontosan ezt kell kiteljesíteni.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 2. HOLNAP -->
+<section>
+  <div class="sec-head">
+    <span class="sec-no ok">HOLNAP</span>
+    <h2>Az adatút — ugyanaz az információ, hét állomáson</h2>
+  </div>
+  <p class="sec-sub">
+    Minden állomás egy konkrét tábla, trigger vagy policy. A lánc egyetlen pontján sem lehet „megspórolni" a címet vagy az állapotot — nem szokáskérdés, hanem adatbázis-megkötés.
+  </p>
+
+  <div class="panel ok">
+
+    <!-- 1 -->
+    <div class="stage">
+      <div class="stage-no"><b>1</b><i>bemenet</i></div>
+      <div class="stage-body">
+        <div class="stage-title">Kétféle forrás, egyetlen célformátum</div>
+        <div class="grid2">
+          <div class="box acc"><span class="bt">Ember → compose drawer</span><span class="bd">az <b>anchor kötelező mező</b>: projekt / matrice-aktivitás / situație / kliens / … vagy explicit „Personal". Nincs negyedik lehetőség.</span></div>
+          <div class="box orn"><span class="bt">Rendszer → trigger &amp; cron</span><span class="bd">fázisváltás, lejáró aviz, esedékes mentenanță — ugyanabba a folyamba ír, nem külön e-mail-szigetre</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 2 -->
+    <div class="stage">
+      <div class="stage-no"><b>2</b><i>tárolás</i></div>
+      <div class="stage-body">
+        <div class="stage-title">
+          <code>notes</code> INSERT <span class="tag new">ÚJ TÁBLA</span><span class="tag f1">F1</span>
+        </div>
+        <div class="grid2">
+          <div class="box acc">
+            <span class="bt">Anchor — a „cím"</span>
+            <span class="bd">nullázható FK-k: <code>project_id</code> · <code>activity_id</code> · <code>situation_id</code> · <code>client_id</code> · <code>subcontractor_id</code> · <code>document_id</code> · <code>team_id</code><br>
+            <b style="color:#8fd898">+ <code>check</code>: legfeljebb egy kitöltve; mind null = személyes</b></span>
+          </div>
+          <div class="box">
+            <span class="bt">Osztályozás — a „műfaj"</span>
+            <span class="bd"><code>kind</code>: note · announcement · question · decision · risk<br>
+            <code>visibility</code>: private · team · project · company<br>
+            <code>status</code>, <code>due_date</code>, <code>requires_ack</code>, <code>ack_deadline</code>, <code>parent_id</code> (szál)</span>
+          </div>
+        </div>
+        <div class="stage-note">
+          <b>Miért nem polimorf <code class="n">entity_type</code> + <code class="n">entity_id</code>?</b> Mert azzal nincs idegen kulcs és nincs kaszkádolt törlés — projekt törlésekor orphan jegyzetek maradnának.
+          A nullázható FK + <code>check</code> minta <b>már a ti bevett megoldásotok</b>: a <code class="n">supplier_invoices</code> ugyanígy csinálja.
+        </div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 3 -->
+    <div class="stage">
+      <div class="stage-no"><b>3</b><i>címzés</i></div>
+      <div class="stage-body">
+        <div class="stage-title"><code>note_mentions</code> — a tranzakción belül <span class="tag new">ÚJ TÁBLA</span><span class="tag f1">F1</span></div>
+        <div class="box acc"><span class="bt">A <code>@említés</code> parse-olása <b>szerveroldalon</b>, a mentéssel egy tranzakcióban</span><span class="bd">nem kliensoldalon — így nem fordulhat elő elmentett jegyzet elveszett címzettel. Ez hajtja a „Pentru mine" sávot és a harangot.</span></div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 4 -->
+    <div class="stage">
+      <div class="stage-no"><b>4</b><i>értesítés</i></div>
+      <div class="stage-body">
+        <div class="stage-title">TRIGGER → <code>notifications</code> <span class="tag new">ÚJ TÁBLA</span><span class="tag f1">F1</span></div>
+        <div class="box orn">
+          <span class="bt">Egy sor / címzett, a címzett nyelvén</span>
+          <span class="bd">
+            <code class="o">type</code>: mention · reply <span class="tag f1">F1</span> — ack_required · due_soon · aviz_expiring · maintenance_due · vacation_request <span class="tag f2">F2</span><br>
+            <b>nem tárol lefordított szöveget:</b> <code class="o">type</code> + <code class="o">payload jsonb</code> párosból renderel a UI next-intl-lel — így nyelvváltás után is helyes<br>
+            beszúrás <b>kizárólag</b> triggerből vagy service-role kulccsal: senki nem gyárthat magának vagy másnak értesítést
+          </span>
+        </div>
+        <div class="stage-note">
+          A ma létező <code class="n">/api/cron/aviz-reminders</code> és <code class="n">/api/cron/maintenance-reminders</code> <b>ide is</b> beír →
+          a harang egyetlen bejövő dobozzá válik, és megszűnik a „csali harang".
+        </div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 5 -->
+    <div class="stage">
+      <div class="stage-no"><b>5</b><i>kiosztás</i></div>
+      <div class="stage-body">
+        <div class="stage-title">Fan-out — négy csatorna, egy forrás</div>
+        <div class="grid4">
+          <div class="box grn"><span class="bt">Harang</span><span class="bd">60 s polling → később Realtime<span class="tag f1">F1</span></span></div>
+          <div class="box acc"><span class="bt">E-mail digest</span><span class="bd">Resend + Vercel cron (mindkettő megvan)<span class="tag f2">F2</span></span></div>
+          <div class="box acc"><span class="bt">Teams webhook</span><span class="bd">~fél nap, ingyenes — a legjobb ár/érték<span class="tag f2">F2</span></span></div>
+          <div class="box dashed"><span class="bt" style="color:var(--v-fg-dim)">WhatsApp 1:1</span><span class="bd">csak sablonnal + OBA-val, üzenetenkénti díjjal<span class="tag f4">F4</span></span></div>
+        </div>
+        <div class="stage-note">
+          <b style="color:#ffb066">Korlát, amit előre tudni kell:</b> a Meta Groups API csak <b>saját, API-val létrehozott</b> csoportba küld,
+          <b>max. 8 résztvevővel</b> — a <b>meglévő WhatsApp-csoportjaitokba nem tud belépni és nem tud posztolni</b>. Ezért nem ez az elsődleges út.
+        </div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 6 -->
+    <div class="stage">
+      <div class="stage-no"><b>6</b><i>visszacsatolás</i></div>
+      <div class="stage-body">
+        <div class="stage-title"><code>note_receipts</code> — itt keletkezik az „állapot" <span class="tag new">ÚJ TÁBLA</span><span class="tag f1">F1</span></div>
+        <div class="grid2">
+          <div class="box"><span class="bt"><code>seen_at</code> — látta</span><span class="bd">a nézet-eseményből, automatikus upsert. Ez hajtja az olvasatlan-jelvényt.</span></div>
+          <div class="box grn"><span class="bt"><code>acknowledged_at</code> — nyugtázta</span><span class="bd">csak <b>explicit kattintásból</b>: „Am citit și am înțeles". <b>A kettő nem ugyanaz — a vezetőnek ez a második kell.</b></span></div>
+        </div>
+        <div class="stage-note">
+          Mindenki csak a <b>saját</b> sorát írhatja (<code>profile_id = auth.uid()</code>); a szerző és az admin <b>az összes sort látja</b> — ebből lesz a „kik nyugtázták / kik nem" lista, névvel.
+        </div>
+      </div>
+    </div>
+    <div class="link"></div>
+
+    <!-- 7 -->
+    <div class="stage">
+      <div class="stage-no"><b>7</b><i>lezárás</i></div>
+      <div class="stage-body">
+        <div class="stage-title">Állapotgép — semmi nem marad félúton</div>
+        <div class="states">
+          <span class="st open">open</span><span class="st-ar">&#8594;</span>
+          <span class="st res">resolved</span><span class="st-ar">&#8594;</span>
+          <span class="st arc">archived</span>
+        </div>
+        <div class="stage-note">
+          Zárni <b>bárki zárhat, aki olvashatja</b> a szálat — nem csak a szerző. Különben minden kérdés örökre nyitva marad, ha a szerző szabadságon van.
+          Törlés: a szerző 15 percen belül; utána csak <code>archived</code> — egy kommunikációs napló értéke a megbízhatóságában van.
+        </div>
+      </div>
+    </div>
+
+    <!-- RLS -->
+    <div style="margin-top:16px" class="gate">
+      <span class="lk">&#128274;</span>
+      <div>
+        <div class="gt">Olvasási kapu az egész úton: <code>can_read_note()</code> security-definer helper</div>
+        <div class="gd">
+          saját jegyzet · vagy megemlítettek · vagy <code>company</code> · vagy <code>team</code> = az én csapatom · vagy <code>project</code> és érintett vagyok (<code>manager_id</code> / projekt-csapat) · vagy admin.
+          <b>Semmiképp <code>using (true)</code></b> — az eddigi két kritikus RLS-hiba pontosan abból jött, hogy a policy megengedőbb volt a szándéknál.
+        </div>
+      </div>
+    </div>
+
+    <!-- FELSZÍNEK -->
+    <div style="margin-top:16px">
+      <div class="col-h">Felszínek — egyetlen <code class="n">&lt;NoteThread&gt;</code> komponens, hat helyszín</div>
+      <div class="grid3">
+        <div class="box acc"><span class="bt">Panoul meu <span class="tag f1">F1</span></span><span class="bd">„Pentru mine" sáv + pinelt kártyák. Ha a sáv üres, a nap rendben van.</span></div>
+        <div class="box acc"><span class="bt">Projekt → „Comunicare" fül <span class="tag f1">F1</span></span><span class="bd">kontextus-pinek + szálak, <code>kind</code> szerint szűrve</span></div>
+        <div class="box acc"><span class="bt">Matrice cella <span class="tag f1">F1</span></span><span class="bd">a meglévő egysoros <code>note</code> marad, mellé „Discuție" szál</span></div>
+        <div class="box grn"><span class="bt">/announcements <span class="tag f2">F2</span></span><span class="bd">közlemény + <b>nyugtázási tábla</b> a hiányzókkal, emlékeztető gombbal</span></div>
+        <div class="box grn"><span class="bt">/search <span class="tag f1">F1</span></span><span class="bd">a jegyzetek a globális keresésben — <b>a legkevésbé látványos, legfontosabb rész</b></span></div>
+        <div class="box dashed"><span class="bt" style="color:var(--v-fg-dim)">activity_events időszalag <span class="tag f3">F3</span></span><span class="bd">„mi történt a projekten" — rendszer + emberi események egy folyamban</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ 3. MIÉRT OLDJA MEG -->
+<section>
+  <div class="sec-head">
+    <span class="sec-no">MIÉRT</span>
+    <h2>A hibák és a mechanizmus, ami mindegyiket kikényszeríti</h2>
+  </div>
+  <p class="sec-sub">
+    Nem ígéret, hanem megkötés. A bal oldal minden sora egy konkrét adatbázis-elemhez van rendelve, és mindegyikhez tartozik egy <b>megfigyelhető</b> szám.
+  </p>
+
+  <div class="panel">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr><th>Hiba MA</th><th>Mechanizmus HOLNAP</th><th>Bizonyíték — mérhető</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="bad">Nincs cím</td>
+            <td class="mech"><code>check</code> megkötés a <code>notes</code> anchor-oszlopain: cím nélkül <b>fizikailag nem lehet beszúrni</b>. A compose drawer első mezője az anchor.</td>
+            <td class="proof">0 cím nélküli jegyzet<span class="pm">DB-szinten kényszerítve, nem fegyelemre bízva</span></td>
+          </tr>
+          <tr>
+            <td class="bad">Nincs állapot</td>
+            <td class="mech"><code>note_receipts.seen_at</code> (automatikus) és <code>.acknowledged_at</code> (explicit) — két külön tény, külön oszlopban.</td>
+            <td class="proof">Nyugtázási arány 24 órán belül<span class="pm">cél: &gt;80% · <b>ez a fő szám</b></span></td>
+          </tr>
+          <tr>
+            <td class="bad">Nincs felelős</td>
+            <td class="mech"><code>requires_ack</code> + <code>ack_deadline</code> + a hiányzók névsora, „emlékeztető küldése" gombbal. Cégszintű közleményt csak <code>can_broadcast()</code> adhat ki (admin + PM).</td>
+            <td class="proof">Név szerint látszik, ki nem nyugtázott<span class="pm">a „nem tudtam róla" vita megszűnik</span></td>
+          </tr>
+          <tr>
+            <td class="bad">Nem visszakereshető</td>
+            <td class="mech">A <code>notes.body</code> és <code>title</code> bekötve a meglévő <code>/search</code> feature-be — ugyanaz a Ctrl+K, ami a projekteket keresi.</td>
+            <td class="proof">„Hol beszéltünk erről?" → 1 keresés<span class="pm">a WhatsApp legnagyobb kára megszűnik</span></td>
+          </tr>
+          <tr>
+            <td class="bad">Két bejövő doboz</td>
+            <td class="mech">A cron-figyelmeztetések <b>is</b> a <code>notifications</code> táblába írnak, nem csak e-mailbe. A harang valódi olvasatlan-számra kötve.</td>
+            <td class="proof">1 harang, 0 elveszett riasztás<span class="pm">nincs „nem láttam az e-mailt" kimenekülés</span></td>
+          </tr>
+          <tr>
+            <td class="bad">Nem mérhető</td>
+            <td class="mech"><code>kind='decision'</code> számláló · 7 napnál régebben nyitott <code>question</code> / <code>risk</code> · jegyzetet tartalmazó aktív projektek aránya.</td>
+            <td class="proof">Heti 4 szám a dashboardon<span class="pm">nem elégedettséget kérdezünk, hanem mérünk</span></td>
+          </tr>
+          <tr>
+            <td class="bad">Terep kizárva</td>
+            <td class="mech">A Panoul meu <b>mobil-első</b>: egyhasábos kártyalista 375 px-en, 44 px érintési célpontok, teljes képernyős compose. Információ <b>soha</b> nem kerül <code class="n">title=</code> attribútumba.</td>
+            <td class="proof">Az <code>outfield_worker</code> tud írni<span class="pm">tőle jön a legtöbb terepi információ</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 4. FÁZISOK -->
+<section>
+  <div class="sec-head">
+    <span class="sec-no">ÜTEM</span>
+    <h2>Fázisok — mit nyit ki mindegyik</h2>
+  </div>
+  <p class="sec-sub">
+    A Fázis 1 önmagában még csak <b>rendezettséget</b> ad. A vezetői probléma a <b>Fázis 2-vel</b> oldódik meg — onnantól mérhető, ki tud miről.
+  </p>
+
+  <div class="panel">
+    <div class="phases">
+      <div class="ph">
+        <div class="pn">FÁZIS 0</div>
+        <div class="pt">Előfeltételek</div>
+        <div class="pe">~fél nap</div>
+        <div class="pu"><code class="n">core/auth/permissions.ts</code> (ma nincs) · <code class="n">profiles.locale</code> (ma nincs) · a csali harang leszerelése</div>
+      </div>
+      <div class="ph">
+        <div class="pn">FÁZIS 1</div>
+        <div class="pt">Jegyzetek · szálak · pinek · Panoul meu · harang</div>
+        <div class="pe">~1–1,5 hét</div>
+        <div class="pu">Minden információnak van <b>címe</b> és <b>kereshető</b>. Ez az, amit a vezető „Keep"-nek fog látni.</div>
+      </div>
+      <div class="ph hero">
+        <span class="flag">ITT OLDÓDIK MEG</span>
+        <div class="pn">FÁZIS 2</div>
+        <div class="pt">Közlemények · nyugtázás · rendszer-értesítések</div>
+        <div class="pe">~1 hét</div>
+        <div class="pu">Egy bejövő doboz, és <b>mérhető, ki tud miről</b>. Innentől válaszol a modul a felkérésre.</div>
+      </div>
+      <div class="ph later">
+        <div class="pn">FÁZIS 3</div>
+        <div class="pt">Aktivitás-folyam („informatii")</div>
+        <div class="pe">~1 hét</div>
+        <div class="pu"><code class="n">activity_events</code> + triggerek, projekt-időszalag, a 4 kommunikációs mutató</div>
+      </div>
+      <div class="ph later">
+        <div class="pn">FÁZIS 4</div>
+        <div class="pt">Realtime · csatolmányok · kimenő csatornák</div>
+        <div class="pe">~1 hét</div>
+        <div class="pu">Realtime a polling helyett · OneDrive-csatolmány · PWA push · WhatsApp sablonok, ha lett OBA</div>
+      </div>
+    </div>
+    <p class="stage-note" style="margin-top:14px">
+      <b>Összesen ~4–5 hét.</b> Az első két fázis után (2–2,5 hét) a hatás már mérhető — a Fázis 3-4 nélkül is működő rendszer.
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================ 5. SZABÁLYOK -->
+<section>
+  <div class="sec-head">
+    <span class="sec-no">60%</span>
+    <h2>A modul másik fele — amit nem lehet lekódolni</h2>
+  </div>
+  <p class="sec-sub">
+    Ez a terv 40%-a technológia és 60%-a szokás. A fenti hét állomás <b>lehetővé teszi</b> a rendezett kommunikációt, de nem <b>kényszeríti ki</b>.
+    Ha csak a felület készül el, három hét után visszaáll a WhatsApp — ezért a hat szabályt a <b>vezetőségnek</b> kell kihirdetnie, nem az IT-nak.
+  </p>
+
+  <div class="panel">
+    <div class="rules">
+      <div class="rule"><span class="rn">01</span><span class="rt"><b>Ha nincs az appban, nem történt meg.</b><span>Döntés, kötelezettség, határidő, kockázat — ezek nem WhatsApp-műfajok.</span></span></div>
+      <div class="rule"><span class="rn">02</span><span class="rt"><b>Minden információnak van címe.</b><span>A felület ezt kikényszeríti; a szabály csak kimondja, miért.</span></span></div>
+      <div class="rule"><span class="rn">03</span><span class="rt"><b>A WhatsApp megmarad — az efemer koordinációra.</b><span>„10 perc és ott vagyok", „mikor jön a daru". Ez legitim és hatékony; nem kell kivezetni.</span></span></div>
+      <div class="rule"><span class="rn">04</span><span class="rt"><b>Minden közleménynek van felelőse és határideje.</b><span>Nyugtázás nélkül nyitva marad, és látszik, kinél.</span></span></div>
+      <div class="rule"><span class="rn">05</span><span class="rt"><b>Napi 5 perc.</b><span>A műszak elején mindenki megnyitja a „Pentru mine" sávot. Ha üres, kész.</span></span></div>
+      <div class="rule"><span class="rn">06</span><span class="rt"><b>Heti 15 perc.</b><span>A PM-körben átmegyünk a 7 napnál régebben nyitott <code class="n">question</code> és <code class="n">risk</code> jegyzeteken. Ez a rituálé tartja életben a rendszert.</span></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="legend">
+  <div><span class="sw grn"></span> új tábla / RLS-kapu</div>
+  <div><span class="sw acc"></span> Fázis 1–2, most építjük</div>
+  <div><span class="sw orn"></span> trigger / rendszer-generált</div>
+  <div><span class="sw red"></span> mai hiba</div>
+  <div><span class="sw dsh"></span> Fázis 3–4 / feltételes</div>
+  <div><b class="mono" style="color:var(--v-accent-hi)">F1…F4</b> = melyik fázisban készül</div>
+</div>
+
+<footer>
+  <span>Veltol Internal Management · Kommunikációs modul · 2026-08-12</span>
+  <span>Részletes terv: <code class="n">PLAN-modul-comunicare.md</code> · Vezetői összefoglaló: <code class="n">BRIEF-modul-comunicare-RO.md</code></span>
+</footer>
+
+</div>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, Paperclip } from "lucide-react";
 import { upsertChecklistItem, logTodayRealizat, getDailyLog, getLinkedDocuments } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
-import { useChecklistStore } from "../hooks/useChecklistStore";
+import { useChecklistStore, type EditableField } from "../hooks/useChecklistStore";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 import { AddDocumentDialog } from "@/features/documents/components/AddDocumentDialog";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -21,6 +21,7 @@ interface Props {
   rows: ChecklistRow[];
   projectId: number;
   canMutate: boolean;
+  teamMemberCount: number | null;
 }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -46,13 +47,14 @@ const INPUT_BASE =
   "h-7 w-20 rounded-md border bg-transparent px-2 text-right font-mono tabular-nums text-[12px] text-veltol-fg outline-none transition-colors focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 disabled:opacity-50";
 
 function NumInput({
-  value, onChange, onBlur, dirty, disabled,
+  value, onChange, onBlur, dirty, disabled, title,
 }: {
   value: string;
   onChange: (v: string) => void;
   onBlur: () => void;
   dirty: boolean;
   disabled?: boolean;
+  title?: string;
 }) {
   return (
     <input
@@ -63,12 +65,13 @@ function NumInput({
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
       disabled={disabled}
+      title={title}
       className={[INPUT_BASE, dirty ? "border-veltol-orange/50" : "border-border"].join(" ")}
     />
   );
 }
 
-export function ChecklistTable({ rows, projectId, canMutate }: Props) {
+export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: Props) {
   const t = useTranslations("checklist");
   const [, startTransition] = useTransition();
 
@@ -96,10 +99,14 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [closeAllHistory]);
 
-  const handleFieldChange = useCallback((itemNumber: number, field: "plan_total" | "zile", value: string) => {
+  const handleFieldChange = useCallback((itemNumber: number, field: EditableField, value: string) => {
+    if (field === "persons_allocated" && teamMemberCount != null) {
+      const n = parseInt(value, 10);
+      if (!isNaN(n)) value = String(Math.min(teamMemberCount, Math.max(0, n)));
+    }
     updateField(itemNumber, field, value);
     markDirty(itemNumber);
-  }, [updateField, markDirty]);
+  }, [updateField, markDirty, teamMemberCount]);
 
   // These callbacks read live store state via getState() rather than closing
   // over `rowState`/`dirtySet`, so their identity stays stable across
@@ -117,6 +124,8 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
       fd.set("item_number", String(itemNumber));
       fd.set("plan_total", state?.plan_total ?? "");
       fd.set("zile", state?.zile ?? "");
+      fd.set("persons_allocated", state?.persons_allocated ?? "");
+      fd.set("units_per_person_day", state?.units_per_person_day ?? "");
       const result = await upsertChecklistItem(null, fd);
       const status: SaveStatus = result?.error ? "error" : "saved";
       useChecklistStore.getState().setRowStatus(itemNumber, status);
@@ -235,6 +244,8 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
               <th className="px-3 py-3 text-left text-[11px] font-medium text-veltol-fgMute">{t("columns.activitate")}</th>
               <th className="w-24 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.plan_total")}</th>
               <th className="w-20 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.zile")}</th>
+              <th className="w-20 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.persons_allocated")}</th>
+              <th className="w-24 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.units_per_person_day")}</th>
               <th className="w-24 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.target_zi")}</th>
               <th className="w-28 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.realizat")}</th>
               {canMutate && <th className="w-28 px-3 py-3 text-right text-[11px] font-medium text-veltol-fgMute">{t("columns.today")}</th>}
@@ -246,7 +257,7 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
             {rows.map((row) => {
               if (row.isSection) {
                 const sectionPct = sectionPctMap.get(row.phase as ChecklistPhase) ?? 0;
-                const colSpan = canMutate ? 10 : 9;
+                const colSpan = canMutate ? 12 : 11;
                 return (
                   <tr key={row.rowKey} className="border-t border-border bg-veltol-surface/40">
                     <td colSpan={colSpan} className="relative overflow-hidden px-4 py-2.5">
@@ -276,6 +287,7 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
                   row={row}
                   projectId={projectId}
                   canMutate={canMutate}
+                  teamMemberCount={teamMemberCount}
                   onFieldChange={handleFieldChange}
                   onBlur={handleBlur}
                   onTodayValueChange={updateTodayValue}
@@ -320,6 +332,7 @@ export function ChecklistTable({ rows, projectId, canMutate }: Props) {
               row={row}
               projectId={projectId}
               canMutate={canMutate}
+              teamMemberCount={teamMemberCount}
               onFieldChange={handleFieldChange}
               onBlur={handleBlur}
               onTodayValueChange={updateTodayValue}
@@ -340,7 +353,8 @@ interface ChecklistDataRowProps {
   row: ChecklistRow;
   projectId: number;
   canMutate: boolean;
-  onFieldChange: (itemNumber: number, field: "plan_total" | "zile", value: string) => void;
+  teamMemberCount: number | null;
+  onFieldChange: (itemNumber: number, field: EditableField, value: string) => void;
   onBlur: (itemNumber: number) => void;
   onTodayValueChange: (itemNumber: number, value: string) => void;
   onTodayBlur: (itemNumber: number, row: ChecklistRow) => void;
@@ -349,7 +363,7 @@ interface ChecklistDataRowProps {
 }
 
 const ChecklistDataRow = memo(function ChecklistDataRow({
-  row, projectId, canMutate,
+  row, projectId, canMutate, teamMemberCount,
   onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
 }: ChecklistDataRowProps) {
   const t = useTranslations("checklist");
@@ -365,6 +379,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
     !isNaN(planTotal) && planTotal > 0 && realizat != null
       ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
       : row.pct;
+  const noTeam = !teamMemberCount || teamMemberCount <= 0;
 
   return (
     <React.Fragment>
@@ -405,11 +420,44 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
           )}
         </td>
 
+        <td className="px-3 py-2">
+          {canMutate ? (
+            <div className="flex justify-end">
+              <NumInput
+                value={state?.persons_allocated ?? ""}
+                onChange={(v) => onFieldChange(row.number, "persons_allocated", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving" || noTeam}
+                title={noTeam ? t("noTeamAssigned") : undefined}
+              />
+            </div>
+          ) : (
+            <span className="block text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">{row.persons_allocated ?? "—"}</span>
+          )}
+        </td>
+
+        <td className="px-3 py-2">
+          {canMutate ? (
+            <div className="flex justify-end">
+              <NumInput
+                value={state?.units_per_person_day ?? ""}
+                onChange={(v) => onFieldChange(row.number, "units_per_person_day", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving"}
+              />
+            </div>
+          ) : (
+            <span className="block text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">{row.units_per_person_day ?? "—"}</span>
+          )}
+        </td>
+
         <td className="px-3 py-2.5 text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">
           {(() => {
-            const pt = parseInt(state?.plan_total ?? "", 10);
-            const z = parseInt(state?.zile ?? "", 10);
-            if (!isNaN(pt) && !isNaN(z) && z > 0) return Math.round(pt / z);
+            const persons = parseInt(state?.persons_allocated ?? "", 10);
+            const rate = parseInt(state?.units_per_person_day ?? "", 10);
+            if (!isNaN(persons) && !isNaN(rate)) return persons * rate;
             return row.target_zi ?? "—";
           })()}
         </td>
@@ -483,7 +531,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
 
       {state?.docsOpen && (
         <tr className="bg-veltol-surface/20">
-          <td colSpan={canMutate ? 10 : 9} className="px-8 py-3">
+          <td colSpan={canMutate ? 12 : 11} className="px-8 py-3">
             <div className="inline-block min-w-[320px] rounded-lg border border-border bg-veltol-bg p-4 shadow-xl">
               <div className="mb-3 text-[11px] font-medium text-veltol-fgMute">
                 {tDocs("attachDocuments")} — {row.activitate}
@@ -508,7 +556,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
 
       {state?.historyOpen && (
         <tr className="bg-veltol-surface/20">
-          <td colSpan={canMutate ? 10 : 9} className="px-8 py-3">
+          <td colSpan={canMutate ? 12 : 11} className="px-8 py-3">
             <div className="inline-block min-w-[260px] rounded-lg border border-border bg-veltol-bg p-3 shadow-xl">
               <div className="mb-2 text-[11px] font-medium text-veltol-fgMute">
                 {t("history.title")} — {row.activitate}
@@ -544,7 +592,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
 });
 
 const ChecklistDataCard = memo(function ChecklistDataCard({
-  row, projectId, canMutate,
+  row, projectId, canMutate, teamMemberCount,
   onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
 }: ChecklistDataRowProps) {
   const t = useTranslations("checklist");
@@ -559,10 +607,11 @@ const ChecklistDataCard = memo(function ChecklistDataCard({
     !isNaN(planTotal) && planTotal > 0 && realizat != null
       ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
       : row.pct;
+  const noTeam = !teamMemberCount || teamMemberCount <= 0;
   const targetZi = (() => {
-    const pt = parseInt(state?.plan_total ?? "", 10);
-    const z = parseInt(state?.zile ?? "", 10);
-    if (!isNaN(pt) && !isNaN(z) && z > 0) return Math.round(pt / z);
+    const persons = parseInt(state?.persons_allocated ?? "", 10);
+    const rate = parseInt(state?.units_per_person_day ?? "", 10);
+    if (!isNaN(persons) && !isNaN(rate)) return persons * rate;
     return row.target_zi ?? "—";
   })();
 
@@ -602,6 +651,31 @@ const ChecklistDataCard = memo(function ChecklistDataCard({
                 disabled={state?.status === "saving"}
               />
             ) : (row.zile ?? "—")}
+          </DataCardField>
+
+          <DataCardField label={t("columns.persons_allocated")}>
+            {canMutate ? (
+              <NumInput
+                value={state?.persons_allocated ?? ""}
+                onChange={(v) => onFieldChange(row.number, "persons_allocated", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving" || noTeam}
+                title={noTeam ? t("noTeamAssigned") : undefined}
+              />
+            ) : (row.persons_allocated ?? "—")}
+          </DataCardField>
+
+          <DataCardField label={t("columns.units_per_person_day")}>
+            {canMutate ? (
+              <NumInput
+                value={state?.units_per_person_day ?? ""}
+                onChange={(v) => onFieldChange(row.number, "units_per_person_day", v)}
+                onBlur={() => onBlur(row.number)}
+                dirty={isDirty}
+                disabled={state?.status === "saving"}
+              />
+            ) : (row.units_per_person_day ?? "—")}
           </DataCardField>
 
           <DataCardField label={t("columns.target_zi")}>{targetZi}</DataCardField>
