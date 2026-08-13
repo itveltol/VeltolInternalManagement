@@ -1,9 +1,29 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ProjectsApiClient, CreateProjectPayload } from "./types";
+import type { ProjectsApiClient, CreateProjectPayload, ProjectListParams, ProjectListResult } from "./types";
 import type { Project, ProjectManager, Currency } from "../types";
 
+const DEFAULT_PAGE_SIZE = 20;
+
 const PROJECT_SELECT =
-  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name), updated_by_user:profiles!updated_by(first_name, last_name)";
+  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name, team_members(count)), updated_by_user:profiles!updated_by(first_name, last_name)";
+
+interface ProjectTeamRow {
+  id: number;
+  name: string;
+  team_members: { count: number }[];
+}
+
+/** Supabase returns the team_members aggregate as a nested array — flatten it into member_count, mirroring supabaseTeamsClient's mapTeamRow. */
+function mapProjectTeam(row: unknown): Project["team"] {
+  const team = row as ProjectTeamRow | null;
+  if (!team) return null;
+  return { id: team.id, name: team.name, member_count: team.team_members?.[0]?.count ?? 0 };
+}
+
+function mapProjectRow(row: unknown): Project {
+  const raw = row as Project & { team: unknown };
+  return { ...raw, team: mapProjectTeam(raw.team) };
+}
 
 interface CurrentAssignmentRow {
   project_id: number;
@@ -63,13 +83,45 @@ async function withCurrentAssignments(
 }
 
 export const createSupabaseProjectsClient = (supabase: SupabaseClient): ProjectsApiClient => ({
-  async getProjects() {
-    const { data, error } = await supabase
+  async getProjects(params?: ProjectListParams): Promise<ProjectListResult> {
+    const { page, pageSize = DEFAULT_PAGE_SIZE, filters, sortByValue } = params ?? {};
+
+    let query = supabase
       .from("projects")
-      .select(PROJECT_SELECT)
-      .order("id");
+      .select(PROJECT_SELECT, { count: "exact" });
+
+    if (filters?.phase && filters.phase.length > 0) {
+      query = query.in("current_phase", filters.phase);
+    }
+    if (filters?.category) {
+      query = query.eq("project_category", filters.category);
+    }
+    if (filters?.contractType && filters.contractType.length > 0) {
+      // ProjectsShell's original client-side filter matched the exact set of
+      // contract types (same members, not merely "includes these") —
+      // contains + containedBy together express that same set-equality
+      // regardless of stored array order.
+      query = query.contains("contract_type", filters.contractType).containedBy("contract_type", filters.contractType);
+    }
+    if (filters?.minValue != null) {
+      query = query.gte("value_eur", filters.minValue);
+    }
+    if (filters?.maxValue != null) {
+      query = query.lte("value_eur", filters.maxValue);
+    }
+
+    query = sortByValue
+      ? query.order("value_eur", { ascending: sortByValue === "asc", nullsFirst: false })
+      : query.order("id");
+
+    if (page != null) {
+      query = query.range((page - 1) * pageSize, page * pageSize - 1);
+    }
+
+    const { data, count, error } = await query;
     if (error) throw new Error(error.message);
-    return withCurrentAssignments(supabase, (data ?? []) as unknown as Project[]);
+    const projects = await withCurrentAssignments(supabase, (data ?? []).map(mapProjectRow));
+    return { projects, totalCount: count ?? projects.length };
   },
 
   async getProjectById(id) {
@@ -80,7 +132,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .single();
     if (error) return null;
     if (!data) return null;
-    const [project] = await withCurrentAssignments(supabase, [data as unknown as Project]);
+    const [project] = await withCurrentAssignments(supabase, [mapProjectRow(data)]);
     return project ?? null;
   },
 

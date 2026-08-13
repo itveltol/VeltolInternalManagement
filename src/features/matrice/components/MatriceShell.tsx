@@ -9,6 +9,7 @@ import { MatriceGrid } from "./MatriceGrid";
 import { MatriceMobileView } from "./MatriceMobileView";
 import { MatriceLegend } from "./MatriceLegend";
 import { DocumentsPopover } from "@/features/documents/components/DocumentsPopover";
+import { NoteThreadPopover } from "@/features/comms/components/NoteThreadPopover";
 import {
   setCellStatus,
   getMatrixData,
@@ -18,6 +19,7 @@ import {
 } from "@/app/[locale]/(app)/matrice-status/actions";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import { getDocuments } from "@/app/[locale]/(app)/documents/actions";
+import { getNotes } from "@/app/[locale]/(app)/board/actions";
 
 interface Props {
   initialData: MatrixData;
@@ -32,7 +34,9 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
   const [shownIds, setShownIds] = useState<number[]>(initialShownIds);
   const [data, setData] = useState<MatrixData>(initialData);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
+  const [discussionCounts, setDiscussionCounts] = useState<Map<string, number>>(new Map());
   const [docsPopover, setDocsPopover] = useState<{ projectId: number; activityId: number } | null>(null);
+  const [discussionPopover, setDiscussionPopover] = useState<{ projectId: number; activityId: number } | null>(null);
   const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(initialData.projects[0]?.id ?? null);
 
@@ -82,6 +86,27 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visibleIds]);
 
+  // Load discussion (notes-thread) counts for matrice cells whenever the visible set changes
+  useEffect(() => {
+    startTransition(async () => {
+      const counts = new Map<string, number>();
+      if (visibleIds.length > 0) {
+        await Promise.all(
+          visibleIds.map(async (projectId) => {
+            const notes = await getNotes({ projectId });
+            for (const note of notes) {
+              if (note.activity_id === null || note.parent_id !== null) continue;
+              const key = `${projectId}:${note.activity_id}`;
+              counts.set(key, (counts.get(key) ?? 0) + 1);
+            }
+          }),
+        );
+      }
+      setDiscussionCounts(counts);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleIds]);
+
   function handleRemoveProject(projectId: number) {
     setShownIds((prev) => prev.filter((id) => id !== projectId));
     startTransition(async () => {
@@ -104,6 +129,10 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
 
   function handleOpenDocuments(projectId: number, activityId: number) {
     setDocsPopover({ projectId, activityId });
+  }
+
+  function handleOpenDiscussion(projectId: number, activityId: number) {
+    setDiscussionPopover({ projectId, activityId });
   }
 
   function handleChangeStatus(projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) {
@@ -184,8 +213,10 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           projects={data.projects}
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
+          onOpenDiscussion={handleOpenDiscussion}
           onHideProject={handleRemoveProject}
           docCounts={docCounts}
+          discussionCounts={discussionCounts}
           pendingCells={pendingCells}
         />
       </div>
@@ -200,8 +231,10 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
             onSelectProject={setSelectedProjectId}
             onChangeStatus={handleChangeStatus}
             onOpenDocuments={handleOpenDocuments}
+            onOpenDiscussion={handleOpenDiscussion}
             onHideProject={handleRemoveProject}
             docCounts={docCounts}
+            discussionCounts={discussionCounts}
             pendingCells={pendingCells}
           />
         )}
@@ -221,6 +254,20 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
             projectId={docsPopover.projectId}
             contextLabel={label}
             canMutate
+          />
+        );
+      })()}
+
+      {discussionPopover && (() => {
+        const project = data.projects.find((p) => p.id === discussionPopover.projectId);
+        const activity = data.activities.find((a) => a.id === discussionPopover.activityId);
+        const label = [project?.name, activity?.name].filter(Boolean).join(" · ");
+        return (
+          <NoteThreadPopover
+            open
+            onClose={() => setDiscussionPopover(null)}
+            anchor={{ projectId: discussionPopover.projectId, activityId: discussionPopover.activityId }}
+            anchorLabel={label}
           />
         );
       })()}

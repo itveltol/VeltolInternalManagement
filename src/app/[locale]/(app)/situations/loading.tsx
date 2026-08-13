@@ -5,7 +5,7 @@ export default function SituationsLoading() {
   return (
     <div className="space-y-8">
       <PageHeaderSkeleton />
-      <TableSkeleton rows={8} cols={5} />
+      <TableSkeleton rows={8} cols={9} />
     </div>
   );
 }

@@ -23,7 +23,11 @@
     "pontaj": "Personnel · Pontaj",
     "gantt": "Gantt",
     "situations": "Situations",
-    "suppliers": "Suppliers"
+    "suppliers": "Suppliers",
+    "comunicareGroup": "COMMUNICATION",
+    "board": "My board",
+    "announcements": "Announcements",
+    "feed": "Feed"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -91,6 +95,7 @@
     "errorGeneric": "Something went wrong.",
     "errorDetail": "Couldn't save: {message}",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorValidation": "Please fill in all required fields — only notes is optional. The project name must be at least 5 characters, and depending on execution mode/category, the manager, technical type, contract details, or subcontractor info may also be required.",
     "folderCreated": "Folder created.",
     "folderFailed": "Project created. Folder could not be created — you can link it later.",
     "linkFolder": "Link folder",
@@ -223,13 +228,15 @@
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to edit this checklist.",
     "errorInvalidNumber": "Please enter a valid number.",
-    "errorCustomTaskLimit": "Maximum number of custom tasks reached for this project.",
+    "noTeamAssigned": "Assign a team to this project first.",
     "columns": {
       "cod": "Code",
       "number": "#",
       "activitate": "Activity",
       "plan_total": "Plan total",
       "zile": "Days",
+      "persons_allocated": "Persons",
+      "units_per_person_day": "Units/person/day",
       "target_zi": "Target / day",
       "realizat": "Done",
       "today": "Today",
@@ -259,33 +266,7 @@
     },
     "gantt": {
       "tabLabel": "Gantt",
-      "breadcrumb": "Gantt",
-      "unscheduled": "{count} unscheduled tasks",
-      "customBadge": "Custom",
-      "emptyState": "No scheduled tasks yet. Click an unscheduled task above to give it dates.",
-      "taskColumn": "Task",
-      "today": "Today",
-      "addCustomTask": "Add custom task",
-      "scheduleTask": "Schedule task",
-      "taskName": "Task name",
-      "taskPhase": "Phase",
-      "planTotal": "Plan total",
-      "plannedDays": "Planned days",
-      "startDate": "Start date",
-      "endDate": "End date",
-      "team": "Team",
-      "noTeam": "No team",
-      "cancel": "Cancel",
-      "save": "Save",
-      "saving": "Saving...",
-      "taskScheduled": "Task scheduled.",
-      "taskCreated": "Task created.",
-      "deleteTask": "Delete task",
-      "confirmDeleteTask": "Delete this custom task? This cannot be undone.",
-      "taskDeleted": "Task deleted.",
-      "unscheduleTask": "Remove from Gantt",
-      "confirmUnscheduleTask": "Remove this task's dates and team from the Gantt chart?",
-      "taskUnscheduled": "Task removed from Gantt."
+      "breadcrumb": "Gantt"
     }
   },
   "login": {
@@ -486,9 +467,12 @@
     }
   },
   "settings": {
-    "eyebrow": "ADMIN · SETTINGS",
+    "eyebrow": "SETTINGS",
     "title": "Settings",
-    "subtitle": "Manage system-wide configuration",
+    "subtitle": "Your preferences, and for admins, system-wide configuration",
+    "emailDigestTitle": "Daily email digest",
+    "emailDigestDescription": "Get a daily email with what you missed — mentions, replies, pending acknowledgements, and notes due soon. Nothing to report means no email.",
+    "emailDigestUpdated": "Preference updated.",
     "officialHolidays": "Official Holidays",
     "pagination": {
       "prev": "Previous",
@@ -663,6 +647,34 @@
       "remove": "Remove {name}"
     }
   },
+  "cronEmails": {
+    "aviz": {
+      "subject": "Permits expiring ({count})",
+      "intro": "The following permits/documents are approaching or past their expiry date:",
+      "item": "{project} — {activity} (expires {date})",
+      "footer": "Open the app for details."
+    },
+    "maintenance": {
+      "subject": "Maintenance inspections due ({count})",
+      "intro": "The following projects need a maintenance inspection checked off:",
+      "item": "{project} — {period} {year}",
+      "footer": "Open the app for details.",
+      "periodMarch": "March",
+      "periodOctober": "October"
+    },
+    "digest": {
+      "subject": "Your communication digest ({count})",
+      "greeting": "Hi {name},",
+      "intro": "Here's what you missed:",
+      "sectionAckRequired": "Needs your confirmation",
+      "sectionMentions": "You were mentioned",
+      "sectionReplies": "Replies to your notes",
+      "sectionDueToday": "Due today",
+      "sectionOther": "Other notifications",
+      "openInApp": "Open in app",
+      "footer": "You're receiving this because you have the daily communication digest enabled. You can turn it off in Settings."
+    }
+  },
   "documents": {
     "eyebrow": "DOCUMENTS · ALL",
     "title": "Documents",
@@ -833,13 +845,14 @@
   },
   "search": {
     "title": "Global Search",
-    "placeholder": "Search projects, clients, documents...",
+    "placeholder": "Search projects, clients, documents, notes...",
     "groupProjects": "Projects",
     "groupClients": "Clients",
     "groupDocuments": "Documents",
     "empty": "No results for \"{query}\".",
     "minChars": "Type at least 2 characters to search.",
-    "loading": "Searching..."
+    "loading": "Searching...",
+    "groupNotes": "Notes"
   },
   "projectType": {
     "CEF": "CEF — Solar farm",
@@ -887,7 +900,9 @@
       "next": "Next",
       "pageOf": "Page {page} of {total}"
     },
-    "endBeforeStart": "End date can't be before the start date."
+    "endBeforeStart": "End date can't be before the start date.",
+    "computedFromChecklist": "Computed from checklist: {days} days",
+    "executionEndDateReadOnly": "End date is derived from the checklist and can't be edited directly"
   },
   "theme": {
     "switchToLight": "Switch to light mode",
@@ -969,6 +984,47 @@
       "prev": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {total}"
+    },
+    "billingSaved": "Billing figures saved.",
+    "errorValidation": "Invalid data.",
+    "centralizer": {
+      "title": "Situations",
+      "eyebrow": "SITUATIONS · CONTRACT CENTRALIZER",
+      "emptyState": "There are no projects yet.",
+      "noResults": "No contract matches the filters.",
+      "searchPlaceholder": "Search by contract no., beneficiary, or project",
+      "totalCount": "{count} contracts",
+      "totalsRow": "Total",
+      "addSituation": "Add situation",
+      "editBilling": "Edit billing",
+      "includeCancelled": "Include cancelled projects",
+      "columns": {
+        "contractNumber": "Contract No.",
+        "beneficiar": "Beneficiary",
+        "contractValueEur": "Contract value (EUR + VAT)",
+        "executedEur": "Executed value (EUR + VAT)",
+        "invoicedEur": "Invoiced value (EUR + VAT)",
+        "collectedEur": "Collected value (EUR + VAT)",
+        "remainingToExecuteEur": "Remaining to execute (EUR + VAT)",
+        "remainingToInvoiceEur": "Remaining to invoice (EUR + VAT)"
+      },
+      "fields": {
+        "currency": "Currency",
+        "invoicedNet": "Invoiced value (net)",
+        "collectedNet": "Collected value (net)",
+        "invoicedInOther": "in {currency}",
+        "rateRefreshed": "updated",
+        "refreshRate": "Refresh to today's rate",
+        "notes": "Notes"
+      },
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {total}"
+      },
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
     }
   },
   "boundaries": {
@@ -1085,6 +1141,189 @@
       "machinery": "Machinery/rental",
       "permits": "Permits & fees",
       "other": "Other/contingency"
+    }
+  },
+  "comms": {
+    "tabLabel": "Communication",
+    "breadcrumb": "Communication",
+    "eyebrow": "MY BOARD",
+    "title": "My board",
+    "subtitle": "Notes, questions, decisions and risks across your projects.",
+    "forMe": {
+      "title": "For me",
+      "empty": "Nothing new. The day is fine."
+    },
+    "anchorPersonal": "Personal",
+    "anchorProject": "Project",
+    "discussion": "Discussion",
+    "unknownAuthor": "User",
+    "loadingThread": "Loading discussion...",
+    "emptyThread": "No messages yet.",
+    "noReplies": "No replies yet.",
+    "backToList": "Back to list",
+    "markResolved": "Mark as resolved",
+    "kind": {
+      "note": "Note",
+      "announcement": "Announcement",
+      "question": "Question",
+      "decision": "Decision",
+      "risk": "Risk"
+    },
+    "visibility": {
+      "private": "Private",
+      "team": "Team",
+      "project": "Project",
+      "company": "Company"
+    },
+    "composer": {
+      "anchorLabel": "What this is about",
+      "kindLabel": "Type",
+      "visibilityLabel": "Visibility",
+      "bodyPlaceholder": "Write a note...",
+      "replyPlaceholder": "Write a reply...",
+      "publish": "Publish",
+      "reply": "Reply",
+      "saving": "Saving...",
+      "audiencePreviewPending": "Choose a visibility to see how many people will receive this announcement.",
+      "audiencePreviewLoading": "Calculating...",
+      "audiencePreview": "Will be sent to {count} people."
+    },
+    "fields": {
+      "project": "Project",
+      "team": "Team",
+      "selectProject": "Select a project",
+      "selectTeam": "Select a team",
+      "titleOptional": "Title (optional)",
+      "ackDeadline": "Acknowledgement deadline"
+    },
+    "noteCreated": "Note added.",
+    "noteStatusUpdated": "Status updated.",
+    "noteDeleted": "Note deleted.",
+    "notePinned": "Pinned.",
+    "noteUnpinned": "Unpinned.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do that.",
+    "errorValidation": "Invalid data.",
+    "notifications": {
+      "title": "Notifications",
+      "markAllRead": "Mark all read",
+      "empty": "No notifications.",
+      "group": {
+        "today": "Today",
+        "thisWeek": "This week",
+        "older": "Older"
+      },
+      "type": {
+        "mention": "mentioned you",
+        "reply": "replied to your note",
+        "ack_required": "requires acknowledgement",
+        "due_soon": "is due soon",
+        "aviz_expiring": "permit expiring",
+        "maintenance_due": "maintenance due",
+        "vacation_request": "vacation request",
+        "system": "system notification"
+      }
+    },
+    "filters": {
+      "allKinds": "All kinds",
+      "unreadOnly": "Unread only",
+      "openOnly": "Open only"
+    },
+    "announcements": {
+      "eyebrow": "COMMUNICATION · ANNOUNCEMENTS",
+      "title": "Announcements",
+      "subtitle": "Official communications to the company, a team, or a project — with read acknowledgement.",
+      "listTitle": "All announcements",
+      "new": "New announcement",
+      "empty": "No announcements yet.",
+      "deadline": "due {date}",
+      "ackRatio": "{acknowledged}/{total} confirmed",
+      "needsYourAck": "needs your confirmation",
+      "acknowledge": "I have read and understood",
+      "youAcknowledged": "You acknowledged this announcement.",
+      "ackTableTitle": "Acknowledgements ({acknowledged}/{total})",
+      "unconfirmedTitle": "Unconfirmed ({count})",
+      "confirmedTitle": "Confirmed ({count})",
+      "allConfirmed": "Everyone has confirmed.",
+      "sendReminder": "Send reminder",
+      "lastReminderAt": "Last reminder: {date}",
+      "reminderSent": "Reminder sent.",
+      "reminderNoneLeft": "Nobody left to remind — everyone confirmed.",
+      "reminderRateLimited": "You can only send a reminder once every 24 hours.",
+      "announcementCreated": "Announcement published.",
+      "acknowledged": "Acknowledgement recorded."
+    },
+    "feed": {
+      "title": "Global feed",
+      "eyebrow": "COMMUNICATION · FEED",
+      "subtitle": "Everything written and everything that changed, in one chronological stream.",
+      "empty": "No events yet.",
+      "loadMore": "Load more",
+      "system": "System",
+      "filter": {
+        "all": "All",
+        "people": "People only",
+        "system": "System only"
+      },
+      "filters": {
+        "project": "Project",
+        "allProjects": "All projects",
+        "actor": "Person",
+        "allActors": "All people",
+        "verbGroup": "Event type",
+        "allVerbGroups": "All types",
+        "dateFrom": "From",
+        "dateTo": "To"
+      },
+      "verbGroup": {
+        "project": "Project",
+        "matrice": "Matrice",
+        "situation": "Situations",
+        "document": "Documents",
+        "vacation": "Vacation"
+      },
+      "grouped": "{name} made {count} updates",
+      "groupedSystem": "{count} system updates",
+      "verb": {
+        "project_created": "created project {entityName}",
+        "project_phase_changed": "changed {entityName}'s phase from {old} to {new}",
+        "project_status_changed": "changed {entityName}'s status from {old} to {new}",
+        "project_deadline_changed": "changed {entityName}'s deadline",
+        "project_value_changed": "changed {entityName}'s value",
+        "matrice_status_changed": "updated {activityName} to {new}",
+        "situation_created": "created situation {entityName}",
+        "situation_finalized": "finalized situation {entityName}",
+        "document_uploaded": "uploaded document {entityName}",
+        "vacation_submitted": "submitted a vacation request",
+        "vacation_approved": "approved a vacation request",
+        "vacation_rejected": "rejected a vacation request"
+      }
+    },
+    "timeline": {
+      "title": "Timeline",
+      "empty": "No events or notes on this project yet."
+    },
+    "metrics": {
+      "title": "Communication health",
+      "eyebrow": "COMMUNICATION · METRICS",
+      "vsTrend": "vs. previous period",
+      "noPriorPeriod": "—",
+      "ackRate": {
+        "label": "24h acknowledgement rate",
+        "meaning": "Of announcements requiring acknowledgement, what share were acknowledged within 24 hours. Target: above 80%."
+      },
+      "staleQuestions": {
+        "label": "Questions/risks open over 7 days",
+        "meaning": "If this number grows, the system isn't resolving anything — just accumulating."
+      },
+      "silentProjects": {
+        "label": "Active projects with no notes in 30 days",
+        "meaning": "A silent project isn't peace, it's a shadow channel — it's probably being discussed elsewhere."
+      },
+      "decisions": {
+        "label": "Decisions recorded this month",
+        "meaning": "The number of decisions written into the system — the actual cure for \"I didn't know about this\" disputes."
+      }
     }
   }
 }

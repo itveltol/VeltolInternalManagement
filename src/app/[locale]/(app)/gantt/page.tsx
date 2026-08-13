@@ -18,7 +18,7 @@ export default async function GanttPage() {
     getGanttProjects(),
     getShownGanttProjectIds(),
   ]);
-  const { activities, cells } = await getGanttMatriceData(initialShownIds);
+  const { activities, cells, checklistRecordsByProjectId } = await getGanttMatriceData(initialShownIds);
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
 
   return (
@@ -35,6 +35,7 @@ export default async function GanttPage() {
         initialShownIds={initialShownIds}
         initialActivities={activities}
         initialCells={cells}
+        initialChecklistRecordsByProjectId={checklistRecordsByProjectId}
         todayMs={todayMs}
       />
     </div>

@@ -24,6 +24,7 @@ interface Props {
    * flags the submission to overwrite the locked-in rate with it. */
   onRefreshRate?: () => Promise<number | null>;
   refreshLabel?: string;
+  required?: boolean;
 }
 
 /** Single amount input + EUR/RON currency select, with a live "≈ converted"
@@ -37,6 +38,7 @@ export function CurrencyAmountInput({
   rate,
   onRefreshRate,
   refreshLabel,
+  required,
 }: Props) {
   const [amount, setAmount] = useState<string>(defaultAmount != null ? String(defaultAmount) : "");
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
@@ -67,6 +69,7 @@ export function CurrencyAmountInput({
           name={amountName}
           type="number"
           min="0"
+          required={required}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="flex-1"

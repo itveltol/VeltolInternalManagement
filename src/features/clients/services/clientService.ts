@@ -1,3 +1,6 @@
+import { unstable_cache } from "next/cache";
+import { createAdminClient } from "@/core/supabase/admin";
+import { createSupabaseClientsClient } from "../api/supabaseClientsClient";
 import type { ClientsApiClient, CreateClientPayload } from "../api/types";
 import type { Client, ClientRef } from "../types";
 
@@ -8,6 +11,18 @@ export async function getClients(api: ClientsApiClient): Promise<Client[]> {
 export async function getClientRefs(api: ClientsApiClient): Promise<ClientRef[]> {
   return api.getClientRefs();
 }
+
+// `clients` has a uniform "authenticated select" RLS policy (same rows for
+// every user), so this is safe to cache globally via the admin client rather
+// than per-session. Invalidated by updateTag("clients") on create/update/delete.
+export const getCachedClientRefs = unstable_cache(
+  async (): Promise<ClientRef[]> => {
+    const api = createSupabaseClientsClient(createAdminClient());
+    return api.getClientRefs();
+  },
+  ["client-refs"],
+  { tags: ["clients"] },
+);
 
 export async function getClientById(api: ClientsApiClient, id: number): Promise<Client | null> {
   return api.getClientById(id);

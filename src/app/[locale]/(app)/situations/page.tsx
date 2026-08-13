@@ -1,11 +1,13 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getAllSituationsWithProjects, getProjectsForPicker } from "./actions";
+import { createSupabaseBillingClient } from "@/features/situations/api/supabaseBillingClient";
+import * as billingService from "@/features/situations/services/billingService";
+import { getAllSituationsWithProjects, getCentralizerRows, getProjectsForPicker } from "./actions";
 import { SituationsShell } from "@/features/situations/components/SituationsShell";
 
 export default async function SituationsPage() {
-  const { user, role } = await getUserProfileRole();
+  const { supabase, user, role } = await getUserProfileRole();
 
   if (!user) {
     const locale = await getLocale();
@@ -13,9 +15,14 @@ export default async function SituationsPage() {
   }
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
-  const [situations, projects] = await Promise.all([
+  const canMutateBilling = ["admin", "finance"].includes(role ?? "");
+
+  const billingApi = createSupabaseBillingClient(supabase);
+  const [rows, situations, projects, billing] = await Promise.all([
+    getCentralizerRows(),
     getAllSituationsWithProjects(),
-    canMutate ? getProjectsForPicker() : Promise.resolve([]),
+    getProjectsForPicker(),
+    billingService.getAllBilling(billingApi),
   ]);
   const t = await getTranslations("situations");
 
@@ -28,7 +35,14 @@ export default async function SituationsPage() {
         </h1>
       </div>
 
-      <SituationsShell situations={situations} projects={projects} canMutate={canMutate} />
+      <SituationsShell
+        rows={rows}
+        situations={situations}
+        projects={projects}
+        billing={billing}
+        canMutate={canMutate}
+        canMutateBilling={canMutateBilling}
+      />
     </div>
   );
 }

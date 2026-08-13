@@ -19,12 +19,14 @@ interface Props {
   projects: MatrixProject[];
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
+  onOpenDiscussion: (projectId: number, activityId: number) => void;
   onHideProject: (projectId: number) => void;
   docCounts?: Map<string, number>;
+  discussionCounts?: Map<string, number>;
   pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onHideProject, docCounts = new Map(), pendingCells }: Props) {
+export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onOpenDiscussion, onHideProject, docCounts = new Map(), discussionCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
   const phases = useMemo(
@@ -267,7 +269,9 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   expiresAt={getExpiresAt(p.id, activity.id)}
                                   onChangeStatus={onChangeStatus}
                                   onOpenDocuments={onOpenDocuments}
+                                  onOpenDiscussion={onOpenDiscussion}
                                   documentCount={docCounts.get(`${p.id}:${activity.id}`) ?? 0}
+                                  discussionCount={discussionCounts.get(`${p.id}:${activity.id}`) ?? 0}
                                   pending={pendingCells?.has(`${p.id}:${activity.id}`)}
                                   disabled={!appliesToProject}
                                 />

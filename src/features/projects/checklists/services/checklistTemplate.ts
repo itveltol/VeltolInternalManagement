@@ -20,7 +20,11 @@ function row(
   target_zi: number | null,
   phase: ChecklistPhase,
 ): ChecklistTemplateRow {
-  return { rowKey: `${prefix}-${number}`, cod, number, activitate, plan_total, zile, target_zi, isSection: SECTION_CODES.has(cod), phase };
+  return {
+    rowKey: `${prefix}-${number}`, cod, number, activitate, plan_total, zile, target_zi,
+    persons_allocated: null, units_per_person_day: null,
+    isSection: SECTION_CODES.has(cod), phase,
+  };
 }
 
 export const PV_TEMPLATE: ChecklistTemplateRow[] = [
@@ -110,6 +114,12 @@ function computePct(planTotal: number | null, realizat: number | null, isSection
   return Math.min(100, Math.max(0, (realizat / planTotal) * 100));
 }
 
+/** target_zi is fully derived from staffing — the whole team's expected daily output. */
+function computeTargetZi(personsAllocated: number | null, unitsPerPersonDay: number | null): number | null {
+  if (personsAllocated == null || unitsPerPersonDay == null) return null;
+  return personsAllocated * unitsPerPersonDay;
+}
+
 export function mergeChecklistRows(
   records: ChecklistItemRecord[],
   hasBess: boolean,
@@ -124,11 +134,13 @@ export function mergeChecklistRows(
     // DB values take precedence over static template defaults
     const plan_total = record?.plan_total ?? tmpl.plan_total;
     const zile       = record?.zile       ?? tmpl.zile;
-    const target_zi  = record?.target_zi  ?? tmpl.target_zi;
+    const persons_allocated    = record?.persons_allocated    ?? tmpl.persons_allocated;
+    const units_per_person_day = record?.units_per_person_day ?? tmpl.units_per_person_day;
+    const target_zi  = computeTargetZi(persons_allocated, units_per_person_day) ?? record?.target_zi ?? tmpl.target_zi;
     const realizat   = record?.realizat   ?? null;
     const pct = computePct(plan_total, realizat, tmpl.isSection);
 
-    return { ...tmpl, plan_total, zile, target_zi, record, pct, isCustom: false };
+    return { ...tmpl, plan_total, zile, target_zi, persons_allocated, units_per_person_day, record, pct, isCustom: false };
   });
 
   // Custom tasks (item_number 44-100) have no CHECKLIST_TEMPLATE entry —
@@ -143,7 +155,9 @@ export function mergeChecklistRows(
       activitate: record.name ?? "",
       plan_total: record.plan_total,
       zile: record.zile,
-      target_zi: record.target_zi,
+      target_zi: computeTargetZi(record.persons_allocated, record.units_per_person_day) ?? record.target_zi,
+      persons_allocated: record.persons_allocated,
+      units_per_person_day: record.units_per_person_day,
       isSection: false,
       phase: record.phase ?? "",
       record,
@@ -165,6 +179,18 @@ export function computeOverallPct(rows: ChecklistRow[]): number {
   if (leaves.length === 0) return 0;
   const sum = leaves.reduce((a, r) => a + (r.pct ?? 0), 0);
   return Math.round(sum / leaves.length);
+}
+
+/**
+ * Total execution duration in days: sum of `zile` across every non-section
+ * leaf row (template rows in item_number order, plus custom rows appended in
+ * item_number order — exactly mergeChecklistRows' output order). Null zile
+ * counts as 0. Items run sequentially, not in parallel.
+ */
+export function computeExecutionDurationDays(rows: ChecklistRow[]): number {
+  return rows
+    .filter((r) => !r.isSection)
+    .reduce((sum, r) => sum + (r.zile ?? 0), 0);
 }
 
 export function computeSectionSummaries(rows: ChecklistRow[]): SectionSummary[] {

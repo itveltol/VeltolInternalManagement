@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
 
@@ -13,16 +13,16 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-// Runs before hydration via the inline <script> in the root layout, so the
-// class is already correct on first paint — this just keeps React state in
-// sync with whatever that script decided.
-function readInitialTheme(): Theme {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
-}
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(readInitialTheme);
+  // Always starts as "light" to match the server-rendered markup — the
+  // inline <script> in the root layout sets the real class on <html>
+  // before hydration, so first paint is already correct even though this
+  // state hasn't caught up yet. It syncs in the effect below, after mount.
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  useEffect(() => {
+    setThemeState(document.documentElement.classList.contains("dark") ? "dark" : "light");
+  }, []);
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);

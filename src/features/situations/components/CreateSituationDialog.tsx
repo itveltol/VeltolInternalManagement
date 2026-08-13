@@ -14,20 +14,25 @@ interface Props {
   projects: Project[];
   open: boolean;
   onClose: () => void;
+  /** Preselects and locks the project — used when creating a situation from
+   * a project's drill-down, where the project is already known. The global
+   * "Adăugare situație" button on the centralizer toolbar omits this and
+   * keeps the picker. */
+  defaultProject?: Project | null;
 }
 
-export function CreateSituationDialog({ projects, open, onClose }: Props) {
+export function CreateSituationDialog({ projects, open, onClose, defaultProject = null }: Props) {
   const t = useTranslations("situations");
-  const [project, setProject] = useState<Project | null>(null);
+  const [project, setProject] = useState<Project | null>(defaultProject);
   const [name, setName] = useState("");
   const [state, action, pending] = useActionState(createSituationAction, null);
 
   useEffect(() => {
     if (!open) {
-      setProject(null);
+      setProject(defaultProject);
       setName("");
     }
-  }, [open]);
+  }, [open, defaultProject]);
 
   useEffect(() => {
     if (state?.success) onClose();
@@ -47,7 +52,11 @@ export function CreateSituationDialog({ projects, open, onClose }: Props) {
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.project")} *</Label>
-              <SituationProjectCombobox projects={projects} value={project} onValueChange={setProject} />
+              {defaultProject ? (
+                <p className="text-sm text-veltol-fg">{defaultProject.name}</p>
+              ) : (
+                <SituationProjectCombobox projects={projects} value={project} onValueChange={setProject} />
+              )}
             </div>
 
             <div className="space-y-1.5">

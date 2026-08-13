@@ -1,4 +1,4 @@
-import type { Project, ProjectManager, ProjectCategory, ContractType, FinancialType, ExecutionMode, Currency } from "../types";
+import type { Project, ProjectManager, ProjectCategory, ProjectPhase, ContractType, FinancialType, ExecutionMode, Currency } from "../types";
 
 export interface CreateProjectPayload {
   name: string;
@@ -36,8 +36,28 @@ export interface UpdatePhaseDatesPayload {
   end_date: string | null;
 }
 
+export interface ProjectListFilters {
+  phase?: ProjectPhase[];
+  category?: ProjectCategory | null;
+  contractType?: ContractType[];
+  minValue?: number | null;
+  maxValue?: number | null;
+}
+
+export interface ProjectListParams {
+  page?: number;
+  pageSize?: number;
+  filters?: ProjectListFilters;
+  sortByValue?: "asc" | "desc" | null;
+}
+
+export interface ProjectListResult {
+  projects: Project[];
+  totalCount: number;
+}
+
 export interface ProjectsApiClient {
-  getProjects(): Promise<Project[]>;
+  getProjects(params?: ProjectListParams): Promise<ProjectListResult>;
   getProjectById(id: number): Promise<Project | null>;
   getProjectManagers(): Promise<ProjectManager[]>;
   createProject(payload: CreateProjectPayload, userId: string): Promise<{ id: number }>;

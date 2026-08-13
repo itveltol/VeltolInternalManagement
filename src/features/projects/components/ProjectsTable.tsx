@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Plus, Trash2 } from "lucide-react";
@@ -27,8 +27,6 @@ import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
 import { formatConvertedCurrency } from "@/shared/utils/currency";
 
-const PAGE_SIZE = 20;
-
 const DISCIPLINE_COLORS: Record<ContractType, string> = {
   proiectare: "var(--v-blue)",
   executie: "var(--v-success)",
@@ -36,8 +34,15 @@ const DISCIPLINE_COLORS: Record<ContractType, string> = {
   racordare: "var(--v-cat-it)",
 };
 
+const PAGE_SIZE = 20;
+
 interface Props {
   projects: Project[];
+  totalCount: number;
+  page: number;
+  onPageChange: (page: number) => void;
+  onRefetch: () => void;
+  isFetching: boolean;
   canMutate: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
@@ -59,6 +64,11 @@ interface Props {
 
 export function ProjectsTable({
   projects,
+  totalCount,
+  page,
+  onPageChange,
+  onRefetch,
+  isFetching,
   canMutate,
   managers,
   clientRefs,
@@ -93,22 +103,7 @@ export function ProjectsTable({
     setDeletingId,
   } = useProjectsStore();
 
-  const [page, setPage] = useState(1);
-  const filterKey = `${filterPhase.join(",")}:${filterCategory}:${filterContractType.join(",")}:${minValue}:${maxValue}:${sortDir}`;
-  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
-  const pageCount = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
-  // Reset to page 1 whenever the filter/sort combo changes (derived during
-  // render, not an effect), then clamp in case the list itself shrank.
-  let currentPage = page;
-  if (filterKey !== lastFilterKey) {
-    setLastFilterKey(filterKey);
-    currentPage = 1;
-    setPage(1);
-  } else if (page !== Math.min(page, pageCount)) {
-    currentPage = Math.min(page, pageCount);
-    setPage(currentPage);
-  }
-  const pagedProjects = projects.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageCount = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   function cycleSortDir() {
     onSortDir(sortDir === null ? "desc" : sortDir === "desc" ? "asc" : null);
@@ -169,7 +164,7 @@ export function ProjectsTable({
       if (result?.error) toast.error(t(result.error as "errorNotAllowed" | "errorGeneric"));
       else if (result?.success) toast.success(t(result.success as "projectDeleted"));
       setDeletingId(null);
-      router.refresh();
+      onRefetch();
     });
   }
 
@@ -179,7 +174,7 @@ export function ProjectsTable({
         <TableToolbar>
           <div>
             <span className="text-[14px] font-medium text-veltol-fgDim">
-              {t("totalCount", { count: projects.length })}
+              {t("totalCount", { count: totalCount })}
             </span>
           </div>
           {canMutate && (
@@ -254,7 +249,7 @@ export function ProjectsTable({
         </div>
 
         <TableDesktopView>
-          <table className="w-full min-w-max text-[14px]">
+          <table className={`w-full min-w-max text-[14px] transition-opacity ${isFetching ? "opacity-60" : ""}`}>
             <thead>
               <tr className="border-b border-border">
                 {[
@@ -285,7 +280,7 @@ export function ProjectsTable({
                   </td>
                 </tr>
               ) : (
-                pagedProjects.map((project) => (
+                projects.map((project) => (
                   <tr
                     key={project.id}
                     className="group cursor-pointer transition-colors hover:bg-veltol-hover"
@@ -420,7 +415,7 @@ export function ProjectsTable({
           <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyState")}</p>
         ) : (
           <DataCardList>
-            {pagedProjects.map((project) => {
+            {projects.map((project) => {
               const { deadline, sourceValue, currency, conversionRate } = projectFigures(project);
               const d = deadline ? daysLeft(deadline) : null;
               const daysColor = d === null ? undefined : d < 0 ? "text-veltol-red" : d <= 7 ? "text-veltol-orange" : "text-veltol-fgMute";
@@ -522,9 +517,9 @@ export function ProjectsTable({
         )}
 
         <Pagination
-          page={currentPage}
+          page={page}
           pageCount={pageCount}
-          onPageChange={setPage}
+          onPageChange={onPageChange}
           prevLabel={t("pagination.prev")}
           nextLabel={t("pagination.next")}
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
@@ -539,7 +534,7 @@ export function ProjectsTable({
         exchangeRate={exchangeRate}
         onClose={() => {
           closeAddDialog();
-          router.refresh();
+          onRefetch();
         }}
       />
     </>

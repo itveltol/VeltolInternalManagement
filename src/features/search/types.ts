@@ -1,4 +1,4 @@
-export type SearchResultType = "project" | "client" | "document";
+export type SearchResultType = "project" | "client" | "document" | "note";
 
 export interface ProjectResult {
     type: "project";
@@ -28,10 +28,21 @@ export interface DocumentResult {
     project?: {id: number; name: string} | null;
 }
 
-export type SearchResult = ProjectResult | ClientResult | DocumentResult;
+export interface NoteResult {
+    type: "note";
+    id: number;
+    title: string | null;
+    body: string;
+    kind: string;
+    project?: {id: number; name: string} | null;
+    activity?: {id: number; name: string} | null;
+}
+
+export type SearchResult = ProjectResult | ClientResult | DocumentResult | NoteResult;
 
 export interface SearchResults {
     projects: ProjectResult[];
     clients: ClientResult[];
     documents: DocumentResult[];
+    notes: NoteResult[];
 }

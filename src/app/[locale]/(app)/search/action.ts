@@ -9,7 +9,7 @@ export async function searchAll(query: string): Promise<SearchResults> {
 
   const q = `%${query}%`;
 
-  const [projects, clients, documents] = await Promise.all([
+  const [projects, clients, documents, notes] = await Promise.all([
     supabase
       .from("projects")
       .select("id, name, county, contract_number, status, current_phase")
@@ -25,11 +25,17 @@ export async function searchAll(query: string): Promise<SearchResults> {
       .select("id, name, url, linked_type, project:projects!project_id(id, name)")
       .ilike("name", q)
       .limit(8),
+    supabase
+      .from("notes")
+      .select("id, title, body, kind, project:projects!project_id(id, name), activity:activities!activity_id(id, name)")
+      .or(`title.ilike.${q},body.ilike.${q}`)
+      .limit(8),
   ]);
 
   return {
     projects: (projects.data ?? []).map((p) => ({ type: "project" as const, ...p })),
     clients: (clients.data ?? []).map(({ type: _t, ...c }) => ({ type: "client" as const, client_type: _t, ...c })),
     documents: (documents.data ?? []).map((d) => ({ type: "document" as const, ...d })) as never,
+    notes: (notes.data ?? []).map((n) => ({ type: "note" as const, ...n })) as never,
   };
 }

@@ -4,14 +4,14 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@base-ui/react/dialog";
-import { Search, FolderKanban, Building2, FileText, Loader2 } from "lucide-react";
+import { Search, FolderKanban, Building2, FileText, MessageSquare, Loader2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import { useSearchStore } from "../hooks/useSearchStore";
 import { searchAll } from "@/app/[locale]/(app)/search/action";
 import type { SearchResult, SearchResults } from "../types";
 
-const EMPTY: SearchResults = { projects: [], clients: [], documents: [] };
+const EMPTY: SearchResults = { projects: [], clients: [], documents: [], notes: [] };
 
 export function GlobalSearchDialog() {
   const t = useTranslations("search");
@@ -56,6 +56,7 @@ export function GlobalSearchDialog() {
     ...results.projects,
     ...results.clients,
     ...results.documents,
+    ...results.notes,
   ];
 
   function navigate(item: SearchResult) {
@@ -63,6 +64,12 @@ export function GlobalSearchDialog() {
       router.push(`/${locale}/projects/${item.id}`);
     } else if (item.type === "client") {
       router.push(`/${locale}/clients?highlight=${item.id}`);
+    } else if (item.type === "note") {
+      router.push(
+        item.project
+          ? `/${locale}/projects/${item.project.id}?tab=comunicare`
+          : `/${locale}/board?note=${item.id}`,
+      );
     } else {
       window.open(item.url, "_blank");
     }
@@ -175,6 +182,26 @@ export function GlobalSearchDialog() {
                       badgeVariant="outline"
                       active={activeIndex === results.projects.length + results.clients.length + i}
                       onClick={() => navigate(d)}
+                    />
+                  ))}
+                </Section>
+              )}
+
+              {results.notes.length > 0 && (
+                <Section label={t("groupNotes")}>
+                  {results.notes.map((n, i) => (
+                    <ResultItem
+                      key={n.id}
+                      icon={<MessageSquare className="h-3.5 w-3.5 text-veltol-primary" />}
+                      title={n.title ?? n.body.slice(0, 60)}
+                      subtitle={n.activity?.name ?? n.project?.name ?? t("groupNotes")}
+                      badge={n.kind}
+                      badgeVariant="secondary"
+                      active={
+                        activeIndex ===
+                        results.projects.length + results.clients.length + results.documents.length + i
+                      }
+                      onClick={() => navigate(n)}
                     />
                   ))}
                 </Section>

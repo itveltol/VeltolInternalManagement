@@ -1,7 +1,7 @@
 "use server";
 
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
@@ -51,9 +51,8 @@ export async function getSubcontractors(): Promise<SubcontractorWithProjects[]> 
 }
 
 export async function getSubcontractorRefs(): Promise<SubcontractorRef[]> {
-  const { supabase } = await requireAuth();
-  const api = createSupabaseSubcontractorsClient(supabase);
-  return subcontractorService.getSubcontractorRefs(api);
+  await requireAuth();
+  return subcontractorService.getCachedSubcontractorRefs();
 }
 
 export async function getSubcontractorAssignment(projectId: number): Promise<ProjectSubcontractorAssignment | null> {
@@ -72,6 +71,7 @@ export async function createSubcontractorAction(
     const payload = extractSubcontractorPayload(formData);
     const result = await subcontractorService.createSubcontractor(api, payload);
     revalidatePath(await getSubcontractorsPath());
+    updateTag("subcontractors");
     return { success: "subcontractorCreated", subcontractor: { id: result.id, name: payload.name } };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -89,6 +89,7 @@ export async function updateSubcontractorAction(
     const subcontractorId = Number(formData.get("subcontractorId"));
     await subcontractorService.updateSubcontractor(api, subcontractorId, extractSubcontractorPayload(formData));
     revalidatePath(await getSubcontractorsPath());
+    updateTag("subcontractors");
     return { success: "subcontractorSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -103,6 +104,7 @@ export async function deleteSubcontractorAction(id: number): Promise<ActionState
     const api = createSupabaseSubcontractorsClient(supabase);
     await subcontractorService.deleteSubcontractor(api, id);
     revalidatePath(await getSubcontractorsPath());
+    updateTag("subcontractors");
     return { success: "subcontractorDeleted" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "HasProjectHistory") return { error: "errorHasProjectHistory" };

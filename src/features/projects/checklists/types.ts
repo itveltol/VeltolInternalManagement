@@ -21,13 +21,10 @@ export interface ChecklistTemplateRow {
   plan_total: number | null;
   zile: number | null;
   target_zi: number | null;
+  persons_allocated: number | null;
+  units_per_person_day: number | null;
   isSection: boolean;
   phase: ChecklistPhase;
-}
-
-export interface ChecklistTeamRef {
-  id: number;
-  name: string;
 }
 
 export interface ChecklistItemRecord {
@@ -38,12 +35,10 @@ export interface ChecklistItemRecord {
   plan_total: number | null;
   zile: number | null;
   target_zi: number | null;
+  persons_allocated: number | null;
+  units_per_person_day: number | null;
   notes: string | null;
   updated_at: string;
-  start_date: string | null;
-  end_date: string | null;
-  team_id: number | null;
-  team?: ChecklistTeamRef | null;
   /** Only set for custom (non-template) items — item_number 44-100. */
   name: string | null;
   /** Only set for custom (non-template) items — item_number 44-100. */

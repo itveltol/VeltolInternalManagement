@@ -1,7 +1,10 @@
 import type { Activity, MatrixCell } from "@/features/matrice/types";
 import { resolveStatus } from "@/features/matrice/services/matriceService";
 import type { Project } from "@/features/projects/types";
-import { DAY_MS, toDayMs } from "@/shared/utils/ganttTimeline";
+import { isBessProjectType } from "@/features/projects/types";
+import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
+import { mergeChecklistRows, computeExecutionDurationDays } from "@/features/projects/checklists/services/checklistTemplate";
+import { DAY_MS, toDayMs, addDays } from "@/shared/utils/ganttTimeline";
 import {
   GANTT_PHASE_KEYS,
   GANTT_PHASE_DATE_FIELDS,
@@ -67,6 +70,7 @@ export function buildProjectGanttRows(
   activities: Activity[],
   cells: MatrixCell[],
   todayMs: number,
+  checklistRecordsByProjectId: Record<number, ChecklistItemRecord[]> = {},
 ): ProjectGanttRow[] {
   return projects.map((project) => {
     const segments: GanttPhaseSegment[] = GANTT_PHASE_KEYS.map((key) => {
@@ -77,10 +81,21 @@ export function buildProjectGanttRows(
         isSubcontractedExecution && project.subcontractor?.start_date
           ? project.subcontractor.start_date
           : (project[fields.start] as string | null) ?? null;
-      const endDate =
-        isSubcontractedExecution && project.subcontractor?.deadline
+
+      let endDate: string | null;
+      if (isSubcontractedExecution) {
+        endDate = project.subcontractor?.deadline
           ? project.subcontractor.deadline
           : (project[fields.end] as string | null) ?? null;
+      } else if (key === "execution" && startDate) {
+        const records = checklistRecordsByProjectId[project.id] ?? [];
+        const rows = mergeChecklistRows(records, isBessProjectType(project.project_type));
+        const durationDays = computeExecutionDurationDays(rows);
+        endDate = durationDays > 0 ? addDays(startDate, durationDays - 1) : startDate;
+      } else {
+        endDate = (project[fields.end] as string | null) ?? null;
+      }
+
       return {
         key,
         pct,

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ProjectsTable } from "./ProjectsTable";
+import { getProjectsPage } from "@/app/[locale]/(app)/projects/actions";
 import type { Project, ProjectManager, ProjectPhase, ProjectCategory, ContractType } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
 
 interface Props {
-  projects: Project[];
+  initialProjects: Project[];
+  initialTotalCount: number;
   canMutate: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
@@ -17,62 +19,99 @@ interface Props {
 
 export type SortDir = "asc" | "desc" | null;
 
-export function ProjectsShell({ projects, canMutate, managers, clientRefs, subcontractorRefs, exchangeRate }: Props) {
+export function ProjectsShell({
+  initialProjects,
+  initialTotalCount,
+  canMutate,
+  managers,
+  clientRefs,
+  subcontractorRefs,
+  exchangeRate,
+}: Props) {
+  const [projects, setProjects] = useState(initialProjects);
+  const [totalCount, setTotalCount] = useState(initialTotalCount);
+  const [page, setPage] = useState(1);
   const [filterPhase, setFilterPhase] = useState<ProjectPhase[]>([]);
   const [filterCategory, setFilterCategory] = useState<ProjectCategory | "">("");
   const [filterContractType, setFilterContractType] = useState<ContractType[]>([]);
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
   const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [isFetching, startTransition] = useTransition();
 
-  const min = minValue.trim() !== "" ? Number(minValue) : null;
-  const max = maxValue.trim() !== "" ? Number(maxValue) : null;
-
-  const filtered = projects.filter((p) => {
-    if (filterPhase.length > 0 && !filterPhase.includes(p.current_phase)) return false;
-    if (filterCategory && p.project_category !== filterCategory) return false;
-    if (
-      filterContractType.length > 0 &&
-      (p.contract_type.length !== filterContractType.length ||
-        !p.contract_type.every((c) => filterContractType.includes(c)))
-    ) return false;
-    if ((min !== null || max !== null)) {
-      if (p.value_eur == null) return false;
-      if (min !== null && p.value_eur < min) return false;
-      if (max !== null && p.value_eur > max) return false;
-    }
-    return true;
-  });
-
-  if (sortDir) {
-    filtered.sort((a, b) => {
-      if (a.value_eur == null && b.value_eur == null) return 0;
-      if (a.value_eur == null) return 1;
-      if (b.value_eur == null) return -1;
-      return sortDir === "asc" ? a.value_eur - b.value_eur : b.value_eur - a.value_eur;
+  const fetchProjects = useCallback(() => {
+    const min = minValue.trim() !== "" ? Number(minValue) : null;
+    const max = maxValue.trim() !== "" ? Number(maxValue) : null;
+    startTransition(async () => {
+      const result = await getProjectsPage({
+        page,
+        filters: {
+          phase: filterPhase,
+          category: filterCategory || null,
+          contractType: filterContractType,
+          minValue: min,
+          maxValue: max,
+        },
+        sortByValue: sortDir,
+      });
+      setProjects(result.projects);
+      setTotalCount(result.totalCount);
     });
+  }, [page, filterPhase, filterCategory, filterContractType, minValue, maxValue, sortDir]);
+
+  // Skip the fetch that would otherwise fire on first render — the server
+  // already gave us page 1 with no filters via initialProjects/initialTotalCount.
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    fetchProjects();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, filterPhase, filterCategory, filterContractType, minValue, maxValue, sortDir]);
+
+  // Any filter/sort change should jump back to page 1 — wrap each setter so
+  // the reset happens as part of the same state update, not derived in render.
+  function resettingPage<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v);
+      setPage(1);
+    };
   }
+  const handleFilterPhase = resettingPage(setFilterPhase);
+  const handleFilterCategory = resettingPage(setFilterCategory);
+  const handleFilterContractType = resettingPage(setFilterContractType);
+  const handleMinValue = resettingPage(setMinValue);
+  const handleMaxValue = resettingPage(setMaxValue);
+  const handleSortDir = resettingPage(setSortDir);
 
   return (
     <ProjectsTable
-      projects={filtered}
+      projects={projects}
+      totalCount={totalCount}
+      page={page}
+      onPageChange={setPage}
+      onRefetch={fetchProjects}
+      isFetching={isFetching}
       canMutate={canMutate}
       managers={managers}
       clientRefs={clientRefs}
       subcontractorRefs={subcontractorRefs}
       exchangeRate={exchangeRate}
       filterPhase={filterPhase}
-      onFilterPhase={setFilterPhase}
+      onFilterPhase={handleFilterPhase}
       filterCategory={filterCategory}
-      onFilterCategory={setFilterCategory}
+      onFilterCategory={handleFilterCategory}
       filterContractType={filterContractType}
-      onFilterContractType={setFilterContractType}
+      onFilterContractType={handleFilterContractType}
       minValue={minValue}
-      onMinValue={setMinValue}
+      onMinValue={handleMinValue}
       maxValue={maxValue}
-      onMaxValue={setMaxValue}
+      onMaxValue={handleMaxValue}
       sortDir={sortDir}
-      onSortDir={setSortDir}
+      onSortDir={handleSortDir}
     />
   );
 }

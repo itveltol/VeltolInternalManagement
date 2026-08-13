@@ -19,6 +19,9 @@ export interface FinalizeSituationPayload {
 export interface SituationsApiClient {
   getAllSituationsWithProjects(): Promise<SituationWithProject[]>;
   getSituationsForProject(projectId: number): Promise<Situation[]>;
+  /** All finalized situations across every project the caller can see — the
+   * source for the centralizer's "Valoare executată" roll-up. */
+  getAllFinalizedSituations(): Promise<Situation[]>;
   createSituation(payload: CreateSituationPayload): Promise<{ id: number }>;
   updateSituation(situationId: number, payload: UpdateSituationPayload): Promise<void>;
   deleteSituation(situationId: number): Promise<void>;

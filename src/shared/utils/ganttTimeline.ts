@@ -6,6 +6,11 @@ export function toDayMs(dateStr: string): number {
   return new Date(dateStr + "T00:00:00").getTime();
 }
 
+export function addDays(dateStr: string, days: number): string {
+  const ms = toDayMs(dateStr) + days * DAY_MS;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
 export interface WeekSection {
   label: string;
   leftPct: number;

@@ -18,7 +18,10 @@ import {
   Loader2,
   Bell,
   Receipt,
-  Truck,
+  MessageSquare,
+  Megaphone,
+  Rss,
+  Settings,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import {
@@ -29,6 +32,7 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { createClient } from "@/core/supabase/client";
 import { cn } from "@/shared/utils/cn";
+import { AnnouncementsNavBadge } from "@/features/comms/components/AnnouncementsNavBadge";
 
 export function NavContent({
   displayName,
@@ -67,15 +71,30 @@ export function NavContent({
         { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
         { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
         { href: `/${locale}/subcontractors`, label: t("subcontractors"), icon: HardHat },
-        { href: `/${locale}/suppliers`, label: t("suppliers"), icon: Truck },
         { href: `/${locale}/situations`, label: t("situations"), icon: Receipt },
         { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
         { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
       ],
     },
     {
+      label: t("comunicareGroup"),
+      items: [
+        { href: `/${locale}/board`, label: t("board"), icon: MessageSquare },
+        {
+          href: `/${locale}/announcements`,
+          label: t("announcements"),
+          icon: Megaphone,
+          badge: AnnouncementsNavBadge,
+        },
+        { href: `/${locale}/feed`, label: t("feed"), icon: Rss },
+      ],
+    },
+    {
       label: t("accountGroup"),
-      items: [{ href: `/${locale}/profile`, label: t("profile"), icon: User }],
+      items: [
+        { href: `/${locale}/profile`, label: t("profile"), icon: User },
+        { href: `/${locale}/settings`, label: t("settings"), icon: Settings },
+      ],
     },
   ];
 
@@ -127,6 +146,7 @@ export function NavContent({
                   >
                     <Icon className="h-4 w-4 shrink-0 text-veltol-primary" />
                     {!collapsed && item.label}
+                    {!collapsed && item.badge && <item.badge />}
                   </Link>
                 ) : (
                   <Link
@@ -147,6 +167,7 @@ export function NavContent({
                       <Icon className="h-4 w-4 shrink-0 text-veltol-fgMute" />
                     )}
                     {!collapsed && item.label}
+                    {!collapsed && item.badge && <item.badge />}
                   </Link>
                 );
               })}

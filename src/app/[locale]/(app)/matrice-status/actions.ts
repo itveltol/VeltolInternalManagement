@@ -79,9 +79,8 @@ export async function unshowMatriceProject(projectId: number): Promise<void> {
 }
 
 export async function getActivities(): Promise<Activity[]> {
-  const { supabase } = await requireAuth();
-  const client = createSupabaseMatriceClient(supabase);
-  return client.getActivities();
+  await requireAuth();
+  return matriceService.getCachedActivities();
 }
 
 export async function setCellStatus(

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Project } from "@/features/projects/types";
 import type { Activity, MatrixCell } from "@/features/matrice/types";
+import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 import type { GanttPhaseSegment } from "../types";
 import { GANTT_PHASE_KEYS, GANTT_PHASE_COLOR } from "../types";
 import { buildProjectGanttRows } from "../services/ganttPhaseService";
@@ -16,19 +17,20 @@ interface Props {
   project: Project;
   initialActivities: Activity[];
   initialCells: MatrixCell[];
+  checklistRecords: ChecklistItemRecord[];
   todayMs: number;
   canMutate: boolean;
 }
 
-export function ProjectPhaseGanttShell({ project, initialActivities, initialCells, todayMs, canMutate }: Props) {
+export function ProjectPhaseGanttShell({ project, initialActivities, initialCells, checklistRecords, todayMs, canMutate }: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<GanttPhaseSegment | null>(null);
 
   const rows = useMemo(
-    () => buildProjectGanttRows([project], initialActivities, initialCells, todayMs),
-    [project, initialActivities, initialCells, todayMs],
+    () => buildProjectGanttRows([project], initialActivities, initialCells, todayMs, { [project.id]: checklistRecords }),
+    [project, initialActivities, initialCells, todayMs, checklistRecords],
   );
 
   return (
@@ -62,6 +64,7 @@ export function ProjectPhaseGanttShell({ project, initialActivities, initialCell
         <PhaseDateDialog
           project={project}
           phaseKey={editing.key}
+          segment={editing}
           open
           onClose={() => {
             setEditing(null);

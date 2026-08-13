@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseClientsClient } from "@/features/clients/api/supabaseClientsClient";
 import * as clientService from "@/features/clients/services/clientService";
@@ -76,9 +76,8 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function getClientRefs(): Promise<ClientRef[]> {
-  const { supabase } = await requireAuth();
-  const api = createSupabaseClientsClient(supabase);
-  return clientService.getClientRefs(api);
+  await requireAuth();
+  return clientService.getCachedClientRefs();
 }
 
 export async function createClientAction(
@@ -92,6 +91,7 @@ export async function createClientAction(
     const api = createSupabaseClientsClient(supabase);
     const result = await clientService.createClient(api, parsed.data);
     revalidatePath(await getClientsPath());
+    updateTag("clients");
     return { success: "clientCreated", client: { id: result.id, name: parsed.data.name } };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -111,6 +111,7 @@ export async function updateClientAction(
     const clientId = Number(formData.get("clientId"));
     await clientService.updateClient(api, clientId, parsed.data);
     revalidatePath(await getClientsPath());
+    updateTag("clients");
     return { success: "clientSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -125,6 +126,7 @@ export async function deleteClientAction(id: number): Promise<ActionState> {
     const api = createSupabaseClientsClient(supabase);
     await clientService.deleteClient(api, id);
     revalidatePath(await getClientsPath());
+    updateTag("clients");
     return { success: "clientDeleted" };
   } catch {
     return { error: "errorGeneric" };

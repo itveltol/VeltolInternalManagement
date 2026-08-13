@@ -7,7 +7,8 @@ import type {
 } from "./types";
 import type { Situation, SituationWithProject } from "../types";
 
-const PROJECT_SELECT = "project:projects(id, name, value_eur, value_lei, currency, conversion_rate, progress_pct)";
+const PROJECT_SELECT =
+  "project:projects(id, name, value_eur, value_lei, currency, conversion_rate, progress_pct, contract_number, contract_date, current_phase, vat_rate, client:clients(id, name))";
 
 export const createSupabaseSituationsClient = (supabase: SupabaseClient): SituationsApiClient => ({
   async getAllSituationsWithProjects() {
@@ -25,6 +26,15 @@ export const createSupabaseSituationsClient = (supabase: SupabaseClient): Situat
       .select("*")
       .eq("project_id", projectId)
       .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Situation[];
+  },
+
+  async getAllFinalizedSituations() {
+    const { data, error } = await supabase
+      .from("situations")
+      .select("*")
+      .eq("status", "final");
     if (error) throw new Error(error.message);
     return (data ?? []) as Situation[];
   },

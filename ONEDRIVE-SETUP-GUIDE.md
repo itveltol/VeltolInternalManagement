@@ -24,11 +24,14 @@ benne a „Proiecte" mappa (`/Documente partajate/Proiecte`).
 
 | Változó | Érték | Állapot |
 |---|---|---|
-| `AZURE_TENANT_ID` | (app Overview → Directory (tenant) ID) | ✅ megvan |
-| `AZURE_CLIENT_ID` | (app Overview → Application (client) ID) | ✅ megvan |
+| `AZURE_TENANT_ID` | `7524abbf-e957-4646-9294-e744a821f1d5` | ✅ megvan |
+| `AZURE_CLIENT_ID` | `4140eb74-b508-4a6d-a8ad-388ca6c848be` | ✅ megvan |
 | `ONEDRIVE_DRIVE_ID` | `b!BHwI0BebiEuPJbsEhRZh6cKZquiFOiRGkBsn8QzOHpewt-j6PQAlRJKPASy2Lh6F` | ✅ megvan |
 | `ONEDRIVE_PROJECTS_FOLDER_ID` | `01IZGJHLNJVDV5JFNTYZE3HBINCGOCN6MM` | ✅ megvan |
 | `AZURE_CLIENT_SECRET` | — | ❌ blokkolva (tenant policy) → lásd lentebb |
+
+App-regisztráció: `Veltol.io` · Object ID `ba0dd9f2-1332-47c7-af25-4a4113b3a521`
+(utóbbi nem env-változó, csak referencia).
 
 > ⚠️ A `AZURE_CLIENT_SECRET`-et (és tanúsítványos útnál a privát kulcsot) SOHA
 > ne ide, ebbe a fájlba írd — csak a Vercel env-be, titkosként. A fenti ID-k

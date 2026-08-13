@@ -2,8 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Plus, Wallet, Gauge, FolderKanban, CheckCircle2 } from "lucide-react";
 import { DashboardKpiRow } from "@/features/dashboard/components/DashboardKpiRow";
 import { DashboardRecentProjects } from "@/features/dashboard/components/DashboardRecentProjects";
-import { IncomeByMonthChart } from "@/features/dashboard/components/IncomeByMonthChart";
-import { IncomeCompareChart } from "@/features/dashboard/components/IncomeCompareChart";
+import { IncomeByMonthChart, IncomeCompareChart } from "@/features/dashboard/components/DashboardCharts";
 import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
 import { PhaseDistributionBar } from "@/features/dashboard/components/PhaseDistributionBar";
 import { MaintenanceRemindersCard } from "@/features/dashboard/components/MaintenanceRemindersCard";
@@ -11,6 +10,8 @@ import { AvizRemindersCard } from "@/features/dashboard/components/AvizReminders
 import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
 import { getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
+import { getCommsMetrics } from "@/app/[locale]/(app)/board/actions";
+import { MetricsStrip } from "@/features/comms/components/MetricsStrip";
 import { requireAuth } from "@/core/supabase/session";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
@@ -29,9 +30,17 @@ export default async function DashboardPage() {
   }
 
   const projectsData = await getProjects();
-  const { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects, residential, industrial } = await getDashboardStats(projectsData);
-  const maintenanceReminders = await getMaintenanceReminders();
-  const avizReminders = await getAvizReminders();
+  const [
+    { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects, residential, industrial },
+    maintenanceReminders,
+    avizReminders,
+    commsMetrics,
+  ] = await Promise.all([
+    getDashboardStats(projectsData),
+    getMaintenanceReminders(projectsData),
+    getAvizReminders(projectsData),
+    getCommsMetrics(),
+  ]);
 
   const kpiCardsReal = [
     { label: t("totalProjectsValue"), value: totalPortfolioValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: true },
@@ -93,6 +102,8 @@ export default async function DashboardPage() {
       />
 
       <DashboardKpiRow cards={kpiCardsReal} icons={kpiRealIcons} />
+
+      {commsMetrics && <MetricsStrip metrics={commsMetrics} />}
 
       {maintenanceReminders.length > 0 && (
         <MaintenanceRemindersCard reminders={maintenanceReminders} />

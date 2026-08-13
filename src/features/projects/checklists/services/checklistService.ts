@@ -1,4 +1,4 @@
-import type { ChecklistApiClient, UpsertChecklistItemPayload, ScheduleItemPayload, CreateCustomTaskPayload } from "../api/types";
+import type { ChecklistApiClient, UpsertChecklistItemPayload } from "../api/types";
 import type { ChecklistItemRecord, DailyLogRecord } from "@/features/projects/checklists/types";
 
 export async function getChecklistRecords(
@@ -6,6 +6,22 @@ export async function getChecklistRecords(
   projectId: number
 ): Promise<ChecklistItemRecord[]> {
   return client.getChecklistRecords(projectId);
+}
+
+export async function getChecklistRecordsForProjects(
+  client: ChecklistApiClient,
+  projectIds: number[]
+): Promise<ChecklistItemRecord[]> {
+  return client.getChecklistRecordsForProjects(projectIds);
+}
+
+export function groupChecklistRecordsByProjectId(
+  records: ChecklistItemRecord[]
+): Record<number, ChecklistItemRecord[]> {
+  return records.reduce<Record<number, ChecklistItemRecord[]>>((acc, r) => {
+    (acc[r.project_id] ??= []).push(r);
+    return acc;
+  }, {});
 }
 
 export async function upsertChecklistItem(
@@ -31,26 +47,4 @@ export async function getDailyLog(
   itemId: number
 ): Promise<DailyLogRecord[]> {
   return client.getDailyLog(itemId);
-}
-
-export async function scheduleChecklistItem(
-  client: ChecklistApiClient,
-  payload: ScheduleItemPayload
-): Promise<void> {
-  return client.scheduleChecklistItem(payload);
-}
-
-export async function createCustomTask(
-  client: ChecklistApiClient,
-  payload: CreateCustomTaskPayload
-): Promise<{ itemNumber: number }> {
-  return client.createCustomTask(payload);
-}
-
-export async function deleteCustomTask(
-  client: ChecklistApiClient,
-  projectId: number,
-  itemNumber: number
-): Promise<void> {
-  return client.deleteCustomTask(projectId, itemNumber);
 }

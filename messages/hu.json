@@ -23,7 +23,11 @@
     "pontaj": "Személyzet · Jelenlét",
     "gantt": "Gantt",
     "situations": "Szituációk",
-    "suppliers": "Beszállítók"
+    "suppliers": "Beszállítók",
+    "comunicareGroup": "KOMMUNIKÁCIÓ",
+    "board": "Saját panel",
+    "announcements": "Közlemények",
+    "feed": "Folyam"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -91,6 +95,7 @@
     "errorGeneric": "Hiba történt. Próbálja újra.",
     "errorDetail": "Mentés sikertelen: {message}",
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "errorValidation": "Kérjük, töltsön ki minden kötelező mezőt — csak a megjegyzés opcionális. A projekt nevének legalább 5 karakter hosszúnak kell lennie, és a végrehajtási módtól/kategóriától függően a projektmenedzser, a műszaki típus, a szerződés adatai vagy az alvállalkozó adatai is kötelezőek lehetnek.",
     "folderCreated": "Mappa létrehozva.",
     "folderFailed": "Projekt létrehozva. A mappa nem hozható létre — később is összekapcsolhatja.",
     "linkFolder": "Mappa összekapcsolása",
@@ -223,13 +228,15 @@
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Nincs jogosultsága szerkeszteni.",
     "errorInvalidNumber": "Érvényes számot adjon meg.",
-    "errorCustomTaskLimit": "Elérte az egyedi feladatok maximális számát ennél a projektnél.",
+    "noTeamAssigned": "Előbb rendeljen csapatot a projekthez.",
     "columns": {
       "cod": "Kód",
       "number": "#",
       "activitate": "Tevékenység",
       "plan_total": "Tervezett összesen",
       "zile": "Napok",
+      "persons_allocated": "Létszám",
+      "units_per_person_day": "Db/fő/nap",
       "target_zi": "Napi cél",
       "realizat": "Elvégzett",
       "today": "Ma",
@@ -259,33 +266,7 @@
     },
     "gantt": {
       "tabLabel": "Ütemterv",
-      "breadcrumb": "Ütemterv",
-      "unscheduled": "{count} beütemezetlen feladat",
-      "customBadge": "Egyedi",
-      "emptyState": "Még nincsenek beütemezett feladatok. Kattintson egy fenti feladatra dátumok megadásához.",
-      "taskColumn": "Feladat",
-      "today": "Ma",
-      "addCustomTask": "Egyedi feladat hozzáadása",
-      "scheduleTask": "Feladat ütemezése",
-      "taskName": "Feladat neve",
-      "taskPhase": "Fázis",
-      "planTotal": "Tervezett összesen",
-      "plannedDays": "Tervezett napok",
-      "startDate": "Kezdő dátum",
-      "endDate": "Befejező dátum",
-      "team": "Csapat",
-      "noTeam": "Nincs csapat",
-      "cancel": "Mégse",
-      "save": "Mentés",
-      "saving": "Mentés...",
-      "taskScheduled": "Feladat ütemezve.",
-      "taskCreated": "Feladat létrehozva.",
-      "deleteTask": "Feladat törlése",
-      "confirmDeleteTask": "Törli ezt az egyedi feladatot? Ez nem vonható vissza.",
-      "taskDeleted": "Feladat törölve.",
-      "unscheduleTask": "Eltávolítás az ütemtervből",
-      "confirmUnscheduleTask": "Eltávolítja ennek a feladatnak a dátumait és csapatát az ütemtervből?",
-      "taskUnscheduled": "Feladat eltávolítva az ütemtervből."
+      "breadcrumb": "Ütemterv"
     }
   },
   "login": {
@@ -486,9 +467,12 @@
     }
   },
   "settings": {
-    "eyebrow": "ADMIN · BEÁLLÍTÁSOK",
+    "eyebrow": "BEÁLLÍTÁSOK",
     "title": "Beállítások",
-    "subtitle": "Rendszerszintű beállítások kezelése",
+    "subtitle": "Saját beállításaid, adminoknak pedig a rendszerszintű konfiguráció",
+    "emailDigestTitle": "Napi e-mail összefoglaló",
+    "emailDigestDescription": "Kapj egy napi e-mailt arról, amit kihagytál — megemlítések, válaszok, várt visszaigazolások és esedékes jegyzetek. Ha nincs mit jelenteni, nem érkezik e-mail.",
+    "emailDigestUpdated": "Beállítás frissítve.",
     "officialHolidays": "Hivatalos munkaszüneti napok",
     "pagination": {
       "prev": "Előző",
@@ -663,6 +647,34 @@
       "remove": "{name} eltávolítása"
     }
   },
+  "cronEmails": {
+    "aviz": {
+      "subject": "Lejáró engedélyek ({count})",
+      "intro": "A következő engedélyek/dokumentumok lejárati dátuma közeleg, vagy már lejárt:",
+      "item": "{project} — {activity} (lejár: {date})",
+      "footer": "Nyisd meg az alkalmazást a részletekért."
+    },
+    "maintenance": {
+      "subject": "Esedékes karbantartási ellenőrzések ({count})",
+      "intro": "A következő projektek karbantartási ellenőrzésre várnak:",
+      "item": "{project} — {period} {year}",
+      "footer": "Nyisd meg az alkalmazást a részletekért.",
+      "periodMarch": "Március",
+      "periodOctober": "Október"
+    },
+    "digest": {
+      "subject": "Kommunikációs összefoglalód ({count})",
+      "greeting": "Szia, {name},",
+      "intro": "Íme, amit kihagytál:",
+      "sectionAckRequired": "A visszaigazolásod szükséges",
+      "sectionMentions": "Megemlítettek téged",
+      "sectionReplies": "Válaszok a jegyzeteidre",
+      "sectionDueToday": "Ma esedékes",
+      "sectionOther": "Egyéb értesítések",
+      "openInApp": "Megnyitás az alkalmazásban",
+      "footer": "Ezt az e-mailt azért kapod, mert bekapcsoltad a napi kommunikációs összefoglalót. A Beállításokban kikapcsolhatod."
+    }
+  },
   "documents": {
     "eyebrow": "DOKUMENTUMOK · ÖSSZES",
     "title": "Dokumentumok",
@@ -833,13 +845,14 @@
   },
   "search": {
     "title": "Globális keresés",
-    "placeholder": "Projektek, ügyfelek, dokumentumok keresése...",
+    "placeholder": "Keresés projektek, ügyfelek, dokumentumok, jegyzetek között...",
     "groupProjects": "Projektek",
     "groupClients": "Ügyfelek",
     "groupDocuments": "Dokumentumok",
     "empty": "Nincs találat: \"{query}\".",
     "minChars": "Legalább 2 karaktert írj be a kereséshez.",
-    "loading": "Keresés..."
+    "loading": "Keresés...",
+    "groupNotes": "Jegyzetek"
   },
   "projectType": {
     "CEF": "CEF — Napelem park",
@@ -887,7 +900,9 @@
       "next": "Következő",
       "pageOf": "{page}. oldal / {total}"
     },
-    "endBeforeStart": "A befejező dátum nem lehet korábbi a kezdő dátumnál."
+    "endBeforeStart": "A befejező dátum nem lehet korábbi a kezdő dátumnál.",
+    "computedFromChecklist": "A checklistából számítva: {days} nap",
+    "executionEndDateReadOnly": "A záró dátum a checklistából származik, nem szerkeszthető közvetlenül"
   },
   "theme": {
     "switchToLight": "Váltás világos módra",
@@ -969,6 +984,47 @@
       "prev": "Előző",
       "next": "Következő",
       "pageOf": "{page}. oldal / {total}"
+    },
+    "billingSaved": "A számlázási adatok mentve.",
+    "errorValidation": "Érvénytelen adatok.",
+    "centralizer": {
+      "title": "Helyzetjelentések",
+      "eyebrow": "HELYZETJELENTÉSEK · SZERZŐDÉS ÖSSZESÍTŐ",
+      "emptyState": "Még nincsenek projektek.",
+      "noResults": "Nincs a szűrőknek megfelelő szerződés.",
+      "searchPlaceholder": "Keresés szerződésszám, kedvezményezett vagy projekt szerint",
+      "totalCount": "{count} szerződés",
+      "totalsRow": "Összesen",
+      "addSituation": "Helyzetjelentés hozzáadása",
+      "editBilling": "Számlázás szerkesztése",
+      "includeCancelled": "Töröltek megjelenítése",
+      "columns": {
+        "contractNumber": "Szerződés sz.",
+        "beneficiar": "Kedvezményezett",
+        "contractValueEur": "Szerződés értéke (EUR + ÁFA)",
+        "executedEur": "Elvégzett munka (EUR + ÁFA)",
+        "invoicedEur": "Számlázott érték (EUR + ÁFA)",
+        "collectedEur": "Beérkezett érték (EUR + ÁFA)",
+        "remainingToExecuteEur": "Hátralévő kivitelezés (EUR + ÁFA)",
+        "remainingToInvoiceEur": "Hátralévő számlázás (EUR + ÁFA)"
+      },
+      "fields": {
+        "currency": "Pénznem",
+        "invoicedNet": "Számlázott érték (nettó)",
+        "collectedNet": "Beérkezett érték (nettó)",
+        "invoicedInOther": "{currency}-ban",
+        "rateRefreshed": "frissítve",
+        "refreshRate": "Frissítés a mai árfolyamra",
+        "notes": "Megjegyzések"
+      },
+      "pagination": {
+        "prev": "Előző",
+        "next": "Következő",
+        "pageOf": "{page}. oldal / {total}"
+      },
+      "cancel": "Mégse",
+      "save": "Mentés",
+      "saving": "Mentés..."
     }
   },
   "boundaries": {
@@ -1085,6 +1141,189 @@
       "machinery": "Gépek/bérlés",
       "permits": "Engedélyek és díjak",
       "other": "Egyéb/előre nem látott"
+    }
+  },
+  "comms": {
+    "tabLabel": "Kommunikáció",
+    "breadcrumb": "Kommunikáció",
+    "eyebrow": "SAJÁT PANEL",
+    "title": "Panoul meu",
+    "subtitle": "Jegyzetek, kérdések, döntések és kockázatok a projektjeidhez.",
+    "forMe": {
+      "title": "Nekem szól",
+      "empty": "Nincs semmi új. A nap rendben van."
+    },
+    "anchorPersonal": "Személyes",
+    "anchorProject": "Projekt",
+    "discussion": "Beszélgetés",
+    "unknownAuthor": "Felhasználó",
+    "loadingThread": "Beszélgetés betöltése...",
+    "emptyThread": "Még nincs üzenet.",
+    "noReplies": "Még nincs válasz.",
+    "backToList": "Vissza a listához",
+    "markResolved": "Megjelölés megoldottként",
+    "kind": {
+      "note": "Jegyzet",
+      "announcement": "Közlemény",
+      "question": "Kérdés",
+      "decision": "Döntés",
+      "risk": "Kockázat"
+    },
+    "visibility": {
+      "private": "Privát",
+      "team": "Csapat",
+      "project": "Projekt",
+      "company": "Cég"
+    },
+    "composer": {
+      "anchorLabel": "Mire vonatkozik",
+      "kindLabel": "Típus",
+      "visibilityLabel": "Láthatóság",
+      "bodyPlaceholder": "Írj egy jegyzetet...",
+      "replyPlaceholder": "Írj egy választ...",
+      "publish": "Közzététel",
+      "reply": "Válasz",
+      "saving": "Mentés...",
+      "audiencePreviewPending": "Válassz láthatóságot, hogy lásd, hányan kapják meg a közleményt.",
+      "audiencePreviewLoading": "Számítás...",
+      "audiencePreview": "{count} személyhez lesz elküldve."
+    },
+    "fields": {
+      "project": "Projekt",
+      "team": "Csapat",
+      "selectProject": "Válassz egy projektet",
+      "selectTeam": "Válassz egy csapatot",
+      "titleOptional": "Cím (opcionális)",
+      "ackDeadline": "Visszaigazolási határidő"
+    },
+    "noteCreated": "Jegyzet hozzáadva.",
+    "noteStatusUpdated": "Státusz frissítve.",
+    "noteDeleted": "Jegyzet törölve.",
+    "notePinned": "Kitűzve.",
+    "noteUnpinned": "Kitűzés visszavonva.",
+    "errorGeneric": "Valami hiba történt.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "errorValidation": "Érvénytelen adatok.",
+    "notifications": {
+      "title": "Értesítések",
+      "markAllRead": "Összes megjelölése olvasottként",
+      "empty": "Nincs értesítés.",
+      "group": {
+        "today": "Ma",
+        "thisWeek": "Ezen a héten",
+        "older": "Régebbi"
+      },
+      "type": {
+        "mention": "megemlített téged",
+        "reply": "válaszolt a jegyzetedre",
+        "ack_required": "visszaigazolást igényel",
+        "due_soon": "határideje közeleg",
+        "aviz_expiring": "engedély lejár",
+        "maintenance_due": "karbantartás esedékes",
+        "vacation_request": "szabadságkérelem",
+        "system": "rendszerértesítés"
+      }
+    },
+    "filters": {
+      "allKinds": "Minden típus",
+      "unreadOnly": "Csak olvasatlan",
+      "openOnly": "Csak nyitott"
+    },
+    "announcements": {
+      "eyebrow": "KOMMUNIKÁCIÓ · KÖZLEMÉNYEK",
+      "title": "Közlemények",
+      "subtitle": "Hivatalos közlemények a cég, a csapat vagy a projekt felé — olvasási visszaigazolással.",
+      "listTitle": "Összes közlemény",
+      "new": "Új közlemény",
+      "empty": "Még nincs közlemény.",
+      "deadline": "határidő {date}",
+      "ackRatio": "{acknowledged}/{total} visszaigazolva",
+      "needsYourAck": "a te visszaigazolásodat igényli",
+      "acknowledge": "Elolvastam és megértettem",
+      "youAcknowledged": "Visszaigazoltad ezt a közleményt.",
+      "ackTableTitle": "Visszaigazolások ({acknowledged}/{total})",
+      "unconfirmedTitle": "Nincs visszaigazolva ({count})",
+      "confirmedTitle": "Visszaigazolva ({count})",
+      "allConfirmed": "Mindenki visszaigazolta.",
+      "sendReminder": "Emlékeztető küldése",
+      "lastReminderAt": "Utolsó emlékeztető: {date}",
+      "reminderSent": "Emlékeztető elküldve.",
+      "reminderNoneLeft": "Nincs kire emlékeztetni — mindenki visszaigazolt.",
+      "reminderRateLimited": "Emlékeztetőt csak 24 óránként küldhetsz.",
+      "announcementCreated": "Közlemény közzétéve.",
+      "acknowledged": "Visszaigazolás rögzítve."
+    },
+    "feed": {
+      "title": "Globális folyam",
+      "eyebrow": "KOMMUNIKÁCIÓ · FOLYAM",
+      "subtitle": "Minden, amit írtak, és minden, ami változott — egy időrendi folyamban.",
+      "empty": "Még nincs esemény.",
+      "loadMore": "Több betöltése",
+      "system": "Rendszer",
+      "filter": {
+        "all": "Mind",
+        "people": "Csak emberek",
+        "system": "Csak rendszer"
+      },
+      "filters": {
+        "project": "Projekt",
+        "allProjects": "Minden projekt",
+        "actor": "Személy",
+        "allActors": "Minden személy",
+        "verbGroup": "Esemény típusa",
+        "allVerbGroups": "Minden típus",
+        "dateFrom": "Ettől",
+        "dateTo": "Eddig"
+      },
+      "verbGroup": {
+        "project": "Projekt",
+        "matrice": "Matrice",
+        "situation": "Szituációk",
+        "document": "Dokumentumok",
+        "vacation": "Szabadságok"
+      },
+      "grouped": "{name} {count} frissítést végzett",
+      "groupedSystem": "{count} rendszerfrissítés",
+      "verb": {
+        "project_created": "létrehozta a {entityName} projektet",
+        "project_phase_changed": "megváltoztatta a {entityName} projekt fázisát: {old} → {new}",
+        "project_status_changed": "megváltoztatta a {entityName} projekt státuszát: {old} → {new}",
+        "project_deadline_changed": "megváltoztatta a {entityName} projekt határidejét",
+        "project_value_changed": "megváltoztatta a {entityName} projekt értékét",
+        "matrice_status_changed": "frissítette: {activityName} → {new}",
+        "situation_created": "létrehozta a {entityName} szituációt",
+        "situation_finalized": "véglegesítette a {entityName} szituációt",
+        "document_uploaded": "feltöltötte a {entityName} dokumentumot",
+        "vacation_submitted": "szabadságkérelmet adott be",
+        "vacation_approved": "jóváhagyott egy szabadságkérelmet",
+        "vacation_rejected": "elutasított egy szabadságkérelmet"
+      }
+    },
+    "timeline": {
+      "title": "Idővonal",
+      "empty": "Még nincs esemény vagy jegyzet ezen a projekten."
+    },
+    "metrics": {
+      "title": "Kommunikáció egészsége",
+      "eyebrow": "KOMMUNIKÁCIÓ · MUTATÓK",
+      "vsTrend": "az előző időszakhoz képest",
+      "noPriorPeriod": "—",
+      "ackRate": {
+        "label": "24 órás visszaigazolási arány",
+        "meaning": "A visszaigazolást igénylő közleményekből hány % lett visszaigazolva az első 24 órában. Cél: 80% felett."
+      },
+      "staleQuestions": {
+        "label": "7 napnál régebben nyitott kérdés/kockázat",
+        "meaning": "Ha ez a szám nő, a rendszer nem old meg semmit — csak gyűjt."
+      },
+      "silentProjects": {
+        "label": "Projektek jegyzet nélkül 30 napja",
+        "meaning": "Egy csendes projekt nem béke, hanem árnyék-csatorna — valószínűleg máshol beszélnek róla."
+      },
+      "decisions": {
+        "label": "Rögzített döntések ebben a hónapban",
+        "meaning": "A rendszerben rögzített döntések száma — a „nem tudtam róla” típusú viták ellenszere."
+      }
     }
   }
 }
