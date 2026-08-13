@@ -7,8 +7,11 @@ import { getSessionUser } from "@/core/supabase/session";
 import { parseFormData } from "@/shared/utils/parseFormData";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 import { resolveMentionedProfileIds } from "@/features/comms/services/mentions";
-import type { CreateNotePayload, Note, NoteStatus, Notification } from "@/features/comms/types";
+import { mergeFeed } from "@/features/comms/services/activityFeed";
+import type { CreateNotePayload, FeedItem, Note, NoteStatus, Notification } from "@/features/comms/types";
 import type { NotesFilter } from "@/features/comms/api/types";
+
+const TIMELINE_PAGE_SIZE = 20;
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -183,4 +186,26 @@ export async function getContextPinNoteIdsAction(projectId: number): Promise<num
   const { supabase } = await requireAuth();
   const api = createSupabaseCommsClient(supabase);
   return api.getContextPinNoteIds(projectId);
+}
+
+// Project "Comunicare" tab timeline: activity_events + notes for one
+// project, merged and paginated server-side. Each source is fetched with
+// .range() for this page only — never the whole history — so the network
+// payload does not grow with total history. Page boundaries can split a
+// 30-minute event group across two pages; accepted tradeoff for keeping
+// pagination genuinely server-side on two independently-ordered sources.
+export async function getProjectTimelinePage(
+  projectId: number,
+  page: number,
+): Promise<{ items: FeedItem[]; hasMore: boolean }> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseCommsClient(supabase);
+
+  const [eventsPage, notesPage] = await Promise.all([
+    api.getActivityEvents({ projectId, page, pageSize: TIMELINE_PAGE_SIZE }),
+    api.getNotesPage({ projectId, page, pageSize: TIMELINE_PAGE_SIZE }),
+  ]);
+
+  const items = mergeFeed(eventsPage.events, notesPage.notes.filter((n) => n.parent_id === null));
+  return { items, hasMore: eventsPage.hasMore || notesPage.hasMore };
 }

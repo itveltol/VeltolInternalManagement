@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForGantt, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getProjectFinancials } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getProjectFinancials } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeSectionSummaries, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
@@ -13,6 +13,8 @@ import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocu
 import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
 import { FinanciarShell } from "@/features/finance/components/FinanciarShell";
 import { NoteThread } from "@/features/comms/components/NoteThread";
+import { ProjectTimeline } from "@/features/comms/components/ProjectTimeline";
+import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { contractValueEur } from "@/features/finance/services/marginService";
 import { isBessProjectType } from "@/features/projects/types";
 import { Badge } from "@/shared/components/ui/badge";
@@ -48,25 +50,26 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const project = await getProject(projectId);
   if (!project) notFound();
 
-  const canReadFinancials =
-    role === "admin" || role === "finance" || project.manager_id === user?.id;
+  // Finance feature is hidden for now.
+  const canReadFinancials = false;
 
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
   const hasBess = isBessProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, financials] =
+  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, financials, timelinePage] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
-      canMutate ? getTeamsForGantt() : Promise.resolve([]),
+      canMutate ? getTeamsForProject() : Promise.resolve([]),
       canMutate ? getProjectManagers() : Promise.resolve([]),
       canMutate ? getClientRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
-      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [] }),
+      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [], checklistRecordsByProjectId: {} }),
       hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
       isFinanciarTab && canReadFinancials ? getProjectFinancials(projectId) : Promise.resolve(null),
+      isComunicareTab ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
     ]);
   const { activities, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -227,17 +230,28 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
             canMutate={canMutate}
           />
         ) : isComunicareTab ? (
-          <div className="rounded-card border border-border bg-card p-5 shadow-card">
-            <NoteThread
-              anchor={{ projectId: project.id }}
-              anchorLabel={`${tComms("anchorProject")} · ${project.name}`}
-            />
+          <div className="flex flex-col gap-6">
+            <div className="rounded-card border border-border bg-card p-5 shadow-card">
+              <h2 className="mb-3 text-[13px] font-semibold text-veltol-fg">{tComms("timeline.title")}</h2>
+              <ProjectTimeline
+                projectId={project.id}
+                initialItems={timelinePage.items}
+                initialHasMore={timelinePage.hasMore}
+              />
+            </div>
+            <div className="rounded-card border border-border bg-card p-5 shadow-card">
+              <NoteThread
+                anchor={{ projectId: project.id }}
+                anchorLabel={`${tComms("anchorProject")} · ${project.name}`}
+              />
+            </div>
           </div>
         ) : isGanttTab || isSubcontracted ? (
           <ProjectPhaseGanttShell
             project={project}
             initialActivities={activities}
             initialCells={cells}
+            checklistRecords={records}
             todayMs={todayMs}
             canMutate={canMutate}
           />
@@ -263,7 +277,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
               ))}
             </div>
 
-            <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} />
+            <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} teamMemberCount={project.team?.member_count ?? null} />
           </>
         )}
     </div>
