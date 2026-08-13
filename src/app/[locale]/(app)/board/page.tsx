@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 import { BoardShell } from "@/features/comms/components/BoardShell";
-import { getNotes, getNotifications } from "./actions";
+import { MetricsStrip } from "@/features/comms/components/MetricsStrip";
+import { getNotes, getNotifications, getCommsMetrics } from "./actions";
 
 export default async function BoardPage() {
   const { supabase, user } = await getUserProfileRole();
@@ -14,10 +15,11 @@ export default async function BoardPage() {
   }
 
   const api = createSupabaseCommsClient(supabase);
-  const [notes, notifications, personalPinnedIds] = await Promise.all([
+  const [notes, notifications, personalPinnedIds, metrics] = await Promise.all([
     getNotes({}),
     getNotifications(),
     api.getPersonalPinNoteIds(user!.id),
+    getCommsMetrics(),
   ]);
 
   const t = await getTranslations("comms");
@@ -32,6 +34,8 @@ export default async function BoardPage() {
         </h1>
         <p className="mt-1 text-[13px] text-veltol-fgMute">{t("subtitle")}</p>
       </div>
+
+      {metrics && <MetricsStrip metrics={metrics} />}
 
       <BoardShell
         initialNotes={notes}

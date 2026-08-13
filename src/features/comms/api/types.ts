@@ -61,4 +61,12 @@ export interface CommsApiClient {
   // Activity feed (Phase 3)
   getActivityEvents(filter: ActivityEventFilter): Promise<{ events: ActivityEvent[]; hasMore: boolean }>;
   getNotesPage(filter: NotesPageFilter): Promise<{ notes: Note[]; hasMore: boolean }>;
+
+  // Metrics (Phase 3) — each *_as_of(periodEnd) call runs under the caller's
+  // own session/RLS (never the admin client); gating on who may call this
+  // at all happens one layer up, in the server action.
+  getAckRateRaw(periodEnd: string): Promise<{ acknowledgedWithin24h: number; totalReceipts: number }>;
+  getStaleQuestionsCount(periodEnd: string): Promise<number>;
+  getSilentProjectsCount(periodEnd: string): Promise<number>;
+  getDecisionsCount(periodEnd: string): Promise<number>;
 }

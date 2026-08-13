@@ -3,12 +3,14 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
-import { getSessionUser } from "@/core/supabase/session";
+import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
+import { canBroadcast } from "@/core/auth/permissions";
 import { parseFormData } from "@/shared/utils/parseFormData";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 import { resolveMentionedProfileIds } from "@/features/comms/services/mentions";
 import { mergeFeed } from "@/features/comms/services/activityFeed";
-import type { CreateNotePayload, FeedItem, Note, NoteStatus, Notification } from "@/features/comms/types";
+import { ackRatePct } from "@/features/comms/services/metrics";
+import type { CommsMetrics, CreateNotePayload, FeedItem, Note, NoteStatus, Notification } from "@/features/comms/types";
 import type { NotesFilter } from "@/features/comms/api/types";
 
 const TIMELINE_PAGE_SIZE = 20;
@@ -208,4 +210,46 @@ export async function getProjectTimelinePage(
 
   const items = mergeFeed(eventsPage.events, notesPage.notes.filter((n) => n.parent_id === null));
   return { items, hasMore: eventsPage.hasMore || notesPage.hasMore };
+}
+
+// The four communication-health metrics (module plan §9): ack rate, stale
+// questions, silent projects, decisions/month — each vs. its own previous
+// period, using the SAME predicate for both periods via the *_as_of() SQL
+// functions (never a different definition for "before" vs. "now").
+//
+// Gated on canBroadcast(role) and read through the session-scoped client —
+// never createAdminClient() — so a viewer cannot learn the portfolio's
+// communication state through this action even by calling it directly; the
+// underlying SQL views/functions are security_invoker too, so RLS applies
+// on both sides of this belt-and-suspenders gate.
+export async function getCommsMetrics(): Promise<CommsMetrics | null> {
+  const { supabase, user, role } = await getUserProfileRole();
+  if (!user || !canBroadcast(role)) return null;
+
+  const api = createSupabaseCommsClient(supabase);
+  const now = new Date();
+  const periodEnd = now.toISOString();
+  const previousPeriodEnd = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [ackNow, ackPrev, staleNow, stalePrev, silentNow, silentPrev, decisionsNow, decisionsPrev] =
+    await Promise.all([
+      api.getAckRateRaw(periodEnd),
+      api.getAckRateRaw(previousPeriodEnd),
+      api.getStaleQuestionsCount(periodEnd),
+      api.getStaleQuestionsCount(previousPeriodEnd),
+      api.getSilentProjectsCount(periodEnd),
+      api.getSilentProjectsCount(previousPeriodEnd),
+      api.getDecisionsCount(periodEnd),
+      api.getDecisionsCount(previousPeriodEnd),
+    ]);
+
+  return {
+    ackRate: {
+      value: ackRatePct(ackNow.acknowledgedWithin24h, ackNow.totalReceipts),
+      previousValue: ackRatePct(ackPrev.acknowledgedWithin24h, ackPrev.totalReceipts),
+    },
+    staleQuestions: { value: staleNow, previousValue: stalePrev },
+    silentProjects: { value: silentNow, previousValue: silentPrev },
+    decisions: { value: decisionsNow, previousValue: decisionsPrev },
+  };
 }

@@ -360,4 +360,29 @@ export const createSupabaseCommsClient = (supabase: SupabaseClient): CommsApiCli
     const hasMore = rows.length > filter.pageSize;
     return { notes: rows.slice(0, filter.pageSize).map(toNote), hasMore };
   },
+
+  async getAckRateRaw(periodEnd: string) {
+    const { data, error } = await supabase.rpc("v_comms_ack_rate_as_of", { p_period_end: periodEnd }).single();
+    if (error) throw new Error(error.message);
+    const row = data as { acknowledged_within_24h: number; total_receipts: number };
+    return { acknowledgedWithin24h: Number(row.acknowledged_within_24h), totalReceipts: Number(row.total_receipts) };
+  },
+
+  async getStaleQuestionsCount(periodEnd: string) {
+    const { data, error } = await supabase.rpc("v_comms_stale_questions_as_of", { p_period_end: periodEnd }).single();
+    if (error) throw new Error(error.message);
+    return Number((data as { stale_count: number }).stale_count);
+  },
+
+  async getSilentProjectsCount(periodEnd: string) {
+    const { data, error } = await supabase.rpc("v_comms_silent_projects_as_of", { p_period_end: periodEnd }).single();
+    if (error) throw new Error(error.message);
+    return Number((data as { silent_count: number }).silent_count);
+  },
+
+  async getDecisionsCount(periodEnd: string) {
+    const { data, error } = await supabase.rpc("v_comms_decisions_as_of", { p_period_end: periodEnd }).single();
+    if (error) throw new Error(error.message);
+    return Number((data as { decision_count: number }).decision_count);
+  },
 });
