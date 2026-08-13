@@ -59,6 +59,7 @@ export interface Note {
   team_id: number | null;
   reply_count: number;
   unread: boolean;
+  last_reminder_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -114,3 +115,62 @@ export interface MentionCandidate {
   id: string;
   handle: string;
 }
+
+export interface AckReceipt {
+  profile_id: string;
+  name: string;
+  seen_at: string | null;
+  acknowledged_at: string | null;
+}
+
+export interface AckSummary {
+  total: number;
+  acknowledged: number;
+  confirmed: AckReceipt[];
+  unconfirmed: AckReceipt[];
+}
+
+export type ActivityVerb =
+  | "project.created"
+  | "project.phase_changed"
+  | "project.status_changed"
+  | "project.deadline_changed"
+  | "project.value_changed"
+  | "matrice.status_changed"
+  | "situation.created"
+  | "situation.finalized"
+  | "document.uploaded"
+  | "vacation.submitted"
+  | "vacation.approved"
+  | "vacation.rejected";
+
+export interface ActivityEventActor {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+export interface ActivityEvent {
+  id: number;
+  actor_id: string | null;
+  actor: ActivityEventActor | null;
+  verb: ActivityVerb | string;
+  project_id: number | null;
+  project_name: string | null;
+  entity_table: string | null;
+  entity_id: number | null;
+  summary: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ActivityEventGroup {
+  kind: "event";
+  actorId: string | null;
+  projectId: number | null;
+  events: ActivityEvent[];
+  createdAt: string;
+}
+
+export type FeedItem =
+  | ActivityEventGroup
+  | { kind: "note"; note: Note };

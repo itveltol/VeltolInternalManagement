@@ -25,7 +25,8 @@
     "situations": "Situații",
     "suppliers": "Furnizori",
     "comunicareGroup": "COMUNICARE",
-    "board": "Panoul meu"
+    "board": "Panoul meu",
+    "announcements": "Anunțuri"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -93,6 +94,7 @@
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
     "errorDetail": "Salvare eșuată: {message}",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "errorValidation": "Completați toate câmpurile obligatorii — doar notele sunt opționale. Numele proiectului trebuie să aibă cel puțin 5 caractere, iar în funcție de modul de execuție/categorie, managerul, tipul tehnic, detaliile contractului sau informațiile despre subcontractor pot fi de asemenea obligatorii.",
     "folderCreated": "Dosar creat.",
     "folderFailed": "Proiect creat. Dosarul nu a putut fi creat — îl puteți asocia mai târziu.",
     "linkFolder": "Asociază dosar",
@@ -225,13 +227,15 @@
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea de a edita.",
     "errorInvalidNumber": "Introduceți un număr valid.",
-    "errorCustomTaskLimit": "S-a atins numărul maxim de sarcini personalizate pentru acest proiect.",
+    "noTeamAssigned": "Alocați mai întâi o echipă acestui proiect.",
     "columns": {
       "cod": "Cod",
       "number": "#",
       "activitate": "Activitate",
       "plan_total": "Plan total",
       "zile": "Zile",
+      "persons_allocated": "Persoane",
+      "units_per_person_day": "Buc/pers/zi",
       "target_zi": "Țintă / zi",
       "realizat": "Realizat",
       "today": "Azi",
@@ -261,33 +265,7 @@
     },
     "gantt": {
       "tabLabel": "Gantt",
-      "breadcrumb": "Gantt",
-      "unscheduled": "{count} sarcini neprogramate",
-      "customBadge": "Personalizat",
-      "emptyState": "Nu există sarcini programate încă. Faceți clic pe o sarcină de mai sus pentru a-i seta datele.",
-      "taskColumn": "Sarcină",
-      "today": "Azi",
-      "addCustomTask": "Adaugă sarcină personalizată",
-      "scheduleTask": "Programează sarcina",
-      "taskName": "Numele sarcinii",
-      "taskPhase": "Fază",
-      "planTotal": "Plan total",
-      "plannedDays": "Zile planificate",
-      "startDate": "Data de început",
-      "endDate": "Data de sfârșit",
-      "team": "Echipă",
-      "noTeam": "Fără echipă",
-      "cancel": "Anulează",
-      "save": "Salvează",
-      "saving": "Salvare...",
-      "taskScheduled": "Sarcină programată.",
-      "taskCreated": "Sarcină creată.",
-      "deleteTask": "Șterge sarcina",
-      "confirmDeleteTask": "Ștergeți această sarcină personalizată? Această acțiune nu poate fi anulată.",
-      "taskDeleted": "Sarcină ștearsă.",
-      "unscheduleTask": "Elimină din Gantt",
-      "confirmUnscheduleTask": "Elimină datele și echipa acestei sarcini din diagrama Gantt?",
-      "taskUnscheduled": "Sarcină eliminată din Gantt."
+      "breadcrumb": "Gantt"
     }
   },
   "login": {
@@ -488,9 +466,12 @@
     }
   },
   "settings": {
-    "eyebrow": "ADMIN · SETĂRI",
+    "eyebrow": "SETĂRI",
     "title": "Setări",
-    "subtitle": "Gestionați configurația la nivel de sistem",
+    "subtitle": "Preferințele tale și, pentru admini, configurația la nivel de sistem",
+    "emailDigestTitle": "Rezumat zilnic pe e-mail",
+    "emailDigestDescription": "Primește un e-mail zilnic cu ce ai ratat — mențiuni, răspunsuri, confirmări așteptate și notițe scadente. Fără nimic de raportat, nu se trimite niciun e-mail.",
+    "emailDigestUpdated": "Preferință actualizată.",
     "officialHolidays": "Sărbători oficiale",
     "pagination": {
       "prev": "Anterior",
@@ -663,6 +644,34 @@
       "empty": "Niciun profil disponibil.",
       "noResults": "Niciun rezultat.",
       "remove": "Elimină {name}"
+    }
+  },
+  "cronEmails": {
+    "aviz": {
+      "subject": "Avize care expiră ({count})",
+      "intro": "Următoarele avize/documente se apropie de data expirării sau au expirat deja:",
+      "item": "{project} — {activity} (expiră {date})",
+      "footer": "Deschideți aplicația pentru detalii."
+    },
+    "maintenance": {
+      "subject": "Inspecții de mentenanță scadente ({count})",
+      "intro": "Următoarele proiecte necesită o inspecție de mentenanță bifată:",
+      "item": "{project} — {period} {year}",
+      "footer": "Deschideți aplicația pentru detalii.",
+      "periodMarch": "Martie",
+      "periodOctober": "Octombrie"
+    },
+    "digest": {
+      "subject": "Rezumatul tău de comunicare ({count})",
+      "greeting": "Salut, {name},",
+      "intro": "Iată ce ai ratat:",
+      "sectionAckRequired": "Necesită confirmarea ta",
+      "sectionMentions": "Ai fost menționat",
+      "sectionReplies": "Răspunsuri la notițele tale",
+      "sectionDueToday": "Scadente astăzi",
+      "sectionOther": "Alte notificări",
+      "openInApp": "Deschide în aplicație",
+      "footer": "Primești acest e-mail pentru că ai activat rezumatul zilnic de comunicare. Îl poți dezactiva din Setări."
     }
   },
   "documents": {
@@ -890,7 +899,9 @@
       "next": "Următor",
       "pageOf": "Pagina {page} din {total}"
     },
-    "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început."
+    "endBeforeStart": "Data de sfârșit nu poate fi înainte de data de început.",
+    "computedFromChecklist": "Calculat din checklist: {days} zile",
+    "executionEndDateReadOnly": "Data de sfârșit este derivată din checklist și nu poate fi editată direct"
   },
   "theme": {
     "switchToLight": "Comută la modul luminos",
@@ -972,6 +983,47 @@
       "prev": "Anterior",
       "next": "Următor",
       "pageOf": "Pagina {page} din {total}"
+    },
+    "billingSaved": "Situație de facturare salvată.",
+    "errorValidation": "Date invalide.",
+    "centralizer": {
+      "title": "Situații",
+      "eyebrow": "SITUAȚII · CENTRALIZATOR CONTRACTE",
+      "emptyState": "Nu există încă proiecte.",
+      "noResults": "Niciun contract nu corespunde filtrelor.",
+      "searchPlaceholder": "Căutare după nr. contract, beneficiar sau proiect",
+      "totalCount": "{count} contracte",
+      "totalsRow": "Total",
+      "addSituation": "Adăugare situație",
+      "editBilling": "Editare facturare",
+      "includeCancelled": "Include proiectele anulate",
+      "columns": {
+        "contractNumber": "Nr Contract",
+        "beneficiar": "Beneficiar",
+        "contractValueEur": "Valoarea contractului (EUR + TVA)",
+        "executedEur": "Valoare executată (EUR + TVA)",
+        "invoicedEur": "Valoare facturată (EUR + TVA)",
+        "collectedEur": "Valoare încasată (EUR + TVA)",
+        "remainingToExecuteEur": "Valoare rămasă de executat (EUR + TVA)",
+        "remainingToInvoiceEur": "Valoare rămasă de facturat (EUR + TVA)"
+      },
+      "fields": {
+        "currency": "Moneda",
+        "invoicedNet": "Valoare facturată (net)",
+        "collectedNet": "Valoare încasată (net)",
+        "invoicedInOther": "în {currency}",
+        "rateRefreshed": "actualizat",
+        "refreshRate": "Actualizare la cursul zilei",
+        "notes": "Note"
+      },
+      "pagination": {
+        "prev": "Anterior",
+        "next": "Următor",
+        "pageOf": "Pagina {page} din {total}"
+      },
+      "cancel": "Anulare",
+      "save": "Salvare",
+      "saving": "Se salvează..."
     }
   },
   "boundaries": {
@@ -1130,7 +1182,18 @@
       "replyPlaceholder": "Scrie un răspuns...",
       "publish": "Publică",
       "reply": "Răspunde",
-      "saving": "Se salvează..."
+      "saving": "Se salvează...",
+      "audiencePreviewPending": "Selectați vizibilitatea pentru a vedea câte persoane vor primi anunțul.",
+      "audiencePreviewLoading": "Se calculează...",
+      "audiencePreview": "Va fi trimis către {count} persoane."
+    },
+    "fields": {
+      "project": "Proiect",
+      "team": "Echipă",
+      "selectProject": "Selectați un proiect",
+      "selectTeam": "Selectați o echipă",
+      "titleOptional": "Titlu (opțional)",
+      "ackDeadline": "Termen de confirmare"
     },
     "noteCreated": "Notiță adăugată.",
     "noteStatusUpdated": "Status actualizat.",
@@ -1164,6 +1227,102 @@
       "allKinds": "Toate tipurile",
       "unreadOnly": "Doar necitite",
       "openOnly": "Doar deschise"
+    },
+    "announcements": {
+      "eyebrow": "COMUNICARE · ANUNȚURI",
+      "title": "Anunțuri",
+      "subtitle": "Comunicări oficiale către companie, echipă sau proiect — cu confirmare de citire.",
+      "listTitle": "Toate anunțurile",
+      "new": "Anunț nou",
+      "empty": "Nu există anunțuri încă.",
+      "deadline": "termen {date}",
+      "ackRatio": "{acknowledged}/{total} confirmate",
+      "needsYourAck": "necesită confirmarea ta",
+      "acknowledge": "Am citit și am înțeles",
+      "youAcknowledged": "Ai confirmat acest anunț.",
+      "ackTableTitle": "Confirmări ({acknowledged}/{total})",
+      "unconfirmedTitle": "Neconfirmat ({count})",
+      "confirmedTitle": "Confirmat ({count})",
+      "allConfirmed": "Toată lumea a confirmat.",
+      "sendReminder": "Trimite memento",
+      "lastReminderAt": "Ultimul memento: {date}",
+      "reminderSent": "Memento trimis.",
+      "reminderNoneLeft": "Nimeni nu mai are de confirmat.",
+      "reminderRateLimited": "Poți trimite un memento o dată la 24 de ore.",
+      "announcementCreated": "Anunț publicat.",
+      "acknowledged": "Confirmare înregistrată."
+    },
+    "feed": {
+      "title": "Flux global",
+      "eyebrow": "COMUNICARE · FLUX",
+      "subtitle": "Tot ce s-a scris și tot ce s-a schimbat, într-un singur flux cronologic.",
+      "empty": "Niciun eveniment încă.",
+      "loadMore": "Încarcă mai multe",
+      "system": "Sistem",
+      "filter": {
+        "all": "Tot",
+        "people": "Doar oameni",
+        "system": "Doar sistem"
+      },
+      "filters": {
+        "project": "Proiect",
+        "allProjects": "Toate proiectele",
+        "actor": "Persoană",
+        "allActors": "Toate persoanele",
+        "verbGroup": "Tip eveniment",
+        "allVerbGroups": "Toate tipurile",
+        "dateFrom": "De la",
+        "dateTo": "Până la"
+      },
+      "verbGroup": {
+        "project": "Proiect",
+        "matrice": "Matrice",
+        "situation": "Situații",
+        "document": "Documente",
+        "vacation": "Concedii"
+      },
+      "grouped": "{name} a făcut {count} actualizări",
+      "groupedSystem": "{count} actualizări de sistem",
+      "verb": {
+        "project_created": "a creat proiectul {entityName}",
+        "project_phase_changed": "a schimbat faza proiectului {entityName} din {old} în {new}",
+        "project_status_changed": "a schimbat statusul proiectului {entityName} din {old} în {new}",
+        "project_deadline_changed": "a schimbat termenul proiectului {entityName}",
+        "project_value_changed": "a schimbat valoarea proiectului {entityName}",
+        "matrice_status_changed": "a actualizat {activityName} în {new}",
+        "situation_created": "a creat situația {entityName}",
+        "situation_finalized": "a finalizat situația {entityName}",
+        "document_uploaded": "a încărcat documentul {entityName}",
+        "vacation_submitted": "a depus o cerere de concediu",
+        "vacation_approved": "a aprobat o cerere de concediu",
+        "vacation_rejected": "a respins o cerere de concediu"
+      }
+    },
+    "timeline": {
+      "title": "Cronologie",
+      "empty": "Niciun eveniment sau notiță încă pe acest proiect."
+    },
+    "metrics": {
+      "title": "Sănătatea comunicării",
+      "eyebrow": "COMUNICARE · INDICATORI",
+      "vsTrend": "față de perioada anterioară",
+      "noPriorPeriod": "—",
+      "ackRate": {
+        "label": "Rată de confirmare în 24h",
+        "meaning": "Din anunțurile care necesită confirmare, cât % au fost confirmate în primele 24 de ore. Țintă: peste 80%."
+      },
+      "staleQuestions": {
+        "label": "Întrebări/riscuri deschise de peste 7 zile",
+        "meaning": "Dacă acest număr crește, sistemul nu se mai rezolvă — doar se adună."
+      },
+      "silentProjects": {
+        "label": "Proiecte fără nicio notiță în 30 de zile",
+        "meaning": "Un proiect tăcut nu e liniște, e un canal umbră — probabil se discută în altă parte."
+      },
+      "decisions": {
+        "label": "Decizii înregistrate luna asta",
+        "meaning": "Numărul de decizii scrise în sistem — antidotul disputelor de tip „nu am știut”."
+      }
     }
   }
 }
