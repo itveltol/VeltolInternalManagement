@@ -267,7 +267,33 @@
     "gantt": {
       "tabLabel": "Gantt",
       "breadcrumb": "Gantt"
-    }
+    },
+    "executionData": {
+      "title": "Project execution data",
+      "siteResponsible": "Site responsible",
+      "dirigintesantier": "Site supervisor (Diriginte)",
+      "rte": "RTE",
+      "zileDeadline": "Deadline days",
+      "zileReale": "Real days",
+      "numarPersoane": "Persons allocated",
+      "bugetAlocat": "Allocated budget",
+      "costTotalManopera": "Total labor cost",
+      "save": "Save",
+      "saved": "Saved.",
+      "saveError": "Something went wrong.",
+      "structureConfig": "Structure configuration",
+      "addStructureRow": "Add structure type",
+      "structureType": "Structure type",
+      "mesaCount": "Mesa count",
+      "piciorPerMesa": "Legs / mesa",
+      "stalpPerMesa": "Poles / mesa",
+      "grinziPerMesa": "Beams / mesa",
+      "panePerMesa": "Purlins / mesa",
+      "total": "Total"
+    },
+    "executionDataSaved": "Execution data saved.",
+    "structureRowSaved": "Structure row saved.",
+    "structureRowDeleted": "Structure row deleted."
   },
   "login": {
     "platform": "VELTOL HOLDING S.R.L. · PLATFORM",

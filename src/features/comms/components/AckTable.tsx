@@ -49,7 +49,9 @@ export function AckTable({ noteId, summary, lastReminderAt }: Props) {
             </Button>
             {reminderAt && (
               <span className="text-[11px] text-veltol-fgMute">
-                {t("announcements.lastReminderAt", { date: format.dateTime(new Date(reminderAt), "short") })}
+                {t("announcements.lastReminderAt", {
+                  date: format.dateTime(new Date(reminderAt), { dateStyle: "short", timeStyle: "short" }),
+                })}
               </span>
             )}
           </div>
@@ -91,7 +93,7 @@ export function AckTable({ noteId, summary, lastReminderAt }: Props) {
               >
                 <span>{r.name}</span>
                 <span className="text-[11px] text-veltol-fgMute">
-                  {format.dateTime(new Date(r.acknowledged_at as string), "short")}
+                  {format.dateTime(new Date(r.acknowledged_at as string), { dateStyle: "short", timeStyle: "short" })}
                 </span>
               </li>
             ))}
