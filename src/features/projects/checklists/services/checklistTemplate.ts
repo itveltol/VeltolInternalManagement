@@ -70,12 +70,19 @@ export const PV_TEMPLATE: ChecklistTemplateRow[] = [
   // ── Section VII: VERIFICĂRI ÎNAINTEA RECEPȚIEI ──────────────────────
   row("pv", "VII", 28, "VERIFICĂRI ÎNAINTEA RECEPȚIEI",                null, null, null, "verificari"),
   row("pv", "7.1", 29, "Verificări electrice + măsurători + probe",    null, 3,    null, "verificari"),
+
+  // Added later (item_number 44 — appended, not inserted, so existing saved
+  // records for numbers 1-43 keep referring to the same activity).
+  row("pv", "1.6", 44, "Montaj pane",                                  null, 6,    null, "structura"),
 ];
 
 // NOTE: numbers continue from PV_TEMPLATE's last number (29) — item_number
 // must be globally unique across the whole CHECKLIST_TEMPLATE since rows are
 // looked up and saved by number alone. Restarting at 1 here previously made
 // PV and BESS rows collide (e.g. scheduling one silently scheduled both).
+// New rows must always be APPENDED with the next free number — never insert
+// in the middle and renumber, since existing project_checklist_items rows
+// are keyed by item_number alone and would silently point at the wrong activity.
 export const BESS_TEMPLATE: ChecklistTemplateRow[] = [
   // ── Section I: PREGĂTIRE TEREN ───────────────────────────────────────
   row("bess", "VIII",   30, "PREGĂTIRE TEREN",                              null, null, null, "pregatire_teren_bess"),

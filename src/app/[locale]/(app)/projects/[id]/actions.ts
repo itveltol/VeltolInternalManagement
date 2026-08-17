@@ -6,11 +6,14 @@ import { createSupabaseChecklistClient } from "@/features/projects/checklists/ap
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
 import { createSupabaseMaintenanceClient } from "@/features/projects/maintenance/api/supabaseMaintenanceClient";
+import { createSupabaseExecutionDataClient } from "@/features/projects/executionData/api/supabaseExecutionDataClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import * as projectService from "@/features/projects/services/projectService";
 import * as teamService from "@/features/teams/services/teamService";
 import * as maintenanceRecordsService from "@/features/projects/maintenance/services/maintenanceRecordsService";
+import * as executionDataService from "@/features/projects/executionData/services/executionDataService";
 import type { MaintenancePeriod } from "@/features/projects/maintenance/types";
+import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import type { Project, ProjectManager } from "@/features/projects/types";
@@ -135,6 +138,151 @@ export async function upsertChecklistItem(
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
+}
+
+export async function getExecutionData(projectId: number): Promise<ProjectExecutionData | null> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseExecutionDataClient(supabase);
+  return executionDataService.getExecutionData(client, projectId);
+}
+
+export async function upsertExecutionData(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const client = createSupabaseExecutionDataClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    if (!projectId) return { error: "errorGeneric" };
+
+    await executionDataService.upsertExecutionData(client, {
+      projectId,
+      site_responsible: (formData.get("site_responsible") as string | null) || null,
+      diriginte_santier: (formData.get("diriginte_santier") as string | null) || null,
+      rte: (formData.get("rte") as string | null) || null,
+      buget_alocat_eur: floatOrNull(formData.get("buget_alocat_eur")),
+      numar_persoane_alocate: intOrNull(formData.get("numar_persoane_alocate")),
+      zile_deadline: intOrNull(formData.get("zile_deadline")),
+      zile_reale: intOrNull(formData.get("zile_reale")),
+      updatedBy: user.id,
+    });
+
+    revalidatePath(await getChecklistPath(projectId));
+    return { success: "executionDataSaved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function getStructureConfig(projectId: number): Promise<ProjectStructureConfigRow[]> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseExecutionDataClient(supabase);
+  return executionDataService.getStructureConfig(client, projectId);
+}
+
+export async function upsertStructureConfigRow(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseExecutionDataClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const structureType = (formData.get("structure_type") as string | null) || "";
+    const mesaCount = intOrNull(formData.get("mesa_count"));
+    if (!projectId || !structureType || mesaCount === null) return { error: "errorGeneric" };
+
+    const id = intOrNull(formData.get("id"));
+
+    await executionDataService.upsertStructureConfigRow(client, {
+      ...(id !== null ? { id } : {}),
+      projectId,
+      structure_type: structureType,
+      mesa_count: mesaCount,
+      picior_per_mesa: intOrNull(formData.get("picior_per_mesa")),
+      stalp_per_mesa: intOrNull(formData.get("stalp_per_mesa")),
+      grinzi_per_mesa: intOrNull(formData.get("grinzi_per_mesa")),
+      pane_per_mesa: intOrNull(formData.get("pane_per_mesa")),
+      sort_order: intOrNull(formData.get("sort_order")) ?? 0,
+    });
+
+    await syncStructureTotalsToChecklist(client, projectId);
+
+    revalidatePath(await getChecklistPath(projectId));
+    await revalidateDerivedViews(projectId);
+    return { success: "structureRowSaved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function deleteStructureConfigRow(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const client = createSupabaseExecutionDataClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    const id = Number(formData.get("id"));
+    if (!projectId || !id) return { error: "errorGeneric" };
+
+    await executionDataService.deleteStructureConfigRow(client, id);
+    await syncStructureTotalsToChecklist(client, projectId);
+
+    revalidatePath(await getChecklistPath(projectId));
+    await revalidateDerivedViews(projectId);
+    return { success: "structureRowDeleted" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+/**
+ * Recomputes structure totals (picior/stâlp/grinzi/pane) from every
+ * project_structure_config row and pushes the derived counts into the
+ * matching checklist rows' plan_total, so "Batere stâlpi" / "Montaj grinzi
+ * longitudinale/verticale" / "Montaj pane" always reflect the structure
+ * config instead of being typed in twice.
+ */
+async function syncStructureTotalsToChecklist(
+  executionClient: ReturnType<typeof createSupabaseExecutionDataClient>,
+  projectId: number,
+) {
+  const configRows = await executionDataService.getStructureConfig(executionClient, projectId);
+  const totals = executionDataService.computeStructureTotals(configRows);
+  const overrides = executionDataService.buildStructurePlanTotalOverrides(totals);
+
+  const supabase = createAdminClient();
+  const checklistClient = createSupabaseChecklistClient(supabase);
+  const existingRecords = await checklistService.getChecklistRecords(checklistClient, projectId);
+  const recordByNumber = new Map(existingRecords.map((r) => [r.item_number, r]));
+
+  for (const { itemNumber, plan_total } of overrides) {
+    const existing = recordByNumber.get(itemNumber);
+    await checklistService.upsertChecklistItem(checklistClient, {
+      projectId,
+      itemNumber,
+      plan_total,
+      zile: existing?.zile ?? null,
+      persons_allocated: existing?.persons_allocated ?? null,
+      units_per_person_day: existing?.units_per_person_day ?? null,
+      notes: existing?.notes ?? null,
+    });
+  }
+}
+
+function floatOrNull(raw: FormDataEntryValue | null): number | null {
+  if (raw === null || raw === "") return null;
+  const n = parseFloat(raw as string);
+  return isNaN(n) ? null : n;
 }
 
 async function getTeamMemberCount(supabase: Parameters<typeof createSupabaseTeamsClient>[0], teamId: number): Promise<number> {

@@ -145,15 +145,13 @@ export function NoteComposer({
               }}
             >
               <option value="private">{t("visibility.private")}</option>
-              <option value="team">{t("visibility.team")}</option>
               <option value="project">{t("visibility.project")}</option>
-              <option value="company">{t("visibility.company")}</option>
             </Select>
           </div>
         </div>
       )}
 
-      {!isReply && visibility === "project" && (
+      {!isReply && !fixedAnchor && visibility === "project" && (
         <div>
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
             {t("fields.project")}
@@ -170,29 +168,6 @@ export function NoteComposer({
             {projectOptions.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-      )}
-
-      {!isReply && visibility === "team" && (
-        <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
-            {t("fields.team")}
-          </label>
-          <Select
-            name="teamId"
-            required
-            value={teamId ?? ""}
-            onChange={(e) => setTeamId(e.target.value ? Number(e.target.value) : null)}
-          >
-            <option value="" disabled>
-              {t("fields.selectTeam")}
-            </option>
-            {teamOptions.map((tm) => (
-              <option key={tm.id} value={tm.id}>
-                {tm.name}
               </option>
             ))}
           </Select>

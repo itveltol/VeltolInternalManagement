@@ -1,13 +1,8 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { Plus, Wallet, Gauge, FolderKanban, CheckCircle2 } from "lucide-react";
 import { DashboardKpiRow } from "@/features/dashboard/components/DashboardKpiRow";
-import { DashboardRecentProjects } from "@/features/dashboard/components/DashboardRecentProjects";
-import { IncomeByMonthChart, IncomeCompareChart } from "@/features/dashboard/components/DashboardCharts";
-import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
-import { PhaseDistributionBar } from "@/features/dashboard/components/PhaseDistributionBar";
 import { MaintenanceRemindersCard } from "@/features/dashboard/components/MaintenanceRemindersCard";
 import { AvizRemindersCard } from "@/features/dashboard/components/AvizRemindersCard";
-import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 import { redirect } from "next/navigation";
 import { getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
 import { getCommsMetrics } from "@/app/[locale]/(app)/board/actions";
@@ -19,8 +14,6 @@ import { Link } from "@/i18n/navigation";
 
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
-  const tPhase = await getTranslations("projectPhase");
-  const tContractType = await getTranslations("contractType");
 
   const { user } = await requireAuth();
 
@@ -63,31 +56,6 @@ export default async function DashboardPage() {
     { label: t("industrialProjects"), value: industrial.totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
   ];
 
-  const recentProjects = projectsData.slice(0, 5);
-
-  const availableYears = getAvailableYears(projectsData);
-  const excludedCount = countProjectsWithoutDeadline(projectsData);
-  const excludedNote = excludedCount > 0 ? t("incomeExcludedNote", { count: excludedCount }) : null;
-
-  const phaseCounts = new Map<string, number>();
-  for (const p of projectsData) {
-    phaseCounts.set(p.current_phase, (phaseCounts.get(p.current_phase) ?? 0) + 1);
-  }
-  const PHASE_COLORS: Record<string, string> = {
-    closed: "var(--v-success)",
-    construction: "var(--v-blue)",
-    permitting: "var(--v-warning)",
-    planning: "var(--v-grey)",
-  };
-  const distributionPhases = (["closed", "construction", "permitting", "planning"] as const)
-    .map((phase) => ({
-      phase,
-      label: tPhase(phase),
-      count: phaseCounts.get(phase) ?? 0,
-      color: PHASE_COLORS[phase],
-    }))
-    .filter((p) => p.count > 0);
-
   return (
     <div className="space-y-8">
       <PageHeader
@@ -103,72 +71,18 @@ export default async function DashboardPage() {
 
       <DashboardKpiRow cards={kpiCardsReal} icons={kpiRealIcons} />
 
-      {commsMetrics && <MetricsStrip metrics={commsMetrics} />}
+      <DashboardKpiRow cards={kpiCardsByCategory} />
 
-      {maintenanceReminders.length > 0 && (
-        <MaintenanceRemindersCard reminders={maintenanceReminders} />
-      )}
+      {commsMetrics && <MetricsStrip metrics={commsMetrics} />}
 
       {avizReminders.length > 0 && (
         <AvizRemindersCard reminders={avizReminders} />
       )}
 
-      <DashboardKpiRow cards={kpiCardsByCategory} />
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <IncomeByMonthChart
-          projects={projectsData}
-          availableYears={availableYears}
-          labels={{
-            eyebrow: t("incomeByMonthEyebrow"),
-            title: t("incomeByMonthTitle"),
-            yearLabel: t("incomeYearLabel"),
-            noData: t("incomeNoData"),
-            incomeLabel: t("incomeLabel"),
-            totalLabel: t("incomeTotalLabel"),
-            excludedNote,
-          }}
-        />
-        <IncomeCompareChart
-          projects={projectsData}
-          availableYears={availableYears}
-          labels={{
-            eyebrow: t("incomeCompareEyebrow"),
-            title: t("incomeCompareTitle"),
-            selectMonths: t("incomeSelectMonths"),
-            clearSelection: t("incomeClearSelection"),
-            noData: t("incomeNoData"),
-            incomeLabel: t("incomeLabel"),
-            excludedNote,
-          }}
-        />
-      </div>
-
-      <ContractTypeBreakdown
-        projects={projectsData}
-        labels={{
-          eyebrow: t("contractTypeBreakdownEyebrow"),
-          title: t("contractTypeBreakdownTitle"),
-          projectCount: (count) => t("contractTypeProjectCount", { count }),
-          contractType: (type) => tContractType(type as Parameters<typeof tContractType>[0]),
-        }}
-      />
-
-      {distributionPhases.length > 0 && (
-        <PhaseDistributionBar
-          eyebrow={t("phaseDistributionEyebrow")}
-          title={t("phaseDistributionTitle")}
-          phases={distributionPhases}
-        />
+      {maintenanceReminders.length > 0 && (
+        <MaintenanceRemindersCard reminders={maintenanceReminders} />
       )}
 
-      <DashboardRecentProjects
-        projects={recentProjects}
-        liveLabel={t("live")}
-        eyebrow={t("recentEyebrow")}
-        title={t("recentTitle")}
-        tPhase={(phase) => tPhase(phase as Parameters<typeof tPhase>[0])}
-      />
     </div>
   );
 }

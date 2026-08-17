@@ -267,7 +267,33 @@
     "gantt": {
       "tabLabel": "Gantt",
       "breadcrumb": "Gantt"
-    }
+    },
+    "executionData": {
+      "title": "Date execuție proiect",
+      "siteResponsible": "Responsabil pe șantier",
+      "dirigintesantier": "Diriginte de șantier",
+      "rte": "RTE",
+      "zileDeadline": "Zile deadline",
+      "zileReale": "Zile reale",
+      "numarPersoane": "Persoane alocate",
+      "bugetAlocat": "Buget alocat",
+      "costTotalManopera": "Cost total manoperă",
+      "save": "Salvează",
+      "saved": "Salvat.",
+      "saveError": "A apărut o eroare.",
+      "structureConfig": "Configurație structură",
+      "addStructureRow": "Adaugă tip structură",
+      "structureType": "Tip structură",
+      "mesaCount": "Nr. mese",
+      "piciorPerMesa": "Picior / masă",
+      "stalpPerMesa": "Stâlp / masă",
+      "grinziPerMesa": "Grinzi / masă",
+      "panePerMesa": "Pane / masă",
+      "total": "Total"
+    },
+    "executionDataSaved": "Date de execuție salvate.",
+    "structureRowSaved": "Rând structură salvat.",
+    "structureRowDeleted": "Rând structură șters."
   },
   "login": {
     "platform": "VELTOL HOLDING S.R.L. · PLATFORMĂ",

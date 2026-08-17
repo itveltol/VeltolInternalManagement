@@ -267,7 +267,33 @@
     "gantt": {
       "tabLabel": "Ütemterv",
       "breadcrumb": "Ütemterv"
-    }
+    },
+    "executionData": {
+      "title": "Projekt kivitelezési adatok",
+      "siteResponsible": "Helyszíni felelős",
+      "dirigintesantier": "Építésvezető (Diriginte)",
+      "rte": "RTE",
+      "zileDeadline": "Határidő (nap)",
+      "zileReale": "Valós napok",
+      "numarPersoane": "Kiosztott létszám",
+      "bugetAlocat": "Elosztott költségvetés",
+      "costTotalManopera": "Teljes munkadíj",
+      "save": "Mentés",
+      "saved": "Mentve.",
+      "saveError": "Hiba történt.",
+      "structureConfig": "Szerkezeti konfiguráció",
+      "addStructureRow": "Szerkezet típus hozzáadása",
+      "structureType": "Szerkezet típusa",
+      "mesaCount": "Asztalok száma",
+      "piciorPerMesa": "Láb / asztal",
+      "stalpPerMesa": "Oszlop / asztal",
+      "grinziPerMesa": "Gerenda / asztal",
+      "panePerMesa": "Szelemen / asztal",
+      "total": "Összesen"
+    },
+    "executionDataSaved": "Kivitelezési adatok mentve.",
+    "structureRowSaved": "Szerkezet sor mentve.",
+    "structureRowDeleted": "Szerkezet sor törölve."
   },
   "login": {
     "platform": "VELTOL HOLDING S.R.L. · PLATFORM",
