@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Trash2, Plus } from "lucide-react";
 import {
+  getExecutionData,
   upsertExecutionData,
   upsertStructureConfigRow,
   deleteStructureConfigRow,
@@ -77,13 +78,105 @@ function NumCard({
   );
 }
 
-export function ProjectExecutionDataPanel({ projectId, executionData, structureConfig, canMutate }: Props) {
+const STRUCTURE_NUM_FIELDS = ["mesa_count", "picior_per_mesa", "stalp_per_mesa", "grinzi_per_mesa", "pane_per_mesa"] as const;
+
+function StructureConfigRow({
+  row, canMutate, onSave, onDelete,
+}: {
+  row: ProjectStructureConfigRow;
+  canMutate: boolean;
+  onSave: (row: ProjectStructureConfigRow) => void;
+  onDelete: (row: ProjectStructureConfigRow) => void;
+}) {
+  // Truly uncontrolled: each field's initial value is captured once (via the
+  // lazy useState initializer) and its draft is kept in a ref, never state,
+  // so `defaultValue` never changes for the lifetime of the mounted Input —
+  // neither from typing nor from the parent re-rendering with a fresh `row`
+  // prop after a save. Base UI warns if an uncontrolled field's defaultValue
+  // changes post-init, and this component intentionally never remounts
+  // across a save (the parent keys it on a stable `clientKey`, not `row.id`),
+  // so `row` here must only ever seed the initial value, never drive it.
+  const [initialRow] = useState(row);
+  const draftRef = useRef(row);
+
+  function fieldChange(field: keyof ProjectStructureConfigRow, value: string) {
+    draftRef.current = { ...draftRef.current, [field]: field === "structure_type" ? value : value === "" ? null : Number(value) };
+  }
+
+  function handleBlur() {
+    onSave(draftRef.current);
+  }
+
+  return (
+    <tr>
+      <td className="px-3 py-2">
+        {canMutate ? (
+          <Input
+            defaultValue={initialRow.structure_type}
+            onChange={(e) => fieldChange("structure_type", e.target.value)}
+            onBlur={handleBlur}
+            className="h-7"
+          />
+        ) : row.structure_type}
+      </td>
+      {STRUCTURE_NUM_FIELDS.map((field) => (
+        <td key={field} className="px-3 py-2">
+          {canMutate ? (
+            <Input
+              type="number"
+              min="0"
+              defaultValue={initialRow[field] ?? ""}
+              onChange={(e) => fieldChange(field, e.target.value)}
+              onBlur={handleBlur}
+              className="h-7 text-right font-mono tabular-nums"
+            />
+          ) : (
+            <span className="block text-right font-mono tabular-nums">{row[field] ?? "—"}</span>
+          )}
+        </td>
+      ))}
+      {canMutate && (
+        <td className="px-3 py-2 text-center">
+          <button
+            type="button"
+            onClick={() => onDelete(row)}
+            className="rounded p-1 text-veltol-fgMute transition-colors hover:bg-veltol-surface/50 hover:text-veltol-red"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </td>
+      )}
+    </tr>
+  );
+}
+
+let nextClientKey = 0;
+
+interface StructureRowEntry {
+  clientKey: number;
+  data: ProjectStructureConfigRow;
+}
+
+export function ProjectExecutionDataPanel({ projectId, executionData: initialExecutionData, structureConfig, canMutate }: Props) {
   const t = useTranslations("checklist.executionData");
   const [, startTransition] = useTransition();
-  const [rows, setRows] = useState(structureConfig);
+  const [executionData, setExecutionData] = useState(initialExecutionData);
+  // Each row carries a `clientKey` assigned once, at creation, and never
+  // touched again — including across a new row's id changing from a
+  // negative placeholder to the real DB id after its first save. Keying
+  // StructureConfigRow on `data.id` instead would remount it right as that
+  // id swap happens, destroying whatever the user was mid-typing into
+  // fields they hadn't blurred yet (uncontrolled inputs lose unblurred
+  // keystrokes on remount).
+  const [rows, setRows] = useState<StructureRowEntry[]>(() => structureConfig.map((data) => ({ clientKey: nextClientKey++, data })));
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  // Serializes concurrent blur-saves for the same row (keyed by its original,
+  // pre-save local id) so a new row's fields don't each insert a separate DB
+  // row while the id from the first save hasn't landed in state yet.
+  const rowSaveQueue = useRef<Map<number, Promise<void>>>(new Map());
+  const savedRowIds = useRef<Map<number, number>>(new Map());
 
-  const totals = computeStructureTotals(rows);
+  const totals = computeStructureTotals(rows.map((r) => r.data));
   const laborCost = computeLaborCost(
     executionData?.buget_alocat_eur ?? null,
     executionData?.zile_deadline ?? null,
@@ -95,6 +188,10 @@ export function ProjectExecutionDataPanel({ projectId, executionData, structureC
   function handleInfoSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await upsertExecutionData(null, formData);
+      if (result?.success) {
+        const fresh = await getExecutionData(projectId);
+        setExecutionData(fresh);
+      }
       setSaveMsg(result?.success ? t("saved") : t("saveError"));
       setTimeout(() => setSaveMsg(null), 2000);
     });
@@ -104,33 +201,33 @@ export function ProjectExecutionDataPanel({ projectId, executionData, structureC
     setRows((prev) => [
       ...prev,
       {
-        id: -(prev.length + 1),
-        project_id: projectId,
-        structure_type: "",
-        mesa_count: 0,
-        picior_per_mesa: null,
-        stalp_per_mesa: null,
-        grinzi_per_mesa: null,
-        pane_per_mesa: null,
-        sort_order: prev.length,
-        created_at: "",
-        updated_at: "",
+        clientKey: nextClientKey++,
+        data: {
+          id: -(prev.length + 1),
+          project_id: projectId,
+          structure_type: "",
+          mesa_count: 0,
+          picior_per_mesa: null,
+          stalp_per_mesa: null,
+          grinzi_per_mesa: null,
+          pane_per_mesa: null,
+          sort_order: prev.length,
+          created_at: "",
+          updated_at: "",
+        },
       },
     ]);
   }
 
-  function handleRowFieldChange(id: number, field: keyof ProjectStructureConfigRow, value: string) {
-    setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: field === "structure_type" ? value : value === "" ? null : Number(value) } : r))
-    );
-  }
-
-  function handleRowBlur(row: ProjectStructureConfigRow) {
+  function handleRowSave(row: ProjectStructureConfigRow) {
     if (!row.structure_type || !row.mesa_count) return;
-    startTransition(async () => {
+    const localId = row.id;
+    const previousSave = (rowSaveQueue.current.get(localId) ?? Promise.resolve()).catch(() => {});
+    const thisSave = previousSave.then(async () => {
+      const knownId = localId > 0 ? localId : savedRowIds.current.get(localId);
       const fd = new FormData();
       fd.set("project_id", String(projectId));
-      if (row.id > 0) fd.set("id", String(row.id));
+      if (knownId != null) fd.set("id", String(knownId));
       fd.set("structure_type", row.structure_type);
       fd.set("mesa_count", String(row.mesa_count));
       fd.set("picior_per_mesa", row.picior_per_mesa != null ? String(row.picior_per_mesa) : "");
@@ -138,12 +235,21 @@ export function ProjectExecutionDataPanel({ projectId, executionData, structureC
       fd.set("grinzi_per_mesa", row.grinzi_per_mesa != null ? String(row.grinzi_per_mesa) : "");
       fd.set("pane_per_mesa", row.pane_per_mesa != null ? String(row.pane_per_mesa) : "");
       fd.set("sort_order", String(row.sort_order));
-      await upsertStructureConfigRow(null, fd);
+      const result = await upsertStructureConfigRow(null, fd);
+      if (result?.success && result.id != null) {
+        const savedId = result.id;
+        savedRowIds.current.set(localId, savedId);
+        setRows((prev) => prev.map((r) => (r.data.id === localId || r.data.id === savedId ? { ...r, data: { ...row, id: savedId } } : r)));
+      }
+    });
+    rowSaveQueue.current.set(localId, thisSave);
+    startTransition(async () => {
+      await thisSave;
     });
   }
 
   function handleDeleteRow(row: ProjectStructureConfigRow) {
-    setRows((prev) => prev.filter((r) => r.id !== row.id));
+    setRows((prev) => prev.filter((r) => r.data.id !== row.id));
     if (row.id <= 0) return;
     startTransition(async () => {
       const fd = new FormData();
@@ -206,48 +312,14 @@ export function ProjectExecutionDataPanel({ projectId, executionData, structureC
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td className="px-3 py-2">
-                    {canMutate ? (
-                      <Input
-                        key={row.updated_at || row.id}
-                        defaultValue={row.structure_type}
-                        onChange={(e) => handleRowFieldChange(row.id, "structure_type", e.target.value)}
-                        onBlur={() => handleRowBlur(row)}
-                        className="h-7"
-                      />
-                    ) : row.structure_type}
-                  </td>
-                  {(["mesa_count", "picior_per_mesa", "stalp_per_mesa", "grinzi_per_mesa", "pane_per_mesa"] as const).map((field) => (
-                    <td key={field} className="px-3 py-2">
-                      {canMutate ? (
-                        <Input
-                          key={`${row.updated_at || row.id}-${field}`}
-                          type="number"
-                          min="0"
-                          defaultValue={row[field] ?? ""}
-                          onChange={(e) => handleRowFieldChange(row.id, field, e.target.value)}
-                          onBlur={() => handleRowBlur(row)}
-                          className="h-7 text-right font-mono tabular-nums"
-                        />
-                      ) : (
-                        <span className="block text-right font-mono tabular-nums">{row[field] ?? "—"}</span>
-                      )}
-                    </td>
-                  ))}
-                  {canMutate && (
-                    <td className="px-3 py-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRow(row)}
-                        className="rounded p-1 text-veltol-fgMute transition-colors hover:bg-veltol-surface/50 hover:text-veltol-red"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  )}
-                </tr>
+              {rows.map(({ clientKey, data }) => (
+                <StructureConfigRow
+                  key={clientKey}
+                  row={data}
+                  canMutate={canMutate}
+                  onSave={handleRowSave}
+                  onDelete={handleDeleteRow}
+                />
               ))}
             </tbody>
             <tfoot>

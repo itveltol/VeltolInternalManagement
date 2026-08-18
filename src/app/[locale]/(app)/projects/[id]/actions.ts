@@ -34,14 +34,19 @@ async function getChecklistPath(projectId: number) {
 
 /**
  * Checklist writes can flip a mapped Matrice cell (via a DB trigger) and, from
- * there, the project's derived progress_pct/status — revalidate those views
- * too, not just the checklist page, so they don't show stale data.
+ * there, the project's derived progress_pct/status — revalidate those other
+ * views so they don't show stale data next time they're visited. Deliberately
+ * does NOT revalidate this project's own page: doing so while a client
+ * component here is mid-edit (e.g. tabbing through the structure-config
+ * table) makes Next.js push a fresh server-rendered payload for the whole
+ * route immediately, which can reset in-progress uncontrolled input state.
+ * The client already has more precise state than a refetch would provide;
+ * callers that need this page itself fresh call revalidatePath explicitly.
  */
-async function revalidateDerivedViews(projectId: number) {
+async function revalidateDerivedViews() {
   const locale = await getLocale();
   revalidatePath(`/${locale}/matrice-status`);
   revalidatePath(`/${locale}/projects`);
-  revalidatePath(`/${locale}/projects/${projectId}`);
 }
 
 async function requireAuth() {
@@ -132,7 +137,7 @@ export async function upsertChecklistItem(
     });
 
     revalidatePath(await getChecklistPath(projectId));
-    await revalidateDerivedViews(projectId);
+    await revalidateDerivedViews();
     return { success: "itemSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -169,7 +174,10 @@ export async function upsertExecutionData(
       updatedBy: user.id,
     });
 
-    revalidatePath(await getChecklistPath(projectId));
+    // Deliberately not revalidating this project's own page here: the
+    // client (ProjectExecutionDataPanel) already re-fetches and displays the
+    // saved value directly, and revalidating this route while other fields
+    // in the same panel are mid-edit can reset their in-progress state.
     return { success: "executionDataSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -183,10 +191,12 @@ export async function getStructureConfig(projectId: number): Promise<ProjectStru
   return executionDataService.getStructureConfig(client, projectId);
 }
 
+export type UpsertStructureConfigRowState = (ActionState & { id?: number }) | null;
+
 export async function upsertStructureConfigRow(
-  _prev: ActionState,
+  _prev: UpsertStructureConfigRowState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<UpsertStructureConfigRowState> {
   try {
     const { supabase } = await requireMutator();
     const client = createSupabaseExecutionDataClient(supabase);
@@ -198,7 +208,7 @@ export async function upsertStructureConfigRow(
 
     const id = intOrNull(formData.get("id"));
 
-    await executionDataService.upsertStructureConfigRow(client, {
+    const saved = await executionDataService.upsertStructureConfigRow(client, {
       ...(id !== null ? { id } : {}),
       projectId,
       structure_type: structureType,
@@ -212,9 +222,8 @@ export async function upsertStructureConfigRow(
 
     await syncStructureTotalsToChecklist(client, projectId);
 
-    revalidatePath(await getChecklistPath(projectId));
-    await revalidateDerivedViews(projectId);
-    return { success: "structureRowSaved" };
+    await revalidateDerivedViews();
+    return { success: "structureRowSaved", id: saved.id };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
@@ -236,8 +245,7 @@ export async function deleteStructureConfigRow(
     await executionDataService.deleteStructureConfigRow(client, id);
     await syncStructureTotalsToChecklist(client, projectId);
 
-    revalidatePath(await getChecklistPath(projectId));
-    await revalidateDerivedViews(projectId);
+    await revalidateDerivedViews();
     return { success: "structureRowDeleted" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -308,7 +316,7 @@ export async function logTodayRealizat(
     await checklistService.logTodayRealizat(client, itemId, projectId, realizat);
 
     revalidatePath(await getChecklistPath(projectId));
-    await revalidateDerivedViews(projectId);
+    await revalidateDerivedViews();
     return { success: "todaySaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };

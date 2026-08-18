@@ -20,9 +20,10 @@ interface Props {
   checklistRecords: ChecklistItemRecord[];
   todayMs: number;
   canMutate: boolean;
+  onChanged?: () => void;
 }
 
-export function ProjectPhaseGanttShell({ project, initialActivities, initialCells, checklistRecords, todayMs, canMutate }: Props) {
+export function ProjectPhaseGanttShell({ project, initialActivities, initialCells, checklistRecords, todayMs, canMutate, onChanged }: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -68,7 +69,7 @@ export function ProjectPhaseGanttShell({ project, initialActivities, initialCell
           open
           onClose={() => {
             setEditing(null);
-            router.refresh();
+            onChanged?.();
           }}
         />
       )}
