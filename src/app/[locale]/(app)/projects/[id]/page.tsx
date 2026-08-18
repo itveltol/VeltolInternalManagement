@@ -2,21 +2,13 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getProjectFinancials, getExecutionData, getStructureConfig } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
-import { mergeChecklistRows, computeSectionSummaries, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
-import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
-import { ProjectExecutionDataPanel } from "@/features/projects/executionData/components/ProjectExecutionDataPanel";
-import { ProjectPhaseGanttShell } from "@/features/gantt/components/ProjectPhaseGanttShell";
+import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
+import { ProjectTabsShell } from "@/features/projects/components/ProjectTabsShell";
 import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
-import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
-import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
-import { FinanciarShell } from "@/features/finance/components/FinanciarShell";
-import { NoteThread } from "@/features/comms/components/NoteThread";
-import { ProjectTimeline } from "@/features/comms/components/ProjectTimeline";
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
-import { contractValueEur } from "@/features/finance/services/marginService";
 import { isBessProjectType } from "@/features/projects/types";
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
@@ -45,20 +37,16 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const isDocumentsTab = tab === "documents";
   const isGanttTab = tab === "gantt";
   const isMaintenanceTab = tab === "maintenance";
-  const isFinanciarTab = tab === "financiar";
   const isComunicareTab = tab === "comunicare";
 
   const project = await getProject(projectId);
   if (!project) notFound();
 
-  // Finance feature is hidden for now.
-  const canReadFinancials = false;
-
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
   const hasBess = isBessProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, financials, timelinePage, executionData, structureConfig] =
+  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -69,7 +57,6 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
       isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [], checklistRecordsByProjectId: {} }),
       hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
-      isFinanciarTab && canReadFinancials ? getProjectFinancials(projectId) : Promise.resolve(null),
       isComunicareTab ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
       isSubcontracted ? Promise.resolve(null) : getExecutionData(projectId),
       isSubcontracted ? Promise.resolve([]) : getStructureConfig(projectId),
@@ -80,7 +67,6 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const canAssignTeam = role === "admin" || project.manager_id === user?.id;
 
   const rows = mergeChecklistRows(records, hasBess);
-  const sections = computeSectionSummaries(rows);
 
   const t = await getTranslations("checklist");
   const tPhase = await getTranslations("projectPhase");
@@ -88,10 +74,11 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const tProjects = await getTranslations("projects");
   const tDocs = await getTranslations("documents");
   const tMaintenance = await getTranslations("maintenance");
-  const tFinanciar = await getTranslations("financiar");
   const tComms = await getTranslations("comms");
 
   const overallPct = computeOverallPct(rows);
+
+  const initialTab = isDocumentsTab ? "documents" : isGanttTab ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
 
   return (
     <div className="space-y-8">
@@ -104,7 +91,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         <span className="text-veltol-fgDim">{project.name}</span>
         <span>/</span>
         <span className="text-veltol-accent">
-          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isFinanciarTab ? tFinanciar("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist")}
+          {isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist")}
         </span>
       </nav>
 
@@ -177,119 +164,24 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         canAssignTeam={canAssignTeam}
       />
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-border">
-          {[
-            ...(isSubcontracted
-              ? []
-              : [{ key: "checklist", label: tDocs("tab.checklist"), href: `/projects/${projectId}` }]),
-            { key: "gantt", label: t("gantt.tabLabel"), href: isSubcontracted ? `/projects/${projectId}` : `/projects/${projectId}?tab=gantt` },
-            { key: "documents", label: tDocs("tab.documents"), href: `/projects/${projectId}?tab=documents` },
-            ...(hasMaintenance
-              ? [{ key: "maintenance", label: tMaintenance("tabLabel"), href: `/projects/${projectId}?tab=maintenance` }]
-              : []),
-            ...(canReadFinancials
-              ? [{ key: "financiar", label: tFinanciar("tabLabel"), href: `/projects/${projectId}?tab=financiar` }]
-              : []),
-            { key: "comunicare", label: tComms("tabLabel"), href: `/projects/${projectId}?tab=comunicare` },
-          ].map(({ key, label, href }) => {
-            const active = key === "documents" ? isDocumentsTab : key === "maintenance" ? isMaintenanceTab : key === "financiar" ? isFinanciarTab : key === "comunicare" ? isComunicareTab : key === "gantt" ? (isGanttTab || (isSubcontracted && !isDocumentsTab && !isMaintenanceTab && !isFinanciarTab && !isComunicareTab)) : (!isDocumentsTab && !isGanttTab && !isMaintenanceTab && !isFinanciarTab && !isComunicareTab);
-            return (
-              <Link
-                key={key}
-                href={href}
-                className={
-                  active
-                    ? "rounded-t-md border border-b-0 border-veltol-accent/25 bg-veltol-accent/10 px-4 py-2 text-[13px] font-semibold text-veltol-accent"
-                    : "px-4 py-2 text-[13px] text-veltol-fgMute transition-colors hover:text-veltol-fgDim"
-                }
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-
-        {isDocumentsTab ? (
-          <ProjectDocumentsTab
-            documents={projectDocuments}
-            project={project}
-            canMutate={canMutate}
-          />
-        ) : isMaintenanceTab && hasMaintenance ? (
-          <MaintenanceShell
-            projectId={project.id}
-            checks={maintenanceChecks}
-            canMutate={canMutate}
-            todayMs={todayMs}
-          />
-        ) : isFinanciarTab && canReadFinancials && financials ? (
-          <FinanciarShell
-            projectId={project.id}
-            contractValueEur={contractValueEur(project.currency, project.value_eur, project.value_lei, project.conversion_rate)}
-            categories={financials.categories}
-            lines={financials.lines}
-            exchangeRate={financials.exchangeRate}
-            canMutate={canMutate}
-          />
-        ) : isComunicareTab ? (
-          <div className="flex flex-col gap-6">
-            <div className="rounded-card border border-border bg-card p-5 shadow-card">
-              <h2 className="mb-3 text-[13px] font-semibold text-veltol-fg">{tComms("timeline.title")}</h2>
-              <ProjectTimeline
-                projectId={project.id}
-                initialItems={timelinePage.items}
-                initialHasMore={timelinePage.hasMore}
-              />
-            </div>
-            <div className="rounded-card border border-border bg-card p-5 shadow-card">
-              <NoteThread
-                anchor={{ projectId: project.id }}
-                anchorLabel={`${tComms("anchorProject")} · ${project.name}`}
-              />
-            </div>
-          </div>
-        ) : isGanttTab || isSubcontracted ? (
-          <ProjectPhaseGanttShell
-            project={project}
-            initialActivities={activities}
-            initialCells={cells}
-            checklistRecords={records}
-            todayMs={todayMs}
-            canMutate={canMutate}
-          />
-        ) : (
-          <>
-            <ProjectExecutionDataPanel
-              projectId={project.id}
-              executionData={executionData}
-              structureConfig={structureConfig}
-              canMutate={canMutate}
-            />
-
-            {/* Section summary strip */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {sections.map((s) => (
-                <div key={s.phase} className="rounded-lg border border-border bg-card px-3 py-2.5">
-                  <div className="text-[11px] font-medium text-veltol-fgMute">
-                    {t(`phase.${s.phase}`)}
-                  </div>
-                  <div className="mt-1.5 h-0.5 w-full overflow-hidden rounded-full bg-veltol-surface">
-                    <div
-                      className="h-full rounded-full bg-veltol-accent transition-all duration-700"
-                      style={{ width: `${s.avgPct}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 font-mono tabular-nums text-[11px] text-veltol-fgDim">
-                    {Math.round(s.avgPct)}%
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} teamMemberCount={project.team?.member_count ?? null} />
-          </>
-        )}
+      <ProjectTabsShell
+        project={project}
+        initialTab={initialTab}
+        isSubcontracted={isSubcontracted}
+        hasMaintenance={hasMaintenance}
+        hasBess={hasBess}
+        canMutate={canMutate}
+        todayMs={todayMs}
+        records={records}
+        executionData={executionData}
+        structureConfig={structureConfig}
+        teamMemberCount={project.team?.member_count ?? null}
+        initialActivities={activities}
+        initialCells={cells}
+        initialDocuments={projectDocuments}
+        initialMaintenanceChecks={maintenanceChecks}
+        initialTimelinePage={timelinePage}
+      />
     </div>
   );
 }

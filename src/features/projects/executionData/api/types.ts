@@ -28,6 +28,6 @@ export interface ExecutionDataApiClient {
   getExecutionData(projectId: number): Promise<ProjectExecutionData | null>;
   upsertExecutionData(payload: UpsertExecutionDataPayload): Promise<void>;
   getStructureConfig(projectId: number): Promise<ProjectStructureConfigRow[]>;
-  upsertStructureConfigRow(payload: UpsertStructureConfigRowPayload): Promise<void>;
+  upsertStructureConfigRow(payload: UpsertStructureConfigRowPayload): Promise<{ id: number }>;
   deleteStructureConfigRow(id: number): Promise<void>;
 }

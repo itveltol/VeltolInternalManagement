@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Badge } from "@/shared/components/ui/badge";
@@ -14,6 +13,7 @@ interface Props {
   checks: MaintenanceCheck[];
   canMutate: boolean;
   todayMs: number;
+  onChanged?: () => void;
 }
 
 function stateVariant(state: MaintenanceState) {
@@ -24,9 +24,8 @@ function stateVariant(state: MaintenanceState) {
   }
 }
 
-export function MaintenanceShell({ projectId, checks, canMutate, todayMs }: Props) {
+export function MaintenanceShell({ projectId, checks, canMutate, todayMs, onChanged }: Props) {
   const t = useTranslations("maintenance");
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const cycles = buildMaintenanceCycles(checks, new Date(todayMs));
@@ -35,7 +34,7 @@ export function MaintenanceShell({ projectId, checks, canMutate, todayMs }: Prop
     startTransition(async () => {
       const result = await setMaintenanceCheckAction(projectId, year, period, checked);
       if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
-      router.refresh();
+      onChanged?.();
     });
   }
 

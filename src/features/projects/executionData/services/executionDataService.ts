@@ -29,7 +29,7 @@ export async function getStructureConfig(
 export async function upsertStructureConfigRow(
   client: ExecutionDataApiClient,
   payload: UpsertStructureConfigRowPayload
-): Promise<void> {
+): Promise<{ id: number }> {
   return client.upsertStructureConfigRow(payload);
 }
 
