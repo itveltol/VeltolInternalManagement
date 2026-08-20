@@ -395,6 +395,7 @@
       "expiresOn": "Expiră {date}"
     },
     "status": {
+      "depus": "Depus",
       "finalizat": "Finalizat",
       "in_progres": "În progres",
       "in_asteptare": "În așteptare",
@@ -425,7 +426,8 @@
         "next": "Următor",
         "pageOf": "Pagina {page} din {total}"
       }
-    }
+    },
+    "errorUnmetDependency": "Această activitate nu poate fi marcată finalizată până când activitățile preliminare nu sunt finalizate: {names}."
   },
   "vacation": {
     "eyebrow": "HR · CERERI CONCEDIU",
@@ -515,7 +517,11 @@
     "holidayCreated": "Sărbătoare adăugată.",
     "holidayDeleted": "Sărbătoare ștearsă.",
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
-    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune."
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "matriceCatalogLink": {
+      "title": "Catalog Matrice",
+      "description": "Redenumește, reordonează și regrupează fazele și activitățile Matrice, setează cerințe de expirare și gestionează dependențele dintre activități."
+    }
   },
   "vacationBalance": {
     "title": "Sold concediu",
@@ -1328,28 +1334,47 @@
     "timeline": {
       "title": "Cronologie",
       "empty": "Niciun eveniment sau notiță încă pe acest proiect."
+    }
+  },
+  "matriceCatalog": {
+    "eyebrow": "SETĂRI · CATALOG MATRICE",
+    "title": "Catalog Matrice",
+    "description": "Editează fazele și activitățile care alcătuiesc grila de status Matrice. Modificările se aplică imediat în toată aplicația.",
+    "addPhase": "Adaugă fază",
+    "phaseName": "Nume fază",
+    "serviceType": "Serviciu contract",
+    "serviceTypes": {
+      "proiectare": "Proiectare",
+      "executie": "Execuție",
+      "mentenanta": "Mentenanță"
     },
-    "metrics": {
-      "title": "Sănătatea comunicării",
-      "eyebrow": "COMUNICARE · INDICATORI",
-      "vsTrend": "față de perioada anterioară",
-      "noPriorPeriod": "—",
-      "ackRate": {
-        "label": "Rată de confirmare în 24h",
-        "meaning": "Din anunțurile care necesită confirmare, cât % au fost confirmate în primele 24 de ore. Țintă: peste 80%."
-      },
-      "staleQuestions": {
-        "label": "Întrebări/riscuri deschise de peste 7 zile",
-        "meaning": "Dacă acest număr crește, sistemul nu se mai rezolvă — doar se adună."
-      },
-      "silentProjects": {
-        "label": "Proiecte fără nicio notiță în 30 de zile",
-        "meaning": "Un proiect tăcut nu e liniște, e un canal umbră — probabil se discută în altă parte."
-      },
-      "decisions": {
-        "label": "Decizii înregistrate luna asta",
-        "meaning": "Numărul de decizii scrise în sistem — antidotul disputelor de tip „nu am știut”."
-      }
+    "ganttPhaseKey": "Grup Gantt",
+    "ganttPhaseKeyNone": "Niciunul",
+    "ganttPhaseKeys": {
+      "planning": "Planificare",
+      "execution": "Execuție",
+      "autorizare": "Autorizare"
+    },
+    "moveUp": "Mută sus",
+    "moveDown": "Mută jos",
+    "delete": "Șterge",
+    "confirmDeletePhase": "Ștergi această fază?",
+    "confirmDeletePhaseWithActivities": "Această fază are {count} activități — vor fi șterse și acestea.",
+    "noActivities": "Încă nu există activități în această fază.",
+    "newActivityPlaceholder": "Nume activitate nouă",
+    "addActivity": "Adaugă activitate",
+    "expiresRequired": "Necesită dată de expirare",
+    "expiresRequiredLockedByAviz": "Întotdeauna necesar pentru activitățile de tip aviz.",
+    "dependencies": "Dependențe",
+    "confirmDeleteActivity": "Ștergi această activitate?",
+    "confirmDeleteActivityWithLinks": "Această activitate este legată de un element din checklist și/sau reguli de dependență — aceste legături vor fi șterse și ele.",
+    "errorGeneric": "Ceva nu a mers bine.",
+    "errorNotAllowed": "Nu ai permisiunea să faci asta.",
+    "errorDependencyCycle": "Aceasta ar crea o dependență circulară.",
+    "dependencyDialog": {
+      "title": "Dependențe pentru \"{activity}\"",
+      "description": "Selectează activitățile care trebuie finalizate înainte ca aceasta să poată fi marcată finalizată.",
+      "close": "Închide"
     }
   }
 }

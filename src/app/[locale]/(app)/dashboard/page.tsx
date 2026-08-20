@@ -5,8 +5,6 @@ import { MaintenanceRemindersCard } from "@/features/dashboard/components/Mainte
 import { AvizRemindersCard } from "@/features/dashboard/components/AvizRemindersCard";
 import { redirect } from "next/navigation";
 import { getProjects, getDashboardStats, getMaintenanceReminders, getAvizReminders } from "@/app/[locale]/(app)/dashboard/action";
-import { getCommsMetrics } from "@/app/[locale]/(app)/board/actions";
-import { MetricsStrip } from "@/features/comms/components/MetricsStrip";
 import { requireAuth } from "@/core/supabase/session";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { Button } from "@/shared/components/ui/button";
@@ -27,12 +25,10 @@ export default async function DashboardPage() {
     { totalPortfolioValue, totalCapacity, totalProjects, totalFinishedProjects, residential, industrial },
     maintenanceReminders,
     avizReminders,
-    commsMetrics,
   ] = await Promise.all([
     getDashboardStats(projectsData),
     getMaintenanceReminders(projectsData),
     getAvizReminders(projectsData),
-    getCommsMetrics(),
   ]);
 
   const kpiCardsReal = [
@@ -72,8 +68,6 @@ export default async function DashboardPage() {
       <DashboardKpiRow cards={kpiCardsReal} icons={kpiRealIcons} />
 
       <DashboardKpiRow cards={kpiCardsByCategory} />
-
-      {commsMetrics && <MetricsStrip metrics={commsMetrics} />}
 
       {avizReminders.length > 0 && (
         <AvizRemindersCard reminders={avizReminders} />

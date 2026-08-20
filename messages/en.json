@@ -395,6 +395,7 @@
       "expiresOn": "Expires {date}"
     },
     "status": {
+      "depus": "Submitted",
       "finalizat": "Done",
       "in_progres": "In progress",
       "in_asteptare": "Waiting",
@@ -425,7 +426,8 @@
         "next": "Next",
         "pageOf": "Page {page} of {total}"
       }
-    }
+    },
+    "errorUnmetDependency": "This activity can't be marked finalized until its prerequisite activities are finished: {names}."
   },
   "vacation": {
     "eyebrow": "HR · VACATION REQUESTS",
@@ -515,7 +517,11 @@
     "holidayCreated": "Holiday added.",
     "holidayDeleted": "Holiday deleted.",
     "errorGeneric": "Something went wrong.",
-    "errorNotAllowed": "You don't have permission to do this."
+    "errorNotAllowed": "You don't have permission to do this.",
+    "matriceCatalogLink": {
+      "title": "Matrice catalog",
+      "description": "Rename, reorder, and regroup Matrice phases and activities, set expiry requirements, and manage dependencies between activities."
+    }
   },
   "vacationBalance": {
     "title": "Vacation balance",
@@ -1328,28 +1334,47 @@
     "timeline": {
       "title": "Timeline",
       "empty": "No events or notes on this project yet."
+    }
+  },
+  "matriceCatalog": {
+    "eyebrow": "SETTINGS · MATRICE CATALOG",
+    "title": "Matrice Catalog",
+    "description": "Edit the phases and activities that make up the Matrice status grid. Changes apply immediately across the app.",
+    "addPhase": "Add phase",
+    "phaseName": "Phase name",
+    "serviceType": "Contract service",
+    "serviceTypes": {
+      "proiectare": "Proiectare",
+      "executie": "Executie",
+      "mentenanta": "Mentenanta"
     },
-    "metrics": {
-      "title": "Communication health",
-      "eyebrow": "COMMUNICATION · METRICS",
-      "vsTrend": "vs. previous period",
-      "noPriorPeriod": "—",
-      "ackRate": {
-        "label": "24h acknowledgement rate",
-        "meaning": "Of announcements requiring acknowledgement, what share were acknowledged within 24 hours. Target: above 80%."
-      },
-      "staleQuestions": {
-        "label": "Questions/risks open over 7 days",
-        "meaning": "If this number grows, the system isn't resolving anything — just accumulating."
-      },
-      "silentProjects": {
-        "label": "Active projects with no notes in 30 days",
-        "meaning": "A silent project isn't peace, it's a shadow channel — it's probably being discussed elsewhere."
-      },
-      "decisions": {
-        "label": "Decisions recorded this month",
-        "meaning": "The number of decisions written into the system — the actual cure for \"I didn't know about this\" disputes."
-      }
+    "ganttPhaseKey": "Gantt bucket",
+    "ganttPhaseKeyNone": "None",
+    "ganttPhaseKeys": {
+      "planning": "Planning",
+      "execution": "Execution",
+      "autorizare": "Autorizare"
+    },
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "delete": "Delete",
+    "confirmDeletePhase": "Delete this phase?",
+    "confirmDeletePhaseWithActivities": "This phase has {count} activities — they will be deleted too.",
+    "noActivities": "No activities in this phase yet.",
+    "newActivityPlaceholder": "New activity name",
+    "addActivity": "Add activity",
+    "expiresRequired": "Requires expiry date",
+    "expiresRequiredLockedByAviz": "Always required for aviz (permit) activities.",
+    "dependencies": "Dependencies",
+    "confirmDeleteActivity": "Delete this activity?",
+    "confirmDeleteActivityWithLinks": "This activity is linked to a checklist item and/or dependency rules — those links will be removed too.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "errorDependencyCycle": "This would create a circular dependency.",
+    "dependencyDialog": {
+      "title": "Dependencies for \"{activity}\"",
+      "description": "Select the activities that must be finalized before this one can be marked finalized.",
+      "close": "Close"
     }
   }
 }

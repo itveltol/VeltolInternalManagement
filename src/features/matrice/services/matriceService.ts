@@ -2,14 +2,14 @@ import { unstable_cache } from 'next/cache';
 import { createAdminClient } from '@/core/supabase/admin';
 import { createSupabaseMatriceClient } from '../api/supabaseMatriceClient';
 import type { MatriceApiClient } from '../api/types';
-import type { Activity, MatrixCell, MatrixData, ActivityStatus, MatrixProject } from '../types';
-import type { ContractType } from '@/features/projects/types';
+import type { Activity, ActivityDependency, MatricePhase, MatrixCell, MatrixData, ActivityStatus, MatrixProject } from '../types';
 
-// `activities` is a near-static workflow taxonomy (~28 rows, no CRUD UI) with
-// a uniform "authenticated select" RLS policy, so it's safe and worthwhile to
-// cache globally rather than re-querying it on every Matrice/Gantt/project
-// page load. No updateTag/revalidateTag call site exists yet since nothing in the app
-// currently mutates this table.
+// `activities`/`matrice_phases` are now admin-editable (see
+// settings/matrice-catalog), but still change rarely relative to page loads,
+// so caching remains worthwhile. Every mutating action in
+// settings/matrice-catalog/actions.ts calls updateTag('activities') so
+// edits show up immediately (read-your-own-writes) rather than after a
+// stale-while-revalidate delay.
 export const getCachedActivities = unstable_cache(
   async (): Promise<Activity[]> => {
     const client = createSupabaseMatriceClient(createAdminClient());
@@ -19,34 +19,41 @@ export const getCachedActivities = unstable_cache(
   { tags: ['activities'] },
 );
 
-/**
- * Matrice phase_no ranges rolled up to the contract's service scope, mirroring
- * GANTT_PHASE_MATRICE_RANGE (planning=1-7, execution=8-10, autorizare=11-12):
- * these are workflow stages, contract_type is which services are contracted —
- * this bridges the two so excluded services can be grayed out, not deleted.
- * Phases 8-12 are all gated on "executie" — 11-12 (autorizare) are
- * execution-stage work, not a maintenance contract service.
- */
-export function contractTypeForPhase(phaseNo: number): ContractType {
-  if (phaseNo <= 7) return 'proiectare';
-  return 'executie';
-}
+export const getCachedPhases = unstable_cache(
+  async (): Promise<MatricePhase[]> => {
+    const client = createSupabaseMatriceClient(createAdminClient());
+    return client.getPhases();
+  },
+  ['matrice-phases'],
+  { tags: ['activities'] },
+);
+
+export const getCachedDependencies = unstable_cache(
+  async (): Promise<ActivityDependency[]> => {
+    const client = createSupabaseMatriceClient(createAdminClient());
+    return client.getDependencies();
+  },
+  ['matrice-dependencies'],
+  { tags: ['activities'] },
+);
 
 /** Whether a project's contract currently covers the given phase's service */
-export function isPhaseEnabled(project: MatrixProject, phaseNo: number): boolean {
-  return project.contract_type.includes(contractTypeForPhase(phaseNo));
+export function isPhaseEnabled(project: MatrixProject, phase: MatricePhase): boolean {
+  return project.contract_type.includes(phase.service_type);
 }
 
 export async function getMatrix(
   client: MatriceApiClient,
   projectIds: number[],
 ): Promise<MatrixData> {
-  const [activities, cells, projects] = await Promise.all([
+  const [activities, phases, dependencies, cells, projects] = await Promise.all([
     getCachedActivities(),
+    getCachedPhases(),
+    getCachedDependencies(),
     client.getCells(projectIds),
     client.getProjects(projectIds),
   ]);
-  return { activities, cells, projects };
+  return { activities, phases, cells, projects, dependencies };
 }
 
 export async function getAllProjects(client: MatriceApiClient): Promise<MatrixProject[]> {
@@ -64,6 +71,24 @@ export async function setCellStatus(
   return client.setCellStatus(projectId, activityId, status, userId, expiresAt);
 }
 
+/** Client-side: names of prerequisite activities that aren't yet 'finalizat'
+ * for this project — mirrors the DB's fn_enforce_activity_dependencies
+ * trigger so the UI can warn before attempting the write. */
+export function getUnmetDependencyNames(
+  activities: Activity[],
+  dependencies: ActivityDependency[],
+  cells: MatrixCell[],
+  projectId: number,
+  activityId: number,
+): string[] {
+  const activityById = new Map(activities.map(a => [a.id, a]));
+  return dependencies
+    .filter(d => d.activity_id === activityId)
+    .filter(d => resolveStatus(cells, projectId, d.depends_on_activity_id) !== 'finalizat')
+    .map(d => activityById.get(d.depends_on_activity_id)?.name)
+    .filter((name): name is string => !!name);
+}
+
 /** Client-side: resolve a cell status (missing row = 'neinceput') */
 export function resolveStatus(
   cells: MatrixCell[],
@@ -76,11 +101,17 @@ export function resolveStatus(
 /** Client-side: compute per-project % complete (excludes na + section headers + phases not covered by the contract) */
 export function projectCompletionPct(
   activities: Activity[],
+  phaseById: Map<number, MatricePhase>,
   cells: MatrixCell[],
   projectId: number,
   project?: MatrixProject,
 ): number {
-  const eligible = activities.filter(a => !a.is_section_header && (!project || isPhaseEnabled(project, a.phase_no)));
+  const eligible = activities.filter(a => {
+    if (a.is_section_header) return false;
+    if (!project) return true;
+    const phase = phaseById.get(a.phase_id);
+    return !phase || isPhaseEnabled(project, phase);
+  });
   const nonNa = eligible.filter(a => resolveStatus(cells, projectId, a.id) !== 'na');
   if (nonNa.length === 0) return 0;
   const done = nonNa.filter(a => resolveStatus(cells, projectId, a.id) === 'finalizat');
@@ -92,9 +123,9 @@ export function phaseCompletionPct(
   activities: Activity[],
   cells: MatrixCell[],
   projectId: number,
-  phaseNo: number,
+  phaseId: number,
 ): number {
-  const eligible = activities.filter(a => a.phase_no === phaseNo && !a.is_section_header);
+  const eligible = activities.filter(a => a.phase_id === phaseId && !a.is_section_header);
   const nonNa = eligible.filter(a => resolveStatus(cells, projectId, a.id) !== 'na');
   if (nonNa.length === 0) return 0;
   const done = nonNa.filter(a => resolveStatus(cells, projectId, a.id) === 'finalizat');

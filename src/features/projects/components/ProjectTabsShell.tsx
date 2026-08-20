@@ -15,7 +15,7 @@ import { NoteThread } from "@/features/comms/components/NoteThread";
 import { ProjectTimeline } from "@/features/comms/components/ProjectTimeline";
 import type { Project } from "@/features/projects/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
-import type { Activity, MatrixCell } from "@/features/matrice/types";
+import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
 import type { Document } from "@/features/documents/types";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
@@ -36,6 +36,7 @@ interface Props {
   structureConfig: ProjectStructureConfigRow[];
   teamMemberCount: number | null;
   initialActivities: Activity[];
+  initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
   initialDocuments: Document[];
   initialMaintenanceChecks: MaintenanceCheck[];
@@ -55,6 +56,7 @@ export function ProjectTabsShell({
   structureConfig,
   teamMemberCount,
   initialActivities,
+  initialPhases,
   initialCells,
   initialDocuments,
   initialMaintenanceChecks,
@@ -69,7 +71,7 @@ export function ProjectTabsShell({
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [loadedTabs, setLoadedTabs] = useState<Set<TabKey>>(new Set([initialTab]));
 
-  const [ganttData, setGanttData] = useState({ activities: initialActivities, cells: initialCells });
+  const [ganttData, setGanttData] = useState({ activities: initialActivities, phases: initialPhases, cells: initialCells });
   const [documents, setDocuments] = useState(initialDocuments);
   const [maintenanceChecks, setMaintenanceChecks] = useState(initialMaintenanceChecks);
   const [timelinePage, setTimelinePage] = useState(initialTimelinePage);
@@ -91,7 +93,7 @@ export function ProjectTabsShell({
     startTransition(async () => {
       if (key === "gantt") {
         const fresh = await getGanttMatriceData([project.id]);
-        setGanttData({ activities: fresh.activities, cells: fresh.cells });
+        setGanttData({ activities: fresh.activities, phases: fresh.phases, cells: fresh.cells });
       } else if (key === "documents") {
         const fresh = await getProjectDocuments(project.id);
         setDocuments(fresh);
@@ -108,7 +110,7 @@ export function ProjectTabsShell({
   function reloadGanttData() {
     startTransition(async () => {
       const fresh = await getGanttMatriceData([project.id]);
-      setGanttData({ activities: fresh.activities, cells: fresh.cells });
+      setGanttData({ activities: fresh.activities, phases: fresh.phases, cells: fresh.cells });
     });
   }
 
@@ -191,6 +193,7 @@ export function ProjectTabsShell({
         <ProjectPhaseGanttShell
           project={project}
           initialActivities={ganttData.activities}
+          initialPhases={ganttData.phases}
           initialCells={ganttData.cells}
           checklistRecords={records}
           todayMs={todayMs}
@@ -204,6 +207,7 @@ export function ProjectTabsShell({
             executionData={executionData}
             structureConfig={structureConfig}
             canMutate={canMutate}
+            teamMemberCount={teamMemberCount}
           />
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

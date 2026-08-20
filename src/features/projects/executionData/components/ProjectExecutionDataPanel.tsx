@@ -19,6 +19,7 @@ interface Props {
   executionData: ProjectExecutionData | null;
   structureConfig: ProjectStructureConfigRow[];
   canMutate: boolean;
+  teamMemberCount: number | null;
 }
 
 function InfoCard({ label, children }: { label: string; children: React.ReactNode }) {
@@ -54,8 +55,8 @@ function TextCard({
 }
 
 function NumCard({
-  label, value, name, canMutate, formId, suffix, revision,
-}: { label: string; value: number | null; name: string; canMutate: boolean; formId: string; suffix?: string; revision?: string }) {
+  label, value, name, canMutate, formId, suffix, revision, max, title,
+}: { label: string; value: number | null; name: string; canMutate: boolean; formId: string; suffix?: string; revision?: string; max?: number; title?: string }) {
   if (!canMutate) {
     return <InfoCard label={label}>{value ?? "—"}{suffix && value != null ? ` ${suffix}` : ""}</InfoCard>;
   }
@@ -70,6 +71,8 @@ function NumCard({
         form={formId}
         type="number"
         min="0"
+        max={max}
+        title={title}
         name={name}
         defaultValue={value ?? ""}
         className="mt-1 h-7 border-0 bg-transparent p-0 text-right font-mono text-[13px] tabular-nums focus-visible:ring-0"
@@ -157,8 +160,10 @@ interface StructureRowEntry {
   data: ProjectStructureConfigRow;
 }
 
-export function ProjectExecutionDataPanel({ projectId, executionData: initialExecutionData, structureConfig, canMutate }: Props) {
+export function ProjectExecutionDataPanel({ projectId, executionData: initialExecutionData, structureConfig, canMutate, teamMemberCount }: Props) {
   const t = useTranslations("checklist.executionData");
+  const tChecklist = useTranslations("checklist");
+  const noTeam = !teamMemberCount || teamMemberCount <= 0;
   const [, startTransition] = useTransition();
   const [executionData, setExecutionData] = useState(initialExecutionData);
   // Each row carries a `clientKey` assigned once, at creation, and never
@@ -274,68 +279,77 @@ export function ProjectExecutionDataPanel({ projectId, executionData: initialExe
           <TextCard label={t("rte")} value={executionData?.rte ?? null} name="rte" canMutate={canMutate} formId={formId} revision={executionData?.updated_at} />
           <NumCard label={t("zileDeadline")} value={executionData?.zile_deadline ?? null} name="zile_deadline" canMutate={canMutate} formId={formId} revision={executionData?.updated_at} />
           <NumCard label={t("zileReale")} value={executionData?.zile_reale ?? null} name="zile_reale" canMutate={canMutate} formId={formId} revision={executionData?.updated_at} />
-          <NumCard label={t("numarPersoane")} value={executionData?.numar_persoane_alocate ?? null} name="numar_persoane_alocate" canMutate={canMutate} formId={formId} revision={executionData?.updated_at} />
+          <NumCard
+            label={t("numarPersoane")}
+            value={executionData?.numar_persoane_alocate ?? null}
+            name="numar_persoane_alocate"
+            canMutate={canMutate}
+            formId={formId}
+            revision={executionData?.updated_at}
+            max={teamMemberCount ?? undefined}
+            title={noTeam ? tChecklist("noTeamAssigned") : undefined}
+          />
           <NumCard label={t("bugetAlocat")} value={executionData?.buget_alocat_eur ?? null} name="buget_alocat_eur" canMutate={canMutate} formId={formId} suffix="EUR" revision={executionData?.updated_at} />
           <InfoCard label={t("costTotalManopera")}>
             {laborCost != null ? `${Math.round(laborCost).toLocaleString()} EUR` : "—"}
           </InfoCard>
         </div>
-        {canMutate && (
+      
+        <div className="pt-2">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-[12px] font-semibold text-veltol-fgDim">{t("structureConfig")}</h3>
+            {canMutate && (
+              <Button type="button" variant="outline" onClick={handleAddRow}>
+                <Plus data-icon="inline-start" />
+                {t("addStructureRow")}
+              </Button>
+            )}
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="border-b border-border bg-veltol-surface/40">
+                  <th className="px-3 py-2 text-left text-[11px] font-medium text-veltol-fgMute">{t("structureType")}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("mesaCount")}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("piciorPerMesa")}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("stalpPerMesa")}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("grinziPerMesa")}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("panePerMesa")}</th>
+                  {canMutate && <th className="w-10 px-3 py-2" />}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.map(({ clientKey, data }) => (
+                  <StructureConfigRow
+                    key={clientKey}
+                    row={data}
+                    canMutate={canMutate}
+                    onSave={handleRowSave}
+                    onDelete={handleDeleteRow}
+                  />
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-border bg-veltol-surface/40 font-semibold">
+                  <td className="px-3 py-2 text-[11px] text-veltol-fgMute">{t("total")}</td>
+                  <td className="px-3 py-2" />
+                  <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.picior}</td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.stalp}</td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.grinzi}</td>
+                  <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.pane}</td>
+                  {canMutate && <td className="px-3 py-2" />}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+         {canMutate && (
           <Button type="submit" variant="outline" className="mt-3">
             {t("save")}
           </Button>
         )}
       </form>
-
-      <div className="pt-2">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-[12px] font-semibold text-veltol-fgDim">{t("structureConfig")}</h3>
-          {canMutate && (
-            <Button type="button" variant="outline" onClick={handleAddRow}>
-              <Plus data-icon="inline-start" />
-              {t("addStructureRow")}
-            </Button>
-          )}
-        </div>
-
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-border bg-veltol-surface/40">
-                <th className="px-3 py-2 text-left text-[11px] font-medium text-veltol-fgMute">{t("structureType")}</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("mesaCount")}</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("piciorPerMesa")}</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("stalpPerMesa")}</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("grinziPerMesa")}</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium text-veltol-fgMute">{t("panePerMesa")}</th>
-                {canMutate && <th className="w-10 px-3 py-2" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map(({ clientKey, data }) => (
-                <StructureConfigRow
-                  key={clientKey}
-                  row={data}
-                  canMutate={canMutate}
-                  onSave={handleRowSave}
-                  onDelete={handleDeleteRow}
-                />
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-border bg-veltol-surface/40 font-semibold">
-                <td className="px-3 py-2 text-[11px] text-veltol-fgMute">{t("total")}</td>
-                <td className="px-3 py-2" />
-                <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.picior}</td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.stalp}</td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.grinzi}</td>
-                <td className="px-3 py-2 text-right font-mono tabular-nums">{totals.pane}</td>
-                {canMutate && <td className="px-3 py-2" />}
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }

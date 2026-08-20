@@ -5,11 +5,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { Loader2, FolderOpen, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { scanProjectFolder, applyFolderScanSuggestions } from "@/app/[locale]/(app)/projects/actions";
-import { getActivities } from "@/app/[locale]/(app)/matrice-status/actions";
+import { getActivities, getPhases } from "@/app/[locale]/(app)/matrice-status/actions";
 import { CHECKLIST_TEMPLATE } from "@/features/projects/checklists/services/checklistTemplate";
 import { STATUS_COLOR } from "@/features/matrice/types";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Activity } from "@/features/matrice/types";
+import type { Activity, MatricePhase } from "@/features/matrice/types";
 
 interface Props {
   projectId: number;
@@ -49,6 +49,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
   const [files, setFiles] = useState<FolderItem[]>([]);
   const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [phases, setPhases] = useState<MatricePhase[]>([]);
   const [checklistProposals, setChecklistProposals] = useState<ChecklistProposal[]>([]);
   const [matriceProposals, setMatriceProposals] = useState<MatriceProposal[]>([]);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -59,8 +60,9 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
   useEffect(() => {
     startTransition(async () => {
       try {
-        const acts = await getActivities();
+        const [acts, phs] = await Promise.all([getActivities(), getPhases()]);
         setActivities(acts);
+        setPhases(phs);
       } catch {
         // Non-fatal — AI analysis will still work with empty activities
       }
@@ -90,9 +92,10 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
     const selected = files.filter((f) => selectedNames.has(f.name));
     const fileNames = selected.map((f) => f.path || f.name);
 
+    const phaseNameById = new Map(phases.map((p) => [p.id, p.name]));
     const activityItems = activities
       .filter((a) => !a.is_section_header)
-      .map((a) => ({ id: a.id, name: a.name, phase_name: a.phase_name }));
+      .map((a) => ({ id: a.id, name: a.name, phase_name: phaseNameById.get(a.phase_id) ?? "" }));
 
     try {
       const res = await fetch("/api/ai/folder-scan", {
@@ -134,7 +137,7 @@ export function FolderScanStep({ projectId, folderLinked, onClose }: Props) {
           activityId: s.activityId,
           status: s.status,
           label: act?.name ?? `#${s.activityId}`,
-          phase: act?.phase_name ?? "",
+          phase: act ? phaseNameById.get(act.phase_id) ?? "" : "",
           accepted: true,
         };
       });

@@ -175,15 +175,3 @@ export interface ActivityEventGroup {
 export type FeedItem =
   | ActivityEventGroup
   | { kind: "note"; note: Note };
-
-export interface CommsMetric {
-  value: number | null;
-  previousValue: number | null;
-}
-
-export interface CommsMetrics {
-  ackRate: CommsMetric;
-  staleQuestions: CommsMetric;
-  silentProjects: CommsMetric;
-  decisions: CommsMetric;
-}

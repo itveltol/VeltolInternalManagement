@@ -162,13 +162,21 @@ export async function upsertExecutionData(
     const projectId = Number(formData.get("project_id"));
     if (!projectId) return { error: "errorGeneric" };
 
+    const projectsClient = createSupabaseProjectsClient(supabase);
+    let numar_persoane_alocate = intOrNull(formData.get("numar_persoane_alocate"));
+    if (numar_persoane_alocate !== null) {
+      const project = await projectService.getProjectById(projectsClient, projectId);
+      const teamMemberCount = project?.team ? await getTeamMemberCount(supabase, project.team.id) : 0;
+      numar_persoane_alocate = Math.min(Math.max(0, numar_persoane_alocate), teamMemberCount);
+    }
+
     await executionDataService.upsertExecutionData(client, {
       projectId,
       site_responsible: (formData.get("site_responsible") as string | null) || null,
       diriginte_santier: (formData.get("diriginte_santier") as string | null) || null,
       rte: (formData.get("rte") as string | null) || null,
       buget_alocat_eur: floatOrNull(formData.get("buget_alocat_eur")),
-      numar_persoane_alocate: intOrNull(formData.get("numar_persoane_alocate")),
+      numar_persoane_alocate,
       zile_deadline: intOrNull(formData.get("zile_deadline")),
       zile_reale: intOrNull(formData.get("zile_reale")),
       updatedBy: user.id,

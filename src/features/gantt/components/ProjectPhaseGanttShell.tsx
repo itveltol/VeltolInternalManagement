@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Project } from "@/features/projects/types";
-import type { Activity, MatrixCell } from "@/features/matrice/types";
+import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 import type { GanttPhaseSegment } from "../types";
 import { GANTT_PHASE_KEYS, GANTT_PHASE_COLOR } from "../types";
@@ -16,6 +16,7 @@ import { pinMatriceProject } from "@/app/[locale]/(app)/matrice-status/actions";
 interface Props {
   project: Project;
   initialActivities: Activity[];
+  initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
   checklistRecords: ChecklistItemRecord[];
   todayMs: number;
@@ -23,15 +24,15 @@ interface Props {
   onChanged?: () => void;
 }
 
-export function ProjectPhaseGanttShell({ project, initialActivities, initialCells, checklistRecords, todayMs, canMutate, onChanged }: Props) {
+export function ProjectPhaseGanttShell({ project, initialActivities, initialPhases, initialCells, checklistRecords, todayMs, canMutate, onChanged }: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [editing, setEditing] = useState<GanttPhaseSegment | null>(null);
 
   const rows = useMemo(
-    () => buildProjectGanttRows([project], initialActivities, initialCells, todayMs, { [project.id]: checklistRecords }),
-    [project, initialActivities, initialCells, todayMs, checklistRecords],
+    () => buildProjectGanttRows([project], initialActivities, initialPhases, initialCells, todayMs, { [project.id]: checklistRecords }),
+    [project, initialActivities, initialPhases, initialCells, todayMs, checklistRecords],
   );
 
   return (

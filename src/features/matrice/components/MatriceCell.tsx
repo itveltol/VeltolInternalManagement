@@ -2,6 +2,7 @@
 
 import { memo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Loader2, Paperclip, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,8 +19,10 @@ interface Props {
   projectId: number;
   activityId: number;
   activityName?: string;
-  isAviz?: boolean;
+  expiresRequired?: boolean;
   expiresAt?: string | null;
+  /** Names of prerequisite activities not yet finalized — non-empty blocks the "finalizat" transition. */
+  unmetDependencyNames?: string[];
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   onOpenDiscussion: (projectId: number, activityId: number) => void;
@@ -31,7 +34,7 @@ interface Props {
   pending?: boolean;
 }
 
-export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", isAviz, expiresAt, onChangeStatus, onOpenDocuments, onOpenDiscussion, documentCount = 0, discussionCount = 0, disabled, pending }: Props) {
+export const MatriceCell = memo(function MatriceCell({ status, projectId, activityId, activityName = "", expiresRequired, expiresAt, unmetDependencyNames = [], onChangeStatus, onOpenDocuments, onOpenDiscussion, documentCount = 0, discussionCount = 0, disabled, pending }: Props) {
   const t = useTranslations("matrice");
   const tDocs = useTranslations("documents");
   const tComms = useTranslations("comms");
@@ -39,7 +42,11 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
   const [pendingExpiryPrompt, setPendingExpiryPrompt] = useState(false);
 
   function applyStatus(s: ActivityStatus) {
-    if (s === "finalizat" && isAviz) {
+    if (s === "finalizat" && unmetDependencyNames.length > 0) {
+      toast.error(t("errorUnmetDependency", { names: unmetDependencyNames.join(", ") }));
+      return;
+    }
+    if (s === "finalizat" && expiresRequired) {
       setPendingExpiryPrompt(true);
       return;
     }
@@ -90,7 +97,7 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-    {isAviz && status === "finalizat" && expiresAt && (
+    {expiresRequired && status === "finalizat" && expiresAt && (
       <span className="text-[10px] font-medium tabular-nums text-veltol-fgMute">
         {t("grid.expiresOn", { date: expiresAt })}
       </span>
@@ -118,7 +125,7 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
         <span className="text-[10px] font-semibold text-veltol-primary">{discussionCount}</span>
       )}
     </button>
-    {isAviz && (
+    {expiresRequired && (
       <AvizExpiryDialog
         open={pendingExpiryPrompt}
         activityName={activityName}

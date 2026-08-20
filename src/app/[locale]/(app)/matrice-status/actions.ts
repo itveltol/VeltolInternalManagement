@@ -4,10 +4,11 @@ import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
+import { DependencyError } from "@/features/matrice/api/types";
 import * as matriceService from "@/features/matrice/services/matriceService";
 import * as shownProjectsService from "@/features/hiddenProjects/services/shownProjectsService";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
-import type { Activity, MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
+import type { Activity, MatricePhase, MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
 import { resolveItemNumberForActivity } from "@/features/matrice/services/checklistActivityMapping";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
@@ -83,6 +84,11 @@ export async function getActivities(): Promise<Activity[]> {
   return matriceService.getCachedActivities();
 }
 
+export async function getPhases(): Promise<MatricePhase[]> {
+  await requireAuth();
+  return matriceService.getCachedPhases();
+}
+
 export async function setCellStatus(
   projectId: number,
   activityId: number,
@@ -96,7 +102,8 @@ export async function setCellStatus(
     const locale = await getLocale();
     revalidatePath(`/${locale}/matrice-status`);
     return { success: "saved" };
-  } catch {
+  } catch (e: unknown) {
+    if (e instanceof DependencyError) return { error: "errorUnmetDependency" };
     return { error: "errorGeneric" };
   }
 }
