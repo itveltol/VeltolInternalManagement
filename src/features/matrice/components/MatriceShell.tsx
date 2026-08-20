@@ -162,7 +162,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
           // Rollback: refetch
           const fresh = await getMatrixData(visibleIds);
           setData(fresh);
-          toast.error(t("errorGeneric"));
+          toast.error(result.error === "errorUnmetDependency" ? t("errorUnmetDependency") : t("errorGeneric"));
           return;
         }
         await syncChecklistFromMatriceCell(projectId, activityId, status, data.activities);
@@ -209,8 +209,10 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
       <div className="hidden overflow-hidden rounded-card border border-border bg-card shadow-card md:block">
         <MatriceGrid
           activities={data.activities}
+          phases={data.phases}
           cells={data.cells}
           projects={data.projects}
+          dependencies={data.dependencies}
           onChangeStatus={handleChangeStatus}
           onOpenDocuments={handleOpenDocuments}
           onOpenDiscussion={handleOpenDiscussion}
@@ -225,8 +227,10 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
         {mobileSelectedProjectId != null && (
           <MatriceMobileView
             activities={data.activities}
+            phases={data.phases}
             cells={data.cells}
             projects={data.projects}
+            dependencies={data.dependencies}
             selectedProjectId={mobileSelectedProjectId}
             onSelectProject={setSelectedProjectId}
             onChangeStatus={handleChangeStatus}

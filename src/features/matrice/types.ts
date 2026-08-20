@@ -4,22 +4,34 @@ export type { ProjectType };
 
 export type ActivityStatus =
   | 'finalizat'
+  | 'depus'
   | 'in_progres'
   | 'in_asteptare'
   | 'blocat'
   | 'neinceput'
   | 'na';
 
+export type GanttPhaseKey = 'planning' | 'execution' | 'autorizare';
+
+export interface MatricePhase {
+  id: number;
+  name: string;
+  sort_order: number;
+  service_type: ContractType;
+  gantt_phase_key: GanttPhaseKey | null;
+}
+
 export interface Activity {
   id: number;
-  phase_no: number;
-  phase_name: string;
+  phase_id: number;
   name: string;
   sort_order: number;
   is_section_header: boolean;
   applies_to: ProjectType[] | null;
   /** Periodic permit/notice — completing it requires an expiry date and is tracked for renewal reminders. */
   is_aviz: boolean;
+  /** Generic "this activity's cell needs an expiry date" flag; is_aviz always implies this. */
+  expires_required: boolean;
 }
 
 export interface ProjectActivityStatus {
@@ -51,12 +63,20 @@ export interface MatrixCell {
 
 export interface MatrixData {
   activities: Activity[];
+  phases: MatricePhase[];
   cells: MatrixCell[];
   projects: MatrixProject[];
+  dependencies: ActivityDependency[];
+}
+
+export interface ActivityDependency {
+  activity_id: number;
+  depends_on_activity_id: number;
 }
 
 export const ACTIVITY_STATUS_VALUES: ActivityStatus[] = [
   'finalizat',
+  'depus',
   'in_progres',
   'in_asteptare',
   'blocat',
@@ -65,6 +85,7 @@ export const ACTIVITY_STATUS_VALUES: ActivityStatus[] = [
 ];
 
 export const STATUS_COLOR: Record<ActivityStatus, string> = {
+  depus:         'bg-[var(--v-success-bg)]/50 text-[var(--v-success)] border-transparent',
   finalizat:     'bg-[var(--v-success-bg)] text-[var(--v-success)] border-transparent',
   in_progres:    'bg-veltol-tint text-veltol-primary border-transparent',
   in_asteptare:  'bg-[var(--v-warning-bg)] text-[var(--v-warning)] border-transparent',
@@ -76,6 +97,7 @@ export const STATUS_COLOR: Record<ActivityStatus, string> = {
 /** Solid swatch color for the small status dot in dropdown menus — stays
  * visible even for statuses whose pill background is very pale. */
 export const STATUS_DOT_COLOR: Record<ActivityStatus, string> = {
+  depus:         'bg-[var(--v-success)]/50',
   finalizat:     'bg-[var(--v-success)]',
   in_progres:    'bg-veltol-primary',
   in_asteptare:  'bg-[var(--v-warning)]',

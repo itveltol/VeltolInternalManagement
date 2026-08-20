@@ -3,20 +3,23 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, X } from "lucide-react";
-import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from "../types";
+import type { Activity, ActivityDependency, MatricePhase, MatrixCell, MatrixProject, ActivityStatus } from "../types";
 import {
   projectCompletionPct,
   phaseCompletionPct,
   activityRowPct,
   isPhaseEnabled,
+  getUnmetDependencyNames,
 } from "../services/matriceService";
 import { MatriceCell } from "./MatriceCell";
 import { cn } from "@/shared/utils/cn";
 
 interface Props {
   activities: Activity[];
+  phases: MatricePhase[];
   cells: MatrixCell[];
   projects: MatrixProject[];
+  dependencies?: ActivityDependency[];
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
   onOpenDocuments: (projectId: number, activityId: number) => void;
   onOpenDiscussion: (projectId: number, activityId: number) => void;
@@ -26,16 +29,15 @@ interface Props {
   pendingCells?: Set<string>;
 }
 
-export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpenDocuments, onOpenDiscussion, onHideProject, docCounts = new Map(), discussionCounts = new Map(), pendingCells }: Props) {
+export function MatriceGrid({ activities, phases, cells, projects, dependencies = [], onChangeStatus, onOpenDocuments, onOpenDiscussion, onHideProject, docCounts = new Map(), discussionCounts = new Map(), pendingCells }: Props) {
   const t = useTranslations("matrice");
 
-  const phases = useMemo(
-    () =>
-      Array.from(
-        new Map(activities.map((a) => [a.phase_no, a.phase_name])).entries(),
-      ).sort((a, b) => a[0] - b[0]),
-    [activities],
+  const sortedPhases = useMemo(
+    () => [...phases].sort((a, b) => a.sort_order - b.sort_order).map((p): [number, string] => [p.id, p.name]),
+    [phases],
   );
+
+  const phaseById = useMemo(() => new Map(phases.map((p) => [p.id, p])), [phases]);
 
   const [collapsedPhases, setCollapsedPhases] = useState<Set<number>>(new Set());
 
@@ -75,21 +77,27 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
     [expiresAtByKey],
   );
 
+  const getUnmetDependencyNamesFor = useCallback(
+    (projectId: number, activityId: number) =>
+      getUnmetDependencyNames(activities, dependencies, cells, projectId, activityId),
+    [activities, dependencies, cells],
+  );
+
   const projectPctById = useMemo(() => {
     const map = new Map<number, number>();
-    for (const p of projects) map.set(p.id, projectCompletionPct(activities, cells, p.id, p));
+    for (const p of projects) map.set(p.id, projectCompletionPct(activities, phaseById, cells, p.id, p));
     return map;
-  }, [activities, cells, projects]);
+  }, [activities, phaseById, cells, projects]);
 
   const phasePctByKey = useMemo(() => {
     const map = new Map<string, number>();
-    for (const [phaseNo] of phases) {
+    for (const [phaseId] of sortedPhases) {
       for (const p of projects) {
-        map.set(`${phaseNo}:${p.id}`, phaseCompletionPct(activities, cells, p.id, phaseNo));
+        map.set(`${phaseId}:${p.id}`, phaseCompletionPct(activities, cells, p.id, phaseId));
       }
     }
     return map;
-  }, [activities, cells, projects, phases]);
+  }, [activities, cells, projects, sortedPhases]);
 
   const activityRowPctById = useMemo(() => {
     const map = new Map<number, number>();
@@ -103,9 +111,9 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
   const activitiesByPhase = useMemo(() => {
     const map = new Map<number, Activity[]>();
     for (const a of activities) {
-      const list = map.get(a.phase_no);
+      const list = map.get(a.phase_id);
       if (list) list.push(a);
-      else map.set(a.phase_no, [a]);
+      else map.set(a.phase_id, [a]);
     }
     return map;
   }, [activities]);
@@ -172,16 +180,16 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
           </tr>
         </thead>
         <tbody>
-          {phases.map(([phaseNo, phaseName]) => {
-            const phaseActivities = activitiesByPhase.get(phaseNo) ?? [];
-            const isCollapsed = collapsedPhases.has(phaseNo);
+          {sortedPhases.map(([phaseId, phaseName]) => {
+            const phaseActivities = activitiesByPhase.get(phaseId) ?? [];
+            const isCollapsed = collapsedPhases.has(phaseId);
 
             return [
               // Phase header row
               <tr
-                key={`phase-${phaseNo}`}
+                key={`phase-${phaseId}`}
                 className="cursor-pointer select-none border-b border-border bg-veltol-surface/60 hover:bg-veltol-surface"
-                onClick={() => togglePhase(phaseNo)}
+                onClick={() => togglePhase(phaseId)}
               >
                 {/* collapse arrow */}
                 <td className="sticky left-0 z-10 bg-veltol-surface/60 px-1 py-2.5 text-center text-veltol-fgMute">
@@ -193,10 +201,11 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                   colSpan={2}
                   className="sticky left-6 z-10 bg-veltol-surface/60 px-3 py-2.5 text-[13px] font-bold text-veltol-fg"
                 >
-                  {phaseNo}. {phaseName}
+                  {phaseName}
                 </td>
                 {projects.map((p) => {
-                  const enabled = isPhaseEnabled(p, phaseNo);
+                  const phase = phaseById.get(phaseId);
+                  const enabled = !phase || isPhaseEnabled(p, phase);
                   return (
                     <td
                       key={p.id}
@@ -206,7 +215,7 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                       )}
                       title={enabled ? undefined : t("grid.notContracted")}
                     >
-                      {enabled ? `${phasePctByKey.get(`${phaseNo}:${p.id}`) ?? 0}%` : "—"}
+                      {enabled ? `${phasePctByKey.get(`${phaseId}:${p.id}`) ?? 0}%` : "—"}
                     </td>
                   );
                 })}
@@ -249,7 +258,8 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                         </td>
                         {projects.map((p) => {
                           const status = getStatus(p.id, activity.id);
-                          const enabled = isPhaseEnabled(p, activity.phase_no);
+                          const activityPhase = phaseById.get(activity.phase_id);
+                          const enabled = !activityPhase || isPhaseEnabled(p, activityPhase);
                           const appliesToProject =
                             activity.applies_to === null ||
                             (p.project_type !== null && activity.applies_to.includes(p.project_type));
@@ -265,8 +275,9 @@ export function MatriceGrid({ activities, cells, projects, onChangeStatus, onOpe
                                   projectId={p.id}
                                   activityId={activity.id}
                                   activityName={activity.name}
-                                  isAviz={activity.is_aviz}
+                                  expiresRequired={activity.expires_required}
                                   expiresAt={getExpiresAt(p.id, activity.id)}
+                                  unmetDependencyNames={getUnmetDependencyNamesFor(p.id, activity.id)}
                                   onChangeStatus={onChangeStatus}
                                   onOpenDocuments={onOpenDocuments}
                                   onOpenDiscussion={onOpenDiscussion}

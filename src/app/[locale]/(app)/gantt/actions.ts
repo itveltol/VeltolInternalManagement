@@ -14,7 +14,7 @@ import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/ap
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
-import type { Activity, MatrixCell } from "@/features/matrice/types";
+import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
 import type { Project } from "@/features/projects/types";
 import type { GanttPhaseKey } from "@/features/gantt/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
@@ -66,19 +66,22 @@ export async function getGanttMatriceData(
   projectIds: number[],
 ): Promise<{
   activities: Activity[];
+  phases: MatricePhase[];
   cells: MatrixCell[];
   checklistRecordsByProjectId: Record<number, ChecklistItemRecord[]>;
 }> {
   const { supabase } = await requireAuth();
   const matriceClient = createSupabaseMatriceClient(supabase);
   const checklistClient = createSupabaseChecklistClient(supabase);
-  const [activities, cells, checklistRecords] = await Promise.all([
+  const [activities, phases, cells, checklistRecords] = await Promise.all([
     matriceService.getCachedActivities(),
+    matriceService.getCachedPhases(),
     matriceClient.getCells(projectIds),
     checklistService.getChecklistRecordsForProjects(checklistClient, projectIds),
   ]);
   return {
     activities,
+    phases,
     cells,
     checklistRecordsByProjectId: checklistService.groupChecklistRecordsByProjectId(checklistRecords),
   };

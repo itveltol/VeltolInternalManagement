@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { MatriceApiClient } from './types';
-import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from '../types';
+import { DependencyError, type MatriceApiClient } from './types';
+import type { Activity, ActivityDependency, MatricePhase, MatrixCell, MatrixProject, ActivityStatus } from '../types';
 
 export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceApiClient => ({
   async getActivities() {
@@ -10,6 +10,23 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
       .order('sort_order');
     if (error) throw new Error(error.message);
     return (data ?? []) as Activity[];
+  },
+
+  async getPhases() {
+    const { data, error } = await supabase
+      .from('matrice_phases')
+      .select('*')
+      .order('sort_order');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as MatricePhase[];
+  },
+
+  async getDependencies() {
+    const { data, error } = await supabase
+      .from('matrice_activity_dependencies')
+      .select('*');
+    if (error) throw new Error(error.message);
+    return (data ?? []) as ActivityDependency[];
   },
 
   async getCells(projectIds) {
@@ -56,6 +73,9 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
         },
         { onConflict: 'project_id,activity_id' },
       );
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.hint === 'unmet_dependency') throw new DependencyError(error.message);
+      throw new Error(error.message);
+    }
   },
 });

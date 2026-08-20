@@ -102,6 +102,8 @@
   --v-warning-bg: #FDF3E1;
   --v-danger:     #DC2626;
   --v-danger-bg:  #FCEBEB;
+  --v-info:       #7048E8;
+  --v-info-bg:    #EFEAFD;
   --v-grey:       #94A3B8;
 
   /* Category coding (dots/accents only) */
@@ -152,6 +154,8 @@
   --v-warning-bg: #3A2C0F;
   --v-danger:     #F87171;
   --v-danger-bg:  #3B1616;
+  --v-info:       #9B87F5;
+  --v-info-bg:    #241C3D;
   --v-grey:       #64748B;
 
   /* Category coding (dots/accents only) */

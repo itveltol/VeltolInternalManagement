@@ -55,13 +55,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       canMutate ? getClientRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
-      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], cells: [], checklistRecordsByProjectId: {} }),
+      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], phases: [], cells: [], checklistRecordsByProjectId: {} }),
       hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
       isComunicareTab ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
       isSubcontracted ? Promise.resolve(null) : getExecutionData(projectId),
       isSubcontracted ? Promise.resolve([]) : getStructureConfig(projectId),
     ]);
-  const { activities, cells } = ganttMatriceData;
+  const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
 
   const canAssignTeam = role === "admin" || project.manager_id === user?.id;
@@ -177,6 +177,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         structureConfig={structureConfig}
         teamMemberCount={project.team?.member_count ?? null}
         initialActivities={activities}
+        initialPhases={phases}
         initialCells={cells}
         initialDocuments={projectDocuments}
         initialMaintenanceChecks={maintenanceChecks}

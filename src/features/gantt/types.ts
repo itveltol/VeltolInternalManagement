@@ -1,31 +1,8 @@
-import type { Project, ContractType } from "@/features/projects/types";
+import type { Project } from "@/features/projects/types";
 
 export type GanttPhaseKey = "planning" | "execution" | "autorizare";
 
-/**
- * Maps each Gantt workflow phase to the contract service it corresponds to,
- * so a segment can be marked disabled when the project's contract doesn't
- * cover that service — without ever discarding its persisted dates/progress.
- *
- * Note: "autorizare" rolls up matrice phase_no 11-12 (Documentare & Recepție,
- * Predare-Primire), but those are execution-stage work, not a maintenance
- * contract service — so this segment is gated on "executie", same as the
- * execution segment, not "mentenanta".
- */
-export const CONTRACT_TYPE_BY_PHASE: Record<GanttPhaseKey, ContractType> = {
-  planning: "proiectare",
-  execution: "executie",
-  autorizare: "executie",
-};
-
 export const GANTT_PHASE_KEYS: GanttPhaseKey[] = ["planning", "execution", "autorizare"];
-
-/** Matrice `activities.phase_no` values rolled up into each portfolio-Gantt phase */
-export const GANTT_PHASE_MATRICE_RANGE: Record<GanttPhaseKey, number[]> = {
-  planning: [1, 2, 3, 4, 5, 6, 7],
-  execution: [8, 9, 10],
-  autorizare: [11, 12],
-};
 
 export const GANTT_PHASE_DATE_FIELDS: Record<
   GanttPhaseKey,

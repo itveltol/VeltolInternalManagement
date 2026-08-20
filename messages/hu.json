@@ -395,6 +395,7 @@
       "expiresOn": "Lejár: {date}"
     },
     "status": {
+      "depus": "Benyújtva",
       "finalizat": "Befejezett",
       "in_progres": "Folyamatban",
       "in_asteptare": "Várakozás",
@@ -425,7 +426,8 @@
         "next": "Következő",
         "pageOf": "{page}. oldal / {total}"
       }
-    }
+    },
+    "errorUnmetDependency": "Ez a tevékenység nem állítható készre, amíg az előfeltétel tevékenységek nincsenek befejezve: {names}."
   },
   "vacation": {
     "eyebrow": "HR · SZABADSÁGKÉRELMEK",
@@ -515,7 +517,11 @@
     "holidayCreated": "Munkaszüneti nap hozzáadva.",
     "holidayDeleted": "Munkaszüneti nap törölve.",
     "errorGeneric": "Hiba történt. Próbálja újra.",
-    "errorNotAllowed": "Ehhez nincs jogosultsága."
+    "errorNotAllowed": "Ehhez nincs jogosultsága.",
+    "matriceCatalogLink": {
+      "title": "Matrice katalógus",
+      "description": "Matrice fázisok és tevékenységek átnevezése, átrendezése, átcsoportosítása, lejárati követelmények beállítása és függőségek kezelése."
+    }
   },
   "vacationBalance": {
     "title": "Szabadság egyenleg",
@@ -1328,28 +1334,47 @@
     "timeline": {
       "title": "Idővonal",
       "empty": "Még nincs esemény vagy jegyzet ezen a projekten."
+    }
+  },
+  "matriceCatalog": {
+    "eyebrow": "BEÁLLÍTÁSOK · MATRICE KATALÓGUS",
+    "title": "Matrice katalógus",
+    "description": "Szerkeszd a Matrice státusz táblázat fázisait és tevékenységeit. A változtatások azonnal érvénybe lépnek az egész alkalmazásban.",
+    "addPhase": "Fázis hozzáadása",
+    "phaseName": "Fázis neve",
+    "serviceType": "Szerződés típusa",
+    "serviceTypes": {
+      "proiectare": "Tervezés",
+      "executie": "Kivitelezés",
+      "mentenanta": "Karbantartás"
     },
-    "metrics": {
-      "title": "Kommunikáció egészsége",
-      "eyebrow": "KOMMUNIKÁCIÓ · MUTATÓK",
-      "vsTrend": "az előző időszakhoz képest",
-      "noPriorPeriod": "—",
-      "ackRate": {
-        "label": "24 órás visszaigazolási arány",
-        "meaning": "A visszaigazolást igénylő közleményekből hány % lett visszaigazolva az első 24 órában. Cél: 80% felett."
-      },
-      "staleQuestions": {
-        "label": "7 napnál régebben nyitott kérdés/kockázat",
-        "meaning": "Ha ez a szám nő, a rendszer nem old meg semmit — csak gyűjt."
-      },
-      "silentProjects": {
-        "label": "Projektek jegyzet nélkül 30 napja",
-        "meaning": "Egy csendes projekt nem béke, hanem árnyék-csatorna — valószínűleg máshol beszélnek róla."
-      },
-      "decisions": {
-        "label": "Rögzített döntések ebben a hónapban",
-        "meaning": "A rendszerben rögzített döntések száma — a „nem tudtam róla” típusú viták ellenszere."
-      }
+    "ganttPhaseKey": "Gantt csoport",
+    "ganttPhaseKeyNone": "Nincs",
+    "ganttPhaseKeys": {
+      "planning": "Tervezés",
+      "execution": "Kivitelezés",
+      "autorizare": "Engedélyezés"
+    },
+    "moveUp": "Feljebb",
+    "moveDown": "Lejjebb",
+    "delete": "Törlés",
+    "confirmDeletePhase": "Törlöd ezt a fázist?",
+    "confirmDeletePhaseWithActivities": "Ennek a fázisnak {count} tevékenysége van — ezek is törlődnek.",
+    "noActivities": "Még nincs tevékenység ebben a fázisban.",
+    "newActivityPlaceholder": "Új tevékenység neve",
+    "addActivity": "Tevékenység hozzáadása",
+    "expiresRequired": "Lejárati dátum szükséges",
+    "expiresRequiredLockedByAviz": "Engedély (aviz) tevékenységeknél mindig kötelező.",
+    "dependencies": "Függőségek",
+    "confirmDeleteActivity": "Törlöd ezt a tevékenységet?",
+    "confirmDeleteActivityWithLinks": "Ez a tevékenység összekötésben áll egy ellenőrzőlistával és/vagy függőségi szabályokkal — ezek a kapcsolatok is törlődnek.",
+    "errorGeneric": "Valami hiba történt.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "errorDependencyCycle": "Ez körköros függőséget hozna létre.",
+    "dependencyDialog": {
+      "title": "\"{activity}\" függőségei",
+      "description": "Válaszd ki azokat a tevékenységeket, amelyeket be kell fejezni, mielőtt ez készre állítható.",
+      "close": "Bezárás"
     }
   }
 }

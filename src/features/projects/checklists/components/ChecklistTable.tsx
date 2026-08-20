@@ -437,20 +437,15 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
           )}
         </td>
 
-        <td className="px-3 py-2">
-          {canMutate ? (
-            <div className="flex justify-end">
-              <NumInput
-                value={state?.units_per_person_day ?? ""}
-                onChange={(v) => onFieldChange(row.number, "units_per_person_day", v)}
-                onBlur={() => onBlur(row.number)}
-                dirty={isDirty}
-                disabled={state?.status === "saving"}
-              />
-            </div>
-          ) : (
-            <span className="block text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">{row.units_per_person_day ?? "—"}</span>
-          )}
+        <td className="px-3 py-2.5 text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">
+          {(() => {
+            const days = parseInt(state?.zile ?? "", 10);
+            const persons = parseInt(state?.persons_allocated ?? "", 10);
+            if (!isNaN(planTotal) && planTotal > 0 && !isNaN(days) && days > 0 && !isNaN(persons) && persons > 0) {
+              return Math.round((planTotal / days) / persons);
+            }
+            return row.units_per_person_day ?? "—";
+          })()}
         </td>
 
         <td className="px-3 py-2.5 text-right font-mono tabular-nums text-[12px] text-veltol-fgDim">

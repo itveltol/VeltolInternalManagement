@@ -7,7 +7,7 @@ alter table public.projects
 
 -- Backfill: any row that already has a project_type is industrial; otherwise residential.
 update public.projects
-  set project_category = case when project_type is not null then 'industrial' else 'residential' end;
+  set project_category = (case when project_type is not null then 'industrial' else 'residential' end)::public.project_category;
 
 alter table public.projects
   alter column project_category set not null,

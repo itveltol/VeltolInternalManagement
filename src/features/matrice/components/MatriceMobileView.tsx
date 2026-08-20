@@ -3,15 +3,17 @@
 import { useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, X } from "lucide-react";
-import type { Activity, MatrixCell, MatrixProject, ActivityStatus } from "../types";
-import { projectCompletionPct, phaseCompletionPct, isPhaseEnabled } from "../services/matriceService";
+import type { Activity, ActivityDependency, MatricePhase, MatrixCell, MatrixProject, ActivityStatus } from "../types";
+import { projectCompletionPct, phaseCompletionPct, isPhaseEnabled, getUnmetDependencyNames } from "../services/matriceService";
 import { MatriceCell } from "./MatriceCell";
 import { cn } from "@/shared/utils/cn";
 
 interface Props {
   activities: Activity[];
+  phases: MatricePhase[];
   cells: MatrixCell[];
   projects: MatrixProject[];
+  dependencies?: ActivityDependency[];
   selectedProjectId: number;
   onSelectProject: (projectId: number) => void;
   onChangeStatus: (projectId: number, activityId: number, status: ActivityStatus, expiresAt?: string | null) => void;
@@ -24,25 +26,24 @@ interface Props {
 }
 
 export function MatriceMobileView({
-  activities, cells, projects, selectedProjectId, onSelectProject,
+  activities, phases, cells, projects, dependencies = [], selectedProjectId, onSelectProject,
   onChangeStatus, onOpenDocuments, onOpenDiscussion, onHideProject, docCounts = new Map(), discussionCounts = new Map(), pendingCells,
 }: Props) {
   const t = useTranslations("matrice");
 
-  const phases = useMemo(
-    () =>
-      Array.from(
-        new Map(activities.map((a) => [a.phase_no, a.phase_name])).entries(),
-      ).sort((a, b) => a[0] - b[0]),
-    [activities],
+  const sortedPhases = useMemo(
+    () => [...phases].sort((a, b) => a.sort_order - b.sort_order).map((p): [number, string] => [p.id, p.name]),
+    [phases],
   );
+
+  const phaseById = useMemo(() => new Map(phases.map((p) => [p.id, p])), [phases]);
 
   const activitiesByPhase = useMemo(() => {
     const map = new Map<number, Activity[]>();
     for (const a of activities) {
-      const list = map.get(a.phase_no);
+      const list = map.get(a.phase_id);
       if (list) list.push(a);
-      else map.set(a.phase_no, [a]);
+      else map.set(a.phase_id, [a]);
     }
     return map;
   }, [activities]);
@@ -71,6 +72,12 @@ export function MatriceMobileView({
     [cells, selectedProject?.id],
   );
 
+  const getUnmetDependencyNamesFor = useCallback(
+    (activityId: number): string[] =>
+      selectedProject ? getUnmetDependencyNames(activities, dependencies, cells, selectedProject.id, activityId) : [],
+    [activities, dependencies, cells, selectedProject],
+  );
+
   if (projects.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center text-sm text-veltol-fgMute">
@@ -85,7 +92,7 @@ export function MatriceMobileView({
     <div>
       <div className="flex gap-2 overflow-x-auto border-b border-border p-3">
         {projects.map((p) => {
-          const pct = projectCompletionPct(activities, cells, p.id, p);
+          const pct = projectCompletionPct(activities, phaseById, cells, p.id, p);
           const isSelected = p.id === selectedProject.id;
           return (
             <div
@@ -123,23 +130,24 @@ export function MatriceMobileView({
       </div>
 
       <div className="divide-y divide-border">
-        {phases.map(([phaseNo, phaseName]) => {
-          const phaseActivities = activitiesByPhase.get(phaseNo) ?? [];
-          const isCollapsed = collapsedPhases.has(phaseNo);
-          const enabled = isPhaseEnabled(selectedProject, phaseNo);
-          const pct = phaseCompletionPct(activities, cells, selectedProject.id, phaseNo);
+        {sortedPhases.map(([phaseId, phaseName]) => {
+          const phaseActivities = activitiesByPhase.get(phaseId) ?? [];
+          const isCollapsed = collapsedPhases.has(phaseId);
+          const phase = phaseById.get(phaseId);
+          const enabled = !phase || isPhaseEnabled(selectedProject, phase);
+          const pct = phaseCompletionPct(activities, cells, selectedProject.id, phaseId);
 
           return (
-            <div key={phaseNo}>
+            <div key={phaseId}>
               <button
                 type="button"
-                onClick={() => togglePhase(phaseNo)}
+                onClick={() => togglePhase(phaseId)}
                 className="flex w-full items-center gap-2 bg-veltol-surface/60 px-4 py-2.5 text-left hover:bg-veltol-surface"
               >
                 <ChevronRight
                   className={cn("size-3.5 shrink-0 text-veltol-fgMute transition-transform", !isCollapsed && "rotate-90")}
                 />
-                <span className="flex-1 text-[13px] font-bold text-veltol-fg">{phaseNo}. {phaseName}</span>
+                <span className="flex-1 text-[13px] font-bold text-veltol-fg">{phaseName}</span>
                 <span
                   className={cn(
                     "text-[12px] font-semibold tabular-nums",
@@ -181,8 +189,9 @@ export function MatriceMobileView({
                             projectId={selectedProject.id}
                             activityId={activity.id}
                             activityName={activity.name}
-                            isAviz={activity.is_aviz}
+                            expiresRequired={activity.expires_required}
                             expiresAt={getExpiresAt(activity.id)}
+                            unmetDependencyNames={getUnmetDependencyNamesFor(activity.id)}
                             onChangeStatus={onChangeStatus}
                             onOpenDocuments={onOpenDocuments}
                             onOpenDiscussion={onOpenDiscussion}
