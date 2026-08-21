@@ -13,6 +13,7 @@ export interface TeamsApiClient {
   updateTeam(id: number, payload: CreateTeamPayload): Promise<void>;
   deleteTeam(id: number): Promise<void>;
   getTeamMembers(teamId: number): Promise<TeamMember[]>;
+  getAllTeamMembers(): Promise<TeamMember[]>;
   addTeamMember(teamId: number, userId: string): Promise<void>;
   removeTeamMember(teamId: number, userId: string): Promise<void>;
 }

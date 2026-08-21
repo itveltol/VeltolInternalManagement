@@ -27,7 +27,8 @@
     "comunicareGroup": "COMUNICARE",
     "board": "Panoul meu",
     "announcements": "Anunțuri",
-    "feed": "Flux"
+    "feed": "Flux",
+    "schedule": "Programare"
   },
   "dashboard": {
     "eyebrow": "PANOU · PREZENTARE",
@@ -1375,6 +1376,51 @@
       "title": "Dependențe pentru \"{activity}\"",
       "description": "Selectează activitățile care trebuie finalizate înainte ca aceasta să poată fi marcată finalizată.",
       "close": "Închide"
+    }
+  },
+  "schedule": {
+    "eyebrow": "PROGRAMARE · SĂPTĂMÂNAL",
+    "title": "Programul echipelor",
+    "subtitle": "Planifică sarcinile zilnice ale fiecărei echipe pentru săptămâna selectată.",
+    "today": "Astăzi",
+    "notesPlaceholder": "Intervenții necesare...",
+    "emptyState": "Nu există încă echipe. Adaugă mai întâi o echipă.",
+    "errorGeneric": "A apărut o eroare.",
+    "errorNotAllowed": "Nu ai permisiunea necesară.",
+    "entrySaved": "Intrare salvată.",
+    "entryDeleted": "Intrare ștearsă.",
+    "noteSaved": "Notă salvată.",
+    "cancel": "Anulează",
+    "save": "Salvează",
+    "saving": "Se salvează...",
+    "columns": {
+      "team": "Echipă",
+      "notes": "Intervenții necesare",
+      "members": "Membri"
+    },
+    "roster": {
+      "eyebrow": "MEMBRII ECHIPEI",
+      "title": "Membri echipă",
+      "members": "Membri",
+      "emptyMembers": "Niciun membru încă."
+    },
+    "export": {
+      "button": "Exportă imagine",
+      "generating": "Se generează...",
+      "error": "Imaginea nu a putut fi generată. Încearcă din nou."
+    },
+    "entry": {
+      "addTitle": "Adaugă sarcină",
+      "editTitle": "Editează sarcina",
+      "label": "Etichetă",
+      "labelPlaceholder": "ex. Bellamy Petelea, CO, Liber...",
+      "project": "Proiect",
+      "projectPlaceholder": "Caută proiecte...",
+      "searching": "Se caută...",
+      "noProjects": "Niciun proiect găsit.",
+      "color": "Culoare",
+      "colorNone": "Fără culoare",
+      "delete": "Șterge"
     }
   }
 }

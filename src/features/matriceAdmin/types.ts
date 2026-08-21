@@ -9,4 +9,5 @@ export interface PhaseWithActivities extends MatricePhase {
 export interface MatriceCatalog {
   phases: PhaseWithActivities[];
   dependencies: ActivityDependency[];
+  checklistLinkedActivityIds: number[];
 }

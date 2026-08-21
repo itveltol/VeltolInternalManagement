@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
 import {
@@ -13,12 +15,17 @@ import {
   DataCardBadgeSlot, DataCardField, DataCardFooter,
 } from "@/shared/components/ui/data-card";
 import { TeamMemberPicker } from "./TeamMemberPicker";
-import { EditTeamDialog } from "./EditTeamDialog";
 import { addTeamMemberAction, removeTeamMemberAction } from "@/app/[locale]/(app)/teams/[id]/actions";
-import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
+import { deleteTeamAction, updateTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import type { Team, TeamMember } from "../types";
 import type { ProfileRef } from "./TeamMemberPicker";
+
+const SELECT_CLASS =
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
+
+const TEXTAREA_CLASS =
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
 
 interface Props {
   team: Team;
@@ -39,8 +46,27 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
-  const [isEditOpen, setEditOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const [name, setName] = useState(team.name);
+  const [description, setDescription] = useState(team.description ?? "");
+  const [leadId, setLeadId] = useState(team.lead_id ?? "");
+  const [updateState, updateAction, updatePending] = useActionState(updateTeamAction, null);
+
+  useEffect(() => {
+    setName(team.name);
+    setDescription(team.description ?? "");
+    setLeadId(team.lead_id ?? "");
+  }, [team]);
+
+  useEffect(() => {
+    if (updateState?.success) {
+      toast.success(t(updateState.success as "teamSaved"));
+      router.refresh();
+    } else if (updateState?.error) {
+      toast.error(t(updateState.error as "errorGeneric" | "errorNotAllowed"));
+    }
+  }, [updateState]);
 
   const memberIds = members.map((m) => m.user_id);
   const availableProfiles = allProfiles.filter((p) => !memberIds.includes(p.id));
@@ -89,20 +115,78 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
         <TableToolbar>
           <div>
             <div className="text-[11px] font-medium text-veltol-fgMute">{t("detailEyebrow")}</div>
-            <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">
-              {t("memberCount", { count: members.length })}
-            </h2>
+            <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">{team.name}</h2>
           </div>
           {canMutate && (
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-                {t("editTeam")}
-              </Button>
-              <Button size="sm" variant="destructive" disabled={isPending} onClick={handleDeleteTeam}>
-                {t("deleteTeam")}
+            <Button size="sm" variant="destructive" disabled={isPending} onClick={handleDeleteTeam}>
+              {t("deleteTeam")}
+            </Button>
+          )}
+        </TableToolbar>
+
+        <form
+          action={updateAction}
+          className="grid gap-4 border-b border-border px-4 py-4 md:grid-cols-2 md:px-6"
+        >
+          <input type="hidden" name="teamId" value={team.id} />
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
+            <Input
+              name="name"
+              required
+              value={name}
+              disabled={!canMutate}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.lead")}</Label>
+            <select
+              name="lead_id"
+              value={leadId}
+              disabled={!canMutate}
+              onChange={(e) => setLeadId(e.target.value)}
+              className={SELECT_CLASS}
+            >
+              <option value="" className="bg-card">{t("fields.noLead")}</option>
+              {allProfiles.map((p) => (
+                <option key={p.id} value={p.id} className="bg-card">
+                  {`${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || p.email}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5 md:col-span-2">
+            <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.description")}</Label>
+            <textarea
+              name="description"
+              rows={3}
+              value={description}
+              disabled={!canMutate}
+              onChange={(e) => setDescription(e.target.value)}
+              className={TEXTAREA_CLASS}
+            />
+          </div>
+
+          {canMutate && (
+            <div className="flex items-center justify-between md:col-span-2">
+              {updateState?.error && (
+                <p className="text-sm text-veltol-red">{t(updateState.error as Parameters<typeof t>[0])}</p>
+              )}
+              <Button type="submit" size="sm" className="ml-auto" disabled={updatePending}>
+                {updatePending ? t("saving") : t("save")}
               </Button>
             </div>
           )}
+        </form>
+
+        <TableToolbar>
+          <h2 className="text-lg font-semibold text-veltol-fg">
+            {t("memberCount", { count: members.length })}
+          </h2>
         </TableToolbar>
 
         <TableDesktopView>
@@ -215,18 +299,6 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
           </div>
         )}
       </TableShell>
-
-      {isEditOpen && (
-        <EditTeamDialog
-          team={team}
-          open={isEditOpen}
-          onClose={() => {
-            setEditOpen(false);
-            router.refresh();
-          }}
-          allProfiles={allProfiles}
-        />
-      )}
     </>
   );
 }

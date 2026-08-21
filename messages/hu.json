@@ -27,7 +27,8 @@
     "comunicareGroup": "KOMMUNIKÁCIÓ",
     "board": "Saját panel",
     "announcements": "Közlemények",
-    "feed": "Folyam"
+    "feed": "Folyam",
+    "schedule": "Beosztás"
   },
   "dashboard": {
     "eyebrow": "IRÁNYÍTÓPULT · ÁTTEKINTÉS",
@@ -1375,6 +1376,51 @@
       "title": "\"{activity}\" függőségei",
       "description": "Válaszd ki azokat a tevékenységeket, amelyeket be kell fejezni, mielőtt ez készre állítható.",
       "close": "Bezárás"
+    }
+  },
+  "schedule": {
+    "eyebrow": "BEOSZTÁS · HETI",
+    "title": "Csapat beosztás",
+    "subtitle": "Tervezd meg az egyes csapatok napi feladatait a kiválasztott hétre.",
+    "today": "Ma",
+    "notesPlaceholder": "Szükséges beavatkozások...",
+    "emptyState": "Még nincs csapat. Előbb hozz létre egyet.",
+    "errorGeneric": "Hiba történt.",
+    "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "entrySaved": "Bejegyzés mentve.",
+    "entryDeleted": "Bejegyzés törölve.",
+    "noteSaved": "Megjegyzés mentve.",
+    "cancel": "Mégse",
+    "save": "Mentés",
+    "saving": "Mentés...",
+    "columns": {
+      "team": "Csapat",
+      "notes": "Szükséges beavatkozások",
+      "members": "Tagok"
+    },
+    "roster": {
+      "eyebrow": "CSAPAT TAGJAI",
+      "title": "Csapattagok",
+      "members": "Tagok",
+      "emptyMembers": "Még nincs tag."
+    },
+    "export": {
+      "button": "Kép exportálása",
+      "generating": "Generálás...",
+      "error": "Nem sikerült létrehozni a képet. Próbáld újra."
+    },
+    "entry": {
+      "addTitle": "Feladat hozzáadása",
+      "editTitle": "Feladat szerkesztése",
+      "label": "Megnevezés",
+      "labelPlaceholder": "pl. Bellamy Petelea, CO, Liber...",
+      "project": "Projekt",
+      "projectPlaceholder": "Projekt keresése...",
+      "searching": "Keresés...",
+      "noProjects": "Nincs találat.",
+      "color": "Szín",
+      "colorNone": "Nincs szín",
+      "delete": "Törlés"
     }
   }
 }

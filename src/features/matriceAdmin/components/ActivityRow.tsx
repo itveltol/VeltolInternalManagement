@@ -26,6 +26,7 @@ interface Props {
   allActivities: Activity[];
   dependencies: ActivityDependency[];
   dependencyCount: number;
+  isChecklistLinked: boolean;
   isFirst: boolean;
   isLast: boolean;
   isPending: boolean;
@@ -34,7 +35,7 @@ interface Props {
 }
 
 export function ActivityRow({
-  activity, allPhases, allActivities, dependencies, dependencyCount, isFirst, isLast, isPending, startTransition, onResult,
+  activity, allPhases, allActivities, dependencies, dependencyCount, isChecklistLinked, isFirst, isLast, isPending, startTransition, onResult,
 }: Props) {
   const t = useTranslations("matriceCatalog");
   const confirm = useConfirm();
@@ -62,7 +63,10 @@ export function ActivityRow({
   async function handleDelete() {
     const ok = await confirm({
       title: t("confirmDeleteActivity"),
-      description: activity.is_aviz || dependencyCount > 0 ? t("confirmDeleteActivityWithLinks") : undefined,
+      description:
+        activity.is_aviz || dependencyCount > 0 || isChecklistLinked
+          ? t("confirmDeleteActivityWithLinks")
+          : undefined,
       confirmLabel: t("delete"),
     });
     if (!ok) return;
