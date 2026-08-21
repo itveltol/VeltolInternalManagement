@@ -21,6 +21,12 @@ export const createSupabaseMatriceAdminClient = (supabase: SupabaseClient): Matr
     return (data ?? []) as ActivityDependency[];
   },
 
+  async getChecklistLinkedActivityIds() {
+    const { data, error } = await supabase.from("checklist_activity_map").select("activity_id");
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row) => row.activity_id as number);
+  },
+
   async createPhase(payload) {
     const { data, error } = await supabase.from("matrice_phases").insert(payload).select("*").single();
     if (error) throw new Error(error.message);

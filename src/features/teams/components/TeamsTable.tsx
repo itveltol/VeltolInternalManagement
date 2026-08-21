@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Link } from "@/i18n/navigation";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Pagination } from "@/shared/components/ui/pagination";
@@ -15,7 +14,6 @@ import {
   DataCardBody, DataCardField, DataCardFooter,
 } from "@/shared/components/ui/data-card";
 import { AddTeamDialog } from "./AddTeamDialog";
-import { EditTeamDialog } from "./EditTeamDialog";
 import { deleteTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useTeamsStore } from "../hooks/useTeamsStore";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
@@ -43,14 +41,14 @@ interface Props {
 
 export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
   const t = useTranslations("teams");
+  const locale = useLocale();
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const {
-    isAddDialogOpen, editingTeam, deletingId,
+    isAddDialogOpen, deletingId,
     openAddDialog, closeAddDialog,
-    openEditDialog, closeEditDialog,
     setDeletingId,
   } = useTeamsStore();
 
@@ -111,14 +109,13 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
                 </tr>
               ) : (
                 pagedTeams.map((team) => (
-                  <tr key={team.id} className="group transition-colors hover:bg-veltol-surface/50">
+                  <tr
+                    key={team.id}
+                    className="group cursor-pointer transition-colors hover:bg-veltol-hover"
+                    onClick={() => router.push(`/${locale}/teams/${team.id}`)}
+                  >
                     <td className="px-5 py-3.5">
-                      <Link
-                        href={`/teams/${team.id}`}
-                        className="font-medium text-veltol-fg hover:text-veltol-accent"
-                      >
-                        {team.name}
-                      </Link>
+                      <span className="font-medium text-veltol-fg">{team.name}</span>
                     </td>
 
                     <td className="px-5 py-3.5">
@@ -151,18 +148,13 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
                         <div className="flex flex-col items-center gap-1">
                           <Button
                             size="icon-sm"
-                            variant="outline"
-                            title={t("editTeam")}
-                            onClick={() => openEditDialog(team)}
-                          >
-                            <Pencil />
-                          </Button>
-                          <Button
-                            size="icon-sm"
                             variant="destructive"
                             title={t("deleteTeam")}
                             disabled={isPending && deletingId === team.id}
-                            onClick={() => handleDelete(team.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(team.id);
+                            }}
                           >
                             {isPending && deletingId === team.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
                           </Button>
@@ -181,11 +173,11 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
         ) : (
           <DataCardList>
             {pagedTeams.map((team) => (
-              <DataCard key={team.id}>
+              <DataCard key={team.id} onClick={() => router.push(`/${locale}/teams/${team.id}`)}>
                 <DataCardHeader>
-                  <Link href={`/teams/${team.id}`} className="min-w-0">
-                    <DataCardTitle className="text-veltol-fg hover:text-veltol-accent">{team.name}</DataCardTitle>
-                  </Link>
+                  <div className="min-w-0">
+                    <DataCardTitle>{team.name}</DataCardTitle>
+                  </div>
                 </DataCardHeader>
 
                 <DataCardBody>
@@ -211,14 +203,14 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
 
                 {canMutate && (
                   <DataCardFooter>
-                    <Button variant="outline" className="flex-1" onClick={() => openEditDialog(team)}>
-                      <Pencil data-icon="inline-start" /> {t("editTeam")}
-                    </Button>
                     <Button
                       variant="destructive"
                       className="flex-1"
                       disabled={isPending && deletingId === team.id}
-                      onClick={() => handleDelete(team.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(team.id);
+                      }}
                     >
                       {isPending && deletingId === team.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
                       {t("deleteTeam")}
@@ -248,18 +240,6 @@ export function TeamsTable({ teams, canMutate, allProfiles }: Props) {
         }}
         allProfiles={allProfiles}
       />
-
-      {editingTeam && (
-        <EditTeamDialog
-          team={editingTeam}
-          open={!!editingTeam}
-          onClose={() => {
-            closeEditDialog();
-            router.refresh();
-          }}
-          allProfiles={allProfiles}
-        />
-      )}
     </>
   );
 }

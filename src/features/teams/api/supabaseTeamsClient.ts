@@ -79,6 +79,15 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
     return (data ?? []) as unknown as TeamMember[];
   },
 
+  async getAllTeamMembers() {
+    const { data, error } = await supabase
+      .from("team_members")
+      .select("team_id, user_id, added_at, profile:profiles!user_id(id, first_name, last_name, email, avatar_url, role)")
+      .order("added_at");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as TeamMember[];
+  },
+
   async addTeamMember(teamId, userId) {
     const { error } = await supabase
       .from("team_members")

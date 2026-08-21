@@ -20,6 +20,7 @@ export interface MatriceAdminApiClient {
   getPhases(): Promise<MatricePhase[]>;
   getActivities(): Promise<Activity[]>;
   getDependencies(): Promise<ActivityDependency[]>;
+  getChecklistLinkedActivityIds(): Promise<number[]>;
 
   createPhase(payload: CreatePhasePayload): Promise<MatricePhase>;
   renamePhase(id: number, name: string): Promise<void>;

@@ -124,6 +124,16 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     return { projects, totalCount: count ?? projects.length };
   },
 
+  async searchProjects(query) {
+    let request = supabase.from("projects").select("id, name").order("name").limit(20);
+    if (query.trim() !== "") {
+      request = request.ilike("name", `%${query.trim()}%`);
+    }
+    const { data, error } = await request;
+    if (error) throw new Error(error.message);
+    return (data ?? []) as { id: number; name: string }[];
+  },
+
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")

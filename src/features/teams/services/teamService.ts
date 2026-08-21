@@ -25,6 +25,10 @@ export async function getTeamMembers(api: TeamsApiClient, teamId: number): Promi
   return api.getTeamMembers(teamId);
 }
 
+export async function getAllTeamMembers(api: TeamsApiClient): Promise<TeamMember[]> {
+  return api.getAllTeamMembers();
+}
+
 export async function addTeamMember(api: TeamsApiClient, teamId: number, userId: string): Promise<void> {
   return api.addTeamMember(teamId, userId);
 }

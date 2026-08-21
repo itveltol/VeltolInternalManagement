@@ -63,6 +63,10 @@ export function MatriceCatalogEditor({ initialCatalog }: Props) {
     }
     return map;
   }, [initialCatalog.dependencies]);
+  const checklistLinkedActivityIds = useMemo(
+    () => new Set(initialCatalog.checklistLinkedActivityIds),
+    [initialCatalog.checklistLinkedActivityIds],
+  );
 
   return (
     <div className="space-y-6">
@@ -74,6 +78,7 @@ export function MatriceCatalogEditor({ initialCatalog }: Props) {
           allActivities={allActivities}
           dependencies={initialCatalog.dependencies}
           dependencyCountByActivityId={dependencyCountByActivityId}
+          checklistLinkedActivityIds={checklistLinkedActivityIds}
           isFirst={index === 0}
           isLast={index === initialCatalog.phases.length - 1}
           isPending={isPending}

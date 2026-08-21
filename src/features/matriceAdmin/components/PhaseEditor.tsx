@@ -32,6 +32,7 @@ interface Props {
   allActivities: Activity[];
   dependencies: ActivityDependency[];
   dependencyCountByActivityId: Map<number, number>;
+  checklistLinkedActivityIds: Set<number>;
   isFirst: boolean;
   isLast: boolean;
   isPending: boolean;
@@ -40,7 +41,7 @@ interface Props {
 }
 
 export function PhaseEditor({
-  phase, allPhases, allActivities, dependencies, dependencyCountByActivityId, isFirst, isLast, isPending, startTransition, onResult,
+  phase, allPhases, allActivities, dependencies, dependencyCountByActivityId, checklistLinkedActivityIds, isFirst, isLast, isPending, startTransition, onResult,
 }: Props) {
   const t = useTranslations("matriceCatalog");
   const confirm = useConfirm();
@@ -156,6 +157,7 @@ export function PhaseEditor({
               allActivities={allActivities}
               dependencies={dependencies}
               dependencyCount={dependencyCountByActivityId.get(activity.id) ?? 0}
+              isChecklistLinked={checklistLinkedActivityIds.has(activity.id)}
               isFirst={index === 0}
               isLast={index === phase.activities.length - 1}
               isPending={isPending}

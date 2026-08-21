@@ -27,7 +27,8 @@
     "comunicareGroup": "COMMUNICATION",
     "board": "My board",
     "announcements": "Announcements",
-    "feed": "Feed"
+    "feed": "Feed",
+    "schedule": "Schedule"
   },
   "dashboard": {
     "eyebrow": "DASHBOARD · OVERVIEW",
@@ -1375,6 +1376,51 @@
       "title": "Dependencies for \"{activity}\"",
       "description": "Select the activities that must be finalized before this one can be marked finalized.",
       "close": "Close"
+    }
+  },
+  "schedule": {
+    "eyebrow": "SCHEDULE · WEEKLY",
+    "title": "Team schedule",
+    "subtitle": "Plan each team's daily assignments for the selected week.",
+    "today": "Today",
+    "notesPlaceholder": "Interventions needed...",
+    "emptyState": "No teams yet. Add a team first.",
+    "errorGeneric": "Something went wrong.",
+    "errorNotAllowed": "You don't have permission to do this.",
+    "entrySaved": "Entry saved.",
+    "entryDeleted": "Entry deleted.",
+    "noteSaved": "Note saved.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "columns": {
+      "team": "Team",
+      "notes": "Interventions needed",
+      "members": "Members"
+    },
+    "roster": {
+      "eyebrow": "TEAM ROSTER",
+      "title": "Team members",
+      "members": "Members",
+      "emptyMembers": "No members yet."
+    },
+    "export": {
+      "button": "Export image",
+      "generating": "Generating...",
+      "error": "Couldn't generate the image. Please try again."
+    },
+    "entry": {
+      "addTitle": "Add assignment",
+      "editTitle": "Edit assignment",
+      "label": "Label",
+      "labelPlaceholder": "e.g. Bellamy Petelea, CO, Liber...",
+      "project": "Project",
+      "projectPlaceholder": "Search projects...",
+      "searching": "Searching...",
+      "noProjects": "No projects found.",
+      "color": "Color",
+      "colorNone": "No color",
+      "delete": "Delete"
     }
   }
 }

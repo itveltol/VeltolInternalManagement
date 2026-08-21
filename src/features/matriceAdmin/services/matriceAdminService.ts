@@ -2,10 +2,11 @@ import type { MatriceAdminApiClient } from "../api/types";
 import type { Activity, ActivityDependency, MatriceCatalog, MatricePhase, PhaseWithActivities } from "../types";
 
 export async function getCatalog(client: MatriceAdminApiClient): Promise<MatriceCatalog> {
-  const [phases, activities, dependencies] = await Promise.all([
+  const [phases, activities, dependencies, checklistLinkedActivityIds] = await Promise.all([
     client.getPhases(),
     client.getActivities(),
     client.getDependencies(),
+    client.getChecklistLinkedActivityIds(),
   ]);
   const activitiesByPhase = new Map<number, Activity[]>();
   for (const a of activities) {
@@ -18,7 +19,7 @@ export async function getCatalog(client: MatriceAdminApiClient): Promise<Matrice
     ...phase,
     activities: (activitiesByPhase.get(phase.id) ?? []).sort((a, b) => a.sort_order - b.sort_order),
   }));
-  return { phases: withActivities, dependencies };
+  return { phases: withActivities, dependencies, checklistLinkedActivityIds };
 }
 
 /** Adjacent-swap reorder within an already sort_order-sorted list; returns the two rows whose sort_order must be swapped, or null if the move is out of bounds. */
