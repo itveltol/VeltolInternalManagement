@@ -186,6 +186,7 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   onNewSubcontractor={() => setShowAddSubcontractor(true)}
                   exchangeRate={exchangeRate}
                   aiClass={aiClass}
+                  fieldErrors={state?.fieldErrors}
                 />
 
                 {state?.error && <p className="text-sm text-veltol-red">{t(state.error as Parameters<typeof t>[0])}</p>}

@@ -25,6 +25,7 @@ interface Props {
   onRefreshRate?: () => Promise<number | null>;
   refreshLabel?: string;
   required?: boolean;
+  "aria-invalid"?: boolean;
 }
 
 /** Single amount input + EUR/RON currency select, with a live "≈ converted"
@@ -39,6 +40,7 @@ export function CurrencyAmountInput({
   onRefreshRate,
   refreshLabel,
   required,
+  "aria-invalid": invalid,
 }: Props) {
   const [amount, setAmount] = useState<string>(defaultAmount != null ? String(defaultAmount) : "");
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
@@ -73,6 +75,7 @@ export function CurrencyAmountInput({
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           className="flex-1"
+          aria-invalid={invalid}
         />
         <select
           name={currencyName}

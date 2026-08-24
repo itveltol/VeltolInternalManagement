@@ -13,7 +13,7 @@ import type { MentionScope, NotesFilter } from "@/features/comms/api/types";
 
 const TIMELINE_PAGE_SIZE = 20;
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = { error?: string; success?: string; fieldErrors?: Record<string, string> } | null;
 
 async function requireAuth() {
   const { supabase, user } = await getSessionUser();
@@ -82,7 +82,7 @@ export async function createNoteAction(_prev: ActionState, formData: FormData): 
   try {
     const { supabase, user } = await requireAuth();
     const parsed = parseFormData(noteSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
 
     const payload: CreateNotePayload = {
       kind: parsed.data.kind,

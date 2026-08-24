@@ -2,26 +2,38 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig } from "./actions";
+import {
+  getProject,
+  getChecklistRecords,
+  getProjectDocuments,
+  getTeamsForProject,
+  getProjectManagers,
+  getClientRefs,
+  getSubcontractorRefs,
+  getSubcontractorAssignment,
+  getMaintenanceChecks,
+  getExecutionData,
+  getStructureConfig,
+} from "@/app/[locale]/(app)/projects/[id]/actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
+import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
-import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { isBessProjectType } from "@/features/projects/types";
 
 interface Props {
-  params: Promise<{ locale: string; id: string }>;
+  params: Promise<{ locale: string; clientId: string; projectId: string }>;
   searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ProjectChecklistPage({ params, searchParams }: Props) {
-  const { id } = await params;
+export default async function ClientProjectDetailPage({ params, searchParams }: Props) {
+  const { clientId, projectId: idParam } = await params;
   const { tab } = await searchParams;
-  const projectId = Number(id);
-  if (isNaN(projectId)) notFound();
+  const clientIdNum = Number(clientId);
+  const projectId = Number(idParam);
+  if (isNaN(clientIdNum) || isNaN(projectId)) notFound();
 
   const { user, role } = await getUserProfileRole();
-
   if (!user) {
     const locale = await getLocale();
     redirect({ href: "/login", locale });
@@ -29,13 +41,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
 
+  const project = await getProject(projectId);
+  if (!project || project.client_id !== clientIdNum) notFound();
+
   const isDocumentsTab = tab === "documents";
   const isGanttTab = tab === "gantt";
   const isMaintenanceTab = tab === "maintenance";
   const isComunicareTab = tab === "comunicare";
-
-  const project = await getProject(projectId);
-  if (!project) notFound();
 
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
@@ -77,7 +89,6 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   return (
     <ProjectDetailView
       breadcrumb={[
-        { label: t("breadcrumbProjects"), href: "/projects" },
         { label: project.name },
         { label: activeTabLabel },
       ]}

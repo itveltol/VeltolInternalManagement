@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { createSupplierAction } from "@/app/[locale]/(app)/suppliers/actions";
 
 const TEXTAREA_CLASS =
-  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 interface SupplierFields {
   name: string;
@@ -75,50 +75,50 @@ function AddSupplierForm({ onClose, onCreated }: Omit<Props, "open">) {
       <form action={action} className="mt-6 space-y-4">
         <div className="space-y-1.5">
           <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
-          <Input name="name" required value={fields.name} onChange={setField("name")} />
+          <Input name="name" required value={fields.name} onChange={setField("name")} aria-invalid={Boolean(state?.fieldErrors?.name)} />
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
-            <Input name="cui" value={fields.cui} onChange={setField("cui")} />
+            <Input name="cui" value={fields.cui} onChange={setField("cui")} aria-invalid={Boolean(state?.fieldErrors?.cui)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.regCom")}</Label>
-            <Input name="reg_com" value={fields.reg_com} onChange={setField("reg_com")} />
+            <Input name="reg_com" value={fields.reg_com} onChange={setField("reg_com")} aria-invalid={Boolean(state?.fieldErrors?.reg_com)} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contactPerson")}</Label>
-            <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} />
+            <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} aria-invalid={Boolean(state?.fieldErrors?.contact_person)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phone")}</Label>
-            <Input name="phone" value={fields.phone} onChange={setField("phone")} />
+            <Input name="phone" value={fields.phone} onChange={setField("phone")} aria-invalid={Boolean(state?.fieldErrors?.phone)} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.email")}</Label>
-            <Input name="email" type="email" value={fields.email} onChange={setField("email")} />
+            <Input name="email" type="email" value={fields.email} onChange={setField("email")} aria-invalid={Boolean(state?.fieldErrors?.email)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.iban")}</Label>
-            <Input name="iban" value={fields.iban} onChange={setField("iban")} />
+            <Input name="iban" value={fields.iban} onChange={setField("iban")} aria-invalid={Boolean(state?.fieldErrors?.iban)} />
           </div>
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.address")}</Label>
-          <Input name="address" value={fields.address} onChange={setField("address")} />
+          <Input name="address" value={fields.address} onChange={setField("address")} aria-invalid={Boolean(state?.fieldErrors?.address)} />
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</Label>
-          <textarea name="notes" rows={3} value={fields.notes} onChange={setField("notes")} className={TEXTAREA_CLASS} />
+          <textarea name="notes" rows={3} value={fields.notes} onChange={setField("notes")} className={TEXTAREA_CLASS} aria-invalid={Boolean(state?.fieldErrors?.notes)} />
         </div>
 
         {state?.error && (

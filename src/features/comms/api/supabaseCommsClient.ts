@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { ActivityEventFilter, CommsApiClient, MentionScope, NotesFilter, NotesPageFilter } from "./types";
+import type { ActivityEventFilter, CommsApiClient, CreateNotificationPayload, MentionScope, NotesFilter, NotesPageFilter } from "./types";
 import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, Notification } from "../types";
 
 const ACTIVITY_EVENT_SELECT =
@@ -202,6 +202,17 @@ export const createSupabaseCommsClient = (supabase: SupabaseClient): CommsApiCli
       .is("read_at", null);
     if (notificationIds !== undefined) query = query.in("id", notificationIds);
     const { error } = await query;
+    if (error) throw new Error(error.message);
+  },
+
+  async createNotification(payload: CreateNotificationPayload) {
+    const { error } = await supabase.from("notifications").insert({
+      profile_id: payload.profileId,
+      type: payload.type,
+      project_id: payload.projectId ?? null,
+      payload: payload.payload ?? {},
+      href: payload.href ?? null,
+    });
     if (error) throw new Error(error.message);
   },
 

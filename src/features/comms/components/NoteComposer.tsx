@@ -161,6 +161,7 @@ export function NoteComposer({
             required
             value={projectId ?? ""}
             onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : null)}
+            aria-invalid={Boolean(state?.fieldErrors?.projectId)}
           >
             <option value="" disabled>
               {t("fields.selectProject")}
@@ -181,6 +182,7 @@ export function NoteComposer({
         autoFocus={autoFocus}
         placeholder={isReply ? t("composer.replyPlaceholder") : t("composer.bodyPlaceholder")}
         rows={isReply ? 2 : 4}
+        aria-invalid={Boolean(state?.fieldErrors?.body)}
       />
 
       <div className="flex justify-end">

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
 import type { SubcontractorRef } from "../types";
+import { cn } from "@/shared/utils/cn";
 import {
   Combobox,
   ComboboxInputGroup,
@@ -23,9 +24,10 @@ interface Props {
   value: SubcontractorRef | null;
   onValueChange: (subcontractor: SubcontractorRef | null) => void;
   name?: string;
+  "aria-invalid"?: boolean;
 }
 
-export function SubcontractorCombobox({ subcontractors, value, onValueChange, name }: Props) {
+export function SubcontractorCombobox({ subcontractors, value, onValueChange, name, "aria-invalid": invalid }: Props) {
   const t = useTranslations("projects");
   const filter = useComboboxFilter({ multiple: false });
 
@@ -39,7 +41,9 @@ export function SubcontractorCombobox({ subcontractors, value, onValueChange, na
       filter={filter.contains}
       name={name}
     >
-      <ComboboxInputGroup className="h-8 min-h-0 py-0">
+      <ComboboxInputGroup
+        className={cn("h-8 min-h-0 py-0", invalid && "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40")}
+      >
         <Search className="size-3.5 shrink-0 text-veltol-faint" />
         <ComboboxInput placeholder={t("subcontractorSearchPlaceholder")} className="text-sm" />
         <ComboboxClear className="ml-auto shrink-0" aria-label={t("subcontractorSearchNone")}>

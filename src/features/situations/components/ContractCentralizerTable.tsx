@@ -16,14 +16,19 @@ import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
 import { useSituationsStore } from "../hooks/useSituationsStore";
 import { CreateSituationDialog } from "./CreateSituationDialog";
+import { CreateSituationWithProjectDialog } from "./CreateSituationWithProjectDialog";
 import type { CentralizerRow } from "../types";
-import type { Project } from "@/features/projects/types";
+import type { Project, ProjectManager } from "@/features/projects/types";
+import type { ClientRef } from "@/features/clients/types";
 
 const PAGE_SIZE = 20;
 
 interface Props {
   rows: CentralizerRow[];
   projects: Project[];
+  managers: ProjectManager[];
+  clientRefs: ClientRef[];
+  nextContractNumber: string;
   canMutate: boolean;
   canMutateBilling: boolean;
 }
@@ -36,10 +41,19 @@ function Money({ value }: { value: number }) {
   );
 }
 
-export function ContractCentralizerTable({ rows, projects, canMutate, canMutateBilling }: Props) {
+export function ContractCentralizerTable({ rows, projects, managers, clientRefs, nextContractNumber, canMutate, canMutateBilling }: Props) {
   const t = useTranslations("situations.centralizer");
   const router = useRouter();
-  const { openProject, openBillingDialog, openAddDialog, isAddDialogOpen, closeAddDialog } = useSituationsStore();
+  const {
+    openProject,
+    openBillingDialog,
+    openAddDialog,
+    isAddDialogOpen,
+    closeAddDialog,
+    openAddWithProjectDialog,
+    isAddWithProjectDialogOpen,
+    closeAddWithProjectDialog,
+  } = useSituationsStore();
   const [search, setSearch] = useState("");
   const [includeCancelled, setIncludeCancelled] = useState(false);
   const [page, setPage] = useState(1);
@@ -125,10 +139,16 @@ export function ContractCentralizerTable({ rows, projects, canMutate, canMutateB
             </Button>
 
             {canMutate && (
-              <Button onClick={openAddDialog} variant="outline">
-                <Plus data-icon="inline-start" />
-                {t("addSituation")}
-              </Button>
+              <>
+                <Button onClick={openAddDialog} variant="outline">
+                  <Plus data-icon="inline-start" />
+                  {t("addSituation")}
+                </Button>
+                <Button onClick={openAddWithProjectDialog} variant="outline">
+                  <Plus data-icon="inline-start" />
+                  {t("addSituationWithProject")}
+                </Button>
+              </>
             )}
           </div>
         </TableToolbar>
@@ -264,6 +284,17 @@ export function ContractCentralizerTable({ rows, projects, canMutate, canMutateB
         open={isAddDialogOpen}
         onClose={() => {
           closeAddDialog();
+          router.refresh();
+        }}
+      />
+
+      <CreateSituationWithProjectDialog
+        open={isAddWithProjectDialogOpen}
+        managers={managers}
+        clientRefs={clientRefs}
+        nextContractNumber={nextContractNumber}
+        onClose={() => {
+          closeAddWithProjectDialog();
           router.refresh();
         }}
       />

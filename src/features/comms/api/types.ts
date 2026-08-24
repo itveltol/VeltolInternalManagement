@@ -1,4 +1,12 @@
-import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, NoteVisibility, Notification } from "../types";
+import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, NoteVisibility, Notification, NotificationType } from "../types";
+
+export interface CreateNotificationPayload {
+  profileId: string;
+  type: NotificationType;
+  projectId?: number | null;
+  payload?: Notification["payload"];
+  href?: string | null;
+}
 
 export interface MentionScope {
   visibility: NoteVisibility;
@@ -48,6 +56,7 @@ export interface CommsApiClient {
   markSeen(noteIds: number[], profileId: string): Promise<void>;
   getNotifications(profileId: string): Promise<Notification[]>;
   markNotificationsRead(profileId: string, notificationIds?: number[]): Promise<void>;
+  createNotification(payload: CreateNotificationPayload): Promise<void>;
 
   // Announcements (Phase 2)
   getAnnouncements(): Promise<Note[]>;

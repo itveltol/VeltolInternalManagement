@@ -161,6 +161,7 @@
       "client": "Client",
       "siteLocation": "Locație site",
       "pinLocation": "Marcați locația pe hartă",
+      "pinLocationRequired": "Faceți clic pe hartă pentru a seta locația",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Categoria proiectului",
@@ -532,6 +533,7 @@
     "used": "Folosite anul acesta"
   },
   "clients": {
+    "breadcrumb": "Clienți",
     "eyebrow": "CLIENȚI · TOȚI",
     "title": "Clienți",
     "subtitle": "Persoane Juridice și persoane asociate proiectelor",
@@ -1029,6 +1031,9 @@
       "totalCount": "{count} contracte",
       "totalsRow": "Total",
       "addSituation": "Adăugare situație",
+      "addSituationWithProject": "Adăugare situație + proiect nou",
+      "newContractTitle": "Contract nou",
+      "continueToSituation": "Continuă",
       "editBilling": "Editare facturare",
       "includeCancelled": "Include proiectele anulate",
       "columns": {
@@ -1254,6 +1259,7 @@
         "aviz_expiring": "aviz expiră",
         "maintenance_due": "mentenanță scadentă",
         "vacation_request": "cerere de concediu",
+        "project_assigned": "te-a numit manager de proiect",
         "system": "notificare sistem"
       }
     },

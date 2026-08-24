@@ -133,6 +133,7 @@ export function EditProjectDialog(props: Props) {
               defaultAssignmentStartDate={currentAssignment?.start_date ?? undefined}
               defaultAssignmentDeadline={currentAssignment?.deadline ?? undefined}
               progressReadout={project.progress_pct}
+              fieldErrors={state?.fieldErrors}
               team={
                 fields.execution_mode === "internal" && canAssignTeam ? (
                   <FormField label={t("fields.team")}>

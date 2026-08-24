@@ -3,6 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
+import { createAdminClient } from "@/core/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
@@ -33,6 +34,7 @@ import type { ActivityStatus } from "@/features/matrice/types";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
 import { getTodaysRate } from "@/features/exchangeRates/services/exchangeRateService";
 import { parseFormData } from "@/shared/utils/parseFormData";
+import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 
 export type ActionState = {
   error?: string;
@@ -40,11 +42,31 @@ export type ActionState = {
   success?: string;
   folderCreated?: boolean;
   projectId?: number;
+  fieldErrors?: Record<string, string>;
 } | null;
 
 async function getProjectsPath() {
   const locale = await getLocale();
   return `/${locale}/projects`;
+}
+
+// notifications has no insert policy for regular users (writes come only
+// from trigger functions or the service-role key — see
+// 20260813000078_comms_rls.sql), so this must go through the admin client.
+// Never let a notification failure block the project save it's attached to.
+async function notifyProjectManagerAssigned(managerId: string, projectId: number, projectName: string) {
+  try {
+    const commsClient = createSupabaseCommsClient(createAdminClient());
+    await commsClient.createNotification({
+      profileId: managerId,
+      type: "project_assigned",
+      projectId,
+      payload: { projectName },
+      href: `/projects/${projectId}`,
+    });
+  } catch (e) {
+    console.error("notifyProjectManagerAssigned failed:", e);
+  }
 }
 
 async function requireAuth() {
@@ -185,6 +207,19 @@ const projectSchema = z.object({
   if (data.project_category === "industrial" && !data.project_type) {
     ctx.addIssue({ code: "custom", path: ["project_type"], message: "Technical type is required" });
   }
+});
+
+// Quick-create path used from the situations centralizer's "add situation +
+// new project" flow — only the fields needed to start a contract now, with
+// everything else (county, coordinates, MW, contract dates...) left null to
+// be filled in later via the normal Edit project flow. Deliberately a
+// separate schema from projectSchema rather than making its many required
+// fields optional, since that would weaken validation for the full form too.
+const minimalProjectSchema = z.object({
+  name: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(5)),
+  client_id: requiredNumber({ min: 1 }),
+  manager_id: optionalTrimmed(),
+  contract_number: optionalTrimmed(),
 });
 
 function extractProjectPayload(
@@ -338,6 +373,12 @@ export async function getProjectsPage(params: ProjectListParams): Promise<Projec
   return projectService.getProjectsPage(client, params);
 }
 
+export async function getProjectsByClientId(clientId: number): Promise<Project[]> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseProjectsClient(supabase);
+  return projectService.getProjectsByClientId(client, clientId);
+}
+
 export async function getProjectManagers(): Promise<ProjectManager[]> {
   await requireAuth();
   return projectService.getCachedProjectManagers();
@@ -359,7 +400,7 @@ export async function createProject(
   try {
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(projectSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const client = createSupabaseProjectsClient(supabase);
     const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
     const rate = await getTodaysRate(exchangeRateClient);
@@ -367,6 +408,10 @@ export async function createProject(
     const { id: newId } = await projectService.createProject(client, payload, user.id);
     await upsertAssignmentIfSubcontracted(supabase, newId, parsed.data, formData);
     revalidatePath(await getProjectsPath());
+
+    if (payload.manager_id && payload.manager_id !== user.id) {
+      await notifyProjectManagerAssigned(payload.manager_id, newId, payload.name);
+    }
 
     try {
       const folder = await createProjectFolder(payload.name, payload.contract_number);
@@ -376,6 +421,60 @@ export async function createProject(
       console.error("createProjectFolder failed:", folderError);
       return { success: "projectCreated", folderCreated: false, projectId: newId };
     }
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function createMinimalProjectAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const parsed = parseFormData(minimalProjectSchema, formData);
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
+    const { name, client_id, manager_id, contract_number } = parsed.data;
+
+    const client = createSupabaseProjectsClient(supabase);
+    const payload = {
+      name,
+      county: null,
+      site_location: null,
+      site_lat: null,
+      site_lng: null,
+      mw_solar: null,
+      mw_bess: null,
+      project_category: "industrial" as const,
+      financial_type: "proprii" as const,
+      project_type: null,
+      contract_type: [],
+      manager_id,
+      client_id,
+      execution_mode: "internal" as const,
+      current_phase: "planning",
+      progress_pct: 0,
+      contract_number,
+      contract_date: null,
+      deadline: null,
+      value_eur: null,
+      value_lei: null,
+      currency: "EUR" as const,
+      conversion_rate: null,
+      status: "on_schedule",
+      status_manual: false,
+      notes: null,
+      paid_by: null,
+    };
+    const { id: newId } = await projectService.createProject(client, payload, user.id);
+    revalidatePath(await getProjectsPath());
+
+    if (manager_id && manager_id !== user.id) {
+      await notifyProjectManagerAssigned(manager_id, newId, name);
+    }
+
+    return { success: "projectCreated", projectId: newId };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
@@ -434,7 +533,7 @@ export async function updateProject(
   try {
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(projectSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const client = createSupabaseProjectsClient(supabase);
     const projectId = Number(formData.get("projectId"));
     const existing = await projectService.getProjectById(client, projectId);
@@ -446,6 +545,11 @@ export async function updateProject(
     const payload = extractProjectPayload(parsed.data, formData, existing ?? undefined, conversionRate);
     await projectService.updateProject(client, projectId, payload, user.id);
     await upsertAssignmentIfSubcontracted(supabase, projectId, parsed.data, formData);
+
+    if (payload.manager_id && payload.manager_id !== existing?.manager_id && payload.manager_id !== user.id) {
+      await notifyProjectManagerAssigned(payload.manager_id, projectId, payload.name);
+    }
+
     const locale = await getLocale();
     revalidatePath(await getProjectsPath());
     revalidatePath(`/${locale}/projects/${projectId}`);

@@ -65,6 +65,7 @@ export interface ProjectsApiClient {
   getProjects(params?: ProjectListParams): Promise<ProjectListResult>;
   searchProjects(query: string): Promise<ProjectOption[]>;
   getProjectById(id: number): Promise<Project | null>;
+  getProjectsByClientId(clientId: number): Promise<Project[]>;
   getProjectManagers(): Promise<ProjectManager[]>;
   createProject(payload: CreateProjectPayload, userId: string): Promise<{ id: number }>;
   updateProject(id: number, payload: CreateProjectPayload, userId: string): Promise<void>;

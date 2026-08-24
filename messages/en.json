@@ -161,6 +161,7 @@
       "client": "Client",
       "siteLocation": "Site location",
       "pinLocation": "Pin location on map",
+      "pinLocationRequired": "Click the map to set a location",
       "mwSolar": "MW Solar",
       "mwBess": "MW BESS",
       "projectCategory": "Project category",
@@ -532,6 +533,7 @@
     "used": "Used this year"
   },
   "clients": {
+    "breadcrumb": "Clients",
     "eyebrow": "CLIENTS · ALL",
     "title": "Clients",
     "subtitle": "Companies and persons associated with projects",
@@ -1029,6 +1031,9 @@
       "totalCount": "{count} contracts",
       "totalsRow": "Total",
       "addSituation": "Add situation",
+      "addSituationWithProject": "Add situation + new project",
+      "newContractTitle": "New contract",
+      "continueToSituation": "Continue",
       "editBilling": "Edit billing",
       "includeCancelled": "Include cancelled projects",
       "columns": {
@@ -1254,6 +1259,7 @@
         "aviz_expiring": "permit expiring",
         "maintenance_due": "maintenance due",
         "vacation_request": "vacation request",
+        "project_assigned": "assigned you as project manager",
         "system": "system notification"
       }
     },
