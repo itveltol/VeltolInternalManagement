@@ -13,7 +13,7 @@ import { formatConvertedCurrency, type Currency } from "@/shared/utils/currency"
 import type { ProjectBilling } from "../types";
 
 const SELECT_CLASS =
-  "h-9 w-28 rounded-lg border border-border bg-veltol-surface/60 px-2 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
+  "h-9 w-28 rounded-lg border border-border bg-veltol-surface/60 px-2 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 interface Props {
   projectId: number;
@@ -75,6 +75,7 @@ export function EditContractBillingDialog({ projectId, projectName, billing, ope
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value as Currency)}
                 className={SELECT_CLASS}
+                aria-invalid={Boolean(state?.fieldErrors?.currency)}
               >
                 <option value="EUR" className="bg-card">EUR</option>
                 <option value="RON" className="bg-card">RON</option>
@@ -91,6 +92,7 @@ export function EditContractBillingDialog({ projectId, projectName, billing, ope
                 required
                 value={invoicedNet}
                 onChange={(e) => setInvoicedNet(e.target.value)}
+                aria-invalid={Boolean(state?.fieldErrors?.invoiced_net)}
               />
             </div>
 
@@ -104,6 +106,7 @@ export function EditContractBillingDialog({ projectId, projectName, billing, ope
                 required
                 value={collectedNet}
                 onChange={(e) => setCollectedNet(e.target.value)}
+                aria-invalid={Boolean(state?.fieldErrors?.collected_net)}
               />
             </div>
 
@@ -127,7 +130,7 @@ export function EditContractBillingDialog({ projectId, projectName, billing, ope
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</Label>
-              <Textarea name="notes" defaultValue={billing?.notes ?? ""} rows={3} />
+              <Textarea name="notes" defaultValue={billing?.notes ?? ""} rows={3} aria-invalid={Boolean(state?.fieldErrors?.notes)} />
             </div>
 
             {state?.error && (

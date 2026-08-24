@@ -3,6 +3,7 @@ import type { Situation } from "../types";
 
 interface SituationsStore {
   isAddDialogOpen: boolean;
+  isAddWithProjectDialogOpen: boolean;
   editingSituation: Situation | null;
   deletingId: number | null;
   /** The contract centralizer row currently drilled into — its project's
@@ -13,6 +14,8 @@ interface SituationsStore {
   editingBillingProjectId: number | null;
   openAddDialog: () => void;
   closeAddDialog: () => void;
+  openAddWithProjectDialog: () => void;
+  closeAddWithProjectDialog: () => void;
   openEditDialog: (situation: Situation) => void;
   closeEditDialog: () => void;
   setDeletingId: (id: number | null) => void;
@@ -26,6 +29,7 @@ interface SituationsStore {
 
 export const useSituationsStore = create<SituationsStore>()((set) => ({
   isAddDialogOpen: false,
+  isAddWithProjectDialogOpen: false,
   editingSituation: null,
   deletingId: null,
   openProjectId: null,
@@ -33,6 +37,8 @@ export const useSituationsStore = create<SituationsStore>()((set) => ({
   editingBillingProjectId: null,
   openAddDialog: () => set({ isAddDialogOpen: true }),
   closeAddDialog: () => set({ isAddDialogOpen: false }),
+  openAddWithProjectDialog: () => set({ isAddWithProjectDialogOpen: true }),
+  closeAddWithProjectDialog: () => set({ isAddWithProjectDialogOpen: false }),
   openEditDialog: (situation) => set({ editingSituation: situation }),
   closeEditDialog: () => set({ editingSituation: null }),
   setDeletingId: (id) => set({ deletingId: id }),

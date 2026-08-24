@@ -7,13 +7,17 @@ import { SituationsTable } from "./SituationsTable";
 import { SituationDetail } from "./SituationDetail";
 import { EditContractBillingDialog } from "./EditContractBillingDialog";
 import type { CentralizerRow, ProjectBilling, SituationWithProject } from "../types";
-import type { Project } from "@/features/projects/types";
+import type { Project, ProjectManager } from "@/features/projects/types";
+import type { ClientRef } from "@/features/clients/types";
 
 interface Props {
   rows: CentralizerRow[];
   situations: SituationWithProject[];
   projects: Project[];
   billing: ProjectBilling[];
+  managers: ProjectManager[];
+  clientRefs: ClientRef[];
+  nextContractNumber: string;
   canMutate: boolean;
   canMutateBilling: boolean;
 }
@@ -25,7 +29,17 @@ interface Props {
  * (openProjectId, openSituationId) rather than a single stack, since level 3
  * always returns to level 2, not level 1.
  */
-export function SituationsShell({ rows, situations, projects, billing, canMutate, canMutateBilling }: Props) {
+export function SituationsShell({
+  rows,
+  situations,
+  projects,
+  billing,
+  managers,
+  clientRefs,
+  nextContractNumber,
+  canMutate,
+  canMutateBilling,
+}: Props) {
   const { openProjectId, openSituationId, closeSituation, closeProject, editingBillingProjectId, closeBillingDialog } = useSituationsStore();
 
   const openSituation = situations.find((s) => s.id === openSituationId) ?? null;
@@ -58,6 +72,9 @@ export function SituationsShell({ rows, situations, projects, billing, canMutate
       <ContractCentralizerTable
         rows={rows}
         projects={projects}
+        managers={managers}
+        clientRefs={clientRefs}
+        nextContractNumber={nextContractNumber}
         canMutate={canMutate}
         canMutateBilling={canMutateBilling}
       />

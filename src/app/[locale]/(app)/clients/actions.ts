@@ -10,7 +10,7 @@ import type { Client, ClientRef } from "@/features/clients/types";
 import { parseFormData } from "@/shared/utils/parseFormData";
 
 export type ActionState =
-  | { error?: string; success?: string; client?: { id: number; name: string } }
+  | { error?: string; success?: string; client?: { id: number; name: string }; fieldErrors?: Record<string, string> }
   | null;
 
 // Trim first, then treat "" as absent — matches the previous str() helper's
@@ -80,6 +80,12 @@ export async function getClientRefs(): Promise<ClientRef[]> {
   return clientService.getCachedClientRefs();
 }
 
+export async function getClient(id: number): Promise<Client | null> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseClientsClient(supabase);
+  return clientService.getClientById(api, id);
+}
+
 export async function createClientAction(
   _prev: ActionState,
   formData: FormData,
@@ -87,7 +93,7 @@ export async function createClientAction(
   try {
     const { supabase } = await requireMutator();
     const parsed = parseFormData(clientSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const api = createSupabaseClientsClient(supabase);
     const result = await clientService.createClient(api, parsed.data);
     revalidatePath(await getClientsPath());
@@ -106,7 +112,7 @@ export async function updateClientAction(
   try {
     const { supabase } = await requireMutator();
     const parsed = parseFormData(clientSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const api = createSupabaseClientsClient(supabase);
     const clientId = Number(formData.get("clientId"));
     await clientService.updateClient(api, clientId, parsed.data);

@@ -5,6 +5,9 @@ import { createSupabaseBillingClient } from "@/features/situations/api/supabaseB
 import * as billingService from "@/features/situations/services/billingService";
 import { getAllSituationsWithProjects, getCentralizerRows, getProjectsForPicker } from "./actions";
 import { getProjects as getDashboardProjects } from "@/app/[locale]/(app)/dashboard/action";
+import { getProjectManagers } from "@/app/[locale]/(app)/projects/actions";
+import { getClientRefs } from "@/app/[locale]/(app)/clients/actions";
+import { suggestNextContractNumber } from "@/features/projects/services/projectService";
 import { SituationsShell } from "@/features/situations/components/SituationsShell";
 import { IncomeByMonthChart, IncomeCompareChart } from "@/features/dashboard/components/DashboardCharts";
 import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
@@ -23,13 +26,16 @@ export default async function SituationsPage() {
   const canMutateBilling = ["admin", "finance"].includes(role ?? "");
 
   const billingApi = createSupabaseBillingClient(supabase);
-  const [rows, situations, projects, billing, dashboardProjects] = await Promise.all([
+  const [rows, situations, projects, billing, dashboardProjects, managers, clientRefs] = await Promise.all([
     getCentralizerRows(),
     getAllSituationsWithProjects(),
     getProjectsForPicker(),
     billingService.getAllBilling(billingApi),
     getDashboardProjects(),
+    getProjectManagers(),
+    getClientRefs(),
   ]);
+  const nextContractNumber = suggestNextContractNumber(projects);
   const t = await getTranslations("situations");
   const tDashboard = await getTranslations("dashboard");
   const tPhase = await getTranslations("projectPhase");
@@ -119,6 +125,9 @@ export default async function SituationsPage() {
         situations={situations}
         projects={projects}
         billing={billing}
+        managers={managers}
+        clientRefs={clientRefs}
+        nextContractNumber={nextContractNumber}
         canMutate={canMutate}
         canMutateBilling={canMutateBilling}
       />

@@ -117,6 +117,7 @@ export function AnnouncementComposer({ projectOptions, teamOptions, onSuccess }:
             required
             value={projectId ?? ""}
             onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : null)}
+            aria-invalid={Boolean(state?.fieldErrors?.projectId)}
           >
             <option value="" disabled>
               {t("fields.selectProject")}
@@ -140,6 +141,7 @@ export function AnnouncementComposer({ projectOptions, teamOptions, onSuccess }:
             required
             value={teamId ?? ""}
             onChange={(e) => setTeamId(e.target.value ? Number(e.target.value) : null)}
+            aria-invalid={Boolean(state?.fieldErrors?.teamId)}
           >
             <option value="" disabled>
               {t("fields.selectTeam")}
@@ -171,7 +173,7 @@ export function AnnouncementComposer({ projectOptions, teamOptions, onSuccess }:
         <Input name="title" placeholder={t("fields.titleOptional")} />
       </div>
 
-      <Textarea name="body" required placeholder={t("composer.bodyPlaceholder")} rows={5} />
+      <Textarea name="body" required placeholder={t("composer.bodyPlaceholder")} rows={5} aria-invalid={Boolean(state?.fieldErrors?.body)} />
 
       <div>
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">

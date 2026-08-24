@@ -10,7 +10,7 @@ import type { Supplier, SupplierRef } from "@/features/suppliers/types";
 import { parseFormData } from "@/shared/utils/parseFormData";
 
 export type ActionState =
-  | { error?: string; success?: string; supplier?: { id: number; name: string } }
+  | { error?: string; success?: string; supplier?: { id: number; name: string }; fieldErrors?: Record<string, string> }
   | null;
 
 const optionalTrimmed = () =>
@@ -73,7 +73,7 @@ export async function createSupplierAction(
   try {
     const { supabase } = await requireMutator();
     const parsed = parseFormData(supplierSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const api = createSupabaseSuppliersClient(supabase);
     const result = await supplierService.createSupplier(api, parsed.data);
     revalidatePath(await getSuppliersPath());
@@ -91,7 +91,7 @@ export async function updateSupplierAction(
   try {
     const { supabase } = await requireMutator();
     const parsed = parseFormData(supplierSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const api = createSupabaseSuppliersClient(supabase);
     const supplierId = Number(formData.get("supplierId"));
     await supplierService.updateSupplier(api, supplierId, parsed.data);

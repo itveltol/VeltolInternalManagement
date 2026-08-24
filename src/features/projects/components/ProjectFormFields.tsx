@@ -30,7 +30,7 @@ const LocationPickerMap = dynamic(
 );
 
 const TEXTAREA_CLASS =
-  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 interface CurrencyFieldDefaults {
   amount: number | null;
@@ -84,6 +84,7 @@ interface Props {
 
   aiClass?: (key: keyof ProjectFieldsState) => string;
   team?: React.ReactNode;
+  fieldErrors?: Record<string, string>;
 }
 
 /**
@@ -126,8 +127,10 @@ export function ProjectFormFields({
   progressReadout,
   aiClass = () => "",
   team,
+  fieldErrors,
 }: Props) {
   const t = useTranslations("projects");
+  const isInvalid = (key: string) => Boolean(fieldErrors?.[key]);
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
   const tType = useTranslations("projectType");
@@ -147,6 +150,7 @@ export function ProjectFormFields({
           value={fields.name}
           onChange={onFieldChange("name")}
           className={aiClass("name")}
+          aria-invalid={isInvalid("name")}
         />
       </FormField>
 
@@ -169,7 +173,7 @@ export function ProjectFormFields({
 
         {fields.execution_mode === "internal" && (
           <FormField label={t("fields.manager")} required>
-            <Select name="manager_id" defaultValue={defaultManagerId} required>
+            <Select name="manager_id" defaultValue={defaultManagerId} required aria-invalid={isInvalid("manager_id")}>
               <option value="" className="bg-card">—</option>
               {managers.map((m) => (
                 <option key={m.id} value={m.id} className="bg-card">
@@ -190,6 +194,7 @@ export function ProjectFormFields({
             onChange={onFieldChange("project_type")}
             className={aiClass("project_type")}
             required
+            aria-invalid={isInvalid("project_type")}
           >
             <option value="" className="bg-card">—</option>
             {PROJECT_TYPES.map((pt) => (
@@ -210,6 +215,7 @@ export function ProjectFormFields({
             value={fields.mw_solar}
             onChange={onFieldChange("mw_solar")}
             className={aiClass("mw_solar")}
+            aria-invalid={isInvalid("mw_solar")}
           />
         </FormField>
         <FormField label={t("fields.mwBess")} required>
@@ -222,6 +228,7 @@ export function ProjectFormFields({
             value={fields.mw_bess}
             onChange={onFieldChange("mw_bess")}
             className={aiClass("mw_bess")}
+            aria-invalid={isInvalid("mw_bess")}
           />
         </FormField>
       </div>
@@ -234,6 +241,7 @@ export function ProjectFormFields({
             value={fields.county}
             onChange={onFieldChange("county")}
             className={aiClass("county")}
+            aria-invalid={isInvalid("county")}
           />
         </FormField>
         <FormField label={t("fields.siteLocation")} required>
@@ -253,7 +261,16 @@ export function ProjectFormFields({
           lat={fields.site_lat ? Number(fields.site_lat) : null}
           lng={fields.site_lng ? Number(fields.site_lng) : null}
           onChange={onMapChange}
+          className={cn(
+            "relative isolate h-56 w-full overflow-hidden rounded-lg border",
+            isInvalid("site_lat") || isInvalid("site_lng")
+              ? "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40"
+              : "border-border",
+          )}
         />
+        {(isInvalid("site_lat") || isInvalid("site_lng")) && (
+          <p className="text-xs text-destructive">{t("fields.pinLocationRequired")}</p>
+        )}
       </FormField>
 
       {team}
@@ -309,6 +326,7 @@ export function ProjectFormFields({
           clients={clientRefs}
           value={selectedClient}
           onValueChange={onClientChange}
+          aria-invalid={isInvalid("client_id")}
         />
       </FormField>
 
@@ -320,6 +338,7 @@ export function ProjectFormFields({
             value={fields.contract_number}
             onChange={onFieldChange("contract_number")}
             className={aiClass("contract_number")}
+            aria-invalid={isInvalid("contract_number")}
           />
         </FormField>
         <FormField label={t("fields.contractDate")} required={fields.execution_mode === "internal"}>
@@ -329,6 +348,7 @@ export function ProjectFormFields({
             required={fields.execution_mode === "internal"}
             defaultValue={defaultContractDate}
             className={SELECT_CLASS}
+            aria-invalid={isInvalid("contract_date")}
           />
         </FormField>
       </div>
@@ -368,6 +388,7 @@ export function ProjectFormFields({
               subcontractors={subcontractorRefs}
               value={selectedSubcontractor}
               onValueChange={onSubcontractorChange}
+              aria-invalid={isInvalid("subcontractor_id")}
             />
           </FormField>
 
@@ -392,6 +413,7 @@ export function ProjectFormFields({
                 required
                 defaultValue={defaultAssignmentStartDate}
                 className={SELECT_CLASS}
+                aria-invalid={isInvalid("assignment_start_date")}
               />
             </FormField>
             <FormField label={t("fields.subcontractorDeadline")} required>
@@ -401,6 +423,7 @@ export function ProjectFormFields({
                 required
                 defaultValue={defaultAssignmentDeadline}
                 className={SELECT_CLASS}
+                aria-invalid={isInvalid("assignment_deadline")}
               />
             </FormField>
           </div>
@@ -432,6 +455,7 @@ export function ProjectFormFields({
                 required
                 defaultValue={defaultDeadline}
                 className={SELECT_CLASS}
+                aria-invalid={isInvalid("deadline")}
               />
             </FormField>
           </div>

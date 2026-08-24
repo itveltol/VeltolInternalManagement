@@ -14,10 +14,10 @@ import type { Client, ClientType } from "../types";
 import { cn } from "@/shared/utils/cn";
 
 const SELECT_CLASS =
-  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 const TEXTAREA_CLASS =
-  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
+  "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 interface ClientFields {
   name: string;
@@ -158,6 +158,7 @@ export function EditClientDialog({ client, open, onClose }: Props) {
                   value={clientType}
                   onChange={(e) => setClientType(e.target.value as ClientType)}
                   className={SELECT_CLASS}
+                  aria-invalid={Boolean(state?.fieldErrors?.type)}
                 >
                   {CLIENT_TYPES.map((ct) => (
                     <option key={ct} value={ct} className="bg-card">
@@ -168,7 +169,7 @@ export function EditClientDialog({ client, open, onClose }: Props) {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.name")} *</Label>
-                <Input name="name" required value={fields.name} onChange={setField("name")} />
+                <Input name="name" required value={fields.name} onChange={setField("name")} aria-invalid={Boolean(state?.fieldErrors?.name)} />
               </div>
             </div>
 
@@ -176,11 +177,11 @@ export function EditClientDialog({ client, open, onClose }: Props) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
-                  <Input name="cui" value={fields.cui} onChange={setField("cui")} className={aiClass("cui")} />
+                  <Input name="cui" value={fields.cui} onChange={setField("cui")} className={aiClass("cui")} aria-invalid={Boolean(state?.fieldErrors?.cui)} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.jNumber")}</Label>
-                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} className={aiClass("j_number")} />
+                  <Input name="j_number" value={fields.j_number} onChange={setField("j_number")} className={aiClass("j_number")} aria-invalid={Boolean(state?.fieldErrors?.j_number)} />
                 </div>
               </div>
             )}
@@ -188,7 +189,7 @@ export function EditClientDialog({ client, open, onClose }: Props) {
             {clientType === "company" && (
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.legalRep")}</Label>
-                <Input name="legal_rep" value={fields.legal_rep} onChange={setField("legal_rep")} className={aiClass("legal_rep")} />
+                <Input name="legal_rep" value={fields.legal_rep} onChange={setField("legal_rep")} className={aiClass("legal_rep")} aria-invalid={Boolean(state?.fieldErrors?.legal_rep)} />
               </div>
             )}
 
@@ -196,43 +197,43 @@ export function EditClientDialog({ client, open, onClose }: Props) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cnp")}</Label>
-                  <Input name="cnp" value={fields.cnp} onChange={setField("cnp")} maxLength={13} className={aiClass("cnp")} />
+                  <Input name="cnp" value={fields.cnp} onChange={setField("cnp")} maxLength={13} className={aiClass("cnp")} aria-invalid={Boolean(state?.fieldErrors?.cnp)} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.idSeries")}</Label>
-                  <Input name="id_series" value={fields.id_series} onChange={setField("id_series")} maxLength={2} className={aiClass("id_series")} />
+                  <Input name="id_series" value={fields.id_series} onChange={setField("id_series")} maxLength={2} className={aiClass("id_series")} aria-invalid={Boolean(state?.fieldErrors?.id_series)} />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.idNumber")}</Label>
-                  <Input name="id_number" value={fields.id_number} onChange={setField("id_number")} maxLength={6} className={aiClass("id_number")} />
+                  <Input name="id_number" value={fields.id_number} onChange={setField("id_number")} maxLength={6} className={aiClass("id_number")} aria-invalid={Boolean(state?.fieldErrors?.id_number)} />
                 </div>
               </div>
             )}
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.regAddress")}</Label>
-              <Input name="reg_address" value={fields.reg_address} onChange={setField("reg_address")} className={aiClass("reg_address")} />
+              <Input name="reg_address" value={fields.reg_address} onChange={setField("reg_address")} className={aiClass("reg_address")} aria-invalid={Boolean(state?.fieldErrors?.reg_address)} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.contactPerson")}</Label>
-                <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} className={aiClass("contact_person")} />
+                <Input name="contact_person" value={fields.contact_person} onChange={setField("contact_person")} className={aiClass("contact_person")} aria-invalid={Boolean(state?.fieldErrors?.contact_person)} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phone")}</Label>
-                <Input name="phone" value={fields.phone} onChange={setField("phone")} className={aiClass("phone")} />
+                <Input name="phone" value={fields.phone} onChange={setField("phone")} className={aiClass("phone")} aria-invalid={Boolean(state?.fieldErrors?.phone)} />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.email")}</Label>
-              <Input name="email" type="email" value={fields.email} onChange={setField("email")} className={aiClass("email")} />
+              <Input name="email" type="email" value={fields.email} onChange={setField("email")} className={aiClass("email")} aria-invalid={Boolean(state?.fieldErrors?.email)} />
             </div>
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</Label>
-              <textarea name="notes" rows={3} value={fields.notes} onChange={setField("notes")} className={TEXTAREA_CLASS} />
+              <textarea name="notes" rows={3} value={fields.notes} onChange={setField("notes")} className={TEXTAREA_CLASS} aria-invalid={Boolean(state?.fieldErrors?.notes)} />
             </div>
 
             {state?.error && (

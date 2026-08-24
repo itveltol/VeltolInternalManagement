@@ -12,7 +12,7 @@ import { getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
 import type { CostCategory, ProjectBudgetLine } from "../types";
 
 const SELECT_CLASS =
-  "h-9 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
+  "h-9 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
 
 interface Props {
   line: ProjectBudgetLine;
@@ -43,7 +43,7 @@ export function EditBudgetLineDialog({ line, categories, open, onClose }: Props)
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.costCategory")} *</Label>
-              <select name="cost_category_id" required className={SELECT_CLASS} defaultValue={line.cost_category_id}>
+              <select name="cost_category_id" required className={SELECT_CLASS} defaultValue={line.cost_category_id} aria-invalid={Boolean(state?.fieldErrors?.cost_category_id)}>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id} className="bg-card">{t(`category.${c.code}`)}</option>
                 ))}
@@ -52,17 +52,17 @@ export function EditBudgetLineDialog({ line, categories, open, onClose }: Props)
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.description")} *</Label>
-              <Input name="description" required defaultValue={line.description} />
+              <Input name="description" required defaultValue={line.description} aria-invalid={Boolean(state?.fieldErrors?.description)} />
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.qty")} *</Label>
-                <Input name="qty" type="number" min="0" step="any" required defaultValue={line.qty} />
+                <Input name="qty" type="number" min="0" step="any" required defaultValue={line.qty} aria-invalid={Boolean(state?.fieldErrors?.qty)} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.unit")} *</Label>
-                <Input name="unit" required defaultValue={line.unit} />
+                <Input name="unit" required defaultValue={line.unit} aria-invalid={Boolean(state?.fieldErrors?.unit)} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phaseNo")}</Label>
@@ -80,6 +80,7 @@ export function EditBudgetLineDialog({ line, categories, open, onClose }: Props)
                 rate={line.conversion_rate}
                 onRefreshRate={getExchangeRate}
                 refreshLabel={t("fields.refreshRate")}
+                aria-invalid={Boolean(state?.fieldErrors?.unit_price)}
               />
             </div>
 

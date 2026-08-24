@@ -11,6 +11,7 @@ export type NotificationType =
   | "aviz_expiring"
   | "maintenance_due"
   | "vacation_request"
+  | "project_assigned"
   | "system";
 
 export interface NoteAnchor {

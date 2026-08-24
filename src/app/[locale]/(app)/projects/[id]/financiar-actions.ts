@@ -11,7 +11,7 @@ import * as financeService from "@/features/finance/services/financeService";
 import type { CostCategory, ProjectBudgetLine } from "@/features/finance/types";
 import { parseFormData } from "@/shared/utils/parseFormData";
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = { error?: string; success?: string; fieldErrors?: Record<string, string> } | null;
 
 const numeric = () => z.preprocess((v) => (typeof v === "string" ? Number(v) : v), z.number());
 
@@ -77,7 +77,7 @@ export async function createBudgetLineAction(
   try {
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(budgetLineSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
 
     const projectId = Number(formData.get("project_id"));
     if (!projectId) return { error: "errorGeneric" };
@@ -108,7 +108,7 @@ export async function updateBudgetLineAction(
   try {
     const { supabase } = await requireMutator();
     const parsed = parseFormData(budgetLineSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
 
     const lineId = Number(formData.get("lineId"));
     if (!lineId) return { error: "errorGeneric" };

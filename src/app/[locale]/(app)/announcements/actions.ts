@@ -11,7 +11,7 @@ import { resolveMentionedProfileIds } from "@/features/comms/services/mentions";
 import { postAnnouncementCard } from "@/features/comms/services/outbound/teams";
 import type { AckReceipt, CreateNotePayload, Note } from "@/features/comms/types";
 
-export type ActionState = { error?: string; success?: string } | null;
+export type ActionState = { error?: string; success?: string; fieldErrors?: Record<string, string> } | null;
 
 async function requireAuth() {
   const { supabase, user } = await getSessionUser();
@@ -113,7 +113,7 @@ export async function createAnnouncementAction(_prev: ActionState, formData: For
   try {
     const { supabase, user } = await requireBroadcaster();
     const parsed = parseFormData(announcementSchema, formData);
-    if (!parsed.success) return { error: parsed.error };
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
 
     const payload: CreateNotePayload = {
       kind: "announcement",

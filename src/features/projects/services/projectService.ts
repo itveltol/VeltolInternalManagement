@@ -19,6 +19,10 @@ export async function getProjectById(client: ProjectsApiClient, id: number): Pro
   return client.getProjectById(id);
 }
 
+export async function getProjectsByClientId(client: ProjectsApiClient, clientId: number): Promise<Project[]> {
+  return client.getProjectsByClientId(clientId);
+}
+
 export async function getProjectManagers(client: ProjectsApiClient): Promise<ProjectManager[]> {
   return client.getProjectManagers();
 }
@@ -41,6 +45,19 @@ export const getCachedProjectManagers = unstable_cache(
 
 export async function createProject(client: ProjectsApiClient, payload: CreateProjectPayload, userId: string): Promise<{ id: number }> {
   return client.createProject(payload, userId);
+}
+
+/** contract_number is free text with no DB-enforced format, so this is only
+ * a suggestion: the highest value that parses as a plain number, plus one.
+ * Non-numeric contract numbers (e.g. "C-2024-01") are ignored rather than
+ * breaking the suggestion. The result is pre-filled into an editable input,
+ * never written to the DB directly. */
+export function suggestNextContractNumber(projects: Project[]): string {
+  const max = projects.reduce((acc, p) => {
+    const n = Number(p.contract_number);
+    return Number.isFinite(n) && n > acc ? n : acc;
+  }, 0);
+  return String(max + 1);
 }
 
 export async function updateProject(client: ProjectsApiClient, id: number, payload: CreateProjectPayload, userId: string): Promise<void> {

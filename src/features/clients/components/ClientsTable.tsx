@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
@@ -35,6 +35,7 @@ interface Props {
 
 export function ClientsTable({ clients, canMutate, filterType, onFilterType, highlightId }: Props) {
   const t = useTranslations("clients");
+  const locale = useLocale();
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
@@ -158,9 +159,10 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
                     key={client.id}
                     ref={client.id === highlightId ? highlightRowRef : undefined}
                     className={cn(
-                      "group transition-colors hover:bg-veltol-surface/50",
+                      "group cursor-pointer transition-colors hover:bg-veltol-surface/50",
                       client.id === highlightId && "bg-veltol-tint/60 hover:bg-veltol-tint/60",
                     )}
+                    onClick={() => router.push(`/${locale}/clients/${client.id}`)}
                   >
                     <td className="px-5 py-3.5">
                       <div className="font-medium text-veltol-fg">{client.name}</div>
@@ -201,7 +203,10 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
                             size="icon-sm"
                             variant="outline"
                             title={t("editClient")}
-                            onClick={() => openEditDialog(client)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditDialog(client);
+                            }}
                           >
                             <Pencil />
                           </Button>
@@ -210,7 +215,10 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
                             variant="destructive"
                             title={t("deleteClient")}
                             disabled={isPending && deletingId === client.id}
-                            onClick={() => handleDelete(client.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(client.id);
+                            }}
                           >
                             {isPending && deletingId === client.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
                           </Button>
@@ -233,6 +241,7 @@ export function ClientsTable({ clients, canMutate, filterType, onFilterType, hig
                 key={client.id}
                 ref={client.id === highlightId ? highlightCardRef : undefined}
                 className={cn(client.id === highlightId && "bg-veltol-tint/60")}
+                onClick={() => router.push(`/${locale}/clients/${client.id}`)}
               >
                 <DataCardHeader>
                   <DataCardTitle>{client.name}</DataCardTitle>

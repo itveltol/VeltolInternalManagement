@@ -161,6 +161,7 @@
       "client": "Ügyfél",
       "siteLocation": "Helyszín",
       "pinLocation": "Helyszín kijelölése térképen",
+      "pinLocationRequired": "Kattintson a térképre a helyszín megadásához",
       "mwSolar": "MW Napelem",
       "mwBess": "MW BESS",
       "projectCategory": "Projekt kategória",
@@ -532,6 +533,7 @@
     "used": "Ebben az évben felhasznált"
   },
   "clients": {
+    "breadcrumb": "Ügyfelek",
     "eyebrow": "ÜGYFELEK · ÖSSZES",
     "title": "Ügyfelek",
     "subtitle": "Projektekhez kapcsolódó cégek és személyek",
@@ -1029,6 +1031,9 @@
       "totalCount": "{count} szerződés",
       "totalsRow": "Összesen",
       "addSituation": "Helyzetjelentés hozzáadása",
+      "addSituationWithProject": "Helyzetjelentés + új projekt hozzáadása",
+      "newContractTitle": "Új szerződés",
+      "continueToSituation": "Tovább",
       "editBilling": "Számlázás szerkesztése",
       "includeCancelled": "Töröltek megjelenítése",
       "columns": {
@@ -1254,6 +1259,7 @@
         "aviz_expiring": "engedély lejár",
         "maintenance_due": "karbantartás esedékes",
         "vacation_request": "szabadságkérelem",
+        "project_assigned": "kijelölt projektvezetőnek",
         "system": "rendszerértesítés"
       }
     },

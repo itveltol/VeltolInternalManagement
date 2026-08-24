@@ -13,6 +13,7 @@ import {
   FileWarning,
   Wrench,
   CalendarDays,
+  UserCheck,
   Info,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -30,6 +31,7 @@ const TYPE_ICON: Record<NotificationType, typeof AtSign> = {
   aviz_expiring: FileWarning,
   maintenance_due: Wrench,
   vacation_request: CalendarDays,
+  project_assigned: UserCheck,
   system: Info,
 };
 

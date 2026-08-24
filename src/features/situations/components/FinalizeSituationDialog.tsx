@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { finalizeSituationAction } from "@/app/[locale]/(app)/situations/actions";
 
@@ -22,7 +23,8 @@ export function FinalizeSituationDialog({ situationId, projectId, open, onClose,
   function handleConfirm() {
     startTransition(async () => {
       const result = await finalizeSituationAction(situationId, projectId);
-      if (!result?.error) onFinalized();
+      if (result?.error) toast.error(t(result.error as "errorNotAllowed" | "errorGeneric"));
+      else onFinalized();
     });
   }
 

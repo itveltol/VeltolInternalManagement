@@ -146,6 +146,16 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     return project ?? null;
   },
 
+  async getProjectsByClientId(clientId) {
+    const { data, error } = await supabase
+      .from("projects")
+      .select(PROJECT_SELECT)
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return withCurrentAssignments(supabase, (data ?? []).map(mapProjectRow));
+  },
+
   async getProjectManagers() {
     const { data, error } = await supabase
       .from("profiles")
