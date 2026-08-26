@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { Pencil } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
@@ -10,15 +9,40 @@ import { EditProjectDialog } from "./EditProjectDialog";
 import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatConvertedCurrency } from "@/shared/utils/currency";
+import { cn } from "@/shared/utils/cn";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import type { Team } from "@/features/teams/types";
 
-const LocationPickerMap = dynamic(
-  () => import("@/shared/components/ui/location-picker-map").then((m) => m.LocationPickerMap),
-  { ssr: false },
-);
+function DetailSection({ title, first, children }: { title: string; first?: boolean; children: React.ReactNode }) {
+  return (
+    <div className={cn(!first && "mt-4 border-t border-border pt-4")}>
+      <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-veltol-fgMute">
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function FieldGrid({ items, wide }: { items: Array<{ label: string; value: React.ReactNode }>; wide?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2",
+        wide ? "lg:grid-cols-4" : "lg:grid-cols-3",
+      )}
+    >
+      {items.map(({ label, value }) => (
+        <div key={label}>
+          <div className="text-[12px] font-medium text-veltol-fgMute">{label}</div>
+          <div className="mt-0.5 text-[15px] text-veltol-fg">{value}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface Props {
   project: Project;
@@ -67,16 +91,28 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
 
   const isSubcontracted = project.execution_mode === "subcontracted";
 
-  const fields: Array<{ label: string; value: React.ReactNode }> = [
+  const identityFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.projectCategory"), value: tCategory(project.project_category) },
     ...(project.project_type ? [{ label: t("fields.projectType"), value: tType(project.project_type as Parameters<typeof tType>[0]) }] : []),
+  ];
+
+  const locationFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.county"), value: project.county ?? "—" },
     { label: t("fields.siteLocation"), value: project.site_location ?? "—" },
+  ];
+
+  const capacityFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.mwSolar"), value: formatMw(project.mw_solar) },
     { label: t("fields.mwBess"), value: formatMw(project.mw_bess) },
-    { label: t("fields.client"), value: project.client?.name ?? "—" },
+  ];
+
+  const peopleFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.manager"), value: managerName },
     ...(isSubcontracted ? [] : [{ label: t("fields.team"), value: project.team?.name ?? "—" }]),
+    { label: t("fields.client"), value: project.client?.name ?? "—" },
+  ];
+
+  const contractFields: Array<{ label: string; value: React.ReactNode }> = [
     {
       label: t("fields.contractType"),
       value: project.contract_type.length > 0
@@ -93,11 +129,30 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         project.conversion_rate,
       ),
     },
-    ...(isSubcontracted ? [] : [
-      { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
-    ]),
-    { label: t("fields.progress"), value: `${project.progress_pct}%` },
   ];
+
+  const executionFields: Array<{ label: string; value: React.ReactNode }> = isSubcontracted
+    ? [
+        { label: t("fields.subcontractorName"), value: project.subcontractor?.name ?? "—" },
+        { label: t("fields.subcontractorContactPerson"), value: project.subcontractor?.contact_person ?? "—" },
+        { label: t("fields.subcontractorPhone"), value: project.subcontractor?.phone ?? "—" },
+        {
+          label: t("fields.subcontractorPrice"),
+          value: formatSourceValueWithConversion(
+            project.subcontractor
+              ? (project.subcontractor.currency === "EUR" ? project.subcontractor.price_eur : project.subcontractor.price_lei)
+              : null,
+            project.subcontractor?.currency ?? "EUR",
+            project.subcontractor?.conversion_rate ?? null,
+          ),
+        },
+        { label: t("fields.subcontractorStartDate"), value: formatDate(project.subcontractor?.start_date ?? null) || "—" },
+        { label: t("fields.subcontractorDeadline"), value: formatDate(project.subcontractor?.deadline ?? null) || "—" },
+      ]
+    : [
+        { label: t("fields.progress"), value: `${project.progress_pct}%` },
+        { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
+      ];
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
@@ -122,69 +177,34 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         )}
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-        {fields.map(({ label, value }) => (
-          <div key={label}>
-            <div className="text-[11px] font-medium text-veltol-fgMute">{label}</div>
-            <div className="mt-0.5 text-sm text-veltol-fg">{value}</div>
-          </div>
-        ))}
-      </div>
+      <DetailSection title={t("sections.identity")} first>
+        <FieldGrid items={identityFields} />
+      </DetailSection>
 
-      {isSubcontracted && (
-        <div className="mt-4 rounded-lg border border-border bg-veltol-surface/40 p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-veltol-fgMute">
-            {t("fields.subcontractor")}
-          </div>
-          <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorName")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{project.subcontractor?.name ?? "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorContactPerson")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{project.subcontractor?.contact_person ?? "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPhone")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{project.subcontractor?.phone ?? "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorPrice")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">
-                {formatSourceValueWithConversion(
-                  project.subcontractor
-                    ? (project.subcontractor.currency === "EUR" ? project.subcontractor.price_eur : project.subcontractor.price_lei)
-                    : null,
-                  project.subcontractor?.currency ?? "EUR",
-                  project.subcontractor?.conversion_rate ?? null,
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorStartDate")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{formatDate(project.subcontractor?.start_date ?? null) || "—"}</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.subcontractorDeadline")}</div>
-              <div className="mt-0.5 text-sm text-veltol-fg">{formatDate(project.subcontractor?.deadline ?? null) || "—"}</div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DetailSection title={t("sections.location")}>
+        <FieldGrid items={locationFields} />
+      </DetailSection>
 
-      {project.site_lat != null && project.site_lng != null && (
-        <div className="mt-4 border-t border-border pt-4">
-          <div className="mb-1.5 text-[11px] font-medium text-veltol-fgMute">{t("fields.pinLocation")}</div>
-          <LocationPickerMap lat={project.site_lat} lng={project.site_lng} readOnly />
-        </div>
-      )}
+      <DetailSection title={t("sections.capacity")}>
+        <FieldGrid items={capacityFields} />
+      </DetailSection>
+
+      <DetailSection title={t("sections.peopleTeam")}>
+        <FieldGrid items={peopleFields} />
+      </DetailSection>
+
+      <DetailSection title={t("sections.contractFinancials")}>
+        <FieldGrid items={contractFields} wide />
+      </DetailSection>
+
+      <DetailSection title={t("sections.executionStatus")}>
+        <FieldGrid items={executionFields} />
+      </DetailSection>
 
       {project.notes && (
-        <div className="mt-4 border-t border-border pt-4">
-          <div className="text-[11px] font-medium text-veltol-fgMute">{t("fields.notes")}</div>
-          <div className="mt-1 whitespace-pre-wrap text-sm text-veltol-fg">{project.notes}</div>
-        </div>
+        <DetailSection title={t("sections.notes")}>
+          <div className="whitespace-pre-wrap text-[15px] text-veltol-fg">{project.notes}</div>
+        </DetailSection>
       )}
 
       {canMutate && (

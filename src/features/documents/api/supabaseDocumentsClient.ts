@@ -79,7 +79,13 @@ export const createSupabaseDocumentsClient = (supabase: SupabaseClient): Documen
   },
 
   async deleteDocument(id) {
-    const { error } = await supabase.from('documents').delete().eq('id', id);
+    const { data, error } = await supabase
+      .from('documents')
+      .delete()
+      .eq('id', id)
+      .select('onedrive_item_id')
+      .maybeSingle();
     if (error) throw new Error(error.message);
+    return { onedrive_item_id: data?.onedrive_item_id ?? null };
   },
 });

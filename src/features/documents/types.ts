@@ -23,6 +23,18 @@ export const DOCUMENT_STATUSES: DocumentStatus[] = [
   'pending', 'submitted', 'obtained', 'rejected', 'expired',
 ];
 
+export const DOCUMENT_LABELS = [
+  'CUI',
+  'CI administrator',
+  'Carte Funciara',
+  'Act de proprietate',
+  'CU daca exista',
+  'AC daca exista',
+  'Fise tehnice',
+] as const;
+
+export type DocumentLabel = typeof DOCUMENT_LABELS[number];
+
 export interface Document {
   id: number;
   name: string;
@@ -40,6 +52,8 @@ export interface Document {
   obtained_at: string | null;
   responsible_id: string | null;
   version: number;
+  label: string | null;
+  onedrive_item_id: string | null;
   creator?: { first_name: string | null; last_name: string | null } | null;
   responsible?: { first_name: string | null; last_name: string | null } | null;
   project?: { id: number; name: string } | null;
@@ -59,6 +73,8 @@ export interface CreateDocumentPayload {
   obtained_at: string | null;
   responsible_id: string | null;
   version: number;
+  label?: string | null;
+  onedrive_item_id?: string | null;
 }
 
 export interface UpdateDocumentPayload {
@@ -72,4 +88,6 @@ export interface UpdateDocumentPayload {
   obtained_at?: string | null;
   responsible_id?: string | null;
   version?: number;
+  label?: string | null;
+  onedrive_item_id?: string | null;
 }

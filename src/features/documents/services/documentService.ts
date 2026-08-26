@@ -36,6 +36,6 @@ export async function updateDocument(
   return api.updateDocument(id, payload);
 }
 
-export async function deleteDocument(api: DocumentsApiClient, id: number): Promise<void> {
+export async function deleteDocument(api: DocumentsApiClient, id: number): Promise<{ onedrive_item_id: string | null }> {
   return api.deleteDocument(id);
 }

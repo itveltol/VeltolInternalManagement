@@ -37,11 +37,22 @@ export function EditProjectDialog(props: Props) {
   const t = useTranslations("projects");
 
   const [state, action, pending] = useActionState(updateProject, null);
+  // React 19 resets a form's fields (including controlled <select>s — a
+  // confirmed React bug, facebook/react#30580) after every submission
+  // attempt, success or failure. Remounting the field subtree on each
+  // attempt forces React to re-apply current state instead of leaving the
+  // native post-submit reset visible.
+  const [submitCount, setSubmitCount] = useState(0);
+  useEffect(() => {
+    if (state) setSubmitCount((n) => n + 1);
+  }, [state]);
 
   const {
     fields,
     setField,
     handleCategoryChange,
+    handleCountyChange,
+    mapFocus,
     handleExecutionModeChange,
     handleFinancialTypeChange,
     setStatusManual,
@@ -91,9 +102,12 @@ export function EditProjectDialog(props: Props) {
             <input type="hidden" name="projectId" value={project.id} />
 
             <ProjectFormFields
+              key={submitCount}
               fields={fields}
               onFieldChange={setField}
               onCategoryChange={handleCategoryChange}
+              onCountyChange={handleCountyChange}
+              mapFocus={mapFocus}
               onExecutionModeChange={handleExecutionModeChange}
               onFinancialTypeChange={handleFinancialTypeChange}
               statusManual={fields.status_manual}
@@ -102,7 +116,6 @@ export function EditProjectDialog(props: Props) {
               onLocationSelect={setLocationSelect}
               onMapChange={handleMapChange}
               managers={managers}
-              defaultManagerId={project.manager_id ?? ""}
               contractTypeDefaults={project.contract_type}
               clientRefs={clientRefs}
               selectedClient={selectedClient}
@@ -128,8 +141,6 @@ export function EditProjectDialog(props: Props) {
               }}
               defaultPhase={project.current_phase}
               defaultStatus={project.status}
-              defaultContractDate={project.contract_date ?? undefined}
-              defaultDeadline={project.deadline ?? undefined}
               defaultAssignmentStartDate={currentAssignment?.start_date ?? undefined}
               defaultAssignmentDeadline={currentAssignment?.deadline ?? undefined}
               progressReadout={project.progress_pct}

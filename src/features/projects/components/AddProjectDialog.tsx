@@ -41,6 +41,15 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
   const t = useTranslations("projects");
 
   const [state, action, pending] = useActionState(createProject, null);
+  // React 19 resets a form's fields (including controlled <select>s — a
+  // confirmed React bug, facebook/react#30580) after every submission
+  // attempt, success or failure. Remounting the field subtree on each
+  // attempt forces React to re-apply current state instead of leaving the
+  // native post-submit reset visible.
+  const [submitCount, setSubmitCount] = useState(0);
+  useEffect(() => {
+    if (state) setSubmitCount((n) => n + 1);
+  }, [state]);
   const [step, setStep] = useState<"form" | "scan">("form");
   const [createdProjectId, setCreatedProjectId] = useState<number | null>(null);
   const [folderLinked, setFolderLinked] = useState(false);
@@ -50,6 +59,8 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
     setFields,
     setField,
     handleCategoryChange,
+    handleCountyChange,
+    mapFocus,
     handleExecutionModeChange,
     handleFinancialTypeChange,
     setStatusManual,
@@ -165,9 +176,12 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
 
               <form action={action} className="mt-6 space-y-4">
                 <ProjectFormFields
+                  key={submitCount}
                   fields={fields}
                   onFieldChange={setField}
                   onCategoryChange={handleCategoryChange}
+                  onCountyChange={handleCountyChange}
+                  mapFocus={mapFocus}
                   onExecutionModeChange={handleExecutionModeChange}
                   onFinancialTypeChange={handleFinancialTypeChange}
                   statusManual={fields.status_manual}

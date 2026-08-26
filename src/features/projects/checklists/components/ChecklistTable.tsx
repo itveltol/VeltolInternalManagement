@@ -105,6 +105,20 @@ export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: 
       if (!isNaN(n)) value = String(Math.min(teamMemberCount, Math.max(0, n)));
     }
     updateField(itemNumber, field, value);
+
+    // units_per_person_day is auto-derived (plan_total / zile / persons) on desktop
+    // rather than typed directly — keep it in sync in state so it's actually
+    // persisted on save, instead of silently reverting to its previous value.
+    if (field === "plan_total" || field === "zile" || field === "persons_allocated") {
+      const s = useChecklistStore.getState().rowState[itemNumber];
+      const planTotal = parseInt(field === "plan_total" ? value : s?.plan_total ?? "", 10);
+      const days = parseInt(field === "zile" ? value : s?.zile ?? "", 10);
+      const persons = parseInt(field === "persons_allocated" ? value : s?.persons_allocated ?? "", 10);
+      if (!isNaN(planTotal) && planTotal > 0 && !isNaN(days) && days > 0 && !isNaN(persons) && persons > 0) {
+        updateField(itemNumber, "units_per_person_day", String(Math.round((planTotal / days) / persons)));
+      }
+    }
+
     markDirty(itemNumber);
   }, [updateField, markDirty, teamMemberCount]);
 

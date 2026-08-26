@@ -8,6 +8,7 @@ import { createSupabaseDocumentsClient } from "@/features/documents/api/supabase
 import * as documentService from "@/features/documents/services/documentService";
 import type { Document, DocumentCategory, DocumentStatus } from "@/features/documents/types";
 import type { GetDocumentsFilter } from "@/features/documents/api/types";
+import { resolveActivityIdForLabel } from "@/features/documents/labelActivityMapping";
 
 const linkedTypeSchema = z.enum(["project", "client", "matrice_cell", "checklist_item"]);
 
@@ -73,16 +74,29 @@ export async function createDocumentAction(
     const obtainedAt  = strOrNull(formData.get("obtained_at"));
     const responsibleId = strOrNull(formData.get("responsible_id"));
     const version   = intOrDefault(formData.get("version"), 1);
+    const label     = strOrNull(formData.get("label"));
 
     if (!name || !url || !linkedType || !linkedId) return { error: "errorGeneric" };
     const linkedTypeResult = linkedTypeSchema.safeParse(linkedType);
     if (!linkedTypeResult.success) return { error: "errorValidation" };
 
+    let resolvedLinkedType = linkedTypeResult.data;
+    let resolvedLinkedId = linkedId;
+    if (label && projectId && resolvedLinkedType === "project") {
+      const { getCachedActivities } = await import("@/features/matrice/services/matriceService");
+      const activities = await getCachedActivities();
+      const activityId = resolveActivityIdForLabel(label, activities);
+      if (activityId) {
+        resolvedLinkedType = "matrice_cell";
+        resolvedLinkedId = `${projectId}:${activityId}`;
+      }
+    }
+
     await documentService.createDocument(api, {
       name,
       url,
-      linked_type: linkedTypeResult.data,
-      linked_id: linkedId,
+      linked_type: resolvedLinkedType,
+      linked_id: resolvedLinkedId,
       project_id: projectId,
       is_renewable: isRenewable,
       expires_at: expiresAt,
@@ -92,6 +106,7 @@ export async function createDocumentAction(
       obtained_at: obtainedAt,
       responsible_id: responsibleId,
       version,
+      label,
       created_by: user.id,
     });
 
@@ -148,6 +163,77 @@ export async function updateDocumentAction(
   }
 }
 
+export async function uploadDocumentAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+
+    const projectId = Number(formData.get("project_id"));
+    const label = strOrNull(formData.get("label"));
+    const file = formData.get("file");
+    if (!projectId || !label || !(file instanceof File) || file.size === 0) {
+      return { error: "errorGeneric" };
+    }
+
+    const { createSupabaseProjectsClient } = await import("@/features/projects/api/supabaseProjectsClient");
+    const projectsApi = createSupabaseProjectsClient(supabase);
+    const project = await projectsApi.getProjectById(projectId);
+    if (!project?.onedrive_folder_id) return { error: "errorNoProjectFolder" };
+
+    const { ensureSubfolder, uploadFileToFolder, deleteFileById } = await import("@/core/microsoft/folderProvider");
+    const subfolder = await ensureSubfolder(project.onedrive_folder_id, label);
+    const content = await file.arrayBuffer();
+    const uploaded = await uploadFileToFolder(subfolder.id, file.name, content);
+
+    let linkedType: "project" | "matrice_cell" = "project";
+    let linkedId = String(projectId);
+
+    const { getCachedActivities } = await import("@/features/matrice/services/matriceService");
+    const activities = await getCachedActivities();
+    const activityId = resolveActivityIdForLabel(label, activities);
+    if (activityId) {
+      linkedType = "matrice_cell";
+      linkedId = `${projectId}:${activityId}`;
+    }
+
+    try {
+      const api = createSupabaseDocumentsClient(supabase);
+      await documentService.createDocument(api, {
+        name: file.name,
+        url: uploaded.webUrl,
+        linked_type: linkedType,
+        linked_id: linkedId,
+        project_id: projectId,
+        is_renewable: false,
+        expires_at: null,
+        category: null,
+        status: null,
+        submitted_at: null,
+        obtained_at: null,
+        responsible_id: null,
+        version: 1,
+        label,
+        onedrive_item_id: uploaded.id,
+        created_by: user.id,
+      });
+    } catch (insertError) {
+      await deleteFileById(uploaded.id).catch(() => {});
+      throw insertError;
+    }
+
+    const locale = await getLocale();
+    revalidatePath(`/${locale}/documents`);
+    revalidatePath(`/${locale}/projects/${projectId}`);
+
+    return { success: "documentCreated" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
 export async function deleteDocumentAction(
   id: number,
   projectId?: number,
@@ -155,7 +241,12 @@ export async function deleteDocumentAction(
   try {
     const { supabase } = await requireAuth();
     const api = createSupabaseDocumentsClient(supabase);
-    await documentService.deleteDocument(api, id);
+    const { onedrive_item_id } = await documentService.deleteDocument(api, id);
+
+    if (onedrive_item_id) {
+      const { deleteFileById } = await import("@/core/microsoft/folderProvider");
+      await deleteFileById(onedrive_item_id).catch(() => {});
+    }
 
     const locale = await getLocale();
     revalidatePath(`/${locale}/documents`);
