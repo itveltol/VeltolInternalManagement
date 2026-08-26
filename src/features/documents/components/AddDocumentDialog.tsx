@@ -11,13 +11,14 @@ import type { DocumentStatus } from "../types";
 
 export function AddDocumentDialog() {
   const t = useTranslations("documents");
-  const { addContext, closeAddDialog, responsibleProfiles } = useDocumentsStore();
+  const { addContext, onAddSuccess, closeAddDialog, responsibleProfiles } = useDocumentsStore();
   const [state, formAction, pending] = useActionState(createDocumentAction, null);
   const [isRenewable, setIsRenewable] = useState(false);
   const [status, setStatus] = useState<DocumentStatus | "">("");
 
   useEffect(() => {
     if (state?.success) {
+      onAddSuccess?.();
       closeAddDialog();
       setIsRenewable(false);
       setStatus("");
@@ -49,6 +50,7 @@ export function AddDocumentDialog() {
             <input type="hidden" name="linked_type" value={addContext?.linkedType ?? ""} />
             <input type="hidden" name="linked_id"   value={addContext?.linkedId ?? ""} />
             <input type="hidden" name="project_id"  value={addContext?.projectId ?? ""} />
+            <input type="hidden" name="label"       value={addContext?.label ?? ""} />
 
             <DocumentFormFields
               responsibleProfiles={responsibleProfiles}

@@ -14,12 +14,14 @@ import {
   getMaintenanceChecks,
   getExecutionData,
   getStructureConfig,
+  getCefData,
+  getBessData,
 } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
-import { isBessProjectType } from "@/features/projects/types";
+import { isBessProjectType, isCefProjectType } from "@/features/projects/types";
 
 interface Props {
   params: Promise<{ locale: string; clientId: string; projectId: string }>;
@@ -52,8 +54,9 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
   const isSubcontracted = project.execution_mode === "subcontracted";
   const hasMaintenance = project.contract_type.includes("mentenanta");
   const hasBess = isBessProjectType(project.project_type);
+  const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig] =
+  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -67,6 +70,8 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
       isComunicareTab ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
       isSubcontracted ? Promise.resolve(null) : getExecutionData(projectId),
       isSubcontracted ? Promise.resolve([]) : getStructureConfig(projectId),
+      hasCef ? getCefData(projectId) : Promise.resolve(null),
+      hasBess ? getBessData(projectId) : Promise.resolve(null),
     ]);
   const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -104,6 +109,8 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
       records={records}
       executionData={executionData}
       structureConfig={structureConfig}
+      cefData={cefData}
+      bessData={bessData}
       managers={managers}
       clientRefs={clientRefs}
       subcontractorRefs={subcontractorRefs}

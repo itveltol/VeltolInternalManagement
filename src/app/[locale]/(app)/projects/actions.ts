@@ -20,6 +20,7 @@ import {
   EXECUTION_MODES,
   PROJECT_PHASES,
   PROJECT_STATUSES,
+  ROMANIAN_COUNTIES,
 } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 import * as clientService from "@/features/clients/services/clientService";
@@ -144,7 +145,7 @@ const requiredNumber = (opts?: { min?: number; max?: number }) =>
 // below via superRefine), are allowed to be blank.
 const projectSchema = z.object({
   name: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(5)),
-  county: requiredTrimmed(),
+  county: z.enum(ROMANIAN_COUNTIES),
   site_location: requiredTrimmed(),
   site_lat: requiredNumber({ min: -90, max: 90 }),
   site_lng: requiredNumber({ min: -180, max: 180 }),

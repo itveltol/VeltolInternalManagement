@@ -16,5 +16,5 @@ export interface DocumentsApiClient {
   getResponsibleProfiles(): Promise<{ id: string; first_name: string | null; last_name: string | null }[]>;
   createDocument(payload: CreateDocumentPayload & { created_by: string }): Promise<{ id: number }>;
   updateDocument(id: number, payload: UpdateDocumentPayload): Promise<void>;
-  deleteDocument(id: number): Promise<void>;
+  deleteDocument(id: number): Promise<{ onedrive_item_id: string | null }>;
 }

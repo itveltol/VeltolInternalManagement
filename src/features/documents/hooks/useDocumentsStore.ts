@@ -6,6 +6,7 @@ export interface DocumentDialogContext {
   linkedId: string;
   projectId: number | null;
   contextLabel: string;
+  label?: string | null;
 }
 
 export interface ResponsibleProfile {
@@ -16,7 +17,8 @@ export interface ResponsibleProfile {
 
 interface DocumentsStore {
   addContext: DocumentDialogContext | null;
-  openAddDialog: (ctx: DocumentDialogContext) => void;
+  onAddSuccess: (() => void) | null;
+  openAddDialog: (ctx: DocumentDialogContext, onSuccess?: () => void) => void;
   closeAddDialog: () => void;
   editingDocument: Document | null;
   openEditDialog: (doc: Document) => void;
@@ -29,8 +31,9 @@ interface DocumentsStore {
 
 export const useDocumentsStore = create<DocumentsStore>()((set) => ({
   addContext: null,
-  openAddDialog: (ctx) => set({ addContext: ctx }),
-  closeAddDialog: () => set({ addContext: null }),
+  onAddSuccess: null,
+  openAddDialog: (ctx, onSuccess) => set({ addContext: ctx, onAddSuccess: onSuccess ?? null }),
+  closeAddDialog: () => set({ addContext: null, onAddSuccess: null }),
   editingDocument: null,
   openEditDialog: (doc) => set({ editingDocument: doc }),
   closeEditDialog: () => set({ editingDocument: null }),

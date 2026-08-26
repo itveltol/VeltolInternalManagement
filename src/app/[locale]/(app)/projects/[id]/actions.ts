@@ -7,13 +7,16 @@ import { createSupabaseProjectsClient } from "@/features/projects/api/supabasePr
 import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
 import { createSupabaseMaintenanceClient } from "@/features/projects/maintenance/api/supabaseMaintenanceClient";
 import { createSupabaseExecutionDataClient } from "@/features/projects/executionData/api/supabaseExecutionDataClient";
+import { createSupabaseCefBessDataClient } from "@/features/projects/cefBessData/api/supabaseCefBessDataClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import * as projectService from "@/features/projects/services/projectService";
 import * as teamService from "@/features/teams/services/teamService";
 import * as maintenanceRecordsService from "@/features/projects/maintenance/services/maintenanceRecordsService";
 import * as executionDataService from "@/features/projects/executionData/services/executionDataService";
+import * as cefBessDataService from "@/features/projects/cefBessData/services/cefBessDataService";
 import type { MaintenancePeriod } from "@/features/projects/maintenance/types";
 import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
+import type { ProjectCefData, ProjectBessData } from "@/features/projects/cefBessData/types";
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import type { Project, ProjectManager } from "@/features/projects/types";
@@ -187,6 +190,81 @@ export async function upsertExecutionData(
     // saved value directly, and revalidating this route while other fields
     // in the same panel are mid-edit can reset their in-progress state.
     return { success: "executionDataSaved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function getCefData(projectId: number): Promise<ProjectCefData | null> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseCefBessDataClient(supabase);
+  return cefBessDataService.getCefData(client, projectId);
+}
+
+export async function upsertCefData(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const client = createSupabaseCefBessDataClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    if (!projectId) return { error: "errorGeneric" };
+
+    await cefBessDataService.upsertCefData(client, {
+      projectId,
+      putere_instalata: floatOrNull(formData.get("putere_instalata")),
+      putere_debitata: floatOrNull(formData.get("putere_debitata")),
+      tip_panou: (formData.get("tip_panou") as string | null) || null,
+      tip_invertor: (formData.get("tip_invertor") as string | null) || null,
+      tip_structura: (formData.get("tip_structura") as string | null) || null,
+      tip_gard: (formData.get("tip_gard") as string | null) || null,
+      ridicare_topo: (formData.get("ridicare_topo") as string | null) || null,
+      updatedBy: user.id,
+    });
+
+    return { success: "cefDataSaved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function getBessData(projectId: number): Promise<ProjectBessData | null> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseCefBessDataClient(supabase);
+  return cefBessDataService.getBessData(client, projectId);
+}
+
+export async function upsertBessData(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const client = createSupabaseCefBessDataClient(supabase);
+
+    const projectId = Number(formData.get("project_id"));
+    if (!projectId) return { error: "errorGeneric" };
+
+    const incarcareRaw = formData.get("incarcare_din_retea");
+    const incarcare_din_retea = incarcareRaw === "true" ? true : incarcareRaw === "false" ? false : null;
+
+    await cefBessDataService.upsertBessData(client, {
+      projectId,
+      putere_instalata: floatOrNull(formData.get("putere_instalata")),
+      putere_descarcare: floatOrNull(formData.get("putere_descarcare")),
+      incarcare_din_retea,
+      tip_bess: (formData.get("tip_bess") as string | null) || null,
+      tip_pcs: (formData.get("tip_pcs") as string | null) || null,
+      ridicare_topo: (formData.get("ridicare_topo") as string | null) || null,
+      detalii_trafo: (formData.get("detalii_trafo") as string | null) || null,
+      updatedBy: user.id,
+    });
+
+    return { success: "bessDataSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
@@ -386,6 +464,12 @@ export async function getLinkedDocuments(linkedType: string, linkedId: string) {
   const { getDocumentsByLinkedId } = await import("@/features/documents/services/documentService");
   const api = createSupabaseDocumentsClient(supabase);
   return getDocumentsByLinkedId(api, linkedType, linkedId);
+}
+
+export async function getActivitiesCatalog() {
+  await requireAuth();
+  const { getCachedActivities } = await import("@/features/matrice/services/matriceService");
+  return getCachedActivities();
 }
 
 export async function getProjectFinancials(projectId: number) {

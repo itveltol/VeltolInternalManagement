@@ -2,11 +2,16 @@ import { getTranslations } from "next-intl/server";
 import { ProjectTabsShell } from "@/features/projects/components/ProjectTabsShell";
 import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
+import { ProjectLocationMap } from "@/features/projects/components/ProjectLocationMap";
+import { ProjectCefDataPanel } from "@/features/projects/cefBessData/components/ProjectCefDataPanel";
+import { ProjectBessDataPanel } from "@/features/projects/cefBessData/components/ProjectBessDataPanel";
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 import type { Project } from "@/features/projects/types";
 import type { ProjectManager } from "@/features/projects/types";
+import { isCefProjectType } from "@/features/projects/types";
+import type { ProjectCefData, ProjectBessData } from "@/features/projects/cefBessData/types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import type { Team } from "@/features/teams/types";
@@ -36,6 +41,8 @@ interface Props {
   records: ChecklistItemRecord[];
   executionData: ProjectExecutionData | null;
   structureConfig: ProjectStructureConfigRow[];
+  cefData: ProjectCefData | null;
+  bessData: ProjectBessData | null;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
@@ -63,6 +70,8 @@ export async function ProjectDetailView({
   records,
   executionData,
   structureConfig,
+  cefData,
+  bessData,
   managers,
   clientRefs,
   subcontractorRefs,
@@ -168,6 +177,18 @@ export async function ProjectDetailView({
         teams={teams}
         canAssignTeam={canAssignTeam}
       />
+
+      {isCefProjectType(project.project_type) && (
+        <ProjectCefDataPanel projectId={project.id} data={cefData} canMutate={canMutate} />
+      )}
+
+      {hasBess && (
+        <ProjectBessDataPanel projectId={project.id} data={bessData} canMutate={canMutate} />
+      )}
+
+      {project.site_lat != null && project.site_lng != null && (
+        <ProjectLocationMap lat={project.site_lat} lng={project.site_lng} />
+      )}
 
       <ProjectTabsShell
         project={project}

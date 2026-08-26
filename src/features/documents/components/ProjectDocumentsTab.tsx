@@ -1,18 +1,21 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { DocumentList } from "./DocumentList";
+import { LabeledDocumentSections } from "./LabeledDocumentSections";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import type { Document } from "../types";
 import type { Project } from "@/features/projects/types";
+import type { Activity } from "@/features/matrice/types";
 
 interface Props {
   documents: Document[];
   project: Project;
   canMutate: boolean;
+  activities: Activity[];
+  onChanged: () => void;
 }
 
-export function ProjectDocumentsTab({ documents, project, canMutate }: Props) {
+export function ProjectDocumentsTab({ documents, project, canMutate, activities, onChanged }: Props) {
   const t = useTranslations("documents");
 
   return (
@@ -48,14 +51,12 @@ export function ProjectDocumentsTab({ documents, project, canMutate }: Props) {
           </span>
         </div>
         <div className="p-6">
-          <DocumentList
+          <LabeledDocumentSections
             documents={documents}
-            linkedType="project"
-            linkedId={String(project.id)}
             projectId={project.id}
-            contextLabel={project.name}
             canMutate={canMutate}
-            compact={false}
+            activities={activities}
+            onChanged={onChanged}
           />
         </div>
       </div>

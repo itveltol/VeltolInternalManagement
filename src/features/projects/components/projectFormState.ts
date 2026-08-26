@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { reverseGeocode } from "@/app/[locale]/(app)/projects/actions";
+import { ROMANIAN_COUNTY_COORDS } from "../types";
 import type { Project, ProjectCategory, FinancialType, ExecutionMode } from "../types";
 
 export interface ProjectFieldsState {
@@ -17,6 +18,9 @@ export interface ProjectFieldsState {
   mw_solar: string;
   mw_bess: string;
   notes: string;
+  manager_id: string;
+  contract_date: string;
+  deadline: string;
 }
 
 const EMPTY_FIELDS: ProjectFieldsState = {
@@ -34,6 +38,9 @@ const EMPTY_FIELDS: ProjectFieldsState = {
   mw_solar: "",
   mw_bess: "",
   notes: "",
+  manager_id: "",
+  contract_date: "",
+  deadline: "",
 };
 
 function fieldsFromProject(project: Project): ProjectFieldsState {
@@ -52,6 +59,9 @@ function fieldsFromProject(project: Project): ProjectFieldsState {
     mw_solar: project.mw_solar != null ? String(project.mw_solar) : "",
     mw_bess: project.mw_bess != null ? String(project.mw_bess) : "",
     notes: project.notes ?? "",
+    manager_id: project.manager_id ?? "",
+    contract_date: project.contract_date ?? "",
+    deadline: project.deadline ?? "",
   };
 }
 
@@ -81,6 +91,20 @@ export function useProjectFormState(project?: Project) {
       project_type: project_category === "residential" ? "" : f.project_type,
     }));
   }, []);
+
+  const handleCountyChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const county = e.target.value;
+    setFields((f) =>
+      f.county === county
+        ? f
+        : { ...f, county, site_location: "", site_lat: "", site_lng: "" },
+    );
+  }, []);
+
+  const mapFocus = useMemo(
+    () => (ROMANIAN_COUNTY_COORDS as Record<string, [number, number]>)[fields.county] ?? null,
+    [fields.county],
+  );
 
   const handleExecutionModeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setFields((f) => ({ ...f, execution_mode: e.target.value as ExecutionMode }));
@@ -115,6 +139,8 @@ export function useProjectFormState(project?: Project) {
     setFields,
     setField,
     handleCategoryChange,
+    handleCountyChange,
+    mapFocus,
     handleExecutionModeChange,
     handleFinancialTypeChange,
     setStatusManual,

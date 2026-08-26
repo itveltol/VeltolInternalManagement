@@ -202,10 +202,12 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   },
 
   async linkOneDriveFolder(id, folderId, folderUrl, userId) {
-    const { error } = await supabase
+    const { data, error, count } = await supabase
       .from("projects")
       .update({ onedrive_folder_id: folderId, onedrive_folder_url: folderUrl, updated_by: userId })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id, onedrive_folder_id, onedrive_folder_url");
+    console.log("[DEBUG linkOneDriveFolder]", { id, folderId, folderUrl, userId, data, error, count });
     if (error) throw new Error(error.message);
   },
 

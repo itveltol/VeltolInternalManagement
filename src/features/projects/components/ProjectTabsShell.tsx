@@ -7,7 +7,6 @@ import { getProjectDocuments, getMaintenanceChecks } from "@/app/[locale]/(app)/
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
-import { ProjectExecutionDataPanel } from "@/features/projects/executionData/components/ProjectExecutionDataPanel";
 import { ProjectPhaseGanttShell } from "@/features/gantt/components/ProjectPhaseGanttShell";
 import { ProjectDocumentsTab } from "@/features/documents/components/ProjectDocumentsTab";
 import { MaintenanceShell } from "@/features/projects/maintenance/components/MaintenanceShell";
@@ -121,6 +120,13 @@ export function ProjectTabsShell({
     });
   }
 
+  function reloadDocuments() {
+    startTransition(async () => {
+      const fresh = await getProjectDocuments(project.id);
+      setDocuments(fresh);
+    });
+  }
+
   const isGanttActive = tab === "gantt" || isSubcontracted;
   const isDocumentsActive = tab === "documents" && !isSubcontracted;
   const isMaintenanceActive = tab === "maintenance" && hasMaintenance && !isSubcontracted;
@@ -163,7 +169,13 @@ export function ProjectTabsShell({
       </div>
 
       {isDocumentsActive ? (
-        <ProjectDocumentsTab documents={documents} project={project} canMutate={canMutate} />
+        <ProjectDocumentsTab
+          documents={documents}
+          project={project}
+          canMutate={canMutate}
+          activities={ganttData.activities}
+          onChanged={reloadDocuments}
+        />
       ) : isMaintenanceActive ? (
         <MaintenanceShell
           projectId={project.id}
@@ -202,13 +214,7 @@ export function ProjectTabsShell({
         />
       ) : (
         <>
-          <ProjectExecutionDataPanel
-            projectId={project.id}
-            executionData={executionData}
-            structureConfig={structureConfig}
-            canMutate={canMutate}
-            teamMemberCount={teamMemberCount}
-          />
+          {/* Disabled: execution data tracking doesn't work correctly yet. Re-enable when fixed. */}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {sections.map((s) => (
