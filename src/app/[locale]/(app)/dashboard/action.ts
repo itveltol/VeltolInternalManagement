@@ -142,5 +142,6 @@ export async function getAvizReminders(projects: DashboardProject[]): Promise<Av
     (cells ?? []) as MatrixCell[],
     projects as MatrixProject[],
     new Date(),
+    { includeStates: ['overdue', 'dueSoon', 'notDue'] },
   );
 }

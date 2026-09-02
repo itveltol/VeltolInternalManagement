@@ -21,12 +21,14 @@ function makeEvent(overrides: Partial<ActivityEvent> = {}): ActivityEvent {
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
     id: 1,
-    kind: "note",
+    kind: "task",
     title: null,
     body: "body",
     color: null,
     author_id: "user-1",
     author: null,
+    assignee_id: null,
+    assignee: null,
     visibility: "project",
     status: "open",
     parent_id: null,

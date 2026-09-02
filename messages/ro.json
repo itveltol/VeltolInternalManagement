@@ -22,7 +22,7 @@
     "site": "Construcție · Șantier",
     "pontaj": "Personal · Pontaj",
     "gantt": "Gantt",
-    "situations": "Situații",
+    "situations": "Contracte",
     "suppliers": "Furnizori",
     "comunicareGroup": "COMUNICARE",
     "board": "Panoul meu",
@@ -101,12 +101,11 @@
     "errorValidation": "Completați toate câmpurile obligatorii — doar notele sunt opționale. Numele proiectului trebuie să aibă cel puțin 5 caractere, iar în funcție de modul de execuție/categorie, managerul, tipul tehnic, detaliile contractului sau informațiile despre subcontractor pot fi de asemenea obligatorii.",
     "folderCreated": "Dosar creat.",
     "folderFailed": "Proiect creat. Dosarul nu a putut fi creat — îl puteți asocia mai târziu.",
-    "linkFolder": "Asociază dosar",
-    "linkFolderPlaceholder": "Inserați URL-ul de partajare OneDrive sau calea locală...",
-    "linkFolderSave": "Asociază",
     "openFolder": "Deschide dosarul",
     "folderLinked": "Dosar asociat.",
     "folderLinkError": "Nu s-a putut asocia dosarul.",
+    "createFolder": "Creează dosar",
+    "creatingFolder": "Se creează dosarul...",
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Salvare...",
@@ -344,6 +343,7 @@
     "passwordPlaceholder": "••••••••",
     "signIn": "Conectare",
     "signingIn": "Conectare...",
+    "rememberMe": "Ține-mă minte timp de 1 an",
     "errorInvalid": "Adresă de e-mail sau parolă incorectă."
   },
   "register": {
@@ -461,6 +461,14 @@
       "noResults": "Niciun proiect nu corespunde căutării.",
       "searchPlaceholder": "Caută după numele proiectului",
       "expiresOn": "Expiră {date}",
+      "statusFilterLabel": "Status",
+      "statusAll": "Necesită atenție",
+      "sortByExpiry": "Sortează după expirare",
+      "state": {
+        "overdue": "Expirat",
+        "dueSoon": "Expiră curând",
+        "notDue": "Nu este încă scadent"
+      },
       "pagination": {
         "prev": "Anterior",
         "next": "Următor",
@@ -704,13 +712,21 @@
       "created": "Creat",
       "member": "Membru",
       "email": "Email",
-      "role": "Rol"
+      "role": "Rol",
+      "worker": "Lucrător",
+      "phone": "Telefon",
+      "notes": "Note",
+      "team": "Echipă"
     },
     "fields": {
       "name": "Nume",
       "description": "Descriere",
       "lead": "Lider echipă",
-      "noLead": "Fără lider"
+      "noLead": "Fără lider",
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "phone": "Telefon",
+      "notes": "Note"
     },
     "memberPicker": {
       "label": "Adaugă membri",
@@ -718,7 +734,18 @@
       "empty": "Niciun profil disponibil.",
       "noResults": "Niciun rezultat.",
       "remove": "Elimină {name}"
-    }
+    },
+    "workerCount": "{count} lucrători de teren",
+    "addWorker": "Adaugă lucrător",
+    "editWorker": "Editează lucrătorul",
+    "removeWorker": "Elimină",
+    "confirmRemoveWorker": "Elimini acest lucrător din echipă?",
+    "workerAdded": "Lucrător adăugat.",
+    "workerSaved": "Lucrător salvat.",
+    "workerRemoved": "Lucrător eliminat.",
+    "emptyWorkers": "Niciun lucrător de teren încă.",
+    "outfieldWorkersEyebrow": "TOATE ECHIPELE · LUCRĂTORI DE TEREN",
+    "outfieldWorkersTitle": "Lucrători de teren"
   },
   "cronEmails": {
     "aviz": {
@@ -778,7 +805,6 @@
     "customFolderPlaceholder": "Nume dosar personalizat",
     "addCustomFolder": "Adaugă dosar",
     "openDocument": "Deschide",
-    "openProjectFolder": "Deschide dosarul proiectului",
     "attachDocuments": "Atașează documente",
     "loadingDocuments": "Se încarcă...",
     "renewable": "Reînnoibil",
@@ -816,6 +842,15 @@
     "tab": {
       "checklist": "Checklist",
       "documents": "Documente"
+    },
+    "viewList": "Listă",
+    "viewTree": "Arbore",
+    "searchPlaceholder": "Caută după numele documentului",
+    "files": {
+      "sectionTitle": "Fișiere",
+      "noFolder": "Acest proiect nu are încă un folder asociat.",
+      "empty": "Acest folder este gol.",
+      "download": "Descarcă"
     },
     "breadcrumb": "Documente",
     "editDocument": "Editează document",
@@ -921,7 +956,20 @@
     "errorGeneric": "A apărut o eroare. Vă rugăm să încercați din nou.",
     "errorNotAdmin": "Nu aveți permisiunea pentru această acțiune.",
     "errorSelfDelete": "Nu vă puteți șterge propriul cont.",
-    "errorEmailExists": "Această adresă de e-mail este deja înregistrată."
+    "errorEmailExists": "Această adresă de e-mail este deja înregistrată.",
+    "grantAccessButton": "Acordă acces la folder",
+    "grantAccessTitle": "Acordă acces la folder",
+    "grantAccessUser": "Utilizator",
+    "grantAccessUserPlaceholder": "Selectează un utilizator",
+    "grantAccessProject": "Proiect",
+    "grantAccessProjectPlaceholder": "Caută proiecte...",
+    "grantAccessSearching": "Se caută...",
+    "grantAccessNoProjects": "Niciun proiect găsit.",
+    "grantAccessSubmit": "Acordă acces",
+    "grantAccessSubmitting": "Se acordă...",
+    "accessGranted": "Acces acordat.",
+    "errorNoFolder": "Acest proiect nu are încă un folder asociat.",
+    "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune."
   },
   "search": {
     "title": "Căutare globală",
@@ -1033,21 +1081,31 @@
       "name": "Nume",
       "project": "Proiect"
     },
+    "executed": {
+      "label": "Valoare executată:",
+      "netSuffix": "(fără TVA)"
+    },
     "selectProjectPlaceholder": "Căutare proiecte...",
     "selectProjectClear": "Șterge proiectul selectat",
     "selectProjectNoResults": "Niciun proiect corespunzător.",
     "status": {
       "draft": "Ciornă",
-      "final": "Finală"
+      "final": "Finală",
+      "paid": "Plătită"
     },
     "finalize": "Finalizare",
     "finalizeConfirmTitle": "Finalizați această situație?",
     "finalizeConfirmBody": "După finalizare, procentul de execuție și suma de facturat sunt blocate la valorile curente. Progresul ulterior al listei de verificare nu va mai modifica cifrele acestei situații. Această acțiune nu poate fi anulată.",
     "finalizeConfirmButton": "Finalizare",
+    "markPaid": "Marchează ca plătită",
+    "markPaidConfirmTitle": "Marcați această situație ca plătită?",
+    "markPaidConfirmBody": "Suma acestei situații va fi inclusă în Valoare încasată pentru acest contract. Această acțiune nu poate fi anulată.",
+    "markPaidConfirmButton": "Marchează ca plătită",
     "situationCreated": "Situație creată.",
     "situationSaved": "Situație salvată.",
     "situationDeleted": "Situație ștearsă.",
     "situationFinalized": "Situație finalizată.",
+    "situationPaid": "Situație marcată ca plătită.",
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea de a face asta.",
     "columns": {
@@ -1055,7 +1113,9 @@
       "date": "Data",
       "pct": "% finalizat",
       "amountEur": "Sumă (EUR)",
-      "amountLei": "Sumă (lei)"
+      "amountEurVat": "Sumă (EUR + TVA)",
+      "amountLei": "Sumă (lei)",
+      "amountLeiVat": "Sumă (lei + TVA)"
     },
     "cancel": "Anulare",
     "save": "Salvare",
@@ -1065,7 +1125,7 @@
       "next": "Următor",
       "pageOf": "Pagina {page} din {total}"
     },
-    "billingSaved": "Situație de facturare salvată.",
+    "contractSaved": "Contract salvat.",
     "errorValidation": "Date invalide.",
     "centralizer": {
       "title": "Situații",
@@ -1075,12 +1135,17 @@
       "searchPlaceholder": "Căutare după nr. contract, beneficiar sau proiect",
       "totalCount": "{count} contracte",
       "totalsRow": "Total",
-      "addSituation": "Adăugare situație",
-      "addSituationWithProject": "Adăugare situație + proiect nou",
+      "addSituationWithProject": "Contract nou",
       "newContractTitle": "Contract nou",
-      "continueToSituation": "Continuă",
-      "editBilling": "Editare facturare",
+      "editContract": "Editare contract",
       "includeCancelled": "Include proiectele anulate",
+      "filterMinContractNumber": "Min",
+      "filterMaxContractNumber": "Max",
+      "sortByContractNumber": "Sortare după nr. contract",
+      "filters": {
+        "minContractNumber": "Nr. contract de la",
+        "maxContractNumber": "Nr. contract până la"
+      },
       "columns": {
         "contractNumber": "Nr Contract",
         "beneficiar": "Beneficiar",
@@ -1092,13 +1157,8 @@
         "remainingToInvoiceEur": "Valoare rămasă de facturat (EUR + TVA)"
       },
       "fields": {
-        "currency": "Moneda",
-        "invoicedNet": "Valoare facturată (net)",
-        "collectedNet": "Valoare încasată (net)",
-        "invoicedInOther": "în {currency}",
-        "rateRefreshed": "actualizat",
         "refreshRate": "Actualizare la cursul zilei",
-        "notes": "Note"
+        "refreshRateError": "Nu s-a putut obține cursul de azi. Încearcă din nou mai târziu."
       },
       "pagination": {
         "prev": "Anterior",
@@ -1231,12 +1291,13 @@
     "breadcrumb": "Comunicare",
     "eyebrow": "PANOUL MEU",
     "title": "Panoul meu",
-    "subtitle": "Notițe, întrebări, decizii și riscuri legate de proiectele tale.",
+    "subtitle": "Sarcini, întrebări, decizii și anunțuri legate de proiectele tale.",
     "forMe": {
       "title": "Pentru mine",
       "empty": "Nimic nou. Ziua e în regulă."
     },
     "anchorPersonal": "Personal",
+    "assignedTo": "Atribuit lui {name}",
     "anchorProject": "Proiect",
     "discussion": "Discuție",
     "unknownAuthor": "Utilizator",
@@ -1245,12 +1306,18 @@
     "noReplies": "Niciun răspuns încă.",
     "backToList": "Înapoi la listă",
     "markResolved": "Marchează ca rezolvat",
+    "status": {
+      "resolved": "Rezolvat"
+    },
+    "sections": {
+      "inProgress": "În desfășurare",
+      "resolved": "Rezolvat"
+    },
     "kind": {
-      "note": "Notiță",
+      "task": "Sarcină",
       "announcement": "Anunț",
       "question": "Întrebare",
-      "decision": "Decizie",
-      "risk": "Risc"
+      "decision": "Decizie"
     },
     "visibility": {
       "private": "Privat",
@@ -1262,7 +1329,7 @@
       "anchorLabel": "Unde se referă",
       "kindLabel": "Tip",
       "visibilityLabel": "Vizibilitate",
-      "bodyPlaceholder": "Scrie o notiță...",
+      "bodyPlaceholder": "Scrie o sarcină...",
       "replyPlaceholder": "Scrie un răspuns...",
       "publish": "Publică",
       "reply": "Răspunde",
@@ -1274,14 +1341,16 @@
     "fields": {
       "project": "Proiect",
       "team": "Echipă",
+      "assignee": "Atribuie lui",
       "selectProject": "Selectați un proiect",
       "selectTeam": "Selectați o echipă",
+      "selectAssignee": "Selectați o persoană",
       "titleOptional": "Titlu (opțional)",
       "ackDeadline": "Termen de confirmare"
     },
-    "noteCreated": "Notiță adăugată.",
+    "noteCreated": "Sarcină adăugată.",
     "noteStatusUpdated": "Status actualizat.",
-    "noteDeleted": "Notiță ștearsă.",
+    "noteDeleted": "Sarcină ștearsă.",
     "notePinned": "Fixat.",
     "noteUnpinned": "Defixat.",
     "errorGeneric": "Ceva a mers greșit.",
@@ -1305,13 +1374,12 @@
         "maintenance_due": "mentenanță scadentă",
         "vacation_request": "cerere de concediu",
         "project_assigned": "te-a numit manager de proiect",
+        "task_assigned": "ți-a atribuit o sarcină",
         "system": "notificare sistem"
       }
     },
     "filters": {
-      "allKinds": "Toate tipurile",
-      "unreadOnly": "Doar necitite",
-      "openOnly": "Doar deschise"
+      "allKinds": "Toate tipurile"
     },
     "announcements": {
       "eyebrow": "COMUNICARE · ANUNȚURI",
@@ -1377,6 +1445,7 @@
         "matrice_status_changed": "a actualizat {activityName} în {new}",
         "situation_created": "a creat situația {entityName}",
         "situation_finalized": "a finalizat situația {entityName}",
+        "situation_paid": "a marcat situația {entityName} ca plătită",
         "document_uploaded": "a încărcat documentul {entityName}",
         "vacation_submitted": "a depus o cerere de concediu",
         "vacation_approved": "a aprobat o cerere de concediu",
@@ -1415,6 +1484,7 @@
     "noActivities": "Încă nu există activități în această fază.",
     "newActivityPlaceholder": "Nume activitate nouă",
     "addActivity": "Adaugă activitate",
+    "isAviz": "Aviz (necesită reînnoire)",
     "expiresRequired": "Necesită dată de expirare",
     "expiresRequiredLockedByAviz": "Întotdeauna necesar pentru activitățile de tip aviz.",
     "dependencies": "Dependențe",
@@ -1453,7 +1523,8 @@
       "eyebrow": "MEMBRII ECHIPEI",
       "title": "Membri echipă",
       "members": "Membri",
-      "emptyMembers": "Niciun membru încă."
+      "emptyMembers": "Niciun membru încă.",
+      "workerTag": "(lucrător)"
     },
     "export": {
       "button": "Exportă imagine",

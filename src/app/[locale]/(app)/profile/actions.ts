@@ -8,12 +8,47 @@ import { createSupabaseProfileClient } from "@/features/profile/api/supabaseProf
 import * as profileService from "@/features/profile/services/profileService";
 import type { AppRole } from "@/features/profile/types";
 import type { Profile } from "@/features/profile/types";
+import { grantProjectFolderAccess } from "@/core/microsoft/folderProvider";
+import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
+import * as teamService from "@/features/teams/services/teamService";
+import type { TeamWorker } from "@/features/teams/types";
 
 export type ActionState = { error?: string; success?: string; actionLink?: string } | null;
+
+export interface OutfieldWorkerRow extends TeamWorker {
+  team_name: string;
+}
 
 async function getProfilePath() {
   const locale = await getLocale();
   return `/${locale}/profile`;
+}
+
+/** Grants a newly invited user access to every existing project folder. Best-effort — never blocks the invite. */
+async function grantAllExistingFolderAccessToUser(email: string) {
+  try {
+    const { data, error } = await createAdminClient()
+      .from("projects")
+      .select("onedrive_folder_id")
+      .not("onedrive_folder_id", "is", null);
+    if (error) throw new Error(error.message);
+    const folderIds = (data ?? [])
+      .map((row) => row.onedrive_folder_id as string | null)
+      .filter((id): id is string => Boolean(id));
+
+    const results = await Promise.allSettled(
+      folderIds.map((folderId) => grantProjectFolderAccess(folderId, [email])),
+    );
+    const failures = results.filter((r) => r.status === "rejected");
+    if (failures.length > 0) {
+      console.error(
+        `grantAllExistingFolderAccessToUser: ${failures.length}/${folderIds.length} folder grants failed for ${email}`,
+        failures,
+      );
+    }
+  } catch (e) {
+    console.error("grantAllExistingFolderAccessToUser failed:", e);
+  }
 }
 
 async function requireAuth() {
@@ -73,6 +108,17 @@ export async function getAllUsers(): Promise<Profile[]> {
   return profileService.getAllUsers(client);
 }
 
+export async function getAllOutfieldWorkers(): Promise<OutfieldWorkerRow[]> {
+  const { supabase } = await requireAdmin();
+  const api = createSupabaseTeamsClient(supabase);
+  const [workers, teams] = await Promise.all([
+    teamService.getAllTeamWorkers(api),
+    teamService.getTeams(api),
+  ]);
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+  return workers.map((w) => ({ ...w, team_name: teamNameById.get(w.team_id) ?? "" }));
+}
+
 export async function updateUser(
   _prev: ActionState,
   formData: FormData,
@@ -108,11 +154,13 @@ export async function inviteUser(
       process.env.NEXT_PUBLIC_SITE_URL ??
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
+    const email = formData.get("email") as string;
     const { actionLink } = await profileService.inviteUser(client, {
-      email: formData.get("email") as string,
+      email,
       role: (formData.get("role") as AppRole) ?? "viewer",
       redirectTo: `${siteUrl}/auth/confirm`,
     });
+    await grantAllExistingFolderAccessToUser(email);
     revalidatePath(await getProfilePath());
     return { success: "inviteLinkTitle", actionLink };
   } catch (e: unknown) {

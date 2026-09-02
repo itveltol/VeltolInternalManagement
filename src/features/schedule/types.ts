@@ -28,6 +28,7 @@ export interface ScheduleDayGroup {
 export interface TeamScheduleMember {
   id: string;
   name: string;
+  kind?: "profile" | "worker";
 }
 
 export interface TeamScheduleRow {

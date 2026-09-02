@@ -15,10 +15,15 @@ import {
   DataCardBadgeSlot, DataCardField, DataCardFooter,
 } from "@/shared/components/ui/data-card";
 import { TeamMemberPicker } from "./TeamMemberPicker";
-import { addTeamMemberAction, removeTeamMemberAction } from "@/app/[locale]/(app)/teams/[id]/actions";
+import { WorkerFormDialog } from "./WorkerFormDialog";
+import {
+  addTeamMemberAction,
+  removeTeamMemberAction,
+  removeWorkerAction,
+} from "@/app/[locale]/(app)/teams/[id]/actions";
 import { deleteTeamAction, updateTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
-import type { Team, TeamMember } from "../types";
+import type { Team, TeamMember, TeamWorker } from "../types";
 import type { ProfileRef } from "./TeamMemberPicker";
 
 const SELECT_CLASS =
@@ -30,6 +35,7 @@ const TEXTAREA_CLASS =
 interface Props {
   team: Team;
   members: TeamMember[];
+  workers: TeamWorker[];
   allProfiles: ProfileRef[];
   canMutate: boolean;
 }
@@ -41,12 +47,25 @@ function memberInitials(m: TeamMember): string {
   return (m.profile?.email?.[0] ?? "?").toUpperCase();
 }
 
-export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props) {
+function workerName(w: TeamWorker): string {
+  return `${w.first_name} ${w.last_name ?? ""}`.trim();
+}
+
+function workerInitials(w: TeamWorker): string {
+  const f = w.first_name[0] ?? "";
+  const l = w.last_name?.[0] ?? "";
+  return (f + l || "?").toUpperCase();
+}
+
+export function TeamDetailShell({ team, members, workers, allProfiles, canMutate }: Props) {
   const t = useTranslations("teams");
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removingWorkerId, setRemovingWorkerId] = useState<number | null>(null);
+  const [workerDialogOpen, setWorkerDialogOpen] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<TeamWorker | null>(null);
 
   const [name, setName] = useState(team.name);
   const [description, setDescription] = useState(team.description ?? "");
@@ -106,6 +125,35 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
       const result = await deleteTeamAction(team.id);
       if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
       else router.push("/teams");
+    });
+  }
+
+  function openAddWorker() {
+    setEditingWorker(null);
+    setWorkerDialogOpen(true);
+  }
+
+  function openEditWorker(worker: TeamWorker) {
+    setEditingWorker(worker);
+    setWorkerDialogOpen(true);
+  }
+
+  function closeWorkerDialog() {
+    setWorkerDialogOpen(false);
+    setEditingWorker(null);
+    router.refresh();
+  }
+
+  async function handleRemoveWorker(worker: TeamWorker) {
+    const ok = await confirm({ title: t("confirmRemoveWorker"), confirmLabel: t("removeWorker") });
+    if (!ok) return;
+    setRemovingWorkerId(worker.id);
+    startTransition(async () => {
+      const result = await removeWorkerAction(worker.id, team.id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "workerRemoved"));
+      setRemovingWorkerId(null);
+      router.refresh();
     });
   }
 
@@ -182,6 +230,16 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
             </div>
           )}
         </form>
+
+        {canMutate && (
+          <div className="border-b border-border px-4 py-4 md:px-6">
+            <TeamMemberPicker
+              allProfiles={availableProfiles}
+              selectedIds={[]}
+              onChange={handleAdd}
+            />
+          </div>
+        )}
 
         <TableToolbar>
           <h2 className="text-lg font-semibold text-veltol-fg">
@@ -289,16 +347,125 @@ export function TeamDetailShell({ team, members, allProfiles, canMutate }: Props
           </DataCardList>
         )}
 
-        {canMutate && (
-          <div className="border-t border-border px-4 py-4 md:px-6">
-            <TeamMemberPicker
-              allProfiles={availableProfiles}
-              selectedIds={[]}
-              onChange={handleAdd}
-            />
-          </div>
+        <TableToolbar>
+          <h2 className="text-lg font-semibold text-veltol-fg">
+            {t("workerCount", { count: workers.length })}
+          </h2>
+          {canMutate && (
+            <Button size="sm" onClick={openAddWorker}>
+              {t("addWorker")}
+            </Button>
+          )}
+        </TableToolbar>
+
+        <TableDesktopView>
+          <table className="w-full text-[13px]">
+            <thead>
+              <tr className="border-b border-border">
+                {[t("columns.worker"), t("columns.phone"), t("columns.notes"), ""].map((col, i) => (
+                  <th key={i} className="px-5 py-3 text-left text-[11px] font-medium text-veltol-fgMute">
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {workers.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
+                    {t("emptyWorkers")}
+                  </td>
+                </tr>
+              ) : (
+                workers.map((w) => (
+                  <tr key={w.id} className="group transition-colors hover:bg-veltol-surface/50">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-7 w-7 shrink-0">
+                          <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
+                            {workerInitials(w)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-veltol-fg">{workerName(w) || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 font-mono text-[12px] text-veltol-fgDim">{w.phone}</td>
+                    <td className="px-5 py-3.5 text-veltol-fgDim">{w.notes}</td>
+                    <td className="px-5 py-3.5">
+                      {canMutate && (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => openEditWorker(w)}>
+                            {t("editWorker")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={isPending && removingWorkerId === w.id}
+                            onClick={() => handleRemoveWorker(w)}
+                          >
+                            {isPending && removingWorkerId === w.id ? "..." : t("removeWorker")}
+                          </Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </TableDesktopView>
+
+        {workers.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-veltol-fgMute md:hidden">{t("emptyWorkers")}</p>
+        ) : (
+          <DataCardList>
+            {workers.map((w) => (
+              <DataCard key={w.id}>
+                <DataCardHeader>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="grad-blue text-[10px] font-bold text-white">
+                        {workerInitials(w)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <DataCardTitle>{workerName(w) || "—"}</DataCardTitle>
+                  </div>
+                </DataCardHeader>
+
+                <DataCardField label={t("columns.phone")}>{w.phone}</DataCardField>
+                {w.notes && <DataCardField label={t("columns.notes")}>{w.notes}</DataCardField>}
+
+                {canMutate && (
+                  <DataCardFooter>
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => openEditWorker(w)}>
+                      {t("editWorker")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1"
+                      disabled={isPending && removingWorkerId === w.id}
+                      onClick={() => handleRemoveWorker(w)}
+                    >
+                      {isPending && removingWorkerId === w.id ? "..." : t("removeWorker")}
+                    </Button>
+                  </DataCardFooter>
+                )}
+              </DataCard>
+            ))}
+          </DataCardList>
         )}
       </TableShell>
+
+      {canMutate && (
+        <WorkerFormDialog
+          key={editingWorker?.id ?? "add"}
+          open={workerDialogOpen}
+          onClose={closeWorkerDialog}
+          teamId={team.id}
+          worker={editingWorker}
+        />
+      )}
     </>
   );
 }

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getProject, getChecklistRecords, getProjectDocuments, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig, getCefData, getBessData } from "./actions";
+import { getProject, getChecklistRecords, getProjectDocuments, getProjectFolderChildren, getTeamsForProject, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig, getCefData, getBessData } from "./actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
@@ -42,10 +42,11 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
+  const [records, projectDocuments, folderChildren, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
+      isDocumentsTab && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]),
       canMutate ? getTeamsForProject() : Promise.resolve([]),
       canMutate ? getProjectManagers() : Promise.resolve([]),
       canMutate ? getClientRefs() : Promise.resolve([]),
@@ -107,6 +108,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       initialPhases={phases}
       initialCells={cells}
       initialDocuments={projectDocuments}
+      initialFolderChildren={folderChildren}
       initialMaintenanceChecks={maintenanceChecks}
       initialTimelinePage={timelinePage}
     />

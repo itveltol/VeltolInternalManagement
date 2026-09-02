@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { buildCentralizerRows, grossOf } from "./centralizerService";
+import { buildCentralizerRows } from "./centralizerService";
 import type { Project } from "@/features/projects/types";
-import type { Situation, ProjectBilling } from "../types";
+import type { Situation } from "../types";
 
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
@@ -67,42 +67,17 @@ function makeSituation(overrides: Partial<Situation> = {}): Situation {
     amount_lei_snapshot: null,
     conversion_rate: 5,
     finalized_at: "2026-02-01T00:00:00Z",
+    paid_at: null,
     created_at: "2026-01-15T00:00:00Z",
     updated_at: "2026-02-01T00:00:00Z",
     ...overrides,
   };
 }
 
-function makeBilling(overrides: Partial<ProjectBilling> = {}): ProjectBilling {
-  return {
-    id: 1,
-    project_id: 1,
-    invoiced_net: 0,
-    collected_net: 0,
-    currency: "EUR",
-    conversion_rate: 5,
-    notes: null,
-    updated_by: null,
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
-    ...overrides,
-  };
-}
-
-describe("grossOf", () => {
-  it("grosses up a net amount by the vat rate", () => {
-    expect(grossOf(1000, 21)).toBeCloseTo(1210);
-  });
-
-  it("leaves the amount unchanged when vat_rate is 0", () => {
-    expect(grossOf(1000, 0)).toBe(1000);
-  });
-});
-
 describe("buildCentralizerRows", () => {
-  it("gives a project with zero situations and zero billing a full row with executed/invoiced/collected at 0 and remaining = contract", () => {
-    const project = makeProject({ id: 1, value_eur: 100000, vat_rate: 21 });
-    const rows = buildCentralizerRows([project], [], []);
+  it("gives a project with zero situations and zero progress a full row with executed/invoiced/collected at 0 and remaining = contract", () => {
+    const project = makeProject({ id: 1, value_eur: 100000, vat_rate: 21, progress_pct: 0 });
+    const rows = buildCentralizerRows([project], []);
 
     expect(rows).toHaveLength(1);
     const row = rows[0];
@@ -115,57 +90,105 @@ describe("buildCentralizerRows", () => {
     expect(row.eur.remainingToCollect).toBe(0);
   });
 
-  it("only sums finalized situations, excluding drafts, and converts billing entered in the other currency", () => {
-    const project = makeProject({ id: 2, value_eur: 100000, value_lei: null, vat_rate: 21, conversion_rate: 5 });
-    const finalSituation = makeSituation({ id: 10, project_id: 2, status: "final", amount_eur_snapshot: 40000 });
-    const draftSituation = makeSituation({ id: 11, project_id: 2, status: "draft", amount_eur_snapshot: 999999 });
-    // Billing entered in RON on a project whose contract value is in EUR — mixed-currency source data.
-    const billing = makeBilling({ project_id: 2, invoiced_net: 50000, collected_net: 25000, currency: "RON", conversion_rate: 5 });
-
-    const rows = buildCentralizerRows([project], [finalSituation, draftSituation], [billing]);
+  it("derives executed from live progress_pct × contract value, independent of any situations existing", () => {
+    const project = makeProject({ id: 2, value_eur: 100000, vat_rate: 0, progress_pct: 40 });
+    const rows = buildCentralizerRows([project], []);
     const row = rows[0];
 
     expect(row.eur.executed.net).toBe(40000);
-    // 50000 RON / 5 = 10000 EUR net invoiced
-    expect(row.eur.invoiced.net).toBeCloseTo(10000);
-    expect(row.eur.collected.net).toBeCloseTo(5000);
-    expect(row.lei.invoiced.net).toBe(50000);
-    expect(row.lei.collected.net).toBe(25000);
+  });
+
+  it("only sums final-or-paid situations for invoiced/collected, excluding drafts", () => {
+    const project = makeProject({ id: 3, value_eur: 100000, value_lei: null, vat_rate: 21, conversion_rate: 5, progress_pct: 0 });
+    const finalSituation = makeSituation({ id: 10, project_id: 3, status: "final", amount_eur_snapshot: 40000 });
+    const draftSituation = makeSituation({ id: 11, project_id: 3, status: "draft", amount_eur_snapshot: 999999 });
+
+    const rows = buildCentralizerRows([project], [finalSituation, draftSituation]);
+    const row = rows[0];
+
+    expect(row.eur.invoiced.net).toBe(40000);
+    expect(row.eur.collected.net).toBe(0);
+  });
+
+  it("keeps facturat cumulative regardless of payment state, while incasat only counts paid situations", () => {
+    const project = makeProject({ id: 6, value_eur: 100000, vat_rate: 0, progress_pct: 0 });
+    const finalOnly = makeSituation({ id: 50, project_id: 6, status: "final", amount_eur_snapshot: 30000, finalized_at: "2026-02-01T00:00:00Z" });
+    const paid = makeSituation({ id: 51, project_id: 6, status: "paid", amount_eur_snapshot: 20000, finalized_at: "2026-03-01T00:00:00Z", paid_at: "2026-03-15T00:00:00Z" });
+
+    const rows = buildCentralizerRows([project], [finalOnly, paid]);
+    const row = rows[0];
+
+    expect(row.eur.invoiced.net).toBe(50000);
+    expect(row.eur.collected.net).toBe(20000);
+  });
+
+  it("lets executed and invoiced diverge: executed tracks live progress, invoiced tracks finalized situations, independently", () => {
+    const project = makeProject({ id: 8, value_eur: 100000, vat_rate: 0, progress_pct: 70 });
+    // Only one situation finalized so far, well below current progress — the paperwork lags the work.
+    const finalOnly = makeSituation({ id: 70, project_id: 8, status: "final", amount_eur_snapshot: 30000 });
+
+    const rows = buildCentralizerRows([project], [finalOnly]);
+    const row = rows[0];
+
+    expect(row.eur.executed.net).toBe(70000);
+    expect(row.eur.invoiced.net).toBe(30000);
+  });
+
+  it("keeps remaining-to-collect (outstanding AR) as the unpaid final situation's amount, not negative", () => {
+    const project = makeProject({ id: 7, value_eur: 100000, vat_rate: 0, progress_pct: 0 });
+    const finalOnly = makeSituation({ id: 60, project_id: 7, status: "final", amount_eur_snapshot: 30000, finalized_at: "2026-02-01T00:00:00Z" });
+    const paid = makeSituation({ id: 61, project_id: 7, status: "paid", amount_eur_snapshot: 20000, finalized_at: "2026-03-01T00:00:00Z", paid_at: "2026-03-15T00:00:00Z" });
+
+    const rows = buildCentralizerRows([project], [finalOnly, paid]);
+    const row = rows[0];
+
+    // invoiced(50000) - collected(20000) = 30000, i.e. exactly the still-unpaid situation
+    expect(row.eur.remainingToCollect).toBe(30000);
   });
 
   it("produces unchanged gross figures when vat_rate is 0", () => {
-    const project = makeProject({ id: 3, value_eur: 100000, vat_rate: 0 });
-    const situation = makeSituation({ id: 20, project_id: 3, amount_eur_snapshot: 30000 });
-    const billing = makeBilling({ project_id: 3, invoiced_net: 20000, collected_net: 10000, currency: "EUR" });
+    const project = makeProject({ id: 3, value_eur: 100000, vat_rate: 0, progress_pct: 30 });
+    const situation = makeSituation({ id: 20, project_id: 3, status: "paid", amount_eur_snapshot: 30000 });
 
-    const rows = buildCentralizerRows([project], [situation], [billing]);
+    const rows = buildCentralizerRows([project], [situation]);
     const row = rows[0];
 
     expect(row.eur.contractValue.gross).toBe(100000);
     expect(row.eur.executed.gross).toBe(30000);
-    expect(row.eur.invoiced.gross).toBe(20000);
-    expect(row.eur.collected.gross).toBe(10000);
+    expect(row.eur.invoiced.gross).toBe(30000);
+    expect(row.eur.collected.gross).toBe(30000);
+  });
+
+  it("gives executed a VAT-grossed display value alongside the net progress figure, and computes remaining-to-execute gross-to-gross, when vat_rate is nonzero", () => {
+    const project = makeProject({ id: 9, value_eur: 100000, vat_rate: 21, progress_pct: 30 });
+
+    const rows = buildCentralizerRows([project], []);
+    const row = rows[0];
+
+    // net = 30% of the net contract value; gross = net grossed up by 21% VAT
+    expect(row.eur.executed.net).toBe(30000);
+    expect(row.eur.executed.gross).toBeCloseTo(36300);
+    // remaining-to-execute compares gross contract value to gross executed, matching every other centralizer column
+    expect(row.eur.remainingToExecute).toBeCloseTo(121000 - 36300);
   });
 
   it("renders a negative remaining-to-execute (over-execution) without clamping at zero", () => {
-    const project = makeProject({ id: 4, value_eur: 100000, vat_rate: 0 });
-    const situation = makeSituation({ id: 30, project_id: 4, amount_eur_snapshot: 150000 });
+    const project = makeProject({ id: 4, value_eur: 100000, vat_rate: 0, progress_pct: 150 });
 
-    const rows = buildCentralizerRows([project], [situation], []);
+    const rows = buildCentralizerRows([project], []);
     const row = rows[0];
 
     expect(row.eur.remainingToExecute).toBe(-50000);
   });
 
-  it("computes remaining-to-invoice from contract minus invoiced, not executed minus invoiced", () => {
-    const project = makeProject({ id: 5, value_eur: 100000, vat_rate: 0 });
+  it("computes remaining-to-invoice from contract minus invoiced", () => {
+    const project = makeProject({ id: 5, value_eur: 100000, vat_rate: 0, progress_pct: 0 });
     const situation = makeSituation({ id: 40, project_id: 5, amount_eur_snapshot: 60000 });
-    const billing = makeBilling({ project_id: 5, invoiced_net: 10000, currency: "EUR" });
 
-    const rows = buildCentralizerRows([project], [situation], [billing]);
+    const rows = buildCentralizerRows([project], [situation]);
     const row = rows[0];
 
-    // contract(100000) - invoiced(10000) = 90000, NOT executed(60000) - invoiced(10000) = 50000
-    expect(row.eur.remainingToInvoice).toBe(90000);
+    // contract(100000) - invoiced(60000) = 40000
+    expect(row.eur.remainingToInvoice).toBe(40000);
   });
 });

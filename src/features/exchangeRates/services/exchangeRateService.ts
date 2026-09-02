@@ -1,7 +1,9 @@
 import type { ExchangeRatesApiClient } from "../api/types";
 import type { ExchangeRate } from "../types";
 
-const BNR_FEED_URL = "https://www.bnr.ro/nbrfxrates.xml";
+// BNR moved this feed off www.bnr.ro to a dedicated subdomain; the old path
+// now 404s / redirects to the homepage instead of returning XML.
+const BNR_FEED_URL = "https://curs.bnr.ro/nbrfxrates.xml";
 
 /** BNR publishes one rate per Romanian business day — key cache lookups by
  * the Romanian calendar date, not the server's local date, so the cache

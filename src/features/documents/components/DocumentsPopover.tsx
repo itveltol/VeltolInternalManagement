@@ -6,7 +6,9 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { DocumentList } from "./DocumentList";
 import { AddDocumentDialog } from "./AddDocumentDialog";
+import { DocumentDropzone } from "./DocumentDropzone";
 import { getLinkedDocuments } from "@/app/[locale]/(app)/projects/[id]/actions";
+import { parseMatriceCellActivityId } from "../labelActivityMapping";
 import type { Document, DocumentLinkedType } from "../types";
 
 interface Props {
@@ -32,13 +34,20 @@ export function DocumentsPopover({
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (!open || !linkedId) return;
+  function refetch() {
     startTransition(async () => {
       const docs = await getLinkedDocuments(linkedType, linkedId);
       setDocuments(docs);
     });
+  }
+
+  useEffect(() => {
+    if (!open || !linkedId) return;
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, linkedType, linkedId]);
+
+  const activityId = linkedType === "matrice_cell" ? parseMatriceCellActivityId(linkedId) : null;
 
   return (
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
@@ -69,7 +78,19 @@ export function DocumentsPopover({
             />
           )}
 
-          <AddDocumentDialog />
+          {canMutate && projectId !== null && activityId !== null && (
+            <div className="mt-3">
+              <DocumentDropzone
+                projectId={projectId}
+                activityId={activityId}
+                label={contextLabel}
+                canMutate={canMutate}
+                onChanged={refetch}
+              />
+            </div>
+          )}
+
+          {linkedType !== "matrice_cell" && <AddDocumentDialog />}
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

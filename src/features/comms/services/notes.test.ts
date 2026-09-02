@@ -3,6 +3,7 @@ import {
   assembleThreads,
   replyCountByRoot,
   unreadCount,
+  groupNotesByStatus,
   groupNotificationsByAge,
   isDueSoon,
   anchorLabel,
@@ -14,12 +15,14 @@ import type { AckReceipt, Note } from "../types";
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
     id: 1,
-    kind: "note",
+    kind: "task",
     title: null,
     body: "body",
     color: null,
     author_id: "user-1",
     author: null,
+    assignee_id: null,
+    assignee: null,
     visibility: "project",
     status: "open",
     parent_id: null,
@@ -97,6 +100,31 @@ describe("unreadCount", () => {
 
   it("returns 0 when every notification has been read", () => {
     expect(unreadCount([{ read_at: "2026-08-01T00:00:00Z" }])).toBe(0);
+  });
+});
+
+describe("groupNotesByStatus", () => {
+  it("splits open notes from resolved notes", () => {
+    const open = makeNote({ id: 1, status: "open" });
+    const resolved = makeNote({ id: 2, status: "resolved" });
+
+    const groups = groupNotesByStatus([open, resolved]);
+
+    expect(groups.open.map((n) => n.id)).toEqual([1]);
+    expect(groups.resolved.map((n) => n.id)).toEqual([2]);
+  });
+
+  it("folds archived notes into the resolved group", () => {
+    const archived = makeNote({ id: 1, status: "archived" });
+
+    const groups = groupNotesByStatus([archived]);
+
+    expect(groups.open).toEqual([]);
+    expect(groups.resolved.map((n) => n.id)).toEqual([1]);
+  });
+
+  it("returns empty arrays for no notes", () => {
+    expect(groupNotesByStatus([])).toEqual({ open: [], resolved: [] });
   });
 });
 

@@ -10,8 +10,8 @@ export function getSituationsForProject(api: SituationsApiClient, projectId: num
   return api.getSituationsForProject(projectId);
 }
 
-export function getAllFinalizedSituations(api: SituationsApiClient): Promise<Situation[]> {
-  return api.getAllFinalizedSituations();
+export function getAllBillableSituations(api: SituationsApiClient): Promise<Situation[]> {
+  return api.getAllBillableSituations();
 }
 
 export function createSituation(api: SituationsApiClient, payload: CreateSituationPayload) {
@@ -30,13 +30,20 @@ export function finalizeSituation(api: SituationsApiClient, situationId: number,
   return api.finalizeSituation(situationId, payload);
 }
 
-/** Most recently finalized situation for a project, excluding the given one — the baseline a new situation bills against. */
+export function markSituationPaid(api: SituationsApiClient, situationId: number, paidAt: string) {
+  return api.markSituationPaid(situationId, paidAt);
+}
+
+/** Most recently finalized-or-paid situation for a project, excluding the
+ * given one — the baseline a new situation bills against. A paid situation
+ * was finalized first and keeps its original finalized_at, so it still sorts
+ * correctly alongside merely-final ones. */
 export function findPreviousFinalized(
   situations: Situation[],
   excludeId: number,
 ): Situation | null {
   const finalized = situations
-    .filter((s) => s.status === "final" && s.id !== excludeId && s.finalized_at != null)
+    .filter((s) => (s.status === "final" || s.status === "paid") && s.id !== excludeId && s.finalized_at != null)
     .sort((a, b) => new Date(b.finalized_at!).getTime() - new Date(a.finalized_at!).getTime());
   return finalized[0] ?? null;
 }
@@ -59,7 +66,7 @@ export function computeSituationFigures(
   project: { progress_pct: number; value_eur: number | null; value_lei: number | null; currency: Currency; conversion_rate: number | null },
   previousPct: number,
 ): SituationFigures {
-  if (situation.status === "final") {
+  if (situation.status === "final" || situation.status === "paid") {
     return {
       pct: situation.pct_snapshot,
       amountEur: situation.amount_eur_snapshot,

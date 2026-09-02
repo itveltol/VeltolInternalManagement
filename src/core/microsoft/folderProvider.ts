@@ -10,9 +10,14 @@ export interface FolderItem {
 
 const MAX_SCAN_DEPTH = 3;
 
+/** OneDrive/SharePoint reject item names ending in a "." or " " (Graph returns a misleading 404 itemNotFound rather than a validation error). */
+function stripTrailingReservedChars(name: string): string {
+  return name.replace(/[. ]+$/, "");
+}
+
 function buildFolderName(name: string, contractNumber: string | null): string {
   const raw = contractNumber ? `${contractNumber} - ${name}` : name;
-  return raw.replace(/\//g, "-").replace(/\\/g, "-");
+  return stripTrailingReservedChars(raw.replace(/\//g, "-").replace(/\\/g, "-"));
 }
 
 async function walkOneDriveFolder(
@@ -84,6 +89,136 @@ export async function listOneDriveFolderContents(folderId: string): Promise<Fold
   return acc;
 }
 
+export interface DriveChildItem {
+  id: string;
+  name: string;
+  type: "file" | "folder";
+  size: number | null;
+  lastModifiedDateTime: string | null;
+}
+
+async function listOneDriveFolderChildren(folderId: string): Promise<DriveChildItem[]> {
+  const driveId = process.env.ONEDRIVE_DRIVE_ID!;
+  const token = await getGraphToken();
+  const acc: DriveChildItem[] = [];
+
+  let url: string | null =
+    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${folderId}/children?$select=id,name,folder,file,size,lastModifiedDateTime`;
+
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Failed to list OneDrive folder: ${folderId}`);
+    const data = (await res.json()) as {
+      value: Array<{
+        id: string;
+        name: string;
+        folder?: object;
+        file?: object;
+        size?: number;
+        lastModifiedDateTime?: string;
+      }>;
+      "@odata.nextLink"?: string;
+    };
+
+    for (const item of data.value) {
+      acc.push({
+        id: item.id,
+        name: item.name,
+        type: item.folder ? "folder" : "file",
+        size: item.size ?? null,
+        lastModifiedDateTime: item.lastModifiedDateTime ?? null,
+      });
+    }
+
+    url = data["@odata.nextLink"] ?? null;
+  }
+
+  return acc;
+}
+
+async function listLocalFolderChildren(folderId: string): Promise<DriveChildItem[]> {
+  const { readdir, stat } = await import("fs/promises");
+  const root = path.join(os.homedir(), "Desktop", "VeltolProjects");
+  const dir = path.join(root, folderId);
+  const entries = await readdir(dir, { withFileTypes: true });
+
+  const items: DriveChildItem[] = [];
+  for (const entry of entries) {
+    const childId = path.join(folderId, entry.name);
+    const stats = await stat(path.join(dir, entry.name));
+    items.push({
+      id: childId,
+      name: entry.name,
+      type: entry.isDirectory() ? "folder" : "file",
+      size: entry.isDirectory() ? null : stats.size,
+      lastModifiedDateTime: stats.mtime.toISOString(),
+    });
+  }
+  return items;
+}
+
+/** Lists the immediate children of a folder (one level, not recursive). */
+export async function listFolderChildren(folderId: string): Promise<DriveChildItem[]> {
+  if (process.env.AZURE_CLIENT_ID) {
+    return listOneDriveFolderChildren(folderId);
+  }
+  return listLocalFolderChildren(folderId);
+}
+
+interface FileContent {
+  content: ArrayBuffer;
+  name: string;
+  mimeType: string;
+}
+
+async function getOneDriveFileContent(itemId: string): Promise<FileContent> {
+  const driveId = process.env.ONEDRIVE_DRIVE_ID!;
+  const token = await getGraphToken();
+
+  const metaRes = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}?$select=name,file`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!metaRes.ok) {
+    const body = await metaRes.text();
+    throw new Error(`Failed to fetch OneDrive item metadata (${metaRes.status}): ${body}`);
+  }
+  const meta = (await metaRes.json()) as {
+    name: string;
+    file?: { mimeType?: string };
+    "@microsoft.graph.downloadUrl"?: string;
+  };
+  const downloadUrl = meta["@microsoft.graph.downloadUrl"];
+  if (!downloadUrl) throw new Error(`OneDrive item has no download URL: ${itemId}`);
+
+  const contentRes = await fetch(downloadUrl);
+  if (!contentRes.ok) {
+    throw new Error(`Failed to download OneDrive item content (${contentRes.status}): ${itemId}`);
+  }
+  const content = await contentRes.arrayBuffer();
+  return { content, name: meta.name, mimeType: meta.file?.mimeType ?? "application/octet-stream" };
+}
+
+async function getLocalFileContent(itemId: string): Promise<FileContent> {
+  const { readFile } = await import("fs/promises");
+  const root = path.join(os.homedir(), "Desktop", "VeltolProjects");
+  const target = path.join(root, itemId);
+  const buffer = await readFile(target);
+  return {
+    content: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer,
+    name: path.basename(target),
+    mimeType: "application/octet-stream",
+  };
+}
+
+/** Fetches a file's raw content by its item id, for server-side streaming to the browser. */
+export async function getFileContent(itemId: string): Promise<FileContent> {
+  if (process.env.AZURE_CLIENT_ID) {
+    return getOneDriveFileContent(itemId);
+  }
+  return getLocalFileContent(itemId);
+}
+
 async function createLocalFolder(
   name: string,
   contractNumber: string | null,
@@ -136,8 +271,43 @@ export async function createProjectFolder(
   return createLocalFolder(name, contractNumber);
 }
 
+const INVITE_CHUNK_SIZE = 20;
+
+/** Grants every listed email "write" access to an OneDrive folder via Graph's app-only invite endpoint, in chunks to stay under per-call recipient limits. No-op in local/test mode. */
+export async function grantProjectFolderAccess(folderId: string, emails: string[]): Promise<void> {
+  if (!process.env.AZURE_CLIENT_ID) return;
+  if (emails.length === 0) return;
+
+  const driveId = process.env.ONEDRIVE_DRIVE_ID!;
+  const token = await getGraphToken();
+
+  for (let i = 0; i < emails.length; i += INVITE_CHUNK_SIZE) {
+    const chunk = emails.slice(i, i + INVITE_CHUNK_SIZE);
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${folderId}/invite`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requireSignIn: true,
+          sendInvitation: false,
+          roles: ["write"],
+          recipients: chunk.map((email) => ({ email })),
+        }),
+      },
+    );
+    if (!res.ok && res.status !== 207) {
+      const body = await res.text();
+      throw new Error(`Failed to grant OneDrive folder access (${res.status}): ${body}`);
+    }
+  }
+}
+
 function sanitizeFolderName(name: string): string {
-  return name.replace(/\//g, "-").replace(/\\/g, "-");
+  return stripTrailingReservedChars(name.replace(/\//g, "-").replace(/\\/g, "-"));
 }
 
 /** Strips path-traversal/separator segments from a user-controlled name before it's used as a local filesystem path component. */

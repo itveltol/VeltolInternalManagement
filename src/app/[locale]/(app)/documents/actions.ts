@@ -172,6 +172,7 @@ export async function uploadDocumentAction(
 
     const projectId = Number(formData.get("project_id"));
     const label = strOrNull(formData.get("label"));
+    const explicitActivityId = strOrNull(formData.get("activity_id"));
     const file = formData.get("file");
     if (!projectId || !label || !(file instanceof File) || file.size === 0) {
       return { error: "errorGeneric" };
@@ -182,21 +183,32 @@ export async function uploadDocumentAction(
     const project = await projectsApi.getProjectById(projectId);
     if (!project?.onedrive_folder_id) return { error: "errorNoProjectFolder" };
 
-    const { ensureSubfolder, uploadFileToFolder, deleteFileById } = await import("@/core/microsoft/folderProvider");
-    const subfolder = await ensureSubfolder(project.onedrive_folder_id, label);
-    const content = await file.arrayBuffer();
-    const uploaded = await uploadFileToFolder(subfolder.id, file.name, content);
+    const { getCachedActivities } = await import("@/features/matrice/services/matriceService");
+    const activities = await getCachedActivities();
 
     let linkedType: "project" | "matrice_cell" = "project";
     let linkedId = String(projectId);
+    let subfolderLabel = label;
 
-    const { getCachedActivities } = await import("@/features/matrice/services/matriceService");
-    const activities = await getCachedActivities();
-    const activityId = resolveActivityIdForLabel(label, activities);
-    if (activityId) {
+    if (explicitActivityId) {
+      const activityId = Number(explicitActivityId);
+      const activity = activities.find((a) => a.id === activityId);
+      if (!activity) return { error: "errorGeneric" };
       linkedType = "matrice_cell";
       linkedId = `${projectId}:${activityId}`;
+      subfolderLabel = activity.name;
+    } else {
+      const activityId = resolveActivityIdForLabel(label, activities);
+      if (activityId) {
+        linkedType = "matrice_cell";
+        linkedId = `${projectId}:${activityId}`;
+      }
     }
+
+    const { ensureSubfolder, uploadFileToFolder, deleteFileById } = await import("@/core/microsoft/folderProvider");
+    const subfolder = await ensureSubfolder(project.onedrive_folder_id, subfolderLabel);
+    const content = await file.arrayBuffer();
+    const uploaded = await uploadFileToFolder(subfolder.id, file.name, content);
 
     try {
       const api = createSupabaseDocumentsClient(supabase);

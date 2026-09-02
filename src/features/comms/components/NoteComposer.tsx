@@ -16,6 +16,7 @@ interface Props {
   parentId?: number | null;
   projectOptions?: { id: number; name: string }[];
   teamOptions?: { id: number; name: string }[];
+  assigneeOptions?: { id: string; name: string }[];
   onSuccess?: () => void;
   autoFocus?: boolean;
 }
@@ -26,6 +27,7 @@ export function NoteComposer({
   parentId,
   projectOptions = [],
   teamOptions = [],
+  assigneeOptions = [],
   onSuccess,
   autoFocus,
 }: Props) {
@@ -33,10 +35,16 @@ export function NoteComposer({
   const [state, formAction, pending] = useActionState<ActionState, FormData>(createNoteAction, null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  const isReply = parentId != null;
+
+  const [kind, setKind] = useState<NoteKind>("task");
   const [visibility, setVisibility] = useState<NoteVisibility>(fixedAnchor ? "project" : "private");
   const [projectId, setProjectId] = useState<number | null>(null);
   const [teamId, setTeamId] = useState<number | null>(null);
+  const [assigneeId, setAssigneeId] = useState<string | null>(null);
   const [mentionCandidates, setMentionCandidates] = useState<MentionCandidate[]>([]);
+
+  const requiresAssignee = !isReply && !fixedAnchor && kind === "task" && visibility === "private";
 
   // A reply always inherits the root's scope, not its own (replies carry no
   // anchor). fixedAnchor already reflects the root's project/team/personal
@@ -71,9 +79,11 @@ export function NoteComposer({
   if (state !== lastHandledState) {
     setLastHandledState(state);
     if (state?.success) {
+      setKind("task");
       setVisibility(fixedAnchor ? "project" : "private");
       setProjectId(null);
       setTeamId(null);
+      setAssigneeId(null);
     }
   }
 
@@ -87,8 +97,6 @@ export function NoteComposer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
-
-  const isReply = parentId != null;
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-3">
@@ -122,12 +130,10 @@ export function NoteComposer({
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
               {t("composer.kindLabel")}
             </label>
-            <Select name="kind" defaultValue={"note" satisfies NoteKind}>
-              <option value="note">{t("kind.note")}</option>
+            <Select name="kind" value={kind} onChange={(e) => setKind(e.target.value as NoteKind)}>
+              <option value="task">{t("kind.task")}</option>
               <option value="question">{t("kind.question")}</option>
               <option value="decision">{t("kind.decision")}</option>
-              <option value="risk">{t("kind.risk")}</option>
-              <option value="announcement">{t("kind.announcement")}</option>
             </Select>
           </div>
           <div>
@@ -167,6 +173,30 @@ export function NoteComposer({
               {t("fields.selectProject")}
             </option>
             {projectOptions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+
+      {requiresAssignee && (
+        <div>
+          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
+            {t("fields.assignee")}
+          </label>
+          <Select
+            name="assigneeId"
+            required
+            value={assigneeId ?? ""}
+            onChange={(e) => setAssigneeId(e.target.value || null)}
+            aria-invalid={Boolean(state?.fieldErrors?.assigneeId)}
+          >
+            <option value="" disabled>
+              {t("fields.selectAssignee")}
+            </option>
+            {assigneeOptions.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>

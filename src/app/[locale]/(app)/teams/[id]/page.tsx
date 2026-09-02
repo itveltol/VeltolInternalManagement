@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getTeam, getTeamMembers } from "./actions";
+import { getTeam, getTeamMembers, getTeamWorkers } from "./actions";
 import { getProfileRefs } from "../actions";
 import { TeamDetailShell } from "@/features/teams/components/TeamDetailShell";
 
@@ -24,9 +24,10 @@ export default async function TeamDetailPage({ params }: Props) {
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
 
-  const [team, members, allProfiles] = await Promise.all([
+  const [team, members, workers, allProfiles] = await Promise.all([
     getTeam(teamId),
     getTeamMembers(teamId),
+    getTeamWorkers(teamId),
     getProfileRefs(),
   ]);
 
@@ -49,6 +50,7 @@ export default async function TeamDetailPage({ params }: Props) {
       <TeamDetailShell
         team={team}
         members={members}
+        workers={workers}
         allProfiles={allProfiles}
         canMutate={canMutate}
       />

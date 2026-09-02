@@ -1,4 +1,4 @@
-export type NoteKind = "note" | "announcement" | "question" | "decision" | "risk";
+export type NoteKind = "task" | "announcement" | "question" | "decision";
 export type NoteVisibility = "private" | "team" | "project" | "company";
 export type NoteStatus = "open" | "resolved" | "archived";
 export type NoteColor = "accent" | "green" | "orange" | "red" | "primary";
@@ -12,6 +12,7 @@ export type NotificationType =
   | "maintenance_due"
   | "vacation_request"
   | "project_assigned"
+  | "task_assigned"
   | "system";
 
 export interface NoteAnchor {
@@ -24,6 +25,7 @@ export interface NoteAnchor {
   documentId?: number | null;
   teamId?: number | null;
   isPersonal?: boolean;
+  assigneeId?: string | null;
 }
 
 export interface NoteAuthor {
@@ -41,6 +43,8 @@ export interface Note {
   color: NoteColor | null;
   author_id: string | null;
   author: NoteAuthor | null;
+  assignee_id: string | null;
+  assignee: NoteAuthor | null;
   visibility: NoteVisibility;
   status: NoteStatus;
   parent_id: number | null;
@@ -141,6 +145,7 @@ export type ActivityVerb =
   | "matrice.status_changed"
   | "situation.created"
   | "situation.finalized"
+  | "situation.paid"
   | "document.uploaded"
   | "vacation.submitted"
   | "vacation.approved"

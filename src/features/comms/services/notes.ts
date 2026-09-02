@@ -38,6 +38,20 @@ export function unreadCount(notifications: { read_at: string | null }[]): number
   return notifications.filter((n) => n.read_at === null).length;
 }
 
+// Board grouping: every note kind is split into "open" (still in progress)
+// and "resolved" — archived notes fold into resolved since they're not
+// reachable from any UI action today and NoteStatus has no other bucket for
+// them.
+export function groupNotesByStatus(notes: Note[]): { open: Note[]; resolved: Note[] } {
+  const open: Note[] = [];
+  const resolved: Note[] = [];
+  for (const note of notes) {
+    if (note.status === "open") open.push(note);
+    else resolved.push(note);
+  }
+  return { open, resolved };
+}
+
 export type NotificationGroupLabel = "today" | "thisWeek" | "older";
 
 export function groupNotificationsByAge<T extends { created_at: string }>(
@@ -101,7 +115,7 @@ export function canSendReminder(lastReminderAt: string | null, now: Date): boole
 }
 
 export function anchorLabel(
-  note: Pick<Note, "project_id" | "project_name" | "activity_id" | "activity_name" | "is_personal">,
+  note: Pick<Note, "project_id" | "project_name" | "activity_id" | "activity_name" | "is_personal" | "assignee">,
 ): { scope: "project" | "matrice" | "personal"; text: string | null } {
   if (note.activity_id !== null && note.project_id !== null) {
     const text = note.project_name ? `${note.project_name} · ${note.activity_name}` : note.activity_name;
@@ -109,6 +123,10 @@ export function anchorLabel(
   }
   if (note.project_id !== null) {
     return { scope: "project", text: note.project_name };
+  }
+  if (note.assignee) {
+    const assigneeName = [note.assignee.first_name, note.assignee.last_name].filter(Boolean).join(" ");
+    return { scope: "personal", text: assigneeName || null };
   }
   return { scope: "personal", text: null };
 }

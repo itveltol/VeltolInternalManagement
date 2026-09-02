@@ -2,22 +2,30 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
+import { Button } from "@/shared/components/ui/button";
 import { uploadDocumentAction } from "@/app/[locale]/(app)/documents/actions";
+import { ensureProjectFolder } from "@/app/[locale]/(app)/projects/actions";
 
 interface Props {
   projectId: number;
   label: string;
+  activityId?: number;
   canMutate: boolean;
   onChanged: () => void;
 }
 
-export function DocumentDropzone({ projectId, label, canMutate, onChanged }: Props) {
+export function DocumentDropzone({ projectId, label, activityId, canMutate, onChanged }: Props) {
   const t = useTranslations("documents");
+  const tProjects = useTranslations("projects");
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [needsFolder, setNeedsFolder] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isCreatingFolder, startCreatingFolder] = useTransition();
 
   function uploadFiles(files: FileList | File[]) {
     const list = Array.from(files);
@@ -30,6 +38,7 @@ export function DocumentDropzone({ projectId, label, canMutate, onChanged }: Pro
         const formData = new FormData();
         formData.set("project_id", String(projectId));
         formData.set("label", label);
+        if (activityId !== undefined) formData.set("activity_id", String(activityId));
         formData.set("file", file);
         const result = await uploadDocumentAction(null, formData);
         if (result?.error) {
@@ -37,13 +46,13 @@ export function DocumentDropzone({ projectId, label, canMutate, onChanged }: Pro
           firstErrorKey ??= result.error;
         }
       }
+      if (firstErrorKey === "errorNoProjectFolder") {
+        setNeedsFolder(true);
+        return;
+      }
       const successes = list.length - failures;
       if (failures > 0) {
-        if (failures === list.length && firstErrorKey && firstErrorKey !== "errorGeneric") {
-          toast.error(t(firstErrorKey as "errorNoProjectFolder"));
-        } else {
-          toast.error(t("errorUpload", { count: failures }));
-        }
+        toast.error(t("errorUpload", { count: failures }));
       }
       if (successes > 0) {
         toast.success(t("documentCreated"));
@@ -52,7 +61,35 @@ export function DocumentDropzone({ projectId, label, canMutate, onChanged }: Pro
     });
   }
 
+  function handleCreateFolder() {
+    startCreatingFolder(async () => {
+      const result = await ensureProjectFolder(projectId);
+      if (result?.error) {
+        toast.error(tProjects(result.error as "folderLinkError"));
+        return;
+      }
+      toast.success(tProjects("folderLinked"));
+      setNeedsFolder(false);
+      router.refresh();
+    });
+  }
+
   if (!canMutate) return null;
+
+  if (needsFolder) {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={isCreatingFolder}
+        onClick={handleCreateFolder}
+        className="w-full"
+      >
+        {isCreatingFolder ? tProjects("creatingFolder") : tProjects("createFolder")}
+      </Button>
+    );
+  }
 
   return (
     <div

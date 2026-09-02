@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { revalidatePath, updateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
@@ -24,7 +25,19 @@ async function getCatalogPath() {
   return `/${locale}/settings/matrice-catalog`;
 }
 
-function afterMutation(path: string) {
+/**
+ * Catalog edits (phase gating, activity add/remove/move) change which
+ * Matrice cells count toward a project's completion, but there's no DB
+ * trigger on activities/matrice_phases — only project_activity_status
+ * writes fire fn_recompute_project_progress(). Without this call, every
+ * existing project's stored progress_pct (and everything derived from it,
+ * e.g. the Situații centralizer's Valoare executată) would silently drift
+ * from what the Matrice grid shows live, until someone happens to touch
+ * that project's own cells. See 20260901000110_recompute_progress_on_catalog_change.sql.
+ */
+async function afterMutation(supabase: SupabaseClient, path: string) {
+  const { error } = await supabase.rpc("recompute_all_project_progress");
+  if (error) throw new Error(error.message);
   updateTag("activities");
   revalidatePath(path);
 }
@@ -56,7 +69,7 @@ export async function createPhase(
       service_type: serviceType,
       gantt_phase_key: ganttPhaseKey,
     });
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -67,7 +80,7 @@ export async function renamePhase(id: number, name: string): Promise<ActionState
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).renamePhase(id, name);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -82,7 +95,7 @@ export async function updatePhaseGating(
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).updatePhaseGating(id, serviceType, ganttPhaseKey);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -101,7 +114,7 @@ export async function reorderPhase(id: number, direction: "up" | "down"): Promis
       client.updatePhaseSortOrder(a.id, b.sort_order),
       client.updatePhaseSortOrder(b.id, a.sort_order),
     ]);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -112,7 +125,7 @@ export async function deletePhase(id: number): Promise<ActionState> {
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).deletePhase(id);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -134,7 +147,7 @@ export async function createActivity(
       sort_order: matriceAdminService.nextSortOrderForPhase(activities, phaseId),
       is_section_header: isSectionHeader,
     });
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -145,7 +158,7 @@ export async function renameActivity(id: number, name: string): Promise<ActionSt
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).renameActivity(id, name);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -169,7 +182,7 @@ export async function reorderActivity(id: number, direction: "up" | "down"): Pro
       client.updateActivitySortOrder(a.id, b.sort_order),
       client.updateActivitySortOrder(b.id, a.sort_order),
     ]);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -183,7 +196,7 @@ export async function moveActivityToPhase(id: number, phaseId: number): Promise<
     const activities = await client.getActivities();
     const sortOrder = matriceAdminService.nextSortOrderForPhase(activities, phaseId);
     await client.moveActivityToPhase(id, phaseId, sortOrder);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -194,7 +207,18 @@ export async function setActivityExpiresRequired(id: number, expiresRequired: bo
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).setActivityExpiresRequired(id, expiresRequired);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
+    return { success: "saved" };
+  } catch (e: unknown) {
+    return mapError(e);
+  }
+}
+
+export async function setActivityIsAviz(id: number, isAviz: boolean): Promise<ActionState> {
+  try {
+    const { supabase } = await requireAdmin();
+    await createSupabaseMatriceAdminClient(supabase).setActivityIsAviz(id, isAviz);
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -205,7 +229,7 @@ export async function deleteActivity(id: number): Promise<ActionState> {
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).deleteActivity(id);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -216,7 +240,7 @@ export async function addActivityDependency(activityId: number, dependsOnActivit
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).addDependency(activityId, dependsOnActivityId);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);
@@ -227,7 +251,7 @@ export async function removeActivityDependency(activityId: number, dependsOnActi
   try {
     const { supabase } = await requireAdmin();
     await createSupabaseMatriceAdminClient(supabase).removeDependency(activityId, dependsOnActivityId);
-    afterMutation(await getCatalogPath());
+    await afterMutation(supabase, await getCatalogPath());
     return { success: "saved" };
   } catch (e: unknown) {
     return mapError(e);

@@ -22,7 +22,7 @@
     "site": "Construction · Site",
     "pontaj": "Personnel · Pontaj",
     "gantt": "Gantt",
-    "situations": "Situations",
+    "situations": "Contracts",
     "suppliers": "Suppliers",
     "comunicareGroup": "COMMUNICATION",
     "board": "My board",
@@ -101,12 +101,11 @@
     "errorValidation": "Please fill in all required fields — only notes is optional. The project name must be at least 5 characters, and depending on execution mode/category, the manager, technical type, contract details, or subcontractor info may also be required.",
     "folderCreated": "Folder created.",
     "folderFailed": "Project created. Folder could not be created — you can link it later.",
-    "linkFolder": "Link folder",
-    "linkFolderPlaceholder": "Paste OneDrive share URL or local path...",
-    "linkFolderSave": "Link",
     "openFolder": "Open folder",
     "folderLinked": "Folder linked.",
     "folderLinkError": "Could not link that folder.",
+    "createFolder": "Create folder",
+    "creatingFolder": "Creating folder...",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
@@ -344,6 +343,7 @@
     "passwordPlaceholder": "••••••••",
     "signIn": "Sign in",
     "signingIn": "Signing in...",
+    "rememberMe": "Remember me for 1 year",
     "errorInvalid": "Invalid email address or password."
   },
   "register": {
@@ -461,6 +461,14 @@
       "noResults": "No projects match your search.",
       "searchPlaceholder": "Search by project name",
       "expiresOn": "Expires {date}",
+      "statusFilterLabel": "Status",
+      "statusAll": "Needs attention",
+      "sortByExpiry": "Sort by expiry",
+      "state": {
+        "overdue": "Overdue",
+        "dueSoon": "Due soon",
+        "notDue": "Not due yet"
+      },
       "pagination": {
         "prev": "Previous",
         "next": "Next",
@@ -704,13 +712,21 @@
       "created": "Created",
       "member": "Member",
       "email": "Email",
-      "role": "Role"
+      "role": "Role",
+      "worker": "Worker",
+      "phone": "Phone",
+      "notes": "Notes",
+      "team": "Team"
     },
     "fields": {
       "name": "Name",
       "description": "Description",
       "lead": "Team lead",
-      "noLead": "No lead"
+      "noLead": "No lead",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "notes": "Notes"
     },
     "memberPicker": {
       "label": "Add members",
@@ -718,7 +734,18 @@
       "empty": "No profiles available.",
       "noResults": "No matches.",
       "remove": "Remove {name}"
-    }
+    },
+    "workerCount": "{count} outfield workers",
+    "addWorker": "Add worker",
+    "editWorker": "Edit worker",
+    "removeWorker": "Remove",
+    "confirmRemoveWorker": "Remove this worker from the team?",
+    "workerAdded": "Worker added.",
+    "workerSaved": "Worker saved.",
+    "workerRemoved": "Worker removed.",
+    "emptyWorkers": "No outfield workers yet.",
+    "outfieldWorkersEyebrow": "ALL TEAMS · OUTFIELD WORKERS",
+    "outfieldWorkersTitle": "Outfield workers"
   },
   "cronEmails": {
     "aviz": {
@@ -778,7 +805,6 @@
     "customFolderPlaceholder": "Custom folder name",
     "addCustomFolder": "Add folder",
     "openDocument": "Open",
-    "openProjectFolder": "Open project folder",
     "attachDocuments": "Attach documents",
     "loadingDocuments": "Loading...",
     "renewable": "Renewable",
@@ -816,6 +842,15 @@
     "tab": {
       "checklist": "Checklist",
       "documents": "Documents"
+    },
+    "viewList": "List",
+    "viewTree": "Tree",
+    "searchPlaceholder": "Search by document name",
+    "files": {
+      "sectionTitle": "Files",
+      "noFolder": "No folder linked to this project yet.",
+      "empty": "This folder is empty.",
+      "download": "Download"
     },
     "breadcrumb": "Documents",
     "editDocument": "Edit document",
@@ -921,7 +956,20 @@
     "errorGeneric": "Something went wrong. Please try again.",
     "errorNotAdmin": "You do not have permission to do this.",
     "errorSelfDelete": "You cannot delete your own account.",
-    "errorEmailExists": "This email address is already registered."
+    "errorEmailExists": "This email address is already registered.",
+    "grantAccessButton": "Grant folder access",
+    "grantAccessTitle": "Grant folder access",
+    "grantAccessUser": "User",
+    "grantAccessUserPlaceholder": "Select a user",
+    "grantAccessProject": "Project",
+    "grantAccessProjectPlaceholder": "Search projects...",
+    "grantAccessSearching": "Searching...",
+    "grantAccessNoProjects": "No projects found.",
+    "grantAccessSubmit": "Grant access",
+    "grantAccessSubmitting": "Granting...",
+    "accessGranted": "Access granted.",
+    "errorNoFolder": "This project doesn't have a linked folder yet.",
+    "errorNotAllowed": "You do not have permission to do this."
   },
   "search": {
     "title": "Global Search",
@@ -1033,21 +1081,31 @@
       "name": "Name",
       "project": "Project"
     },
+    "executed": {
+      "label": "Executed:",
+      "netSuffix": "(without VAT)"
+    },
     "selectProjectPlaceholder": "Search projects...",
     "selectProjectClear": "Clear selected project",
     "selectProjectNoResults": "No matching projects.",
     "status": {
       "draft": "Draft",
-      "final": "Final"
+      "final": "Final",
+      "paid": "Paid"
     },
     "finalize": "Finalize",
     "finalizeConfirmTitle": "Finalize this situation?",
     "finalizeConfirmBody": "Once finalized, the percentage complete and billable amount are locked to their current values. Later checklist progress won't change this situation's numbers. This can't be undone.",
     "finalizeConfirmButton": "Finalize",
+    "markPaid": "Mark as paid",
+    "markPaidConfirmTitle": "Mark this situation as paid?",
+    "markPaidConfirmBody": "This situation's amount will be included in Valoare încasată for this contract. This can't be undone.",
+    "markPaidConfirmButton": "Mark as paid",
     "situationCreated": "Situation created.",
     "situationSaved": "Situation saved.",
     "situationDeleted": "Situation deleted.",
     "situationFinalized": "Situation finalized.",
+    "situationPaid": "Situation marked as paid.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
     "columns": {
@@ -1055,7 +1113,9 @@
       "date": "Date",
       "pct": "% complete",
       "amountEur": "Amount (EUR)",
-      "amountLei": "Amount (lei)"
+      "amountEurVat": "Amount (EUR + VAT)",
+      "amountLei": "Amount (lei)",
+      "amountLeiVat": "Amount (lei + VAT)"
     },
     "cancel": "Cancel",
     "save": "Save",
@@ -1065,7 +1125,7 @@
       "next": "Next",
       "pageOf": "Page {page} of {total}"
     },
-    "billingSaved": "Billing figures saved.",
+    "contractSaved": "Contract saved.",
     "errorValidation": "Invalid data.",
     "centralizer": {
       "title": "Situations",
@@ -1075,12 +1135,17 @@
       "searchPlaceholder": "Search by contract no., beneficiary, or project",
       "totalCount": "{count} contracts",
       "totalsRow": "Total",
-      "addSituation": "Add situation",
-      "addSituationWithProject": "Add situation + new project",
+      "addSituationWithProject": "New contract",
       "newContractTitle": "New contract",
-      "continueToSituation": "Continue",
-      "editBilling": "Edit billing",
+      "editContract": "Edit contract",
       "includeCancelled": "Include cancelled projects",
+      "filterMinContractNumber": "Min",
+      "filterMaxContractNumber": "Max",
+      "sortByContractNumber": "Sort by contract no.",
+      "filters": {
+        "minContractNumber": "Contract no. from",
+        "maxContractNumber": "Contract no. to"
+      },
       "columns": {
         "contractNumber": "Contract No.",
         "beneficiar": "Beneficiary",
@@ -1092,13 +1157,8 @@
         "remainingToInvoiceEur": "Remaining to invoice (EUR + VAT)"
       },
       "fields": {
-        "currency": "Currency",
-        "invoicedNet": "Invoiced value (net)",
-        "collectedNet": "Collected value (net)",
-        "invoicedInOther": "in {currency}",
-        "rateRefreshed": "updated",
         "refreshRate": "Refresh to today's rate",
-        "notes": "Notes"
+        "refreshRateError": "Couldn't fetch today's rate. Try again later."
       },
       "pagination": {
         "prev": "Previous",
@@ -1231,12 +1291,13 @@
     "breadcrumb": "Communication",
     "eyebrow": "MY BOARD",
     "title": "My board",
-    "subtitle": "Notes, questions, decisions and risks across your projects.",
+    "subtitle": "Tasks, questions, decisions and announcements across your projects.",
     "forMe": {
       "title": "For me",
       "empty": "Nothing new. The day is fine."
     },
     "anchorPersonal": "Personal",
+    "assignedTo": "Assigned to {name}",
     "anchorProject": "Project",
     "discussion": "Discussion",
     "unknownAuthor": "User",
@@ -1245,12 +1306,18 @@
     "noReplies": "No replies yet.",
     "backToList": "Back to list",
     "markResolved": "Mark as resolved",
+    "status": {
+      "resolved": "Resolved"
+    },
+    "sections": {
+      "inProgress": "In progress",
+      "resolved": "Resolved"
+    },
     "kind": {
-      "note": "Note",
+      "task": "Task",
       "announcement": "Announcement",
       "question": "Question",
-      "decision": "Decision",
-      "risk": "Risk"
+      "decision": "Decision"
     },
     "visibility": {
       "private": "Private",
@@ -1262,7 +1329,7 @@
       "anchorLabel": "What this is about",
       "kindLabel": "Type",
       "visibilityLabel": "Visibility",
-      "bodyPlaceholder": "Write a note...",
+      "bodyPlaceholder": "Write a task...",
       "replyPlaceholder": "Write a reply...",
       "publish": "Publish",
       "reply": "Reply",
@@ -1274,14 +1341,16 @@
     "fields": {
       "project": "Project",
       "team": "Team",
+      "assignee": "Assign to",
       "selectProject": "Select a project",
       "selectTeam": "Select a team",
+      "selectAssignee": "Select a person",
       "titleOptional": "Title (optional)",
       "ackDeadline": "Acknowledgement deadline"
     },
-    "noteCreated": "Note added.",
+    "noteCreated": "Task added.",
     "noteStatusUpdated": "Status updated.",
-    "noteDeleted": "Note deleted.",
+    "noteDeleted": "Task deleted.",
     "notePinned": "Pinned.",
     "noteUnpinned": "Unpinned.",
     "errorGeneric": "Something went wrong.",
@@ -1305,13 +1374,12 @@
         "maintenance_due": "maintenance due",
         "vacation_request": "vacation request",
         "project_assigned": "assigned you as project manager",
+        "task_assigned": "assigned you a task",
         "system": "system notification"
       }
     },
     "filters": {
-      "allKinds": "All kinds",
-      "unreadOnly": "Unread only",
-      "openOnly": "Open only"
+      "allKinds": "All kinds"
     },
     "announcements": {
       "eyebrow": "COMMUNICATION · ANNOUNCEMENTS",
@@ -1377,6 +1445,7 @@
         "matrice_status_changed": "updated {activityName} to {new}",
         "situation_created": "created situation {entityName}",
         "situation_finalized": "finalized situation {entityName}",
+        "situation_paid": "marked situation {entityName} as paid",
         "document_uploaded": "uploaded document {entityName}",
         "vacation_submitted": "submitted a vacation request",
         "vacation_approved": "approved a vacation request",
@@ -1415,6 +1484,7 @@
     "noActivities": "No activities in this phase yet.",
     "newActivityPlaceholder": "New activity name",
     "addActivity": "Add activity",
+    "isAviz": "Permit (requires renewal)",
     "expiresRequired": "Requires expiry date",
     "expiresRequiredLockedByAviz": "Always required for aviz (permit) activities.",
     "dependencies": "Dependencies",
@@ -1453,7 +1523,8 @@
       "eyebrow": "TEAM ROSTER",
       "title": "Team members",
       "members": "Members",
-      "emptyMembers": "No members yet."
+      "emptyMembers": "No members yet.",
+      "workerTag": "(worker)"
     },
     "export": {
       "button": "Export image",

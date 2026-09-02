@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Banknote, CheckCheck, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
@@ -14,13 +14,15 @@ import {
   DataCardBadgeSlot, DataCardBody, DataCardField, DataCardFooter,
 } from "@/shared/components/ui/data-card";
 import { formatDate } from "@/shared/utils/formatDate";
-import { formatCurrency } from "@/shared/utils/currency";
+import { formatCurrency, grossOf } from "@/shared/utils/currency";
 import { deleteSituationAction } from "@/app/[locale]/(app)/situations/actions";
 import { computeSituationFigures, findPreviousFinalized } from "../services/situationService";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { useSituationsStore } from "../hooks/useSituationsStore";
 import { CreateSituationDialog } from "./CreateSituationDialog";
 import { RenameSituationDialog } from "./RenameSituationDialog";
+import { FinalizeSituationDialog } from "./FinalizeSituationDialog";
+import { MarkPaidDialog } from "./MarkPaidDialog";
 import type { Situation, SituationWithProject } from "../types";
 import type { Project } from "@/features/projects/types";
 
@@ -30,6 +32,7 @@ interface Props {
   situations: SituationWithProject[];
   projects: Project[];
   canMutate: boolean;
+  canMutateBilling: boolean;
   /** Scopes the table to one contract — level 2 of the centralizer
    * drill-down. When set, the project-name search is hidden (redundant when
    * already scoped to one project), new situations are created pre-bound to
@@ -38,7 +41,7 @@ interface Props {
   onBack?: () => void;
 }
 
-export function SituationsTable({ situations, projects, canMutate, projectFilter = null, onBack }: Props) {
+export function SituationsTable({ situations, projects, canMutate, canMutateBilling, projectFilter = null, onBack }: Props) {
   const t = useTranslations("situations");
   const router = useRouter();
   const confirm = useConfirm();
@@ -46,6 +49,8 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
   const [deleteError, setDeleteError] = useState<{ id: number; message: string } | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [finalizingSituation, setFinalizingSituation] = useState<SituationWithProject | null>(null);
+  const [markingPaidSituation, setMarkingPaidSituation] = useState<SituationWithProject | null>(null);
 
   const {
     isAddDialogOpen, editingSituation, deletingId,
@@ -55,6 +60,15 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
   } = useSituationsStore();
 
   const scoped = projectFilter ? situations.filter((s) => s.project_id === projectFilter.id) : situations;
+
+  const contractSourceValue = projectFilter
+    ? (projectFilter.currency === "EUR" ? projectFilter.value_eur : projectFilter.value_lei)
+    : null;
+  const executedNet = projectFilter && contractSourceValue != null
+    ? (projectFilter.progress_pct / 100) * contractSourceValue
+    : null;
+  const executedGross = executedNet != null && projectFilter ? grossOf(executedNet, projectFilter.vat_rate) : null;
+  const executedUnit = projectFilter?.currency === "EUR" ? "EUR" : "lei";
   const filtered = projectFilter
     ? scoped
     : scoped.filter((s) => s.project.name.toLowerCase().includes(search.trim().toLowerCase()));
@@ -100,9 +114,19 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
       )}
       <TableShell>
         <TableToolbar>
-          <span className="text-xs font-medium text-veltol-fgMute">
-            {projectFilter ? (projectFilter.contract_number ?? projectFilter.name) : t("totalCount", { count: scoped.length })}
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-veltol-fgMute">
+              {projectFilter ? (projectFilter.contract_number ?? projectFilter.name) : t("totalCount", { count: scoped.length })}
+            </span>
+            {projectFilter && executedGross != null && (
+              <span className="text-xs text-veltol-fgMute">
+                {t("executed.label")}{" "}
+                <span className="font-medium text-veltol-fg">{formatCurrency(executedGross, executedUnit)}</span>
+                {" "}
+                <span>{formatCurrency(executedNet, executedUnit)} {t("executed.netSuffix")}</span>
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             {!projectFilter && (
               <FilterField label={t("searchPlaceholder")} htmlFor="situations-search">
@@ -129,7 +153,7 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-border">
-                {[t("columns.project"), t("fields.name"), "", t("columns.date"), t("columns.pct"), t("columns.amountEur"), t("columns.amountLei"), ""].map((col, i) => (
+                {[t("columns.project"), t("fields.name"), "", t("columns.date"), t("columns.pct"), t("columns.amountEur"), t("columns.amountEurVat"), t("columns.amountLei"), t("columns.amountLeiVat"), ""].map((col, i) => (
                   <th key={i} className="px-5 py-3 text-left text-[11px] font-medium text-veltol-fgMute">
                     {col}
                   </th>
@@ -139,19 +163,19 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
             <tbody className="divide-y divide-border">
               {scoped.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={10} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
                     {t("emptyState")}
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
+                  <td colSpan={10} className="px-5 py-10 text-center text-sm text-veltol-fgMute">
                     {t("noResults")}
                   </td>
                 </tr>
               ) : (
                 pagedSituations.map((situation) => {
-                  const isFinal = situation.status === "final";
+                  const isFinal = situation.status === "final" || situation.status === "paid";
                   const siblings = situations.filter((s) => s.project_id === situation.project_id);
                   const previous = findPreviousFinalized(siblings, situation.id);
                   const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
@@ -182,33 +206,61 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
                         {formatCurrency(figures.amountEur, "EUR")}
                       </td>
                       <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
+                        {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.project.vat_rate) : null, "EUR")}
+                      </td>
+                      <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
                         {formatCurrency(figures.amountLei, "lei")}
                       </td>
+                      <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
+                        {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.project.vat_rate) : null, "lei")}
+                      </td>
                       <td className="px-5 py-3.5 align-top" onClick={(e) => e.stopPropagation()}>
-                        {canMutate && (
-                          <div className="flex flex-col items-center gap-1">
+                        <div className="flex flex-col items-center gap-1">
+                          {canMutate && situation.status === "draft" && (
                             <Button
                               size="icon-sm"
                               variant="outline"
-                              title={t("editSituation")}
-                              onClick={() => openEditDialog(editableSituation(situation))}
+                              title={t("finalize")}
+                              onClick={() => setFinalizingSituation(situation)}
                             >
-                              <Pencil />
+                              <CheckCheck />
                             </Button>
+                          )}
+                          {canMutateBilling && situation.status === "final" && (
                             <Button
                               size="icon-sm"
-                              variant="destructive"
-                              title={t("deleteSituation")}
-                              disabled={isPending && deletingId === situation.id}
-                              onClick={() => handleDelete(situation.id)}
+                              variant="outline"
+                              title={t("markPaid")}
+                              onClick={() => setMarkingPaidSituation(situation)}
                             >
-                              {isPending && deletingId === situation.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                              <Banknote />
                             </Button>
-                            {deleteError?.id === situation.id && (
-                              <p className="max-w-[10rem] text-center text-[10px] text-veltol-red">{deleteError.message}</p>
-                            )}
-                          </div>
-                        )}
+                          )}
+                          {canMutate && (
+                            <>
+                              <Button
+                                size="icon-sm"
+                                variant="outline"
+                                title={t("editSituation")}
+                                onClick={() => openEditDialog(editableSituation(situation))}
+                              >
+                                <Pencil />
+                              </Button>
+                              <Button
+                                size="icon-sm"
+                                variant="destructive"
+                                title={t("deleteSituation")}
+                                disabled={isPending && deletingId === situation.id}
+                                onClick={() => handleDelete(situation.id)}
+                              >
+                                {isPending && deletingId === situation.id ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                              </Button>
+                            </>
+                          )}
+                          {deleteError?.id === situation.id && (
+                            <p className="max-w-[10rem] text-center text-[10px] text-veltol-red">{deleteError.message}</p>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -225,7 +277,7 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
         ) : (
           <DataCardList>
             {pagedSituations.map((situation) => {
-              const isFinal = situation.status === "final";
+              const isFinal = situation.status === "final" || situation.status === "paid";
               const siblings = situations.filter((s) => s.project_id === situation.project_id);
               const previous = findPreviousFinalized(siblings, situation.id);
               const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
@@ -247,29 +299,53 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
                       {figures.pct != null ? `${Math.round(figures.pct)}%` : "—"}
                     </DataCardField>
                     <DataCardField label={t("columns.amountEur")}>{formatCurrency(figures.amountEur, "EUR")}</DataCardField>
+                    <DataCardField label={t("columns.amountEurVat")}>
+                      {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.project.vat_rate) : null, "EUR")}
+                    </DataCardField>
                     <DataCardField label={t("columns.amountLei")}>{formatCurrency(figures.amountLei, "lei")}</DataCardField>
+                    <DataCardField label={t("columns.amountLeiVat")}>
+                      {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.project.vat_rate) : null, "lei")}
+                    </DataCardField>
                   </DataCardBody>
 
-                  {canMutate && (
+                  {(canMutate || (canMutateBilling && situation.status === "final")) && (
                     <DataCardFooter className="flex-col items-stretch gap-2">
-                      <div className="flex gap-2">
+                      {canMutate && situation.status === "draft" && (
                         <Button
                           variant="outline"
-                          className="flex-1"
-                          onClick={() => openEditDialog(editableSituation(situation))}
+                          onClick={() => setFinalizingSituation(situation)}
                         >
-                          <Pencil data-icon="inline-start" /> {t("editSituation")}
+                          <CheckCheck data-icon="inline-start" /> {t("finalize")}
                         </Button>
+                      )}
+                      {canMutateBilling && situation.status === "final" && (
                         <Button
-                          variant="destructive"
-                          className="flex-1"
-                          disabled={isPending && deletingId === situation.id}
-                          onClick={() => handleDelete(situation.id)}
+                          variant="outline"
+                          onClick={() => setMarkingPaidSituation(situation)}
                         >
-                          {isPending && deletingId === situation.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
-                          {t("deleteSituation")}
+                          <Banknote data-icon="inline-start" /> {t("markPaid")}
                         </Button>
-                      </div>
+                      )}
+                      {canMutate && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => openEditDialog(editableSituation(situation))}
+                          >
+                            <Pencil data-icon="inline-start" /> {t("editSituation")}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="flex-1"
+                            disabled={isPending && deletingId === situation.id}
+                            onClick={() => handleDelete(situation.id)}
+                          >
+                            {isPending && deletingId === situation.id ? <Loader2 className="animate-spin" /> : <Trash2 data-icon="inline-start" />}
+                            {t("deleteSituation")}
+                          </Button>
+                        </div>
+                      )}
                       {deleteError?.id === situation.id && (
                         <p className="text-center text-[11px] text-veltol-red">{deleteError.message}</p>
                       )}
@@ -307,6 +383,32 @@ export function SituationsTable({ situations, projects, canMutate, projectFilter
           open={!!editingSituation}
           onClose={() => {
             closeEditDialog();
+            router.refresh();
+          }}
+        />
+      )}
+
+      {finalizingSituation && (
+        <FinalizeSituationDialog
+          situationId={finalizingSituation.id}
+          projectId={finalizingSituation.project_id}
+          open={!!finalizingSituation}
+          onClose={() => setFinalizingSituation(null)}
+          onFinalized={() => {
+            setFinalizingSituation(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {markingPaidSituation && (
+        <MarkPaidDialog
+          situationId={markingPaidSituation.id}
+          projectId={markingPaidSituation.project_id}
+          open={!!markingPaidSituation}
+          onClose={() => setMarkingPaidSituation(null)}
+          onPaid={() => {
+            setMarkingPaidSituation(null);
             router.refresh();
           }}
         />

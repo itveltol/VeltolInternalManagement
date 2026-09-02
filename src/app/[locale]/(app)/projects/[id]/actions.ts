@@ -450,6 +450,12 @@ export async function setMaintenanceCheckAction(
   }
 }
 
+export async function getProjectFolderChildren(folderId: string) {
+  await requireAuth();
+  const { listFolderChildren } = await import("@/core/microsoft/folderProvider");
+  return listFolderChildren(folderId);
+}
+
 export async function getProjectDocuments(projectId: number) {
   const { supabase } = await requireAuth();
   const { createSupabaseDocumentsClient } = await import("@/features/documents/api/supabaseDocumentsClient");

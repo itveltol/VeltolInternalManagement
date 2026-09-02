@@ -12,16 +12,21 @@ export function getAvizState(expiresAt: string | null, today: Date): AvizState {
   if (!expiresAt) return 'noExpiry';
   const expiry = new Date(`${expiresAt}T00:00:00.000Z`);
   const daysLeft = daysBetween(today, expiry);
-  return daysLeft <= AVIZ_LOOKAHEAD_DAYS ? 'needsAttention' : 'notDue';
+  if (daysLeft < 0) return 'overdue';
+  return daysLeft <= AVIZ_LOOKAHEAD_DAYS ? 'dueSoon' : 'notDue';
 }
 
-/** All finished aviz cells across the given projects/activities that need renewal attention. */
+const DEFAULT_INCLUDE_STATES: AvizState[] = ['overdue', 'dueSoon'];
+
+/** All finished aviz cells across the given projects/activities, filtered to `includeStates` (default: overdue + due soon). */
 export function buildAvizReminders(
   activities: Activity[],
   cells: MatrixCell[],
   projects: MatrixProject[],
   today: Date,
+  options?: { includeStates?: AvizState[] },
 ): AvizReminder[] {
+  const includeStates = options?.includeStates ?? DEFAULT_INCLUDE_STATES;
   const avizActivities = activities.filter((a) => a.is_aviz);
   if (avizActivities.length === 0) return [];
 
@@ -36,7 +41,7 @@ export function buildAvizReminders(
     if (!project) continue;
 
     const state = getAvizState(cell.expires_at, today);
-    if (state !== 'needsAttention') continue;
+    if (!includeStates.includes(state)) continue;
 
     reminders.push({
       projectId: project.id,
