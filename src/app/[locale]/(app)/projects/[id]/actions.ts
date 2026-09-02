@@ -225,6 +225,7 @@ export async function upsertCefData(
       updatedBy: user.id,
     });
 
+    revalidatePath(await getChecklistPath(projectId));
     return { success: "cefDataSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -264,6 +265,7 @@ export async function upsertBessData(
       updatedBy: user.id,
     });
 
+    revalidatePath(await getChecklistPath(projectId));
     return { success: "bessDataSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
