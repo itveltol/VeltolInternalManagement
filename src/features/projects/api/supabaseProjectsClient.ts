@@ -5,19 +5,21 @@ import type { Project, ProjectManager, Currency } from "../types";
 const DEFAULT_PAGE_SIZE = 20;
 
 const PROJECT_SELECT =
-  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name, team_members(count)), updated_by_user:profiles!updated_by(first_name, last_name)";
+  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name, team_members(count), team_workers(count)), updated_by_user:profiles!updated_by(first_name, last_name)";
 
 interface ProjectTeamRow {
   id: number;
   name: string;
   team_members: { count: number }[];
+  team_workers: { count: number }[];
 }
 
-/** Supabase returns the team_members aggregate as a nested array — flatten it into member_count, mirroring supabaseTeamsClient's mapTeamRow. */
+/** Supabase returns the team_members/team_workers aggregates as nested arrays — flatten and sum into member_count, mirroring supabaseTeamsClient's mapTeamRow. */
 function mapProjectTeam(row: unknown): Project["team"] {
   const team = row as ProjectTeamRow | null;
   if (!team) return null;
-  return { id: team.id, name: team.name, member_count: team.team_members?.[0]?.count ?? 0 };
+  const member_count = (team.team_members?.[0]?.count ?? 0) + (team.team_workers?.[0]?.count ?? 0);
+  return { id: team.id, name: team.name, member_count };
 }
 
 function mapProjectRow(row: unknown): Project {
