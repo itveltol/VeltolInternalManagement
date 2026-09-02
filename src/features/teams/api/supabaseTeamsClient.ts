@@ -11,7 +11,11 @@ interface TeamRow {
   updated_at: string;
   lead: { first_name: string | null; last_name: string | null } | null;
   team_members: { count: number }[];
+  team_workers: { count: number }[];
 }
+
+const TEAM_SELECT =
+  "*, lead:profiles!lead_id(first_name, last_name), team_members(count), team_workers(count)";
 
 function mapTeamRow(row: TeamRow): Team {
   return {
@@ -20,7 +24,7 @@ function mapTeamRow(row: TeamRow): Team {
     description: row.description,
     lead_id: row.lead_id,
     lead: row.lead,
-    member_count: row.team_members?.[0]?.count ?? 0,
+    member_count: (row.team_members?.[0]?.count ?? 0) + (row.team_workers?.[0]?.count ?? 0),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -30,7 +34,7 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
   async getTeams() {
     const { data, error } = await supabase
       .from("teams")
-      .select("*, lead:profiles!lead_id(first_name, last_name), team_members(count)")
+      .select(TEAM_SELECT)
       .order("name");
     if (error) throw new Error(error.message);
     return ((data ?? []) as unknown as TeamRow[]).map(mapTeamRow);
@@ -39,7 +43,7 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
   async getTeamById(id) {
     const { data, error } = await supabase
       .from("teams")
-      .select("*, lead:profiles!lead_id(first_name, last_name), team_members(count)")
+      .select(TEAM_SELECT)
       .eq("id", id)
       .single();
     if (error) return null;
