@@ -8,10 +8,13 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import * as projectService from "@/features/projects/services/projectService";
-import type { ProjectListParams, ProjectListResult } from "@/features/projects/api/types";
-import { createProjectFolder, listOneDriveFolderContents } from "@/core/microsoft/folderProvider";
+import type { ProjectListParams, ProjectListResult, ProjectOption } from "@/features/projects/api/types";
+import {
+  createProjectFolder,
+  grantProjectFolderAccess,
+  listOneDriveFolderContents,
+} from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import { getGraphToken } from "@/core/microsoft/graph";
 import type { Project, ProjectManager } from "@/features/projects/types";
 import {
   CONTRACT_TYPES,
@@ -67,6 +70,18 @@ async function notifyProjectManagerAssigned(managerId: string, projectId: number
     });
   } catch (e) {
     console.error("notifyProjectManagerAssigned failed:", e);
+  }
+}
+
+/** Grants every current app user access to a newly created project folder. Best-effort — never blocks project/folder creation. */
+async function grantFolderAccessToAllUsers(folderId: string) {
+  try {
+    const { data, error } = await createAdminClient().from("profiles").select("email");
+    if (error) throw new Error(error.message);
+    const emails = (data ?? []).map((row) => row.email).filter((email): email is string => Boolean(email));
+    await grantProjectFolderAccess(folderId, emails);
+  } catch (e) {
+    console.error("grantFolderAccessToAllUsers failed:", e);
   }
 }
 
@@ -221,6 +236,7 @@ const minimalProjectSchema = z.object({
   client_id: requiredNumber({ min: 1 }),
   manager_id: optionalTrimmed(),
   contract_number: optionalTrimmed(),
+  contract_date: optionalDate(),
 });
 
 function extractProjectPayload(
@@ -380,6 +396,33 @@ export async function getProjectsByClientId(clientId: number): Promise<Project[]
   return projectService.getProjectsByClientId(client, clientId);
 }
 
+export async function searchProjectsAction(query: string): Promise<ProjectOption[]> {
+  const { supabase } = await requireAuth();
+  const client = createSupabaseProjectsClient(supabase);
+  return client.searchProjects(query);
+}
+
+export async function grantUserProjectFolderAccess(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const projectId = Number(formData.get("projectId"));
+    const email = formData.get("email") as string;
+
+    const client = createSupabaseProjectsClient(supabase);
+    const project = await client.getProjectById(projectId);
+    if (!project?.onedrive_folder_id) return { error: "errorNoFolder" };
+
+    await grantProjectFolderAccess(project.onedrive_folder_id, [email]);
+    return { success: "accessGranted" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
 export async function getProjectManagers(): Promise<ProjectManager[]> {
   await requireAuth();
   return projectService.getCachedProjectManagers();
@@ -388,10 +431,15 @@ export async function getProjectManagers(): Promise<ProjectManager[]> {
 /** Today's EUR→RON reference rate for the "≈ converted amount" display, or
  * null if BNR's feed is unreachable and nothing has been cached yet. */
 export async function getExchangeRate(): Promise<number | null> {
-  const { supabase } = await requireAuth();
-  const client = createSupabaseExchangeRatesClient(supabase);
-  const rate = await getTodaysRate(client);
-  return rate?.eurRon ?? null;
+  try {
+    const { supabase } = await requireAuth();
+    const client = createSupabaseExchangeRatesClient(supabase);
+    const rate = await getTodaysRate(client);
+    return rate?.eurRon ?? null;
+  } catch (e: unknown) {
+    console.error("getExchangeRate failed", e);
+    return null;
+  }
 }
 
 export async function createProject(
@@ -417,6 +465,7 @@ export async function createProject(
     try {
       const folder = await createProjectFolder(payload.name, payload.contract_number);
       await client.linkOneDriveFolder(newId, folder.id, folder.url, user.id);
+      await grantFolderAccessToAllUsers(folder.id);
       return { success: "projectCreated", folderCreated: true, projectId: newId };
     } catch (folderError) {
       console.error("createProjectFolder failed:", folderError);
@@ -436,7 +485,7 @@ export async function createMinimalProjectAction(
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(minimalProjectSchema, formData);
     if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
-    const { name, client_id, manager_id, contract_number } = parsed.data;
+    const { name, client_id, manager_id, contract_number, contract_date } = parsed.data;
 
     const client = createSupabaseProjectsClient(supabase);
     const payload = {
@@ -457,7 +506,7 @@ export async function createMinimalProjectAction(
       current_phase: "planning",
       progress_pct: 0,
       contract_number,
-      contract_date: null,
+      contract_date,
       deadline: null,
       value_eur: null,
       value_lei: null,
@@ -475,55 +524,40 @@ export async function createMinimalProjectAction(
       await notifyProjectManagerAssigned(manager_id, newId, name);
     }
 
-    return { success: "projectCreated", projectId: newId };
+    try {
+      const folder = await createProjectFolder(payload.name, payload.contract_number);
+      await client.linkOneDriveFolder(newId, folder.id, folder.url, user.id);
+      await grantFolderAccessToAllUsers(folder.id);
+      return { success: "projectCreated", folderCreated: true, projectId: newId };
+    } catch (folderError) {
+      console.error("createProjectFolder failed:", folderError);
+      return { success: "projectCreated", folderCreated: false, projectId: newId };
+    }
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
 }
 
-export async function linkProjectFolder(
-  projectId: number,
-  input: string,
-): Promise<ActionState> {
+export async function ensureProjectFolder(projectId: number): Promise<ActionState> {
   try {
     const { supabase, user } = await requireMutator();
     const client = createSupabaseProjectsClient(supabase);
 
-    let folderId: string;
-    let folderUrl: string;
+    const project = await client.getProjectById(projectId);
+    if (!project) return { error: "errorGeneric" };
+    if (project.onedrive_folder_id) return { success: "folderLinked" };
 
-    if (process.env.AZURE_CLIENT_ID) {
-      // OneDrive: resolve share URL to a drive item
-      const token = await getGraphToken();
-      const encoded = Buffer.from(input).toString("base64url");
-      const res = await fetch(
-        `https://graph.microsoft.com/v1.0/shares/u!${encoded}/driveItem`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (!res.ok) return { error: "folderLinkError" };
-      const item = (await res.json()) as { id: string; webUrl: string };
-      folderId = item.id;
-      folderUrl = item.webUrl;
-    } else {
-      // Local stub: treat input as an absolute path
-      const { stat } = await import("fs/promises");
-      try {
-        await stat(input);
-      } catch {
-        return { error: "folderLinkError" };
-      }
-      folderId = input.split("/").pop() ?? input;
-      folderUrl = input;
-    }
+    const folder = await createProjectFolder(project.name, project.contract_number);
+    await client.linkOneDriveFolder(projectId, folder.id, folder.url, user.id);
+    await grantFolderAccessToAllUsers(folder.id);
 
-    await client.linkOneDriveFolder(projectId, folderId, folderUrl, user.id);
     const locale = await getLocale();
     revalidatePath(`/${locale}/projects/${projectId}`);
     return { success: "folderLinked" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
+    return { error: "folderLinkError" };
   }
 }
 

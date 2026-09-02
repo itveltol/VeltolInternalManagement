@@ -1,8 +1,11 @@
 import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/core/supabase/admin";
+import { parseContractNumber } from "@/shared/utils/contractNumber";
 import { createSupabaseProjectsClient } from "../api/supabaseProjectsClient";
 import type { ProjectsApiClient, CreateProjectPayload, ProjectListParams, ProjectListResult } from "../api/types";
 import type { Project, ProjectManager } from "../types";
+
+export { parseContractNumber };
 
 /** Full, unfiltered, unpaginated project list — for pickers/dropdowns and
  * dashboards that need every project, not a page of them. */
@@ -48,16 +51,18 @@ export async function createProject(client: ProjectsApiClient, payload: CreatePr
 }
 
 /** contract_number is free text with no DB-enforced format, so this is only
- * a suggestion: the highest value that parses as a plain number, plus one.
- * Non-numeric contract numbers (e.g. "C-2024-01") are ignored rather than
- * breaking the suggestion. The result is pre-filled into an editable input,
- * never written to the DB directly. */
+ * a suggestion: the highest numeric prefix among existing contract numbers,
+ * plus one, formatted as "N/YYYY-MM-DD" with today's date. Unparseable
+ * contract numbers are ignored rather than breaking the suggestion. The
+ * result is pre-filled into an editable input, never written to the DB
+ * directly. */
 export function suggestNextContractNumber(projects: Project[]): string {
   const max = projects.reduce((acc, p) => {
-    const n = Number(p.contract_number);
-    return Number.isFinite(n) && n > acc ? n : acc;
+    const n = parseContractNumber(p.contract_number);
+    return n !== null && n > acc ? n : acc;
   }, 0);
-  return String(max + 1);
+  const today = new Date().toISOString().slice(0, 10);
+  return `${max + 1}/${today}`;
 }
 
 export async function updateProject(client: ProjectsApiClient, id: number, payload: CreateProjectPayload, userId: string): Promise<void> {

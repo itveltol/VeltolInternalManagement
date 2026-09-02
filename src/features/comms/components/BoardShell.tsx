@@ -15,8 +15,10 @@ interface Props {
   initialNotifications: Notification[];
   personalPinnedIds: number[];
   now: string;
+  currentUserId: string;
   projectOptions: { id: number; name: string }[];
   teamOptions: { id: number; name: string }[];
+  assigneeOptions: { id: string; name: string }[];
 }
 
 export function BoardShell({
@@ -24,8 +26,10 @@ export function BoardShell({
   initialNotifications,
   personalPinnedIds,
   now,
+  currentUserId,
   projectOptions,
   teamOptions,
+  assigneeOptions,
 }: Props) {
   const t = useTranslations("comms");
   const [notes, setNotes] = useState(initialNotes);
@@ -51,7 +55,13 @@ export function BoardShell({
 
   return (
     <div className="space-y-6">
-      <ForMeBand notes={notes} notifications={notifications} now={new Date(now)} onSelect={setOpenNoteId} />
+      <ForMeBand
+        notes={notes}
+        notifications={notifications}
+        now={new Date(now)}
+        currentUserId={currentUserId}
+        onSelect={setOpenNoteId}
+      />
 
       <div className="flex items-center justify-between">
         <h2 className="text-[13px] font-bold uppercase tracking-[.06em] text-veltol-fgMute">
@@ -67,6 +77,7 @@ export function BoardShell({
           <NoteComposer
             projectOptions={projectOptions}
             teamOptions={teamOptions}
+            assigneeOptions={assigneeOptions}
             onSuccess={() => {
               setComposing(false);
               reload();
@@ -86,6 +97,7 @@ export function BoardShell({
               anchor={{ isPersonal: openRoot.is_personal, projectId: openRoot.project_id, activityId: openRoot.activity_id }}
               anchorLabel={openRoot.title ?? ""}
               rootId={openRoot.id}
+              onChange={reload}
             />
           </div>
         </div>

@@ -1,4 +1,4 @@
-export type SituationStatus = "draft" | "final";
+export type SituationStatus = "draft" | "final" | "paid";
 
 export type Currency = "EUR" | "RON";
 
@@ -13,6 +13,8 @@ export interface Situation {
   /** EUR->RON rate locked in at finalize time; null while draft. */
   conversion_rate: number | null;
   finalized_at: string | null;
+  /** When this situation was marked paid; null until then. Only ever set on a situation that's already final. */
+  paid_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,27 +54,6 @@ export interface SituationFigures {
   amountLei: number | null;
 }
 
-/**
- * The two manually-maintained centralizer figures for one contract
- * (Facturat/Încasat, the yellow cells of the Excel centralizer) plus the
- * currency/rate they were entered in. Net — VAT is applied only for display,
- * see grossOf() in centralizerService.ts. A project with no figures entered
- * yet has no row in project_billing at all; callers treat that as 0/0
- * (see centralizerService.buildCentralizerRows).
- */
-export interface ProjectBilling {
-  id: number;
-  project_id: number;
-  invoiced_net: number;
-  collected_net: number;
-  currency: Currency;
-  conversion_rate: number | null;
-  notes: string | null;
-  updated_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 /** Per-currency money figures for one contract centralizer row — each pairs
  * the net source value with its VAT-grossed display value so components
  * never recompute VAT inline. */
@@ -82,7 +63,7 @@ export interface CentralizerMoney {
 }
 
 /** One row of the Situații → Centralizator contracte table: one project
- * (= one contract, see the migration comment on project_billing) with every
+ * (= one contract, see the migration comment on contract_billing) with every
  * money figure the Excel centralizer tracks, in both currencies. */
 export interface CentralizerRow {
   projectId: number;

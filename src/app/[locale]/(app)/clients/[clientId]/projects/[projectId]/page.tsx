@@ -6,6 +6,7 @@ import {
   getProject,
   getChecklistRecords,
   getProjectDocuments,
+  getProjectFolderChildren,
   getTeamsForProject,
   getProjectManagers,
   getClientRefs,
@@ -56,10 +57,11 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
+  const [records, projectDocuments, folderChildren, teams, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
+      isDocumentsTab && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]),
       canMutate ? getTeamsForProject() : Promise.resolve([]),
       canMutate ? getProjectManagers() : Promise.resolve([]),
       canMutate ? getClientRefs() : Promise.resolve([]),
@@ -120,6 +122,7 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
       initialPhases={phases}
       initialCells={cells}
       initialDocuments={projectDocuments}
+      initialFolderChildren={folderChildren}
       initialMaintenanceChecks={maintenanceChecks}
       initialTimelinePage={timelinePage}
     />

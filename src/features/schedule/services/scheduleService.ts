@@ -1,6 +1,7 @@
 import type { ScheduleApiClient } from "../api/types";
 import type { TeamsApiClient } from "@/features/teams/api/types";
-import type { ScheduleEntry, TeamScheduleRow, WeekGrid } from "../types";
+import type { TeamWorker } from "@/features/teams/types";
+import type { ScheduleEntry, TeamScheduleMember, TeamScheduleRow, WeekGrid } from "../types";
 
 const WEEKDAY_COUNT = 6; // Monday..Saturday, matching the dispatch sheet
 
@@ -39,15 +40,20 @@ function memberName(member: { profile?: { first_name: string | null; last_name: 
   return name || p.email;
 }
 
+function workerName(worker: TeamWorker): string {
+  return `${worker.first_name} ${worker.last_name ?? ""}`.trim();
+}
+
 export async function getWeekGrid(
   scheduleClient: ScheduleApiClient,
   teamsClient: TeamsApiClient,
   weekStart: string,
 ): Promise<WeekGrid> {
   const dates = weekDates(weekStart);
-  const [teams, allMembers, { entries, notes }] = await Promise.all([
+  const [teams, allMembers, allWorkers, { entries, notes }] = await Promise.all([
     teamsClient.getTeams(),
     teamsClient.getAllTeamMembers(),
+    teamsClient.getAllTeamWorkers(),
     scheduleClient.getWeek(weekStart, dates[dates.length - 1]),
   ]);
 
@@ -58,11 +64,16 @@ export async function getWeekGrid(
     else entriesByTeam.set(entry.team_id, [entry]);
   }
 
-  const membersByTeam = new Map<number, { id: string; name: string }[]>();
+  const membersByTeam = new Map<number, TeamScheduleMember[]>();
   for (const member of allMembers) {
     const list = membersByTeam.get(member.team_id) ?? [];
-    list.push({ id: member.user_id, name: memberName(member) });
+    list.push({ id: member.user_id, name: memberName(member), kind: "profile" });
     membersByTeam.set(member.team_id, list);
+  }
+  for (const worker of allWorkers) {
+    const list = membersByTeam.get(worker.team_id) ?? [];
+    list.push({ id: `worker:${worker.id}`, name: workerName(worker), kind: "worker" });
+    membersByTeam.set(worker.team_id, list);
   }
 
   const noteByTeam = new Map(notes.map((n) => [n.team_id, n.note]));

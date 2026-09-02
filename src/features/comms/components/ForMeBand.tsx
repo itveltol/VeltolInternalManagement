@@ -8,10 +8,11 @@ interface Props {
   notes: Note[];
   notifications: Notification[];
   now: Date;
+  currentUserId: string;
   onSelect: (noteId: number) => void;
 }
 
-export function ForMeBand({ notes, notifications, now, onSelect }: Props) {
+export function ForMeBand({ notes, notifications, now, currentUserId, onSelect }: Props) {
   const t = useTranslations("comms");
 
   const unreadMentionNoteIds = new Set(
@@ -23,8 +24,11 @@ export function ForMeBand({ notes, notifications, now, onSelect }: Props) {
     (n) => n.kind === "question" && n.status === "open" && unreadMentionNoteIds.has(n.id),
   );
   const mentioned = notes.filter((n) => unreadMentionNoteIds.has(n.id));
+  const assignedToMe = notes.filter((n) => n.assignee_id === currentUserId && n.status === "open");
 
-  const items = Array.from(new Map([...mentioned, ...dueSoon, ...openQuestionsForMe].map((n) => [n.id, n])).values());
+  const items = Array.from(
+    new Map([...mentioned, ...dueSoon, ...openQuestionsForMe, ...assignedToMe].map((n) => [n.id, n])).values(),
+  );
 
   return (
     <div className="rounded-card border border-border bg-card p-4 shadow-card">
@@ -46,7 +50,11 @@ export function ForMeBand({ notes, notifications, now, onSelect }: Props) {
               >
                 <span className="min-w-0 flex-1 truncate">{n.title ?? n.body}</span>
                 <span className="shrink-0 text-[11px] text-veltol-fgMute">
-                  {anchor.scope === "personal" ? t("anchorPersonal") : anchor.text}
+                  {anchor.scope === "personal"
+                    ? anchor.text
+                      ? t("assignedTo", { name: anchor.text })
+                      : t("anchorPersonal")
+                    : anchor.text}
                 </span>
               </button>
             );

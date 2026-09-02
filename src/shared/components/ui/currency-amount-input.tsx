@@ -24,6 +24,9 @@ interface Props {
    * flags the submission to overwrite the locked-in rate with it. */
   onRefreshRate?: () => Promise<number | null>;
   refreshLabel?: string;
+  /** Shown when onRefreshRate resolves to null or throws (e.g. the exchange
+   * rate feed is unreachable and no cached rate exists yet). */
+  refreshErrorLabel?: string;
   required?: boolean;
   "aria-invalid"?: boolean;
 }
@@ -39,6 +42,7 @@ export function CurrencyAmountInput({
   rate,
   onRefreshRate,
   refreshLabel,
+  refreshErrorLabel,
   required,
   "aria-invalid": invalid,
 }: Props) {
@@ -47,18 +51,25 @@ export function CurrencyAmountInput({
   const [effectiveRate, setEffectiveRate] = useState<number | null>(rate);
   const [rateRefreshed, setRateRefreshed] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
 
   const numericAmount = amount.trim() !== "" ? Number(amount) : null;
 
   async function handleRefresh() {
     if (!onRefreshRate || refreshing) return;
     setRefreshing(true);
+    setRefreshError(false);
     try {
       const todaysRate = await onRefreshRate();
       if (todaysRate != null) {
         setEffectiveRate(todaysRate);
         setRateRefreshed(true);
+      } else {
+        setRefreshError(true);
       }
+    } catch (e) {
+      console.error("Failed to refresh exchange rate", e);
+      setRefreshError(true);
     } finally {
       setRefreshing(false);
     }
@@ -107,6 +118,9 @@ export function CurrencyAmountInput({
           </>
         )}
       </div>
+      {refreshError && refreshErrorLabel && (
+        <p className="font-mono text-[11px] text-veltol-red">{refreshErrorLabel}</p>
+      )}
     </div>
   );
 }

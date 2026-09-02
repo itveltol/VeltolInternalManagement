@@ -107,7 +107,7 @@ export const STATUS_DOT_COLOR: Record<ActivityStatus, string> = {
 };
 
 /** Renewal state for a finished aviz cell, relative to today. */
-export type AvizState = 'needsAttention' | 'done' | 'notDue' | 'noExpiry';
+export type AvizState = 'overdue' | 'dueSoon' | 'notDue' | 'noExpiry';
 
 export interface AvizReminder {
   projectId: number;

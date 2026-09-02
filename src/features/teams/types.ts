@@ -29,3 +29,15 @@ export interface TeamMember {
   added_at: string;
   profile?: TeamMemberProfile;
 }
+
+export interface TeamWorker {
+  id: number;
+  team_id: number;
+  first_name: string;
+  last_name: string | null;
+  phone: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}

@@ -88,6 +88,14 @@ export const createSupabaseMatriceAdminClient = (supabase: SupabaseClient): Matr
     if (error) throw new Error(error.message);
   },
 
+  async setActivityIsAviz(id, isAviz) {
+    const { error } = await supabase
+      .from("activities")
+      .update(isAviz ? { is_aviz: true, expires_required: true } : { is_aviz: false })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
   async deleteActivity(id) {
     const { error } = await supabase.from("activities").delete().eq("id", id);
     if (error) throw new Error(error.message);

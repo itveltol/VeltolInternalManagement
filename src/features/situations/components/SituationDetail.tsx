@@ -11,21 +11,25 @@ import { formatCurrency } from "@/shared/utils/currency";
 import { formatDate } from "@/shared/utils/formatDate";
 import { computeSituationFigures, findPreviousFinalized } from "../services/situationService";
 import { FinalizeSituationDialog } from "./FinalizeSituationDialog";
+import { MarkPaidDialog } from "./MarkPaidDialog";
 import type { SituationWithProject } from "../types";
 
 interface Props {
   situation: SituationWithProject;
   situations: SituationWithProject[];
   canMutate: boolean;
+  canMutateBilling: boolean;
   onBack: () => void;
 }
 
-export function SituationDetail({ situation, situations, canMutate, onBack }: Props) {
+export function SituationDetail({ situation, situations, canMutate, canMutateBilling, onBack }: Props) {
   const t = useTranslations("situations");
   const router = useRouter();
   const [isFinalizeOpen, setFinalizeOpen] = useState(false);
+  const [isMarkPaidOpen, setMarkPaidOpen] = useState(false);
 
-  const isFinal = situation.status === "final";
+  const isFinal = situation.status === "final" || situation.status === "paid";
+  const isPaid = situation.status === "paid";
 
   const siblings = situations.filter((s) => s.project_id === situation.project_id);
   const previous = findPreviousFinalized(siblings, situation.id);
@@ -56,11 +60,18 @@ export function SituationDetail({ situation, situations, canMutate, onBack }: Pr
             </div>
           </div>
 
-          {canMutate && !isFinal && (
-            <Button onClick={() => setFinalizeOpen(true)}>
-              {t("finalize")}
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {canMutate && !isFinal && (
+              <Button onClick={() => setFinalizeOpen(true)}>
+                {t("finalize")}
+              </Button>
+            )}
+            {canMutateBilling && isFinal && !isPaid && (
+              <Button onClick={() => setMarkPaidOpen(true)}>
+                {t("markPaid")}
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-3">
@@ -92,6 +103,17 @@ export function SituationDetail({ situation, situations, canMutate, onBack }: Pr
         onClose={() => setFinalizeOpen(false)}
         onFinalized={() => {
           setFinalizeOpen(false);
+          router.refresh();
+        }}
+      />
+
+      <MarkPaidDialog
+        situationId={situation.id}
+        projectId={situation.project.id}
+        open={isMarkPaidOpen}
+        onClose={() => setMarkPaidOpen(false)}
+        onPaid={() => {
+          setMarkPaidOpen(false);
           router.refresh();
         }}
       />

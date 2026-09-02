@@ -1,18 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Building2, Grid2X2, User as UserIcon, MessageSquare } from "lucide-react";
+import { Building2, Grid2X2, User as UserIcon, MessageSquare, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { anchorLabel } from "../services/notes";
 import type { Note } from "../types";
 import { cn } from "@/shared/utils/cn";
 
 const KIND_VARIANT: Record<Note["kind"], "default" | "secondary" | "warning" | "destructive" | "success"> = {
-  note: "secondary",
+  task: "secondary",
   announcement: "default",
   question: "warning",
   decision: "success",
-  risk: "destructive",
 };
 
 const COLOR_BORDER: Record<NonNullable<Note["color"]>, string> = {
@@ -45,6 +44,12 @@ export function NoteCard({ note, onClick }: Props) {
     >
       <div className="flex items-center gap-2">
         <Badge variant={KIND_VARIANT[note.kind]}>{t(`kind.${note.kind}`)}</Badge>
+        {note.status === "resolved" && (
+          <Badge variant="success">
+            <CheckCircle2 />
+            {t("status.resolved")}
+          </Badge>
+        )}
         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-veltol-fgMute">
           {anchor.scope === "matrice" ? (
             <Grid2X2 className="h-3 w-3" />
@@ -53,7 +58,11 @@ export function NoteCard({ note, onClick }: Props) {
           ) : (
             <UserIcon className="h-3 w-3" />
           )}
-          {anchor.scope === "personal" ? t("anchorPersonal") : anchor.text}
+          {anchor.scope === "personal"
+            ? anchor.text
+              ? t("assignedTo", { name: anchor.text })
+              : t("anchorPersonal")
+            : anchor.text}
         </span>
         {note.unread && <span className="ml-auto size-1.5 shrink-0 rounded-full bg-veltol-accent" aria-hidden="true" />}
       </div>

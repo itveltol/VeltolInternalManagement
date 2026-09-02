@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 import { BoardShell } from "@/features/comms/components/BoardShell";
-import { getNotes, getNotifications, getBoardProjectOptions, getBoardTeamOptions } from "./actions";
+import { getNotes, getNotifications, getBoardProjectOptions, getBoardTeamOptions, getAssignableProfiles } from "./actions";
 
 export default async function BoardPage() {
   const { supabase, user } = await getUserProfileRole();
@@ -14,12 +14,13 @@ export default async function BoardPage() {
   }
 
   const api = createSupabaseCommsClient(supabase);
-  const [notes, notifications, personalPinnedIds, projectOptions, teamOptions] = await Promise.all([
+  const [notes, notifications, personalPinnedIds, projectOptions, teamOptions, assigneeOptions] = await Promise.all([
     getNotes({}),
     getNotifications(),
     api.getPersonalPinNoteIds(user!.id),
     getBoardProjectOptions(),
     getBoardTeamOptions(),
+    getAssignableProfiles(),
   ]);
 
   const t = await getTranslations("comms");
@@ -34,14 +35,16 @@ export default async function BoardPage() {
         </h1>
         <p className="mt-1 text-[13px] text-veltol-fgMute">{t("subtitle")}</p>
       </div>
-
+      
       <BoardShell
         initialNotes={notes}
         initialNotifications={notifications}
         personalPinnedIds={personalPinnedIds}
         now={now}
+        currentUserId={user!.id}
         projectOptions={projectOptions}
         teamOptions={teamOptions}
+        assigneeOptions={assigneeOptions}
       />
     </div>
   );

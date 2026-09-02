@@ -3,6 +3,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { locales, defaultLocale } from "@/i18n/config";
+import {
+  SESSION_META_COOKIE,
+  isSessionExpired,
+  parseSessionMeta,
+} from "@/core/supabase/sessionMeta";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
@@ -54,8 +59,9 @@ export async function proxy(request: NextRequest) {
   const isRegisterPage = pathnameWithoutLocale === "/register";
   const isRoot = pathnameWithoutLocale === "/";
 
-  // Start from the intl response so its headers (x-intl-locale etc.) are kept
-  let response = intlResponse;
+  // Start from the intl response so its headers (x-intl-locale etc.) and any
+  // Set-Cookie it already issued (NEXT_LOCALE sync) are kept
+  const response = intlResponse;
 
   if (SUPABASE_READY) {
     const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -67,7 +73,6 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -76,8 +81,22 @@ export async function proxy(request: NextRequest) {
     });
 
     const {
-      data: { user },
+      data: { user: authedUser },
     } = await supabase.auth.getUser();
+
+    // Supabase's refresh token has one project-wide lifetime with no
+    // per-login "remember me" concept. Enforce a shorter, app-level expiry
+    // here for anyone who didn't check it: once stale, treat the request as
+    // signed out and drop the still-valid Supabase cookies.
+    const sessionMeta = parseSessionMeta(
+      request.cookies.get(SESSION_META_COOKIE)?.value
+    );
+    const sessionExpired = !!authedUser && isSessionExpired(sessionMeta);
+    if (sessionExpired) {
+      await supabase.auth.signOut();
+      response.cookies.delete(SESSION_META_COOKIE);
+    }
+    const user = sessionExpired ? null : authedUser;
 
     let needsRegistration = false;
     if (user) {

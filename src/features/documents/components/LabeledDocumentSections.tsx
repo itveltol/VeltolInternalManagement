@@ -36,25 +36,35 @@ function DocumentRow({
   const t = useTranslations("documents");
   return (
     <div className="flex items-center justify-between gap-2">
-      <a
-        href={doc.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="truncate font-mono text-[12px] text-veltol-accent underline-offset-2 hover:underline"
-      >
-        {doc.name}
-      </a>
-      {canMutate && (
-        <Button
-          size="sm"
-          variant="destructive"
-          disabled={isPending}
-          onClick={() => onDelete(doc.id)}
-          className="shrink-0"
+      {doc.onedrive_item_id ? (
+        <span className="truncate font-mono text-[12px] text-veltol-fg">{doc.name}</span>
+      ) : (
+        <a
+          href={doc.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="truncate font-mono text-[12px] text-veltol-accent underline-offset-2 hover:underline"
         >
-          {t("delete")}
-        </Button>
+          {doc.name}
+        </a>
       )}
+      <div className="flex shrink-0 items-center gap-2">
+        {doc.onedrive_item_id && (
+          <Button size="sm" variant="outline" render={<a href={`/api/onedrive/${doc.onedrive_item_id}/content`} download />}>
+            {t("files.download")}
+          </Button>
+        )}
+        {canMutate && (
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={isPending}
+            onClick={() => onDelete(doc.id)}
+          >
+            {t("delete")}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

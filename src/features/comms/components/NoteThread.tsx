@@ -16,9 +16,11 @@ interface Props {
   anchorLabel: string;
   /** When set, only this root's thread is shown (used by a "discussion" popover); otherwise every root matching the anchor is listed. */
   rootId?: number;
+  /** Notifies a parent list (e.g. BoardShell's own notes state) that a note changed, so it can refetch too. */
+  onChange?: () => void;
 }
 
-export function NoteThread({ anchor, anchorLabel: anchorLabelText, rootId }: Props) {
+export function NoteThread({ anchor, anchorLabel: anchorLabelText, rootId, onChange }: Props) {
   const t = useTranslations("comms");
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [openRootId, setOpenRootId] = useState<number | null>(rootId ?? null);
@@ -51,7 +53,10 @@ export function NoteThread({ anchor, anchorLabel: anchorLabelText, rootId }: Pro
     startTransition(async () => {
       const result = await setNoteStatusAction(noteId, "resolved");
       if (result?.error) toast.error(t(result.error as "errorGeneric"));
-      else reload();
+      else {
+        reload();
+        onChange?.();
+      }
     });
   }
 

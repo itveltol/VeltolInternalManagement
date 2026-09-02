@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { TeamsApiClient, CreateTeamPayload } from "./types";
-import type { Team, TeamMember } from "../types";
+import type { TeamsApiClient, CreateTeamPayload, TeamWorkerPayload } from "./types";
+import type { Team, TeamMember, TeamWorker } from "../types";
 
 interface TeamRow {
   id: number;
@@ -101,6 +101,48 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
       .delete()
       .eq("team_id", teamId)
       .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+  },
+
+  async getTeamWorkers(teamId) {
+    const { data, error } = await supabase
+      .from("team_workers")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("first_name");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as TeamWorker[];
+  },
+
+  async getAllTeamWorkers() {
+    const { data, error } = await supabase
+      .from("team_workers")
+      .select("*")
+      .order("first_name");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as TeamWorker[];
+  },
+
+  async addTeamWorker(teamId, payload: TeamWorkerPayload, userId) {
+    const { data, error } = await supabase
+      .from("team_workers")
+      .insert({ team_id: teamId, ...payload, created_by: userId, updated_by: userId })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: (data as { id: number }).id };
+  },
+
+  async updateTeamWorker(id, payload: TeamWorkerPayload, userId) {
+    const { error } = await supabase
+      .from("team_workers")
+      .update({ ...payload, updated_by: userId })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
+  async removeTeamWorker(id) {
+    const { error } = await supabase.from("team_workers").delete().eq("id", id);
     if (error) throw new Error(error.message);
   },
 });

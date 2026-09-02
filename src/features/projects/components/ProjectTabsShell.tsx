@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
-import { getProjectDocuments, getMaintenanceChecks } from "@/app/[locale]/(app)/projects/[id]/actions";
+import { getProjectDocuments, getMaintenanceChecks, getProjectFolderChildren } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { mergeChecklistRows, computeSectionSummaries } from "@/features/projects/checklists/services/checklistTemplate";
 import { ChecklistShell } from "@/features/projects/checklists/components/ChecklistShell";
@@ -19,6 +19,7 @@ import type { Document } from "@/features/documents/types";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
 import type { FeedItem } from "@/features/comms/types";
+import type { DriveChildItem } from "@/core/microsoft/folderProvider";
 
 type TabKey = "checklist" | "gantt" | "documents" | "maintenance" | "comunicare";
 
@@ -38,6 +39,7 @@ interface Props {
   initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
   initialDocuments: Document[];
+  initialFolderChildren: DriveChildItem[];
   initialMaintenanceChecks: MaintenanceCheck[];
   initialTimelinePage: { items: FeedItem[]; hasMore: boolean };
 }
@@ -58,6 +60,7 @@ export function ProjectTabsShell({
   initialPhases,
   initialCells,
   initialDocuments,
+  initialFolderChildren,
   initialMaintenanceChecks,
   initialTimelinePage,
 }: Props) {
@@ -72,6 +75,7 @@ export function ProjectTabsShell({
 
   const [ganttData, setGanttData] = useState({ activities: initialActivities, phases: initialPhases, cells: initialCells });
   const [documents, setDocuments] = useState(initialDocuments);
+  const [folderChildren, setFolderChildren] = useState(initialFolderChildren);
   const [maintenanceChecks, setMaintenanceChecks] = useState(initialMaintenanceChecks);
   const [timelinePage, setTimelinePage] = useState(initialTimelinePage);
 
@@ -96,6 +100,10 @@ export function ProjectTabsShell({
       } else if (key === "documents") {
         const fresh = await getProjectDocuments(project.id);
         setDocuments(fresh);
+        if (project.onedrive_folder_id) {
+          const freshChildren = await getProjectFolderChildren(project.onedrive_folder_id);
+          setFolderChildren(freshChildren);
+        }
       } else if (key === "maintenance" && hasMaintenance) {
         const fresh = await getMaintenanceChecks(project.id);
         setMaintenanceChecks(fresh);
@@ -124,6 +132,10 @@ export function ProjectTabsShell({
     startTransition(async () => {
       const fresh = await getProjectDocuments(project.id);
       setDocuments(fresh);
+      if (project.onedrive_folder_id) {
+        const freshChildren = await getProjectFolderChildren(project.onedrive_folder_id);
+        setFolderChildren(freshChildren);
+      }
     });
   }
 
@@ -143,7 +155,7 @@ export function ProjectTabsShell({
 
   return (
     <>
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-1 overflow-x-auto border-b border-border">
         {tabs.map(({ key, label }) => {
           const active =
             key === "documents" ? isDocumentsActive
@@ -158,8 +170,8 @@ export function ProjectTabsShell({
               onClick={() => switchTab(key)}
               className={
                 active
-                  ? "rounded-t-md border border-b-0 border-veltol-accent/25 bg-veltol-accent/10 px-4 py-2 text-[13px] font-semibold text-veltol-accent"
-                  : "px-4 py-2 text-[13px] text-veltol-fgMute transition-colors hover:text-veltol-fgDim"
+                  ? "shrink-0 whitespace-nowrap rounded-t-md border border-b-0 border-veltol-accent/25 bg-veltol-accent/10 px-4 py-2 text-[13px] font-semibold text-veltol-accent"
+                  : "shrink-0 whitespace-nowrap px-4 py-2 text-[13px] text-veltol-fgMute transition-colors hover:text-veltol-fgDim"
               }
             >
               {label}
@@ -174,6 +186,7 @@ export function ProjectTabsShell({
           project={project}
           canMutate={canMutate}
           activities={ganttData.activities}
+          folderChildren={folderChildren}
           onChanged={reloadDocuments}
         />
       ) : isMaintenanceActive ? (

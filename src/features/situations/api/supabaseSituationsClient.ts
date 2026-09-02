@@ -30,11 +30,11 @@ export const createSupabaseSituationsClient = (supabase: SupabaseClient): Situat
     return (data ?? []) as Situation[];
   },
 
-  async getAllFinalizedSituations() {
+  async getAllBillableSituations() {
     const { data, error } = await supabase
       .from("situations")
       .select("*")
-      .eq("status", "final");
+      .in("status", ["final", "paid"]);
     if (error) throw new Error(error.message);
     return (data ?? []) as Situation[];
   },
@@ -73,6 +73,14 @@ export const createSupabaseSituationsClient = (supabase: SupabaseClient): Situat
         amount_lei_snapshot: payload.amountLei,
         conversion_rate: payload.conversionRate,
       })
+      .eq("id", situationId);
+    if (error) throw new Error(error.message);
+  },
+
+  async markSituationPaid(situationId, paidAt) {
+    const { error } = await supabase
+      .from("situations")
+      .update({ status: "paid", paid_at: paidAt })
       .eq("id", situationId);
     if (error) throw new Error(error.message);
   },

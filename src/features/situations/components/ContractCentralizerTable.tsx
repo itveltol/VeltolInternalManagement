@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
 import { Pagination } from "@/shared/components/ui/pagination";
@@ -14,18 +14,19 @@ import {
 } from "@/shared/components/ui/data-card";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
+import { parseContractNumber } from "@/shared/utils/contractNumber";
 import { useSituationsStore } from "../hooks/useSituationsStore";
-import { CreateSituationDialog } from "./CreateSituationDialog";
 import { CreateSituationWithProjectDialog } from "./CreateSituationWithProjectDialog";
 import type { CentralizerRow } from "../types";
-import type { Project, ProjectManager } from "@/features/projects/types";
+import type { ProjectManager } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
+
+type SortDir = "asc" | "desc" | null;
 
 const PAGE_SIZE = 20;
 
 interface Props {
   rows: CentralizerRow[];
-  projects: Project[];
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   nextContractNumber: string;
@@ -41,35 +42,55 @@ function Money({ value }: { value: number }) {
   );
 }
 
-export function ContractCentralizerTable({ rows, projects, managers, clientRefs, nextContractNumber, canMutate, canMutateBilling }: Props) {
+export function ContractCentralizerTable({ rows, managers, clientRefs, nextContractNumber, canMutate, canMutateBilling }: Props) {
   const t = useTranslations("situations.centralizer");
   const router = useRouter();
   const {
     openProject,
     openBillingDialog,
-    openAddDialog,
-    isAddDialogOpen,
-    closeAddDialog,
     openAddWithProjectDialog,
     isAddWithProjectDialogOpen,
     closeAddWithProjectDialog,
   } = useSituationsStore();
   const [search, setSearch] = useState("");
   const [includeCancelled, setIncludeCancelled] = useState(false);
+  const [minContractNumber, setMinContractNumber] = useState("");
+  const [maxContractNumber, setMaxContractNumber] = useState("");
+  const [sortDir, setSortDir] = useState<SortDir>(null);
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return rows.filter((row) => {
+    const min = minContractNumber.trim() === "" ? null : Number(minContractNumber);
+    const max = maxContractNumber.trim() === "" ? null : Number(maxContractNumber);
+    const result = rows.filter((row) => {
       if (!includeCancelled && row.currentPhase === "cancelled") return false;
-      if (!query) return true;
-      return (
-        (row.contractNumber ?? "").toLowerCase().includes(query) ||
-        (row.beneficiar ?? "").toLowerCase().includes(query) ||
-        row.projectName.toLowerCase().includes(query)
-      );
+      if (query) {
+        const matchesQuery =
+          (row.contractNumber ?? "").toLowerCase().includes(query) ||
+          (row.beneficiar ?? "").toLowerCase().includes(query) ||
+          row.projectName.toLowerCase().includes(query);
+        if (!matchesQuery) return false;
+      }
+      const num = parseContractNumber(row.contractNumber);
+      if (min !== null && (num === null || num < min)) return false;
+      if (max !== null && (num === null || num > max)) return false;
+      return true;
     });
-  }, [rows, search, includeCancelled]);
+
+    if (sortDir) {
+      result.sort((a, b) => {
+        const an = parseContractNumber(a.contractNumber);
+        const bn = parseContractNumber(b.contractNumber);
+        if (an === null && bn === null) return 0;
+        if (an === null) return 1;
+        if (bn === null) return -1;
+        return sortDir === "asc" ? an - bn : bn - an;
+      });
+    }
+
+    return result;
+  }, [rows, search, includeCancelled, minContractNumber, maxContractNumber, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -97,6 +118,22 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
     setSearch(value);
     setPage(1);
   }
+
+  function handleMinContractNumberChange(value: string) {
+    setMinContractNumber(value);
+    setPage(1);
+  }
+
+  function handleMaxContractNumberChange(value: string) {
+    setMaxContractNumber(value);
+    setPage(1);
+  }
+
+  function cycleSortDir() {
+    setSortDir((d) => (d === null ? "desc" : d === "desc" ? "asc" : null));
+  }
+
+  const SortIcon = sortDir === "asc" ? ArrowUp : sortDir === "desc" ? ArrowDown : ArrowUpDown;
 
   const columns = [
     t("columns.contractNumber"),
@@ -129,6 +166,38 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
               />
             </FilterField>
 
+            <FilterField label={t("filters.minContractNumber")} htmlFor="centralizer-min-contract-number">
+              <FilterInput
+                id="centralizer-min-contract-number"
+                type="number"
+                value={minContractNumber}
+                onChange={(e) => handleMinContractNumberChange(e.target.value)}
+                placeholder={t("filterMinContractNumber")}
+              />
+            </FilterField>
+
+            <FilterField label={t("filters.maxContractNumber")} htmlFor="centralizer-max-contract-number">
+              <FilterInput
+                id="centralizer-max-contract-number"
+                type="number"
+                value={maxContractNumber}
+                onChange={(e) => handleMaxContractNumberChange(e.target.value)}
+                placeholder={t("filterMaxContractNumber")}
+              />
+            </FilterField>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              title={t("sortByContractNumber")}
+              onClick={cycleSortDir}
+              className="gap-1.5"
+            >
+              <SortIcon className="size-3.5" />
+              {t("sortByContractNumber")}
+            </Button>
+
             <Button
               type="button"
               variant={includeCancelled ? "default" : "outline"}
@@ -139,16 +208,10 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
             </Button>
 
             {canMutate && (
-              <>
-                <Button onClick={openAddDialog} variant="outline">
-                  <Plus data-icon="inline-start" />
-                  {t("addSituation")}
-                </Button>
-                <Button onClick={openAddWithProjectDialog} variant="outline">
-                  <Plus data-icon="inline-start" />
-                  {t("addSituationWithProject")}
-                </Button>
-              </>
+              <Button onClick={openAddWithProjectDialog} variant="outline">
+                <Plus data-icon="inline-start" />
+                {t("addSituationWithProject")}
+              </Button>
             )}
           </div>
         </TableToolbar>
@@ -201,7 +264,7 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
                         <Button
                           size="icon-sm"
                           variant="outline"
-                          title={t("editBilling")}
+                          title={t("editContract")}
                           onClick={() => openBillingDialog(row.projectId)}
                         >
                           <Pencil />
@@ -260,7 +323,7 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
                       className="flex-1"
                       onClick={() => openBillingDialog(row.projectId)}
                     >
-                      <Pencil data-icon="inline-start" /> {t("editBilling")}
+                      <Pencil data-icon="inline-start" /> {t("editContract")}
                     </Button>
                   </DataCardFooter>
                 )}
@@ -278,15 +341,6 @@ export function ContractCentralizerTable({ rows, projects, managers, clientRefs,
           pageLabel={(p, total) => t("pagination.pageOf", { page: p, total })}
         />
       </TableShell>
-
-      <CreateSituationDialog
-        projects={projects}
-        open={isAddDialogOpen}
-        onClose={() => {
-          closeAddDialog();
-          router.refresh();
-        }}
-      />
 
       <CreateSituationWithProjectDialog
         open={isAddWithProjectDialogOpen}

@@ -1,5 +1,14 @@
 export type Currency = "EUR" | "RON";
 
+/** Grosses up a net amount for display by a VAT rate. vat_rate = 0
+ * (reverse charge / export) leaves the amount unchanged. Every money value
+ * already stored in the schema (projects.value_*, situations snapshots) is
+ * net; this is the one place VAT is applied — never scatter `× 1.21` through
+ * components. */
+export function grossOf(net: number, vatRate: number): number {
+  return net * (1 + vatRate / 100);
+}
+
 export function formatCurrency(value: number | null, unit: "EUR" | "lei"): string {
   if (value == null) return "—";
   return `${new Intl.NumberFormat("hu-HU").format(Math.round(value))} ${unit}`;

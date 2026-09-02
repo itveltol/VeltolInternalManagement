@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/core/supabase/client";
+import {
+  SESSION_META_COOKIE,
+  encodeSessionMeta,
+} from "@/core/supabase/sessionMeta";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -14,6 +18,7 @@ export default function LoginPage() {
   const { locale } = useParams<{ locale: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +38,13 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
+
+    const meta = encodeSessionMeta({
+      startedAt: Date.now(),
+      remember: rememberMe,
+    });
+    const maxAge = rememberMe ? `; max-age=${60 * 60 * 24 * 365}` : "";
+    document.cookie = `${SESSION_META_COOKIE}=${meta}; path=/; samesite=lax${maxAge}`;
 
     router.push(`/${locale}/dashboard`);
     router.refresh();
@@ -92,6 +104,22 @@ export default function LoginPage() {
               placeholder={t("passwordPlaceholder")}
               className="border-veltol-border bg-card text-veltol-fg placeholder:text-veltol-faint focus-visible:ring-veltol-accent/20"
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-veltol-border accent-veltol-accent"
+            />
+            <Label
+              htmlFor="rememberMe"
+              className="text-xs font-normal text-veltol-fgDim"
+            >
+              {t("rememberMe")}
+            </Label>
           </div>
 
           {error && (

@@ -75,7 +75,7 @@ export function DocumentList({
           </div>
         ))
       )}
-      {canMutate && (
+      {canMutate && linkedType !== "matrice_cell" && (
         <Button
           size="sm"
           variant="outline"

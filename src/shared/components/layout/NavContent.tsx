@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { createClient } from "@/core/supabase/client";
+import { SESSION_META_COOKIE } from "@/core/supabase/sessionMeta";
 import { cn } from "@/shared/utils/cn";
 import { AnnouncementsNavBadge } from "@/features/comms/components/AnnouncementsNavBadge";
 
@@ -67,12 +68,12 @@ export function NavContent({
       label: t("mainMenuGroup"),
       items: [
         { href: `/${locale}/dashboard`, label: t("dashboard"), icon: LayoutDashboard },
+        { href: `/${locale}/situations`, label: t("situations"), icon: Receipt },
         { href: `/${locale}/projects`, label: t("projects"), icon: FolderKanban },
         { href: `/${locale}/matrice-status`, label: t("matriceStatus"), icon: Grid2X2 },
         { href: `/${locale}/gantt`, label: t("gantt"), icon: GanttChartSquare },
         { href: `/${locale}/clients`, label: t("clients"), icon: Building2 },
         { href: `/${locale}/subcontractors`, label: t("subcontractors"), icon: HardHat },
-        { href: `/${locale}/situations`, label: t("situations"), icon: Receipt },
         { href: `/${locale}/teams`, label: t("teams"), icon: UsersRound },
         { href: `/${locale}/schedule`, label: t("schedule"), icon: CalendarRange },
         { href: `/${locale}/vacation`, label: t("vacation"), icon: CalendarDays },
@@ -104,6 +105,7 @@ export function NavContent({
     startSignOut(async () => {
       const supabase = createClient();
       await supabase.auth.signOut();
+      document.cookie = `${SESSION_META_COOKIE}=; path=/; max-age=0`;
       router.push(`/${locale}/login`);
       router.refresh();
     });

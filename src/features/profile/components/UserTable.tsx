@@ -17,13 +17,14 @@ import {
 } from "@/shared/components/ui/data-card";
 import { EditUserDialog } from "./EditUserDialog";
 import { InviteUserDialog } from "./InviteUserDialog";
+import { GrantFolderAccessDialog } from "./GrantFolderAccessDialog";
 import { deleteUser } from "@/app/[locale]/(app)/profile/actions";
 import { useProfileStore } from "../hooks/useProfileStore";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { Profile, AppRole } from "../types";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const ROLE_VARIANT: Record<AppRole, "default" | "warning" | "info" | "secondary" | "success" | "outline"> = {
   admin: "default",
@@ -76,9 +77,10 @@ export function UserTable({
 
   const {
     editingUser, deletingId,
-    isInviteDialogOpen,
+    isInviteDialogOpen, isGrantAccessDialogOpen,
     openEditUser, closeEditUser,
     openInviteDialog, closeInviteDialog,
+    openGrantAccessDialog, closeGrantAccessDialog,
     setDeletingId,
   } = useProfileStore();
 
@@ -138,6 +140,9 @@ export function UserTable({
                 className="w-56"
               />
             </FilterField>
+            <Button onClick={openGrantAccessDialog} variant="outline">
+              {t("grantAccessButton")}
+            </Button>
             <Button onClick={openInviteDialog} variant="outline">
               {t("inviteUser")}
             </Button>
@@ -370,6 +375,12 @@ export function UserTable({
       <InviteUserDialog
         open={isInviteDialogOpen}
         onClose={closeInviteDialog}
+      />
+
+      <GrantFolderAccessDialog
+        open={isGrantAccessDialogOpen}
+        onClose={closeGrantAccessDialog}
+        users={users}
       />
     </>
   );

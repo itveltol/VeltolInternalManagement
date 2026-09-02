@@ -12,6 +12,7 @@ import {
   reorderActivity,
   moveActivityToPhase,
   setActivityExpiresRequired,
+  setActivityIsAviz,
   deleteActivity,
   type ActionState,
 } from "@/app/[locale]/(app)/settings/matrice-catalog/actions";
@@ -58,6 +59,10 @@ export function ActivityRow({
 
   function handleToggleExpiresRequired(checked: boolean) {
     startTransition(async () => onResult(await setActivityExpiresRequired(activity.id, checked)));
+  }
+
+  function handleToggleIsAviz(checked: boolean) {
+    startTransition(async () => onResult(await setActivityIsAviz(activity.id, checked)));
   }
 
   async function handleDelete() {
@@ -112,6 +117,15 @@ export function ActivityRow({
           <option key={p.id} value={p.id}>{p.name}</option>
         ))}
       </Select>
+
+      <label className="flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-veltol-fgMute">
+        <input
+          type="checkbox"
+          checked={activity.is_aviz}
+          onChange={(e) => handleToggleIsAviz(e.target.checked)}
+        />
+        {t("isAviz")}
+      </label>
 
       <label className="flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-veltol-fgMute">
         <input

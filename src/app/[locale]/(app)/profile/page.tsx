@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
-import { getAllUsers } from "./actions";
+import { getAllUsers, getAllOutfieldWorkers } from "./actions";
 import { getVacationBalance } from "../vacation/actions";
 import { ProfileShell } from "@/features/profile/components/ProfileShell";
 import type { Profile } from "@/features/profile/types";
@@ -21,8 +21,9 @@ export default async function ProfilePage() {
     .single();
 
   const isAdmin = profile?.role === "admin";
-  const [allUsers, balance] = await Promise.all([
+  const [allUsers, outfieldWorkers, balance] = await Promise.all([
     isAdmin ? getAllUsers() : Promise.resolve([]),
+    isAdmin ? getAllOutfieldWorkers() : Promise.resolve([]),
     getVacationBalance(),
   ]);
   const t = await getTranslations("profile");
@@ -39,6 +40,7 @@ export default async function ProfilePage() {
       <ProfileShell
         profile={profile as Profile}
         allUsers={allUsers}
+        outfieldWorkers={outfieldWorkers}
         currentUserId={user.id}
         isAdmin={isAdmin}
         balance={balance}

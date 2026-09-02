@@ -33,6 +33,7 @@ export interface MatriceAdminApiClient {
   updateActivitySortOrder(id: number, sortOrder: number): Promise<void>;
   moveActivityToPhase(id: number, phaseId: number, sortOrder: number): Promise<void>;
   setActivityExpiresRequired(id: number, expiresRequired: boolean): Promise<void>;
+  setActivityIsAviz(id: number, isAviz: boolean): Promise<void>;
   deleteActivity(id: number): Promise<void>;
 
   addDependency(activityId: number, dependsOnActivityId: number): Promise<void>;

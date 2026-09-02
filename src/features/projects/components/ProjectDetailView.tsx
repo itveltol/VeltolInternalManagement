@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { ProjectTabsShell } from "@/features/projects/components/ProjectTabsShell";
-import { LinkFolderForm } from "@/features/projects/components/LinkFolderForm";
+import { CreateFolderButton } from "@/features/projects/components/CreateFolderButton";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
 import { ProjectLocationMap } from "@/features/projects/components/ProjectLocationMap";
 import { ProjectCefDataPanel } from "@/features/projects/cefBessData/components/ProjectCefDataPanel";
@@ -21,6 +21,7 @@ import type { Document } from "@/features/documents/types";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
 import type { FeedItem } from "@/features/comms/types";
+import type { DriveChildItem } from "@/core/microsoft/folderProvider";
 
 export interface BreadcrumbSegment {
   label: string;
@@ -52,6 +53,7 @@ interface Props {
   initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
   initialDocuments: Document[];
+  initialFolderChildren: DriveChildItem[];
   initialMaintenanceChecks: MaintenanceCheck[];
   initialTimelinePage: { items: FeedItem[]; hasMore: boolean };
 }
@@ -81,6 +83,7 @@ export async function ProjectDetailView({
   initialPhases,
   initialCells,
   initialDocuments,
+  initialFolderChildren,
   initialMaintenanceChecks,
   initialTimelinePage,
 }: Props) {
@@ -149,7 +152,7 @@ export async function ProjectDetailView({
                 {tProjects("openFolder")}
               </a>
             ) : canMutate ? (
-              <LinkFolderForm projectId={project.id} />
+              <CreateFolderButton projectId={project.id} />
             ) : null}
           </div>
         </div>
@@ -206,6 +209,7 @@ export async function ProjectDetailView({
         initialPhases={initialPhases}
         initialCells={initialCells}
         initialDocuments={initialDocuments}
+        initialFolderChildren={initialFolderChildren}
         initialMaintenanceChecks={initialMaintenanceChecks}
         initialTimelinePage={initialTimelinePage}
       />

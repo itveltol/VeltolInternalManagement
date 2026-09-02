@@ -14,6 +14,7 @@ import {
   Wrench,
   CalendarDays,
   UserCheck,
+  ListTodo,
   Info,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -32,6 +33,7 @@ const TYPE_ICON: Record<NotificationType, typeof AtSign> = {
   maintenance_due: Wrench,
   vacation_request: CalendarDays,
   project_assigned: UserCheck,
+  task_assigned: ListTodo,
   system: Info,
 };
 

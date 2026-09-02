@@ -1,5 +1,5 @@
-import type { TeamsApiClient, CreateTeamPayload } from "../api/types";
-import type { Team, TeamMember } from "../types";
+import type { TeamsApiClient, CreateTeamPayload, TeamWorkerPayload } from "../api/types";
+import type { Team, TeamMember, TeamWorker } from "../types";
 
 export async function getTeams(api: TeamsApiClient): Promise<Team[]> {
   return api.getTeams();
@@ -35,4 +35,34 @@ export async function addTeamMember(api: TeamsApiClient, teamId: number, userId:
 
 export async function removeTeamMember(api: TeamsApiClient, teamId: number, userId: string): Promise<void> {
   return api.removeTeamMember(teamId, userId);
+}
+
+export async function getTeamWorkers(api: TeamsApiClient, teamId: number): Promise<TeamWorker[]> {
+  return api.getTeamWorkers(teamId);
+}
+
+export async function getAllTeamWorkers(api: TeamsApiClient): Promise<TeamWorker[]> {
+  return api.getAllTeamWorkers();
+}
+
+export async function addTeamWorker(
+  api: TeamsApiClient,
+  teamId: number,
+  payload: TeamWorkerPayload,
+  userId: string,
+): Promise<{ id: number }> {
+  return api.addTeamWorker(teamId, payload, userId);
+}
+
+export async function updateTeamWorker(
+  api: TeamsApiClient,
+  id: number,
+  payload: TeamWorkerPayload,
+  userId: string,
+): Promise<void> {
+  return api.updateTeamWorker(id, payload, userId);
+}
+
+export async function removeTeamWorker(api: TeamsApiClient, id: number): Promise<void> {
+  return api.removeTeamWorker(id);
 }

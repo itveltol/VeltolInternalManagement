@@ -22,7 +22,7 @@
     "site": "Építési helyszín",
     "pontaj": "Személyzet · Jelenlét",
     "gantt": "Gantt",
-    "situations": "Szituációk",
+    "situations": "Szerződések",
     "suppliers": "Beszállítók",
     "comunicareGroup": "KOMMUNIKÁCIÓ",
     "board": "Saját panel",
@@ -101,12 +101,11 @@
     "errorValidation": "Kérjük, töltsön ki minden kötelező mezőt — csak a megjegyzés opcionális. A projekt nevének legalább 5 karakter hosszúnak kell lennie, és a végrehajtási módtól/kategóriától függően a projektmenedzser, a műszaki típus, a szerződés adatai vagy az alvállalkozó adatai is kötelezőek lehetnek.",
     "folderCreated": "Mappa létrehozva.",
     "folderFailed": "Projekt létrehozva. A mappa nem hozható létre — később is összekapcsolhatja.",
-    "linkFolder": "Mappa összekapcsolása",
-    "linkFolderPlaceholder": "Illessze be a OneDrive megosztási URL-t vagy helyi elérési utat...",
-    "linkFolderSave": "Összekapcsolás",
     "openFolder": "Mappa megnyitása",
     "folderLinked": "Mappa összekapcsolva.",
     "folderLinkError": "Nem sikerült összekapcsolni a mappát.",
+    "createFolder": "Mappa létrehozása",
+    "creatingFolder": "Mappa létrehozása...",
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés...",
@@ -344,6 +343,7 @@
     "passwordPlaceholder": "••••••••",
     "signIn": "Bejelentkezés",
     "signingIn": "Bejelentkezés...",
+    "rememberMe": "Emlékezz rám 1 évig",
     "errorInvalid": "Hibás e-mail cím vagy jelszó."
   },
   "register": {
@@ -461,6 +461,14 @@
       "noResults": "Nincs a keresésnek megfelelő projekt.",
       "searchPlaceholder": "Keresés projekt neve alapján",
       "expiresOn": "Lejár: {date}",
+      "statusFilterLabel": "Állapot",
+      "statusAll": "Figyelmet igényel",
+      "sortByExpiry": "Rendezés lejárat szerint",
+      "state": {
+        "overdue": "Lejárt",
+        "dueSoon": "Hamarosan lejár",
+        "notDue": "Még nem esedékes"
+      },
       "pagination": {
         "prev": "Előző",
         "next": "Következő",
@@ -704,13 +712,21 @@
       "created": "Létrehozva",
       "member": "Tag",
       "email": "Email",
-      "role": "Szerepkör"
+      "role": "Szerepkör",
+      "worker": "Munkás",
+      "phone": "Telefon",
+      "notes": "Megjegyzés",
+      "team": "Csapat"
     },
     "fields": {
       "name": "Név",
       "description": "Leírás",
       "lead": "Csapatvezető",
-      "noLead": "Nincs vezető"
+      "noLead": "Nincs vezető",
+      "firstName": "Keresztnév",
+      "lastName": "Vezetéknév",
+      "phone": "Telefon",
+      "notes": "Megjegyzés"
     },
     "memberPicker": {
       "label": "Tagok hozzáadása",
@@ -718,7 +734,18 @@
       "empty": "Nincs elérhető profil.",
       "noResults": "Nincs találat.",
       "remove": "{name} eltávolítása"
-    }
+    },
+    "workerCount": "{count} helyszíni munkás",
+    "addWorker": "Munkás hozzáadása",
+    "editWorker": "Munkás szerkesztése",
+    "removeWorker": "Eltávolítás",
+    "confirmRemoveWorker": "Eltávolítod ezt a munkást a csapatból?",
+    "workerAdded": "Munkás hozzáadva.",
+    "workerSaved": "Munkás mentve.",
+    "workerRemoved": "Munkás eltávolítva.",
+    "emptyWorkers": "Még nincs helyszíni munkás.",
+    "outfieldWorkersEyebrow": "ÖSSZES CSAPAT · HELYSZÍNI MUNKÁSOK",
+    "outfieldWorkersTitle": "Helyszíni munkások"
   },
   "cronEmails": {
     "aviz": {
@@ -778,7 +805,6 @@
     "customFolderPlaceholder": "Egyéni mappa neve",
     "addCustomFolder": "Mappa hozzáadása",
     "openDocument": "Megnyitás",
-    "openProjectFolder": "Projektmappa megnyitása",
     "attachDocuments": "Dokumentumok csatolása",
     "loadingDocuments": "Betöltés...",
     "renewable": "Megújítandó",
@@ -816,6 +842,15 @@
     "tab": {
       "checklist": "Ellenőrzőlista",
       "documents": "Dokumentumok"
+    },
+    "viewList": "Lista",
+    "viewTree": "Fastruktúra",
+    "searchPlaceholder": "Keresés dokumentumnév alapján",
+    "files": {
+      "sectionTitle": "Fájlok",
+      "noFolder": "Ehhez a projekthez még nincs csatolt mappa.",
+      "empty": "Ez a mappa üres.",
+      "download": "Letöltés"
     },
     "breadcrumb": "Dokumentumok",
     "editDocument": "Dokumentum szerkesztése",
@@ -921,7 +956,20 @@
     "errorGeneric": "Hiba történt. Próbálja újra.",
     "errorNotAdmin": "Ehhez nincs jogosultsága.",
     "errorSelfDelete": "Saját fiókját nem törölheti.",
-    "errorEmailExists": "Ez az e-mail cím már regisztrált."
+    "errorEmailExists": "Ez az e-mail cím már regisztrált.",
+    "grantAccessButton": "Mappahozzáférés megadása",
+    "grantAccessTitle": "Mappahozzáférés megadása",
+    "grantAccessUser": "Felhasználó",
+    "grantAccessUserPlaceholder": "Válassz felhasználót",
+    "grantAccessProject": "Projekt",
+    "grantAccessProjectPlaceholder": "Projektek keresése...",
+    "grantAccessSearching": "Keresés...",
+    "grantAccessNoProjects": "Nincs találat.",
+    "grantAccessSubmit": "Hozzáférés megadása",
+    "grantAccessSubmitting": "Megadás...",
+    "accessGranted": "Hozzáférés megadva.",
+    "errorNoFolder": "Ehhez a projekthez még nincs csatolt mappa.",
+    "errorNotAllowed": "Ehhez nincs jogosultsága."
   },
   "search": {
     "title": "Globális keresés",
@@ -1033,21 +1081,31 @@
       "name": "Név",
       "project": "Projekt"
     },
+    "executed": {
+      "label": "Elvégzett munka:",
+      "netSuffix": "(ÁFA nélkül)"
+    },
     "selectProjectPlaceholder": "Projektek keresése...",
     "selectProjectClear": "Kiválasztott projekt törlése",
     "selectProjectNoResults": "Nincs egyező projekt.",
     "status": {
       "draft": "Vázlat",
-      "final": "Végleges"
+      "final": "Végleges",
+      "paid": "Fizetve"
     },
     "finalize": "Véglegesítés",
     "finalizeConfirmTitle": "Véglegesíti ezt a szituációt?",
     "finalizeConfirmBody": "Véglegesítés után a százalékos készültség és a számlázható összeg lezáródik a jelenlegi értékre. A későbbi checklist-haladás már nem változtatja meg ennek a szituációnak a számait. Ez nem vonható vissza.",
     "finalizeConfirmButton": "Véglegesítés",
+    "markPaid": "Megjelölés fizetettként",
+    "markPaidConfirmTitle": "Megjelöli ezt a szituációt fizetettként?",
+    "markPaidConfirmBody": "Ennek a szituációnak az összege bekerül a szerződés Beérkezett értékébe. Ez nem vonható vissza.",
+    "markPaidConfirmButton": "Megjelölés fizetettként",
     "situationCreated": "Szituáció létrehozva.",
     "situationSaved": "Szituáció mentve.",
     "situationDeleted": "Szituáció törölve.",
     "situationFinalized": "Szituáció véglegesítve.",
+    "situationPaid": "Szituáció fizetettként megjelölve.",
     "errorGeneric": "Valami hiba történt.",
     "errorNotAllowed": "Nincs jogosultsága ehhez a művelethez.",
     "columns": {
@@ -1055,7 +1113,9 @@
       "date": "Dátum",
       "pct": "Készültség %",
       "amountEur": "Összeg (EUR)",
-      "amountLei": "Összeg (lej)"
+      "amountEurVat": "Összeg (EUR + ÁFA)",
+      "amountLei": "Összeg (lej)",
+      "amountLeiVat": "Összeg (lej + ÁFA)"
     },
     "cancel": "Mégse",
     "save": "Mentés",
@@ -1065,7 +1125,7 @@
       "next": "Következő",
       "pageOf": "{page}. oldal / {total}"
     },
-    "billingSaved": "A számlázási adatok mentve.",
+    "contractSaved": "Szerződés mentve.",
     "errorValidation": "Érvénytelen adatok.",
     "centralizer": {
       "title": "Helyzetjelentések",
@@ -1075,12 +1135,17 @@
       "searchPlaceholder": "Keresés szerződésszám, kedvezményezett vagy projekt szerint",
       "totalCount": "{count} szerződés",
       "totalsRow": "Összesen",
-      "addSituation": "Helyzetjelentés hozzáadása",
-      "addSituationWithProject": "Helyzetjelentés + új projekt hozzáadása",
+      "addSituationWithProject": "Új szerződés",
       "newContractTitle": "Új szerződés",
-      "continueToSituation": "Tovább",
-      "editBilling": "Számlázás szerkesztése",
+      "editContract": "Szerződés szerkesztése",
       "includeCancelled": "Töröltek megjelenítése",
+      "filterMinContractNumber": "Min",
+      "filterMaxContractNumber": "Max",
+      "sortByContractNumber": "Rendezés szerződésszám szerint",
+      "filters": {
+        "minContractNumber": "Szerződésszám -tól",
+        "maxContractNumber": "Szerződésszám -ig"
+      },
       "columns": {
         "contractNumber": "Szerződés sz.",
         "beneficiar": "Kedvezményezett",
@@ -1092,13 +1157,8 @@
         "remainingToInvoiceEur": "Hátralévő számlázás (EUR + ÁFA)"
       },
       "fields": {
-        "currency": "Pénznem",
-        "invoicedNet": "Számlázott érték (nettó)",
-        "collectedNet": "Beérkezett érték (nettó)",
-        "invoicedInOther": "{currency}-ban",
-        "rateRefreshed": "frissítve",
         "refreshRate": "Frissítés a mai árfolyamra",
-        "notes": "Megjegyzések"
+        "refreshRateError": "Nem sikerült lekérni a mai árfolyamot. Próbáld újra később."
       },
       "pagination": {
         "prev": "Előző",
@@ -1231,12 +1291,13 @@
     "breadcrumb": "Kommunikáció",
     "eyebrow": "SAJÁT PANEL",
     "title": "Panoul meu",
-    "subtitle": "Jegyzetek, kérdések, döntések és kockázatok a projektjeidhez.",
+    "subtitle": "Feladatok, kérdések, döntések és közlemények a projektjeidhez.",
     "forMe": {
       "title": "Nekem szól",
       "empty": "Nincs semmi új. A nap rendben van."
     },
     "anchorPersonal": "Személyes",
+    "assignedTo": "{name} részére kiosztva",
     "anchorProject": "Projekt",
     "discussion": "Beszélgetés",
     "unknownAuthor": "Felhasználó",
@@ -1245,12 +1306,18 @@
     "noReplies": "Még nincs válasz.",
     "backToList": "Vissza a listához",
     "markResolved": "Megjelölés megoldottként",
+    "status": {
+      "resolved": "Megoldva"
+    },
+    "sections": {
+      "inProgress": "Folyamatban",
+      "resolved": "Megoldva"
+    },
     "kind": {
-      "note": "Jegyzet",
+      "task": "Feladat",
       "announcement": "Közlemény",
       "question": "Kérdés",
-      "decision": "Döntés",
-      "risk": "Kockázat"
+      "decision": "Döntés"
     },
     "visibility": {
       "private": "Privát",
@@ -1262,7 +1329,7 @@
       "anchorLabel": "Mire vonatkozik",
       "kindLabel": "Típus",
       "visibilityLabel": "Láthatóság",
-      "bodyPlaceholder": "Írj egy jegyzetet...",
+      "bodyPlaceholder": "Írj egy feladatot...",
       "replyPlaceholder": "Írj egy választ...",
       "publish": "Közzététel",
       "reply": "Válasz",
@@ -1274,14 +1341,16 @@
     "fields": {
       "project": "Projekt",
       "team": "Csapat",
+      "assignee": "Kiosztva",
       "selectProject": "Válassz egy projektet",
       "selectTeam": "Válassz egy csapatot",
+      "selectAssignee": "Válassz egy személyt",
       "titleOptional": "Cím (opcionális)",
       "ackDeadline": "Visszaigazolási határidő"
     },
-    "noteCreated": "Jegyzet hozzáadva.",
+    "noteCreated": "Feladat hozzáadva.",
     "noteStatusUpdated": "Státusz frissítve.",
-    "noteDeleted": "Jegyzet törölve.",
+    "noteDeleted": "Feladat törölve.",
     "notePinned": "Kitűzve.",
     "noteUnpinned": "Kitűzés visszavonva.",
     "errorGeneric": "Valami hiba történt.",
@@ -1305,13 +1374,12 @@
         "maintenance_due": "karbantartás esedékes",
         "vacation_request": "szabadságkérelem",
         "project_assigned": "kijelölt projektvezetőnek",
+        "task_assigned": "feladatot rendelt hozzád",
         "system": "rendszerértesítés"
       }
     },
     "filters": {
-      "allKinds": "Minden típus",
-      "unreadOnly": "Csak olvasatlan",
-      "openOnly": "Csak nyitott"
+      "allKinds": "Minden típus"
     },
     "announcements": {
       "eyebrow": "KOMMUNIKÁCIÓ · KÖZLEMÉNYEK",
@@ -1377,6 +1445,7 @@
         "matrice_status_changed": "frissítette: {activityName} → {new}",
         "situation_created": "létrehozta a {entityName} szituációt",
         "situation_finalized": "véglegesítette a {entityName} szituációt",
+        "situation_paid": "fizetettként jelölte meg a {entityName} szituációt",
         "document_uploaded": "feltöltötte a {entityName} dokumentumot",
         "vacation_submitted": "szabadságkérelmet adott be",
         "vacation_approved": "jóváhagyott egy szabadságkérelmet",
@@ -1415,6 +1484,7 @@
     "noActivities": "Még nincs tevékenység ebben a fázisban.",
     "newActivityPlaceholder": "Új tevékenység neve",
     "addActivity": "Tevékenység hozzáadása",
+    "isAviz": "Engedély (megújítás szükséges)",
     "expiresRequired": "Lejárati dátum szükséges",
     "expiresRequiredLockedByAviz": "Engedély (aviz) tevékenységeknél mindig kötelező.",
     "dependencies": "Függőségek",
@@ -1453,7 +1523,8 @@
       "eyebrow": "CSAPAT TAGJAI",
       "title": "Csapattagok",
       "members": "Tagok",
-      "emptyMembers": "Még nincs tag."
+      "emptyMembers": "Még nincs tag.",
+      "workerTag": "(munkás)"
     },
     "export": {
       "button": "Kép exportálása",

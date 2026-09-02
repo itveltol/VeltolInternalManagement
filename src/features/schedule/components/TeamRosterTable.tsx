@@ -59,7 +59,12 @@ export async function TeamRosterTable({ rows }: Props) {
                                 {memberInitials(member.name)}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-[12px] text-veltol-fgDim">{member.name}</span>
+                            <span className="text-[12px] text-veltol-fgDim">
+                              {member.name}
+                              {member.kind === "worker" && (
+                                <span className="text-veltol-fgMute"> {t("roster.workerTag")}</span>
+                              )}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -94,7 +99,12 @@ export async function TeamRosterTable({ rows }: Props) {
                               {memberInitials(member.name)}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{member.name}</span>
+                          <span>
+                            {member.name}
+                            {member.kind === "worker" && (
+                              <span className="text-veltol-fgMute"> {t("roster.workerTag")}</span>
+                            )}
+                          </span>
                         </div>
                       ))}
                     </div>

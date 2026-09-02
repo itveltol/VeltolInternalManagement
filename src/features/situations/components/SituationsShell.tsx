@@ -6,7 +6,7 @@ import { ContractCentralizerTable } from "./ContractCentralizerTable";
 import { SituationsTable } from "./SituationsTable";
 import { SituationDetail } from "./SituationDetail";
 import { EditContractBillingDialog } from "./EditContractBillingDialog";
-import type { CentralizerRow, ProjectBilling, SituationWithProject } from "../types";
+import type { CentralizerRow, SituationWithProject } from "../types";
 import type { Project, ProjectManager } from "@/features/projects/types";
 import type { ClientRef } from "@/features/clients/types";
 
@@ -14,7 +14,6 @@ interface Props {
   rows: CentralizerRow[];
   situations: SituationWithProject[];
   projects: Project[];
-  billing: ProjectBilling[];
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   nextContractNumber: string;
@@ -33,7 +32,6 @@ export function SituationsShell({
   rows,
   situations,
   projects,
-  billing,
   managers,
   clientRefs,
   nextContractNumber,
@@ -45,7 +43,6 @@ export function SituationsShell({
   const openSituation = situations.find((s) => s.id === openSituationId) ?? null;
   const openProject = projects.find((p) => p.id === openProjectId) ?? null;
   const billingProject = projects.find((p) => p.id === editingBillingProjectId) ?? null;
-  const billingForDialog = billing.find((b) => b.project_id === editingBillingProjectId) ?? null;
 
   let content: ReactNode;
   if (openSituation) {
@@ -54,6 +51,7 @@ export function SituationsShell({
         situation={openSituation}
         situations={situations}
         canMutate={canMutate}
+        canMutateBilling={canMutateBilling}
         onBack={closeSituation}
       />
     );
@@ -63,6 +61,7 @@ export function SituationsShell({
         situations={situations}
         projects={projects}
         canMutate={canMutate}
+        canMutateBilling={canMutateBilling}
         projectFilter={openProject}
         onBack={closeProject}
       />
@@ -71,7 +70,6 @@ export function SituationsShell({
     content = (
       <ContractCentralizerTable
         rows={rows}
-        projects={projects}
         managers={managers}
         clientRefs={clientRefs}
         nextContractNumber={nextContractNumber}
@@ -86,9 +84,8 @@ export function SituationsShell({
       {content}
       {billingProject && (
         <EditContractBillingDialog
-          projectId={billingProject.id}
-          projectName={billingProject.name}
-          billing={billingForDialog}
+          project={billingProject}
+          clientRefs={clientRefs}
           open={!!billingProject}
           onClose={closeBillingDialog}
         />
