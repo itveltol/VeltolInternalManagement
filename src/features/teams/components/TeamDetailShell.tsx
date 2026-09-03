@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/data-card";
 import { TeamMemberPicker } from "./TeamMemberPicker";
 import { WorkerFormDialog } from "./WorkerFormDialog";
+import { LogWorkerAbsenceDialog } from "./LogWorkerAbsenceDialog";
 import {
   addTeamMemberAction,
   removeTeamMemberAction,
@@ -66,6 +67,7 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
   const [removingWorkerId, setRemovingWorkerId] = useState<number | null>(null);
   const [workerDialogOpen, setWorkerDialogOpen] = useState(false);
   const [editingWorker, setEditingWorker] = useState<TeamWorker | null>(null);
+  const [absenceWorker, setAbsenceWorker] = useState<TeamWorker | null>(null);
 
   const [name, setName] = useState(team.name);
   const [description, setDescription] = useState(team.description ?? "");
@@ -397,6 +399,9 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
                           <Button size="sm" variant="outline" onClick={() => openEditWorker(w)}>
                             {t("editWorker")}
                           </Button>
+                          <Button size="sm" variant="outline" onClick={() => setAbsenceWorker(w)}>
+                            {t("logAbsenceShort")}
+                          </Button>
                           <Button
                             size="sm"
                             variant="destructive"
@@ -436,9 +441,12 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
                 {w.notes && <DataCardField label={t("columns.notes")}>{w.notes}</DataCardField>}
 
                 {canMutate && (
-                  <DataCardFooter>
+                  <DataCardFooter className="flex-wrap">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => openEditWorker(w)}>
                       {t("editWorker")}
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1" onClick={() => setAbsenceWorker(w)}>
+                      {t("logAbsenceShort")}
                     </Button>
                     <Button
                       size="sm"
@@ -464,6 +472,18 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
           onClose={closeWorkerDialog}
           teamId={team.id}
           worker={editingWorker}
+        />
+      )}
+
+      {canMutate && absenceWorker && (
+        <LogWorkerAbsenceDialog
+          key={absenceWorker.id}
+          open={!!absenceWorker}
+          onClose={() => {
+            setAbsenceWorker(null);
+            router.refresh();
+          }}
+          worker={absenceWorker}
         />
       )}
     </>

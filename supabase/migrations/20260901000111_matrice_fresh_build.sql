@@ -69,7 +69,7 @@ from public.matrice_phases, (values
   ('D.T.A.C.', 1, false, false, false),
   ('D.T.O.E', 2, false, false, false),
   ('Deviz general', 3, false, false, true),
-  ('Ce specialitati facem * ( AHITECTURA / REZISTENTA / ELECTRICE ) sau daca are sa puna la dispozitie', 4, false, false, false),
+  ('Ce specialitati facem * ( AHITECTURA / REZISTENTA ) sau daca are sa puna la dispozitie', 4, false, false, false),
   ('Anunțare Începerea Lucrări (Primărie + ISCE)', 5, false, false, false),
   ('Autorizația de înființare ANRE (AI)', 6, false, false, true)
 ) as v(name, sort_order, is_section_header, is_aviz, expires_required)

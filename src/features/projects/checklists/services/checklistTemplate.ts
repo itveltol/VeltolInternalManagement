@@ -121,7 +121,7 @@ function computePct(planTotal: number | null, realizat: number | null, isSection
   return Math.min(100, Math.max(0, (realizat / planTotal) * 100));
 }
 
-/** target_zi is fully derived from staffing — the whole team's expected daily output. */
+/** target_zi is fully derived from staffing — the allocated people's expected daily output. */
 function computeTargetZi(personsAllocated: number | null, unitsPerPersonDay: number | null): number | null {
   if (personsAllocated == null || unitsPerPersonDay == null) return null;
   return personsAllocated * unitsPerPersonDay;

@@ -49,5 +49,5 @@ export async function rejectRequest(
 }
 
 export function canEdit(request: VacationRequest, userId: string): boolean {
-  return request.status === "pending" && request.user_id === userId;
+  return request.status === "pending" && request.user_id !== null && request.user_id === userId;
 }

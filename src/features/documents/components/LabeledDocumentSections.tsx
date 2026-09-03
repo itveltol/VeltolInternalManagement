@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
-import { useDocumentsStore } from "../hooks/useDocumentsStore";
 import { deleteDocumentAction } from "@/app/[locale]/(app)/documents/actions";
 import { getActivitiesCatalog } from "@/app/[locale]/(app)/projects/[id]/actions";
 import { DocumentDropzone } from "./DocumentDropzone";
@@ -86,9 +85,6 @@ function LabelSection({
   onDelete: (id: number) => void;
   onChanged: () => void;
 }) {
-  const t = useTranslations("documents");
-  const { openAddDialog } = useDocumentsStore();
-
   return (
     <div className="space-y-2.5 rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-2">
@@ -105,27 +101,6 @@ function LabelSection({
       )}
 
       <DocumentDropzone projectId={projectId} label={label} canMutate={canMutate} onChanged={onChanged} />
-
-      {canMutate && (
-        <button
-          type="button"
-          onClick={() =>
-            openAddDialog(
-              {
-                linkedType: "project",
-                linkedId: String(projectId),
-                projectId,
-                contextLabel: label,
-                label,
-              },
-              onChanged,
-            )
-          }
-          className="font-mono text-[10px] text-veltol-fgMute underline-offset-2 hover:text-veltol-accent hover:underline"
-        >
-          {t("pasteLinkInstead")}
-        </button>
-      )}
     </div>
   );
 }

@@ -4,13 +4,11 @@ import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
-import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
 import { createSupabaseMaintenanceClient } from "@/features/projects/maintenance/api/supabaseMaintenanceClient";
 import { createSupabaseExecutionDataClient } from "@/features/projects/executionData/api/supabaseExecutionDataClient";
 import { createSupabaseCefBessDataClient } from "@/features/projects/cefBessData/api/supabaseCefBessDataClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import * as projectService from "@/features/projects/services/projectService";
-import * as teamService from "@/features/teams/services/teamService";
 import * as maintenanceRecordsService from "@/features/projects/maintenance/services/maintenanceRecordsService";
 import * as executionDataService from "@/features/projects/executionData/services/executionDataService";
 import * as cefBessDataService from "@/features/projects/cefBessData/services/cefBessDataService";
@@ -21,7 +19,6 @@ import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import type { Project, ProjectManager } from "@/features/projects/types";
 import type { DailyLogRecord } from "@/features/projects/checklists/types";
-import type { Team } from "@/features/teams/types";
 import type { ClientRef } from "@/features/clients/types";
 import * as clientService from "@/features/clients/services/clientService";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
@@ -130,8 +127,8 @@ export async function upsertChecklistItem(
     let persons_allocated = intOrNull(formData.get("persons_allocated"));
     if (persons_allocated !== null) {
       const project = await projectService.getProjectById(projectsClient, projectId);
-      const teamMemberCount = project?.team ? await getTeamMemberCount(supabase, project.team.id) : 0;
-      persons_allocated = Math.min(Math.max(0, persons_allocated), teamMemberCount);
+      const peopleNeeded = project?.people_needed ?? 0;
+      persons_allocated = Math.min(Math.max(0, persons_allocated), peopleNeeded);
     }
     const units_per_person_day = intOrNull(formData.get("units_per_person_day"));
 
@@ -169,8 +166,8 @@ export async function upsertExecutionData(
     let numar_persoane_alocate = intOrNull(formData.get("numar_persoane_alocate"));
     if (numar_persoane_alocate !== null) {
       const project = await projectService.getProjectById(projectsClient, projectId);
-      const teamMemberCount = project?.team ? await getTeamMemberCount(supabase, project.team.id) : 0;
-      numar_persoane_alocate = Math.min(Math.max(0, numar_persoane_alocate), teamMemberCount);
+      const peopleNeeded = project?.people_needed ?? 0;
+      numar_persoane_alocate = Math.min(Math.max(0, numar_persoane_alocate), peopleNeeded);
     }
 
     await executionDataService.upsertExecutionData(client, {
@@ -381,12 +378,6 @@ function floatOrNull(raw: FormDataEntryValue | null): number | null {
   return isNaN(n) ? null : n;
 }
 
-async function getTeamMemberCount(supabase: Parameters<typeof createSupabaseTeamsClient>[0], teamId: number): Promise<number> {
-  const client = createSupabaseTeamsClient(supabase);
-  const team = await teamService.getTeamById(client, teamId);
-  return team?.member_count ?? 0;
-}
-
 export async function logTodayRealizat(
   _prev: ActionState,
   formData: FormData,
@@ -416,12 +407,6 @@ export async function getDailyLog(itemId: number): Promise<DailyLogRecord[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseChecklistClient(supabase);
   return checklistService.getDailyLog(client, itemId);
-}
-
-export async function getTeamsForProject(): Promise<Team[]> {
-  const { supabase } = await requireAuth();
-  const client = createSupabaseTeamsClient(supabase);
-  return teamService.getTeams(client);
 }
 
 export async function getMaintenanceChecks(projectId: number) {

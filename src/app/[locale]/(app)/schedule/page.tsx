@@ -1,10 +1,12 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getWeekGrid, searchProjectsAction } from "./actions";
+import { getWeekGrid, getTeamLookup, getTeamRoster, getPmColorsAction } from "./actions";
 import { ScheduleShell } from "@/features/schedule/components/ScheduleShell";
 import { TeamRosterTable } from "@/features/schedule/components/TeamRosterTable";
-import { mondayOf } from "@/features/schedule/services/scheduleService";
+import { WorkerHoursSummaryTable } from "@/features/schedule/components/WorkerHoursSummaryTable";
+import { PmColorManager } from "@/features/schedule/components/PmColorManager";
+import { mondayOf, summarizeWorkerHours } from "@/features/schedule/services/scheduleService";
 
 interface Props {
   searchParams: Promise<{ week?: string }>;
@@ -22,8 +24,14 @@ export default async function SchedulePage({ searchParams }: Props) {
   const { week } = await searchParams;
   const weekStart = week ?? mondayOf(new Date());
 
-  const grid = await getWeekGrid(weekStart);
+  const [grid, teamLookup, roster, pmColors] = await Promise.all([
+    getWeekGrid(weekStart),
+    getTeamLookup(),
+    getTeamRoster(),
+    getPmColorsAction(),
+  ]);
   const t = await getTranslations("schedule");
+  const hoursSummary = summarizeWorkerHours(grid.cards);
 
   return (
     <div className="space-y-8">
@@ -35,9 +43,15 @@ export default async function SchedulePage({ searchParams }: Props) {
         <p className="mt-2 max-w-2xl text-sm text-veltol-fgMute">{t("subtitle")}</p>
       </div>
 
-      <ScheduleShell initialGrid={grid} canMutate={canMutate} searchProjects={searchProjectsAction} />
+      <div id="schedule-export-region" className="space-y-8">
+        <ScheduleShell initialGrid={grid} teamLookup={teamLookup} roster={roster} pmColors={pmColors} canMutate={canMutate} />
 
-      <TeamRosterTable rows={grid.rows} />
+        <TeamRosterTable rows={roster} />
+
+        <WorkerHoursSummaryTable rows={hoursSummary} />
+      </div>
+
+      <PmColorManager pmColors={pmColors} canMutate={canMutate} />
     </div>
   );
 }

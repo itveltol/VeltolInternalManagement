@@ -1,30 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { toPng } from "html-to-image";
 import { Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { ScheduleExportCapture } from "./ScheduleExportCapture";
-import type { TeamScheduleRow } from "../types";
+
+const EXPORT_REGION_ID = "schedule-export-region";
 
 interface Props {
-  rows: TeamScheduleRow[];
   weekStart: string;
 }
 
-export function ExportScheduleButton({ rows, weekStart }: Props) {
+export function ExportScheduleButton({ weekStart }: Props) {
   const t = useTranslations("schedule");
-  const captureRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   async function handleExport() {
-    if (!captureRef.current) return;
+    const region = document.getElementById(EXPORT_REGION_ID);
+    if (!region) return;
     setIsExporting(true);
     try {
       await document.fonts.ready;
-      const dataUrl = await toPng(captureRef.current, {
+      const dataUrl = await toPng(region, {
         pixelRatio: 2,
         backgroundColor: "#FFFFFF",
         cacheBust: true,
@@ -41,12 +40,9 @@ export function ExportScheduleButton({ rows, weekStart }: Props) {
   }
 
   return (
-    <>
-      <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-        <Download data-icon="inline-start" />
-        {isExporting ? t("export.generating") : t("export.button")}
-      </Button>
-      <ScheduleExportCapture ref={captureRef} rows={rows} weekStart={weekStart} />
-    </>
+    <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+      <Download data-icon="inline-start" />
+      {isExporting ? t("export.generating") : t("export.button")}
+    </Button>
   );
 }

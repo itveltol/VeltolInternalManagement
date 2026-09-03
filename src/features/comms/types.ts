@@ -13,6 +13,7 @@ export type NotificationType =
   | "vacation_request"
   | "project_assigned"
   | "task_assigned"
+  | "schedule_conflict"
   | "system";
 
 export interface NoteAnchor {
@@ -93,6 +94,10 @@ export interface Notification {
     projectName?: string | null;
     snippet?: string | null;
     noteKind?: NoteKind | null;
+    workerName?: string | null;
+    conflictStart?: string | null;
+    conflictEnd?: string | null;
+    kind?: "assign_over_vacation" | "vacation_over_assignment" | null;
   };
   href: string | null;
   read_at: string | null;

@@ -14,7 +14,6 @@ import { isCefProjectType } from "@/features/projects/types";
 import type { ProjectCefData, ProjectBessData } from "@/features/projects/cefBessData/types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
-import type { Team } from "@/features/teams/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
 import type { Document } from "@/features/documents/types";
@@ -36,7 +35,6 @@ interface Props {
   hasMaintenance: boolean;
   hasBess: boolean;
   canMutate: boolean;
-  canAssignTeam: boolean;
   todayMs: number;
   overallPct: number;
   records: ChecklistItemRecord[];
@@ -48,7 +46,6 @@ interface Props {
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
   currentAssignment: ProjectSubcontractorAssignment | null;
-  teams: Team[];
   initialActivities: Activity[];
   initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
@@ -66,7 +63,6 @@ export async function ProjectDetailView({
   hasMaintenance,
   hasBess,
   canMutate,
-  canAssignTeam,
   todayMs,
   overallPct,
   records,
@@ -78,7 +74,6 @@ export async function ProjectDetailView({
   clientRefs,
   subcontractorRefs,
   currentAssignment,
-  teams,
   initialActivities,
   initialPhases,
   initialCells,
@@ -177,8 +172,6 @@ export async function ProjectDetailView({
         clientRefs={clientRefs}
         subcontractorRefs={subcontractorRefs}
         currentAssignment={currentAssignment}
-        teams={teams}
-        canAssignTeam={canAssignTeam}
       />
 
       {isCefProjectType(project.project_type) && (
@@ -204,7 +197,7 @@ export async function ProjectDetailView({
         records={records}
         executionData={executionData}
         structureConfig={structureConfig}
-        teamMemberCount={project.team?.member_count ?? null}
+        peopleNeeded={project.people_needed ?? null}
         initialActivities={initialActivities}
         initialPhases={initialPhases}
         initialCells={initialCells}

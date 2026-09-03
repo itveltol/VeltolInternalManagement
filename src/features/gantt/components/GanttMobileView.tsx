@@ -47,7 +47,7 @@ export function GanttMobileView({ rows, onNavigateToPhase, onEditDates, onHidePr
                 <DataCardSubtitle>
                   {project.execution_mode === "subcontracted"
                     ? project.subcontractor?.name
-                    : project.team?.name}
+                    : [project.manager?.first_name, project.manager?.last_name].filter(Boolean).join(" ")}
                   {project.project_type && (
                     <span className="ml-1.5 uppercase tracking-wide">{project.project_type}</span>
                   )}

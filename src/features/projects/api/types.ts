@@ -8,11 +8,13 @@ export interface CreateProjectPayload {
   site_lng: number | null;
   mw_solar: number | null;
   mw_bess: number | null;
+  people_needed: number | null;
   project_category: ProjectCategory;
   financial_type: FinancialType;
   project_type: string | null;
   contract_type: ContractType[];
   manager_id: string | null;
+  sales_id: string | null;
   client_id: number | null;
   execution_mode: ExecutionMode;
   current_phase: string;
@@ -69,7 +71,6 @@ export interface ProjectsApiClient {
   getProjectManagers(): Promise<ProjectManager[]>;
   createProject(payload: CreateProjectPayload, userId: string): Promise<{ id: number }>;
   updateProject(id: number, payload: CreateProjectPayload, userId: string): Promise<void>;
-  updateProjectTeam(id: number, teamId: number | null, userId: string): Promise<void>;
   deleteProject(id: number): Promise<void>;
   linkOneDriveFolder(id: number, folderId: string, folderUrl: string, userId: string): Promise<void>;
   updatePhaseDates(

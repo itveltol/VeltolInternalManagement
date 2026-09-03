@@ -5,10 +5,21 @@ import {
   DataCardList, DataCard, DataCardHeader, DataCardTitle, DataCardBody, DataCardField,
 } from "@/shared/components/ui/data-card";
 import { memberInitials } from "../utils/memberInitials";
-import type { TeamScheduleRow } from "../types";
+
+export interface RosterMember {
+  id: string;
+  name: string;
+  kind: "profile" | "worker";
+}
+
+export interface RosterRow {
+  team_id: number;
+  team_name: string;
+  members: RosterMember[];
+}
 
 interface Props {
-  rows: TeamScheduleRow[];
+  rows: RosterRow[];
 }
 
 export async function TeamRosterTable({ rows }: Props) {

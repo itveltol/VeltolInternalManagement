@@ -69,10 +69,6 @@ export async function updateProject(client: ProjectsApiClient, id: number, paylo
   return client.updateProject(id, payload, userId);
 }
 
-export async function updateProjectTeam(client: ProjectsApiClient, id: number, teamId: number | null, userId: string): Promise<void> {
-  return client.updateProjectTeam(id, teamId, userId);
-}
-
 export async function deleteProject(client: ProjectsApiClient, id: number): Promise<void> {
   return client.deleteProject(id);
 }

@@ -84,7 +84,6 @@ interface Props {
   progressReadout?: number;
 
   aiClass?: (key: keyof ProjectFieldsState) => string;
-  team?: React.ReactNode;
   fieldErrors?: Record<string, string>;
 }
 
@@ -92,7 +91,7 @@ interface Props {
  * Field JSX shared by AddProjectDialog and EditProjectDialog — the two
  * dialogs differ only in where field values/defaults come from (blank state
  * vs an existing Project) and in a few dialog-specific extras (AI-fill ring
- * styling, the read-only progress readout, team assignment) passed as props.
+ * styling, the read-only progress readout) passed as props.
  */
 export function ProjectFormFields({
   fields,
@@ -126,7 +125,6 @@ export function ProjectFormFields({
   defaultAssignmentDeadline,
   progressReadout,
   aiClass = () => "",
-  team,
   fieldErrors,
 }: Props) {
   const t = useTranslations("projects");
@@ -271,7 +269,7 @@ export function ProjectFormFields({
         </div>
       </FormSection>
 
-      <FormSection title={t("sections.peopleTeam")}>
+      <FormSection title={t("sections.people")}>
         {fields.execution_mode === "internal" && (
           <FormField label={t("fields.manager")} required>
             <Select
@@ -291,7 +289,33 @@ export function ProjectFormFields({
           </FormField>
         )}
 
-        {team}
+        <FormField label={t("fields.sales")}>
+          <Select
+            name="sales_id"
+            value={fields.sales_id}
+            onChange={onFieldChange("sales_id")}
+          >
+            <option value="" className="bg-card">—</option>
+            {managers.map((m) => (
+              <option key={m.id} value={m.id} className="bg-card">
+                {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+              </option>
+            ))}
+          </Select>
+        </FormField>
+
+        <FormField label={t("fields.peopleNeeded")}>
+          <Input
+            name="people_needed"
+            type="number"
+            step="1"
+            min="0"
+            value={fields.people_needed}
+            onChange={onFieldChange("people_needed")}
+            className={aiClass("people_needed")}
+            aria-invalid={isInvalid("people_needed")}
+          />
+        </FormField>
 
         <FormField
           required

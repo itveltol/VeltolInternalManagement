@@ -34,7 +34,7 @@ interface Props {
   records: ChecklistItemRecord[];
   executionData: ProjectExecutionData | null;
   structureConfig: ProjectStructureConfigRow[];
-  teamMemberCount: number | null;
+  peopleNeeded: number | null;
   initialActivities: Activity[];
   initialPhases: MatricePhase[];
   initialCells: MatrixCell[];
@@ -55,7 +55,7 @@ export function ProjectTabsShell({
   records,
   executionData,
   structureConfig,
-  teamMemberCount,
+  peopleNeeded,
   initialActivities,
   initialPhases,
   initialCells,
@@ -248,7 +248,7 @@ export function ProjectTabsShell({
             ))}
           </div>
 
-          <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} teamMemberCount={teamMemberCount} />
+          <ChecklistShell rows={rows} projectId={project.id} canMutate={canMutate} peopleNeeded={peopleNeeded} />
         </>
       )}
     </>

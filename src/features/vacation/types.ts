@@ -3,7 +3,8 @@ export type VacationLeaveType = "rest" | "personal" | "medical";
 
 export interface VacationRequest {
   id: number;
-  user_id: string;
+  user_id: string | null;
+  team_worker_id: number | null;
   start_date: string;
   end_date: string;
   reason: string | null;
@@ -16,7 +17,9 @@ export interface VacationRequest {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
-  requester: { first_name: string | null; last_name: string | null };
+  requester: { first_name: string | null; last_name: string | null } | null;
+  /** Populated when team_worker_id is set — a no-login outfield worker's absence, logged directly by a PM/admin. */
+  teamWorker?: { first_name: string; last_name: string | null } | null;
   approver: { first_name: string | null; last_name: string | null } | null;
 }
 

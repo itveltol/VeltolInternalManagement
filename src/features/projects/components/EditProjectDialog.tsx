@@ -1,19 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
-import { FormField } from "@/shared/components/ui/form-field";
-import { Select } from "@/shared/components/ui/select";
 import { Button } from "@/shared/components/ui/button";
-import { updateProject, assignProjectTeam, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
+import { updateProject, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { ProjectFormFields } from "./ProjectFormFields";
 import { useProjectFormState } from "./projectFormState";
-import type { Team } from "@/features/teams/types";
 
 interface Props {
   project: Project;
@@ -22,8 +19,6 @@ interface Props {
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
   currentAssignment: ProjectSubcontractorAssignment | null;
-  teams: Team[];
-  canAssignTeam: boolean;
   onClose: () => void;
 }
 
@@ -33,7 +28,7 @@ export function EditProjectDialog(props: Props) {
   // change already-uncontrolled fields' defaultValue mid-flight.
   const [project] = useState(props.project);
   const [currentAssignment] = useState(props.currentAssignment);
-  const { open, managers, clientRefs, subcontractorRefs, teams, canAssignTeam, onClose } = props;
+  const { open, managers, clientRefs, subcontractorRefs, onClose } = props;
   const t = useTranslations("projects");
 
   const [state, action, pending] = useActionState(updateProject, null);
@@ -64,25 +59,12 @@ export function EditProjectDialog(props: Props) {
   const [localSubcontractorRefs, setLocalSubcontractorRefs] = useState<SubcontractorRef[]>(subcontractorRefs);
   const [showAddSubcontractor, setShowAddSubcontractor] = useState(false);
 
-  const [teamId, setTeamId] = useState<number | null>(project.team_id);
-  const [teamState, setTeamState] = useState<{ error?: string; success?: string } | null>(null);
-  const [teamPending, startTeamTransition] = useTransition();
-
   const [selectedClient, setSelectedClient] = useState<ClientRef | null>(
     clientRefs.find((c) => c.id === project.client_id) ?? null,
   );
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<SubcontractorRef | null>(
     subcontractorRefs.find((s) => s.id === currentAssignment?.subcontractor_id) ?? null,
   );
-
-  function handleTeamChange(value: string) {
-    const nextTeamId = value === "" ? null : Number(value);
-    setTeamId(nextTeamId);
-    startTeamTransition(async () => {
-      const result = await assignProjectTeam(project.id, nextTeamId);
-      setTeamState(result);
-    });
-  }
 
   useEffect(() => {
     if (state?.success) onClose();
@@ -145,24 +127,6 @@ export function EditProjectDialog(props: Props) {
               defaultAssignmentDeadline={currentAssignment?.deadline ?? undefined}
               progressReadout={project.progress_pct}
               fieldErrors={state?.fieldErrors}
-              team={
-                fields.execution_mode === "internal" && canAssignTeam ? (
-                  <FormField label={t("fields.team")}>
-                    <Select
-                      value={teamId ?? ""}
-                      onChange={(e) => handleTeamChange(e.target.value)}
-                      disabled={teamPending}
-                    >
-                      <option value="" className="bg-card">—</option>
-                      {teams.map((tm) => (
-                        <option key={tm.id} value={tm.id} className="bg-card">{tm.name}</option>
-                      ))}
-                    </Select>
-                    {teamState?.error && <p className="text-xs text-veltol-red">{t(teamState.error as Parameters<typeof t>[0])}</p>}
-                    {teamState?.success && <p className="text-xs text-veltol-green">{t(teamState.success as Parameters<typeof t>[0])}</p>}
-                  </FormField>
-                ) : null
-              }
             />
 
             {state?.error && (

@@ -1,29 +1,80 @@
-import type { ScheduleEntry, WeekNote } from "../types";
+export interface AssignmentMemberInput {
+  profile_id: string | null;
+  team_worker_id: number | null;
+}
 
-export interface CreateScheduleEntryPayload {
-  team_id: number;
+export interface CreateAssignmentPayload {
+  project_id: number | null;
+  pm_id: string | null;
+  sales_id: string | null;
+  members: AssignmentMemberInput[];
+  start_date: string;
+  end_date: string;
+  label: string;
+  color: string | null;
+}
+
+export interface UpdateAssignmentPayload {
+  project_id: number | null;
+  pm_id: string | null;
+  sales_id: string | null;
+  start_date: string;
+  end_date: string;
+  label: string;
+  color: string | null;
+}
+
+export interface AssignmentDayPayload {
+  delegated: boolean;
+  plus_hours: number;
+}
+
+export interface RawAssignmentMember {
+  profile_id: string | null;
+  team_worker_id: number | null;
+  profile: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
+  team_worker: { id: number; first_name: string; last_name: string | null } | null;
+}
+
+export interface RawScheduleAssignment {
+  id: number;
+  project_id: number | null;
+  pm_id: string | null;
+  sales_id: string | null;
+  start_date: string;
+  end_date: string;
+  label: string;
+  color: string | null;
+  project: { id: number; name: string } | null;
+  pm: { id: string; first_name: string | null; last_name: string | null } | null;
+  sales: { id: string; first_name: string | null; last_name: string | null } | null;
+  members: RawAssignmentMember[];
+}
+
+export interface ScheduleAssignmentDayRow {
+  assignment_id: number;
   work_date: string;
-  project_id: number | null;
-  label: string;
-  color: string | null;
-  sort_order: number;
-}
-
-export interface UpdateScheduleEntryPayload {
-  project_id: number | null;
-  label: string;
-  color: string | null;
-}
-
-export interface ScheduleWeekResult {
-  entries: ScheduleEntry[];
-  notes: WeekNote[];
+  delegated: boolean;
+  plus_hours: number;
 }
 
 export interface ScheduleApiClient {
-  getWeek(weekStart: string, weekEnd: string): Promise<ScheduleWeekResult>;
-  createEntry(payload: CreateScheduleEntryPayload, userId: string): Promise<{ id: number }>;
-  updateEntry(id: number, payload: UpdateScheduleEntryPayload, userId: string): Promise<void>;
-  deleteEntry(id: number): Promise<void>;
-  upsertWeekNote(teamId: number, weekStart: string, note: string): Promise<void>;
+  getAssignmentsForRange(rangeStart: string, rangeEnd: string): Promise<RawScheduleAssignment[]>;
+  getAssignmentById(id: number): Promise<RawScheduleAssignment | null>;
+  getAssignmentDaysForAssignments(
+    assignmentIds: number[],
+    rangeStart: string,
+    rangeEnd: string,
+  ): Promise<ScheduleAssignmentDayRow[]>;
+  createAssignment(payload: CreateAssignmentPayload, userId: string): Promise<{ id: number }>;
+  updateAssignment(id: number, payload: UpdateAssignmentPayload, userId: string): Promise<void>;
+  replaceAssignmentMembers(assignmentId: number, members: AssignmentMemberInput[]): Promise<void>;
+  deleteAssignment(id: number): Promise<void>;
+  pruneAssignmentDaysOutsideRange(assignmentId: number, start: string, end: string): Promise<void>;
+  upsertAssignmentDay(
+    assignmentId: number,
+    workDate: string,
+    payload: AssignmentDayPayload,
+    userId: string,
+  ): Promise<void>;
 }

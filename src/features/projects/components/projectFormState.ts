@@ -17,8 +17,10 @@ export interface ProjectFieldsState {
   contract_number: string;
   mw_solar: string;
   mw_bess: string;
+  people_needed: string;
   notes: string;
   manager_id: string;
+  sales_id: string;
   contract_date: string;
   deadline: string;
 }
@@ -37,8 +39,10 @@ const EMPTY_FIELDS: ProjectFieldsState = {
   contract_number: "",
   mw_solar: "",
   mw_bess: "",
+  people_needed: "",
   notes: "",
   manager_id: "",
+  sales_id: "",
   contract_date: "",
   deadline: "",
 };
@@ -58,8 +62,10 @@ function fieldsFromProject(project: Project): ProjectFieldsState {
     contract_number: project.contract_number ?? "",
     mw_solar: project.mw_solar != null ? String(project.mw_solar) : "",
     mw_bess: project.mw_bess != null ? String(project.mw_bess) : "",
+    people_needed: project.people_needed != null ? String(project.people_needed) : "",
     notes: project.notes ?? "",
     manager_id: project.manager_id ?? "",
+    sales_id: project.sales_id ?? "",
     contract_date: project.contract_date ?? "",
     deadline: project.deadline ?? "",
   };

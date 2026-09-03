@@ -92,7 +92,6 @@
     "projectSaved": "Projekt mentve.",
     "projectCreated": "Projekt létrehozva.",
     "projectDeleted": "Projekt törölve.",
-    "teamAssigned": "Csapat hozzárendelve.",
     "cefDataSaved": "CEF adatok mentve.",
     "bessDataSaved": "BESS adatok mentve.",
     "errorGeneric": "Hiba történt. Próbálja újra.",
@@ -170,7 +169,8 @@
       "projectType": "Műszaki típus",
       "contractType": "Szerződés típusa",
       "manager": "Projektmenedzser",
-      "team": "Hozzárendelt csapat",
+      "sales": "Értékesítő",
+      "peopleNeeded": "Szükséges létszám",
       "executionMode": "Kivitelezés",
       "subcontractor": "Alvállalkozó",
       "subcontractorName": "Alvállalkozó neve",
@@ -194,7 +194,7 @@
       "identity": "Azonosítás",
       "location": "Helyszín",
       "capacity": "Kapacitás",
-      "peopleTeam": "Csapat és ügyfél",
+      "people": "Létszám",
       "contractFinancials": "Szerződés és pénzügyek",
       "executionStatus": "Kivitelezés és státusz",
       "notes": "Megjegyzés"
@@ -266,8 +266,8 @@
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Nincs jogosultsága szerkeszteni.",
     "errorInvalidNumber": "Érvényes számot adjon meg.",
-    "noTeamAssigned": "Előbb rendeljen csapatot a projekthez.",
-    "noTeamAssignedBanner": "Nem tud létszámot megadni soronként, mert ehhez a projekthez nincs csapattag hozzárendelve. Rendeljen a projekthez egy csapatot (legalább egy taggal) a mező feloldásához.",
+    "noPeopleNeeded": "Előbb állítsa be, hány fő szükséges ehhez a projekthez.",
+    "noPeopleNeededBanner": "Nem tud létszámot megadni soronként, mert ehhez a projekthez nincs beállítva a szükséges létszám. Állítsa be a projektnél a mező feloldásához.",
     "columns": {
       "cod": "Kód",
       "number": "#",
@@ -530,6 +530,7 @@
     "errorNotAllowed": "Ehhez nincs jogosultsága.",
     "errorNoWorkingDays": "Ez az időszak nem tartalmaz munkanapot (a hétvégék és a hivatalos munkaszüneti napok nem számítanak).",
     "documentError": "A dokumentum létrehozása nem sikerült.",
+    "teamWorkerTag": "terepi munkás",
     "officialHolidays": "Hivatalos munkaszüneti napok",
     "workingDaysCount": "{count} munkanap",
     "columns": {
@@ -695,6 +696,11 @@
     "teamDeleted": "Csapat törölve.",
     "removeMember": "Eltávolítás",
     "confirmRemoveMember": "Eltávolítja ezt a tagot a csapatból?",
+    "logAbsence": "Távollét rögzítése — {name}",
+    "logAbsenceShort": "Távollét rögzítése",
+    "absenceStart": "Kezdő dátum",
+    "absenceEnd": "Záró dátum",
+    "absenceReason": "Indoklás",
     "memberAdded": "Tag hozzáadva.",
     "memberAddPartialFailure": "{count} tag hozzáadása nem sikerült.",
     "memberRemoved": "Tag eltávolítva.",
@@ -1375,6 +1381,7 @@
         "vacation_request": "szabadságkérelem",
         "project_assigned": "kijelölt projektvezetőnek",
         "task_assigned": "feladatot rendelt hozzád",
+        "schedule_conflict": "ütemezési/szabadság ütközés",
         "system": "rendszerértesítés"
       }
     },
@@ -1501,22 +1508,21 @@
   },
   "schedule": {
     "eyebrow": "BEOSZTÁS · HETI",
-    "title": "Csapat beosztás",
-    "subtitle": "Tervezd meg az egyes csapatok napi feladatait a kiválasztott hétre.",
+    "title": "Projekt beosztás",
+    "subtitle": "Rendelj terepi munkásokat projektekhez egy hétre vagy egy egész hónapra, és kövesd a kiküldetéseket és a túlórát.",
     "today": "Ma",
-    "notesPlaceholder": "Szükséges beavatkozások...",
-    "emptyState": "Még nincs csapat. Előbb hozz létre egyet.",
+    "add": "Hozzáadás",
+    "emptyState": "Ezen a héten még nincs beosztott projekt.",
     "errorGeneric": "Hiba történt.",
     "errorNotAllowed": "Nincs jogosultságod ehhez.",
+    "errorProjectOrLabelRequired": "Adj meg egy projektet vagy egy megnevezést mentés előtt.",
     "entrySaved": "Bejegyzés mentve.",
     "entryDeleted": "Bejegyzés törölve.",
-    "noteSaved": "Megjegyzés mentve.",
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés...",
     "columns": {
       "team": "Csapat",
-      "notes": "Szükséges beavatkozások",
       "members": "Tagok"
     },
     "roster": {
@@ -1524,7 +1530,27 @@
       "title": "Csapattagok",
       "members": "Tagok",
       "emptyMembers": "Még nincs tag.",
-      "workerTag": "(munkás)"
+      "workerTag": "(munkás)",
+      "custom": "Egyéni",
+      "jobsThisWeek": "{count} munka ezen a héten"
+    },
+    "pmColors": {
+      "eyebrow": "BEOSZTÁS SZÍNEI",
+      "title": "Projektvezetők színei",
+      "empty": "Nincs projektvezető."
+    },
+    "hoursSummary": {
+      "eyebrow": "HETI ÓRÁK",
+      "title": "Ledolgozott órák",
+      "columns": {
+        "person": "Személy",
+        "normalDays": "Normál napok",
+        "delegationDays": "Kiküldetés napok",
+        "baseHours": "Alap órák",
+        "plusHours": "+ óra",
+        "totalHours": "Összes óra"
+      },
+      "empty": "Ezen a héten nincs rögzített óra."
     },
     "export": {
       "button": "Kép exportálása",
@@ -1532,17 +1558,39 @@
       "error": "Nem sikerült létrehozni a képet. Próbáld újra."
     },
     "entry": {
-      "addTitle": "Feladat hozzáadása",
-      "editTitle": "Feladat szerkesztése",
-      "label": "Megnevezés",
-      "labelPlaceholder": "pl. Bellamy Petelea, CO, Liber...",
+      "addTitle": "Beosztás hozzáadása",
+      "editTitle": "Beosztás szerkesztése",
+      "addAssignee": "Munkás hozzáadása",
+      "scheduleProject": "Projekt beütemezése",
       "project": "Projekt",
       "projectPlaceholder": "Projekt keresése...",
-      "searching": "Keresés...",
+      "projectOrLabelHint": "Adj meg egy projektet vagy egy megnevezést.",
       "noProjects": "Nincs találat.",
+      "pm": "Projektmenedzser",
+      "pmPlaceholder": "Projektmenedzser keresése...",
+      "sales": "Értékesítő",
+      "salesPlaceholder": "Értékesítő keresése...",
+      "assignee": "Munkás",
+      "assigneePlaceholder": "Keress munkások és csapattagok között...",
+      "removeAssignee": "{name} eltávolítása",
+      "noAssignees": "Nincs találat.",
+      "assigneesLockedHint": "A csapat tagsága itt rögzített — a tagokat a csapat oldalán kezelheted.",
+      "noAssignments": "Még nincs beosztott munkás.",
+      "startDate": "Kezdő dátum",
+      "endDate": "Záró dátum",
+      "label": "Megnevezés",
+      "labelPlaceholder": "pl. Bellamy Petelea, CO, Liber...",
+      "searching": "Keresés...",
       "color": "Szín",
       "colorNone": "Nincs szín",
-      "delete": "Törlés"
+      "delete": "Törlés",
+      "removeFromDay": "Eltávolítás erről a napról",
+      "confirmRemoveFromDay": "Eltávolítod ezt a munkást erről a napról?",
+      "delegationHours": "Kiküldetés és túlóra",
+      "delegation": "Kiküldetés",
+      "plusHoursPlaceholder": "+óra",
+      "onVacation": "Jóváhagyott szabadságon",
+      "vacationConflict": "Ennek a munkásnak jóváhagyott szabadsága van {start} és {end} között — mégis beosztva."
     }
   }
 }

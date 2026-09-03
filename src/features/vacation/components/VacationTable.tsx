@@ -63,6 +63,11 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
     return name || "—";
   }
 
+  function subjectName(req: VacationRequest) {
+    if (req.teamWorker) return `${personName(req.teamWorker)} (${t("teamWorkerTag")})`;
+    return personName(req.requester);
+  }
+
   async function handleCancel(id: number) {
     const ok = await confirm({ title: t("confirmCancel") });
     if (!ok) return;
@@ -125,7 +130,7 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
               ) : (
                 pagedRequests.map((req) => (
                   <tr key={req.id} className="group transition-colors hover:bg-veltol-surface/50">
-                    <td className="px-5 py-3.5 text-veltol-fg">{personName(req.requester)}</td>
+                    <td className="px-5 py-3.5 text-veltol-fg">{subjectName(req)}</td>
                     <td className="px-5 py-3.5 font-mono tabular-nums text-[12px] text-veltol-fgDim">
                       {formatDate(req.start_date) || "—"}
                     </td>
@@ -207,7 +212,7 @@ export function VacationTable({ requests, isAdmin, currentUserId, balance, emplo
             {pagedRequests.map((req) => (
               <DataCard key={req.id}>
                 <DataCardHeader>
-                  <DataCardTitle>{personName(req.requester)}</DataCardTitle>
+                  <DataCardTitle>{subjectName(req)}</DataCardTitle>
                   <DataCardBadgeSlot>
                     <Badge variant={vacationStatusVariant(req.status)}>
                       {t(`status_${req.status}` as Parameters<typeof t>[0])}
