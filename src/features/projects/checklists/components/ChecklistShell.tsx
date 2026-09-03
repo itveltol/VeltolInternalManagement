@@ -9,22 +9,22 @@ interface Props {
   rows: ChecklistRow[];
   projectId: number;
   canMutate: boolean;
-  teamMemberCount: number | null;
+  peopleNeeded: number | null;
 }
 
-export function ChecklistShell({ rows, projectId, canMutate, teamMemberCount }: Props) {
+export function ChecklistShell({ rows, projectId, canMutate, peopleNeeded }: Props) {
   const t = useTranslations("checklist");
-  const noTeam = !teamMemberCount || teamMemberCount <= 0;
+  const noPeopleNeeded = !peopleNeeded || peopleNeeded <= 0;
 
   return (
     <div className="flex flex-col gap-3">
-      {noTeam && (
+      {noPeopleNeeded && (
         <div className="flex items-start gap-2 rounded-lg border border-veltol-orange/30 bg-veltol-orange/10 px-4 py-2 text-sm text-veltol-orange">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <span>{t("noTeamAssignedBanner")}</span>
+          <span>{t("noPeopleNeededBanner")}</span>
         </div>
       )}
-      <ChecklistTable rows={rows} projectId={projectId} canMutate={canMutate} teamMemberCount={teamMemberCount} />
+      <ChecklistTable rows={rows} projectId={projectId} canMutate={canMutate} peopleNeeded={peopleNeeded} />
     </div>
   );
 }

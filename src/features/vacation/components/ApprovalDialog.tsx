@@ -33,13 +33,18 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   useEffect(() => {
+    if (!request.user_id) return;
     getVacationBalance(request.user_id).then(setBalance);
   }, [request.user_id]);
 
-  function personName(p: { first_name: string | null; last_name: string | null } | null) {
+  function personName(p: { first_name: string | null; last_name: string | null } | null | undefined) {
     if (!p) return "—";
     return [p.first_name, p.last_name].filter(Boolean).join(" ") || "—";
   }
+
+  const subjectName = request.teamWorker
+    ? `${personName(request.teamWorker)} (${t("teamWorkerTag")})`
+    : personName(request.requester);
 
   function handleApprove() {
     setAction("approve");
@@ -73,7 +78,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
           <div className="mt-6 space-y-3 rounded-lg border border-border bg-veltol-surface/30 p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-veltol-fgMute">{t("columns.employee")}</span>
-              <span className="text-sm text-veltol-fg">{personName(request.requester)}</span>
+              <span className="text-sm text-veltol-fg">{subjectName}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-veltol-fgMute">{t("period")}</span>

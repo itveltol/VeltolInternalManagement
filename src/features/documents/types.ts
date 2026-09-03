@@ -30,7 +30,9 @@ export const DOCUMENT_LABELS = [
   'Act de proprietate',
   'CU daca exista',
   'AC daca exista',
+  'ATR daca exista',
   'Fise tehnice',
+  'Contract',
 ] as const;
 
 export type DocumentLabel = typeof DOCUMENT_LABELS[number];

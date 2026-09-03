@@ -100,17 +100,6 @@ async function requireMutator() {
   return { supabase, user };
 }
 
-/** Only an admin or the project's own manager may reassign its team. */
-async function requireProjectOwner(projectId: number) {
-  const { supabase, user, role } = await getUserProfileRole();
-  if (!user) throw new Error("Unauthenticated");
-  if (role === "admin") return { supabase, user };
-  const client = createSupabaseProjectsClient(supabase);
-  const project = await projectService.getProjectById(client, projectId);
-  if (!project || project.manager_id !== user.id) throw new Error("Forbidden");
-  return { supabase, user };
-}
-
 const optionalTrimmed = () =>
   z.preprocess(
     (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
@@ -166,10 +155,12 @@ const projectSchema = z.object({
   site_lng: requiredNumber({ min: -180, max: 180 }),
   mw_solar: requiredNumber({ min: 0, max: 9999 }),
   mw_bess: requiredNumber({ min: 0, max: 9999 }),
+  people_needed: optionalNumber({ min: 0 }),
   project_category: z.enum(PROJECT_CATEGORIES),
   financial_type: z.enum(FINANCIAL_TYPES),
   project_type: optionalTrimmed(),
   manager_id: optionalTrimmed(),
+  sales_id: optionalTrimmed(),
   client_id: requiredNumber({ min: 1 }),
   execution_mode: z.enum(EXECUTION_MODES),
   current_phase: z.enum(PROJECT_PHASES).optional(),
@@ -266,11 +257,13 @@ function extractProjectPayload(
     site_lng: data.site_lng,
     mw_solar: data.mw_solar,
     mw_bess: data.mw_bess,
+    people_needed: data.people_needed,
     project_category: data.project_category,
     financial_type: data.financial_type,
     project_type: data.project_category === "residential" ? null : data.project_type,
     contract_type,
     manager_id: data.manager_id,
+    sales_id: data.sales_id,
     client_id: data.client_id,
     execution_mode: data.execution_mode,
     current_phase: data.current_phase ?? existing?.current_phase ?? "planning",
@@ -496,11 +489,13 @@ export async function createMinimalProjectAction(
       site_lng: null,
       mw_solar: null,
       mw_bess: null,
+      people_needed: null,
       project_category: "industrial" as const,
       financial_type: "proprii" as const,
       project_type: null,
       contract_type: [],
       manager_id,
+      sales_id: null,
       client_id,
       execution_mode: "internal" as const,
       current_phase: "planning",
@@ -623,22 +618,6 @@ export async function getSubcontractorAssignment(projectId: number): Promise<Pro
   const { supabase } = await requireAuth();
   const api = createSupabaseSubcontractorsClient(supabase);
   return subcontractorService.getCurrentAssignment(api, projectId);
-}
-
-export async function assignProjectTeam(projectId: number, teamId: number | null): Promise<ActionState> {
-  try {
-    const { supabase, user } = await requireProjectOwner(projectId);
-    const client = createSupabaseProjectsClient(supabase);
-    await projectService.updateProjectTeam(client, projectId, teamId, user.id);
-    const locale = await getLocale();
-    revalidatePath(await getProjectsPath());
-    revalidatePath(`/${locale}/projects/${projectId}`);
-    revalidatePath(`/${locale}/gantt`);
-    return { success: "teamAssigned" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
-  }
 }
 
 export async function scanProjectFolder(

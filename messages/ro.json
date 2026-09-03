@@ -92,7 +92,6 @@
     "projectSaved": "Proiect salvat.",
     "projectCreated": "Proiect creat.",
     "projectDeleted": "Proiect șters.",
-    "teamAssigned": "Echipă atribuită.",
     "cefDataSaved": "Date CEF salvate.",
     "bessDataSaved": "Date BESS salvate.",
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
@@ -170,7 +169,8 @@
       "projectType": "Tipul tehnic",
       "contractType": "Tipul contractului",
       "manager": "Manager de proiect",
-      "team": "Echipă atribuită",
+      "sales": "Agent vânzări",
+      "peopleNeeded": "Persoane necesare",
       "executionMode": "Execuție",
       "subcontractor": "Subcontractant",
       "subcontractorName": "Numele subcontractantului",
@@ -194,7 +194,7 @@
       "identity": "Identitate",
       "location": "Locație",
       "capacity": "Capacitate",
-      "peopleTeam": "Echipă și client",
+      "people": "Personal",
       "contractFinancials": "Contract și finanțe",
       "executionStatus": "Execuție și status",
       "notes": "Note"
@@ -266,8 +266,8 @@
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu aveți permisiunea de a edita.",
     "errorInvalidNumber": "Introduceți un număr valid.",
-    "noTeamAssigned": "Alocați mai întâi o echipă acestui proiect.",
-    "noTeamAssignedBanner": "Nu puteți introduce numărul de persoane pe rânduri deoarece niciun membru de echipă nu este alocat acestui proiect. Alocați o echipă (cu cel puțin un membru) proiectului pentru a debloca acest câmp.",
+    "noPeopleNeeded": "Stabiliți mai întâi numărul de persoane necesare pentru acest proiect.",
+    "noPeopleNeededBanner": "Nu puteți introduce numărul de persoane pe rânduri deoarece acest proiect nu are stabilit numărul de persoane necesare. Stabiliți-l la nivelul proiectului pentru a debloca acest câmp.",
     "columns": {
       "cod": "Cod",
       "number": "#",
@@ -530,6 +530,7 @@
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
     "errorNoWorkingDays": "Această perioadă nu include nicio zi lucrătoare (weekendurile și sărbătorile oficiale nu se numără).",
     "documentError": "Documentul nu a putut fi generat.",
+    "teamWorkerTag": "muncitor teren",
     "officialHolidays": "Sărbători oficiale",
     "workingDaysCount": "{count} zile lucrătoare",
     "columns": {
@@ -695,6 +696,11 @@
     "teamDeleted": "Echipă ștearsă.",
     "removeMember": "Elimină",
     "confirmRemoveMember": "Eliminați acest membru din echipă?",
+    "logAbsence": "Înregistrează absență — {name}",
+    "logAbsenceShort": "Înregistrează absență",
+    "absenceStart": "Data început",
+    "absenceEnd": "Data sfârșit",
+    "absenceReason": "Motiv",
     "memberAdded": "Membru adăugat.",
     "memberAddPartialFailure": "{count} membru(i) nu au putut fi adăugați.",
     "memberRemoved": "Membru eliminat.",
@@ -1375,6 +1381,7 @@
         "vacation_request": "cerere de concediu",
         "project_assigned": "te-a numit manager de proiect",
         "task_assigned": "ți-a atribuit o sarcină",
+        "schedule_conflict": "conflict programare/concediu",
         "system": "notificare sistem"
       }
     },
@@ -1501,22 +1508,21 @@
   },
   "schedule": {
     "eyebrow": "PROGRAMARE · SĂPTĂMÂNAL",
-    "title": "Programul echipelor",
-    "subtitle": "Planifică sarcinile zilnice ale fiecărei echipe pentru săptămâna selectată.",
+    "title": "Programul proiectelor",
+    "subtitle": "Alocă muncitori de teren proiectelor pentru o săptămână sau o lună întreagă și urmărește delegațiile și orele suplimentare.",
     "today": "Astăzi",
-    "notesPlaceholder": "Intervenții necesare...",
-    "emptyState": "Nu există încă echipe. Adaugă mai întâi o echipă.",
+    "add": "Adaugă",
+    "emptyState": "Niciun proiect programat în această săptămână încă.",
     "errorGeneric": "A apărut o eroare.",
     "errorNotAllowed": "Nu ai permisiunea necesară.",
+    "errorProjectOrLabelRequired": "Adaugă un proiect sau o etichetă înainte de a salva.",
     "entrySaved": "Intrare salvată.",
     "entryDeleted": "Intrare ștearsă.",
-    "noteSaved": "Notă salvată.",
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Se salvează...",
     "columns": {
       "team": "Echipă",
-      "notes": "Intervenții necesare",
       "members": "Membri"
     },
     "roster": {
@@ -1524,7 +1530,27 @@
       "title": "Membri echipă",
       "members": "Membri",
       "emptyMembers": "Niciun membru încă.",
-      "workerTag": "(lucrător)"
+      "workerTag": "(lucrător)",
+      "custom": "Personalizat",
+      "jobsThisWeek": "{count, plural, one {# job săptămâna aceasta} other {# joburi săptămâna aceasta}}"
+    },
+    "pmColors": {
+      "eyebrow": "CULORI PROGRAMARE",
+      "title": "Culori manageri de proiect",
+      "empty": "Niciun manager de proiect găsit."
+    },
+    "hoursSummary": {
+      "eyebrow": "ORE SĂPTĂMÂNALE",
+      "title": "Ore lucrate",
+      "columns": {
+        "person": "Persoană",
+        "normalDays": "Zile normale",
+        "delegationDays": "Zile delegație",
+        "baseHours": "Ore de bază",
+        "plusHours": "+ ore",
+        "totalHours": "Total ore"
+      },
+      "empty": "Nicio oră înregistrată în această săptămână."
     },
     "export": {
       "button": "Exportă imagine",
@@ -1532,17 +1558,39 @@
       "error": "Imaginea nu a putut fi generată. Încearcă din nou."
     },
     "entry": {
-      "addTitle": "Adaugă sarcină",
-      "editTitle": "Editează sarcina",
-      "label": "Etichetă",
-      "labelPlaceholder": "ex. Bellamy Petelea, CO, Liber...",
+      "addTitle": "Adaugă alocare",
+      "editTitle": "Editează alocarea",
+      "addAssignee": "Adaugă muncitor",
+      "scheduleProject": "Programează un proiect",
       "project": "Proiect",
       "projectPlaceholder": "Caută proiecte...",
-      "searching": "Se caută...",
+      "projectOrLabelHint": "Adaugă un proiect sau o etichetă.",
       "noProjects": "Niciun proiect găsit.",
+      "pm": "Manager de proiect",
+      "pmPlaceholder": "Caută manageri de proiect...",
+      "sales": "Agent vânzări",
+      "salesPlaceholder": "Caută agenți de vânzări...",
+      "assignee": "Muncitor",
+      "assigneePlaceholder": "Caută muncitori și membri ai echipei...",
+      "removeAssignee": "Elimină pe {name}",
+      "noAssignees": "Niciun rezultat găsit.",
+      "assigneesLockedHint": "Componența acestei echipe este fixă aici — gestionează membrii din pagina echipei.",
+      "noAssignments": "Niciun muncitor alocat încă.",
+      "startDate": "Data început",
+      "endDate": "Data sfârșit",
+      "label": "Etichetă",
+      "labelPlaceholder": "ex. Bellamy Petelea, CO, Liber...",
+      "searching": "Se caută...",
       "color": "Culoare",
       "colorNone": "Fără culoare",
-      "delete": "Șterge"
+      "delete": "Șterge",
+      "removeFromDay": "Elimină din această zi",
+      "confirmRemoveFromDay": "Elimini acest muncitor din această zi?",
+      "delegationHours": "Delegație și ore suplimentare",
+      "delegation": "Delegație",
+      "plusHoursPlaceholder": "+ore",
+      "onVacation": "În concediu aprobat",
+      "vacationConflict": "Acest muncitor are concediu aprobat între {start} și {end} — alocat oricum."
     }
   }
 }

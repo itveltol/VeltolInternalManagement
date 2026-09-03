@@ -92,7 +92,6 @@
     "projectSaved": "Project saved.",
     "projectCreated": "Project created.",
     "projectDeleted": "Project deleted.",
-    "teamAssigned": "Team assigned.",
     "cefDataSaved": "CEF data saved.",
     "bessDataSaved": "BESS data saved.",
     "errorGeneric": "Something went wrong.",
@@ -170,7 +169,8 @@
       "projectType": "Technical type",
       "contractType": "Contract type",
       "manager": "Project manager",
-      "team": "Assigned team",
+      "sales": "Sales person",
+      "peopleNeeded": "People needed",
       "executionMode": "Execution",
       "subcontractor": "Subcontractor",
       "subcontractorName": "Subcontractor name",
@@ -194,7 +194,7 @@
       "identity": "Identity",
       "location": "Location",
       "capacity": "Capacity",
-      "peopleTeam": "People & Team",
+      "people": "People",
       "contractFinancials": "Contract & Financials",
       "executionStatus": "Execution & Status",
       "notes": "Notes"
@@ -266,8 +266,8 @@
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to edit this checklist.",
     "errorInvalidNumber": "Please enter a valid number.",
-    "noTeamAssigned": "Assign a team to this project first.",
-    "noTeamAssignedBanner": "You can't enter the number of people per row because no team members are assigned to this project. Assign a team (with at least one member) to the project to unlock this field.",
+    "noPeopleNeeded": "Set the number of people needed for this project first.",
+    "noPeopleNeededBanner": "You can't enter the number of people per row because this project has no people-needed value set. Set it on the project to unlock this field.",
     "columns": {
       "cod": "Code",
       "number": "#",
@@ -530,6 +530,7 @@
     "errorNotAllowed": "You don't have permission to do this.",
     "errorNoWorkingDays": "This period doesn't include any working days (weekends and official holidays don't count).",
     "documentError": "Could not generate the document.",
+    "teamWorkerTag": "outfield worker",
     "officialHolidays": "Official holidays",
     "workingDaysCount": "{count} working days",
     "columns": {
@@ -695,6 +696,11 @@
     "teamDeleted": "Team deleted.",
     "removeMember": "Remove",
     "confirmRemoveMember": "Remove this member from the team?",
+    "logAbsence": "Log absence — {name}",
+    "logAbsenceShort": "Log absence",
+    "absenceStart": "Start date",
+    "absenceEnd": "End date",
+    "absenceReason": "Reason",
     "memberAdded": "Member added.",
     "memberAddPartialFailure": "{count} member(s) could not be added.",
     "memberRemoved": "Member removed.",
@@ -1375,6 +1381,7 @@
         "vacation_request": "vacation request",
         "project_assigned": "assigned you as project manager",
         "task_assigned": "assigned you a task",
+        "schedule_conflict": "schedule/vacation conflict",
         "system": "system notification"
       }
     },
@@ -1501,22 +1508,21 @@
   },
   "schedule": {
     "eyebrow": "SCHEDULE · WEEKLY",
-    "title": "Team schedule",
-    "subtitle": "Plan each team's daily assignments for the selected week.",
+    "title": "Project schedule",
+    "subtitle": "Assign outfield workers to projects for a week or a whole month, and track delegation and overtime.",
     "today": "Today",
-    "notesPlaceholder": "Interventions needed...",
-    "emptyState": "No teams yet. Add a team first.",
+    "add": "Add",
+    "emptyState": "No projects scheduled this week yet.",
     "errorGeneric": "Something went wrong.",
     "errorNotAllowed": "You don't have permission to do this.",
+    "errorProjectOrLabelRequired": "Add a project or a label before saving.",
     "entrySaved": "Entry saved.",
     "entryDeleted": "Entry deleted.",
-    "noteSaved": "Note saved.",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
     "columns": {
       "team": "Team",
-      "notes": "Interventions needed",
       "members": "Members"
     },
     "roster": {
@@ -1524,7 +1530,27 @@
       "title": "Team members",
       "members": "Members",
       "emptyMembers": "No members yet.",
-      "workerTag": "(worker)"
+      "workerTag": "(worker)",
+      "custom": "Custom",
+      "jobsThisWeek": "{count, plural, one {# job this week} other {# jobs this week}}"
+    },
+    "pmColors": {
+      "eyebrow": "SCHEDULE COLORS",
+      "title": "Project manager colors",
+      "empty": "No project managers found."
+    },
+    "hoursSummary": {
+      "eyebrow": "WEEKLY HOURS",
+      "title": "Worked hours",
+      "columns": {
+        "person": "Person",
+        "normalDays": "Normal days",
+        "delegationDays": "Delegation days",
+        "baseHours": "Base hours",
+        "plusHours": "+ hours",
+        "totalHours": "Total hours"
+      },
+      "empty": "No hours recorded this week."
     },
     "export": {
       "button": "Export image",
@@ -1534,15 +1560,37 @@
     "entry": {
       "addTitle": "Add assignment",
       "editTitle": "Edit assignment",
-      "label": "Label",
-      "labelPlaceholder": "e.g. Bellamy Petelea, CO, Liber...",
+      "addAssignee": "Add worker",
+      "scheduleProject": "Schedule a project",
       "project": "Project",
       "projectPlaceholder": "Search projects...",
-      "searching": "Searching...",
+      "projectOrLabelHint": "Add a project or a label.",
       "noProjects": "No projects found.",
+      "pm": "Project manager",
+      "pmPlaceholder": "Search project managers...",
+      "sales": "Sales person",
+      "salesPlaceholder": "Search sales people...",
+      "assignee": "Worker",
+      "assigneePlaceholder": "Search workers and team members...",
+      "removeAssignee": "Remove {name}",
+      "noAssignees": "No matches found.",
+      "assigneesLockedHint": "This team's roster is fixed here — manage members from the team roster page.",
+      "noAssignments": "No workers assigned yet.",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "label": "Label",
+      "labelPlaceholder": "e.g. Bellamy Petelea, CO, Liber...",
+      "searching": "Searching...",
       "color": "Color",
       "colorNone": "No color",
-      "delete": "Delete"
+      "delete": "Delete",
+      "removeFromDay": "Remove from this day",
+      "confirmRemoveFromDay": "Remove this worker from this day?",
+      "delegationHours": "Delegation & hours",
+      "delegation": "Delegation",
+      "plusHoursPlaceholder": "+h",
+      "onVacation": "On approved leave",
+      "vacationConflict": "This worker has approved leave from {start} to {end} — assigned anyway."
     }
   }
 }

@@ -21,7 +21,7 @@ interface Props {
   rows: ChecklistRow[];
   projectId: number;
   canMutate: boolean;
-  teamMemberCount: number | null;
+  peopleNeeded: number | null;
 }
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -71,7 +71,7 @@ function NumInput({
   );
 }
 
-export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: Props) {
+export function ChecklistTable({ rows, projectId, canMutate, peopleNeeded }: Props) {
   const t = useTranslations("checklist");
   const [, startTransition] = useTransition();
 
@@ -100,9 +100,9 @@ export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: 
   }, [closeAllHistory]);
 
   const handleFieldChange = useCallback((itemNumber: number, field: EditableField, value: string) => {
-    if (field === "persons_allocated" && teamMemberCount != null) {
+    if (field === "persons_allocated" && peopleNeeded != null) {
       const n = parseInt(value, 10);
-      if (!isNaN(n)) value = String(Math.min(teamMemberCount, Math.max(0, n)));
+      if (!isNaN(n)) value = String(Math.min(peopleNeeded, Math.max(0, n)));
     }
     updateField(itemNumber, field, value);
 
@@ -120,7 +120,7 @@ export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: 
     }
 
     markDirty(itemNumber);
-  }, [updateField, markDirty, teamMemberCount]);
+  }, [updateField, markDirty, peopleNeeded]);
 
   // These callbacks read live store state via getState() rather than closing
   // over `rowState`/`dirtySet`, so their identity stays stable across
@@ -301,7 +301,7 @@ export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: 
                   row={row}
                   projectId={projectId}
                   canMutate={canMutate}
-                  teamMemberCount={teamMemberCount}
+                  peopleNeeded={peopleNeeded}
                   onFieldChange={handleFieldChange}
                   onBlur={handleBlur}
                   onTodayValueChange={updateTodayValue}
@@ -346,7 +346,7 @@ export function ChecklistTable({ rows, projectId, canMutate, teamMemberCount }: 
               row={row}
               projectId={projectId}
               canMutate={canMutate}
-              teamMemberCount={teamMemberCount}
+              peopleNeeded={peopleNeeded}
               onFieldChange={handleFieldChange}
               onBlur={handleBlur}
               onTodayValueChange={updateTodayValue}
@@ -367,7 +367,7 @@ interface ChecklistDataRowProps {
   row: ChecklistRow;
   projectId: number;
   canMutate: boolean;
-  teamMemberCount: number | null;
+  peopleNeeded: number | null;
   onFieldChange: (itemNumber: number, field: EditableField, value: string) => void;
   onBlur: (itemNumber: number) => void;
   onTodayValueChange: (itemNumber: number, value: string) => void;
@@ -377,7 +377,7 @@ interface ChecklistDataRowProps {
 }
 
 const ChecklistDataRow = memo(function ChecklistDataRow({
-  row, projectId, canMutate, teamMemberCount,
+  row, projectId, canMutate, peopleNeeded,
   onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
 }: ChecklistDataRowProps) {
   const t = useTranslations("checklist");
@@ -393,7 +393,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
     !isNaN(planTotal) && planTotal > 0 && realizat != null
       ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
       : row.pct;
-  const noTeam = !teamMemberCount || teamMemberCount <= 0;
+  const noPeopleNeeded = !peopleNeeded || peopleNeeded <= 0;
 
   return (
     <React.Fragment>
@@ -442,8 +442,8 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
                 onChange={(v) => onFieldChange(row.number, "persons_allocated", v)}
                 onBlur={() => onBlur(row.number)}
                 dirty={isDirty}
-                disabled={state?.status === "saving" || noTeam}
-                title={noTeam ? t("noTeamAssigned") : undefined}
+                disabled={state?.status === "saving" || noPeopleNeeded}
+                title={noPeopleNeeded ? t("noPeopleNeeded") : undefined}
               />
             </div>
           ) : (
@@ -601,7 +601,7 @@ const ChecklistDataRow = memo(function ChecklistDataRow({
 });
 
 const ChecklistDataCard = memo(function ChecklistDataCard({
-  row, projectId, canMutate, teamMemberCount,
+  row, projectId, canMutate, peopleNeeded,
   onFieldChange, onBlur, onTodayValueChange, onTodayBlur, onToggleHistory, onToggleDocs,
 }: ChecklistDataRowProps) {
   const t = useTranslations("checklist");
@@ -616,7 +616,7 @@ const ChecklistDataCard = memo(function ChecklistDataCard({
     !isNaN(planTotal) && planTotal > 0 && realizat != null
       ? Math.min(100, Math.max(0, (realizat / planTotal) * 100))
       : row.pct;
-  const noTeam = !teamMemberCount || teamMemberCount <= 0;
+  const noPeopleNeeded = !peopleNeeded || peopleNeeded <= 0;
   const targetZi = (() => {
     const persons = parseInt(state?.persons_allocated ?? "", 10);
     const rate = parseInt(state?.units_per_person_day ?? "", 10);
@@ -669,8 +669,8 @@ const ChecklistDataCard = memo(function ChecklistDataCard({
                 onChange={(v) => onFieldChange(row.number, "persons_allocated", v)}
                 onBlur={() => onBlur(row.number)}
                 dirty={isDirty}
-                disabled={state?.status === "saving" || noTeam}
-                title={noTeam ? t("noTeamAssigned") : undefined}
+                disabled={state?.status === "saving" || noPeopleNeeded}
+                title={noPeopleNeeded ? t("noPeopleNeeded") : undefined}
               />
             ) : (row.persons_allocated ?? "—")}
           </DataCardField>

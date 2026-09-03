@@ -260,9 +260,12 @@ export function PortfolioGanttChart({ rows, rangeRows, todayMs, onNavigateToPhas
                   ? project.subcontractor?.name && (
                       <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.subcontractor.name}</span>
                     )
-                  : project.team?.name && (
-                      <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{project.team.name}</span>
-                    )}
+                  : (() => {
+                      const managerName = [project.manager?.first_name, project.manager?.last_name].filter(Boolean).join(" ");
+                      return managerName && (
+                        <span className="block truncate font-mono text-[9px] text-veltol-fgMute">{managerName}</span>
+                      );
+                    })()}
                 {project.project_type && (
                   <span className="font-mono text-[9px] uppercase tracking-wide text-veltol-fgMute">
                     {project.project_type}

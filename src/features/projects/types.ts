@@ -38,10 +38,11 @@ export interface Project {
   contract_type: ContractType[];
   manager_id: string | null;
   manager?: { first_name: string | null; last_name: string | null } | null;
+  sales_id: string | null;
+  sales?: { first_name: string | null; last_name: string | null } | null;
   client_id: number | null;
   client?: { id: number; name: string } | null;
-  team_id: number | null;
-  team?: { id: number; name: string; member_count: number } | null;
+  people_needed: number | null;
   execution_mode: ExecutionMode;
   /** Id of the project's current project_subcontractors assignment row, if any. */
   subcontractor_assignment_id: number | null;

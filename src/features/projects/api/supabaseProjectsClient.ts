@@ -5,27 +5,7 @@ import type { Project, ProjectManager, Currency } from "../types";
 const DEFAULT_PAGE_SIZE = 20;
 
 const PROJECT_SELECT =
-  "*, manager:profiles!manager_id(first_name, last_name), client:clients!client_id(id, name), team:teams!team_id(id, name, team_members(count), team_workers(count)), updated_by_user:profiles!updated_by(first_name, last_name)";
-
-interface ProjectTeamRow {
-  id: number;
-  name: string;
-  team_members: { count: number }[];
-  team_workers: { count: number }[];
-}
-
-/** Supabase returns the team_members/team_workers aggregates as nested arrays — flatten and sum into member_count, mirroring supabaseTeamsClient's mapTeamRow. */
-function mapProjectTeam(row: unknown): Project["team"] {
-  const team = row as ProjectTeamRow | null;
-  if (!team) return null;
-  const member_count = (team.team_members?.[0]?.count ?? 0) + (team.team_workers?.[0]?.count ?? 0);
-  return { id: team.id, name: team.name, member_count };
-}
-
-function mapProjectRow(row: unknown): Project {
-  const raw = row as Project & { team: unknown };
-  return { ...raw, team: mapProjectTeam(raw.team) };
-}
+  "*, manager:profiles!manager_id(first_name, last_name), sales:profiles!sales_id(first_name, last_name), client:clients!client_id(id, name), updated_by_user:profiles!updated_by(first_name, last_name)";
 
 interface CurrentAssignmentRow {
   project_id: number;
@@ -122,7 +102,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
 
     const { data, count, error } = await query;
     if (error) throw new Error(error.message);
-    const projects = await withCurrentAssignments(supabase, (data ?? []).map(mapProjectRow));
+    const projects = await withCurrentAssignments(supabase, (data ?? []) as Project[]);
     return { projects, totalCount: count ?? projects.length };
   },
 
@@ -144,7 +124,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .single();
     if (error) return null;
     if (!data) return null;
-    const [project] = await withCurrentAssignments(supabase, [mapProjectRow(data)]);
+    const [project] = await withCurrentAssignments(supabase, [data as Project]);
     return project ?? null;
   },
 
@@ -155,7 +135,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .eq("client_id", clientId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return withCurrentAssignments(supabase, (data ?? []).map(mapProjectRow));
+    return withCurrentAssignments(supabase, (data ?? []) as Project[]);
   },
 
   async getProjectManagers() {
@@ -186,14 +166,6 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     const { error } = await supabase
       .from("projects")
       .update({ ...payload, updated_by: userId })
-      .eq("id", id);
-    if (error) throw new Error(error.message);
-  },
-
-  async updateProjectTeam(id, teamId, userId) {
-    const { error } = await supabase
-      .from("projects")
-      .update({ team_id: teamId, updated_by: userId })
       .eq("id", id);
     if (error) throw new Error(error.message);
   },

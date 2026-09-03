@@ -15,6 +15,7 @@ import {
   CalendarDays,
   UserCheck,
   ListTodo,
+  TriangleAlert,
   Info,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -34,6 +35,7 @@ const TYPE_ICON: Record<NotificationType, typeof AtSign> = {
   vacation_request: CalendarDays,
   project_assigned: UserCheck,
   task_assigned: ListTodo,
+  schedule_conflict: TriangleAlert,
   system: Info,
 };
 

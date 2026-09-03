@@ -19,7 +19,7 @@ interface Props {
   executionData: ProjectExecutionData | null;
   structureConfig: ProjectStructureConfigRow[];
   canMutate: boolean;
-  teamMemberCount: number | null;
+  peopleNeeded: number | null;
 }
 
 function InfoCard({ label, children }: { label: string; children: React.ReactNode }) {
@@ -160,10 +160,10 @@ interface StructureRowEntry {
   data: ProjectStructureConfigRow;
 }
 
-export function ProjectExecutionDataPanel({ projectId, executionData: initialExecutionData, structureConfig, canMutate, teamMemberCount }: Props) {
+export function ProjectExecutionDataPanel({ projectId, executionData: initialExecutionData, structureConfig, canMutate, peopleNeeded }: Props) {
   const t = useTranslations("checklist.executionData");
   const tChecklist = useTranslations("checklist");
-  const noTeam = !teamMemberCount || teamMemberCount <= 0;
+  const noPeopleNeeded = !peopleNeeded || peopleNeeded <= 0;
   const [, startTransition] = useTransition();
   const [executionData, setExecutionData] = useState(initialExecutionData);
   // Each row carries a `clientKey` assigned once, at creation, and never
@@ -286,8 +286,8 @@ export function ProjectExecutionDataPanel({ projectId, executionData: initialExe
             canMutate={canMutate}
             formId={formId}
             revision={executionData?.updated_at}
-            max={teamMemberCount ?? undefined}
-            title={noTeam ? tChecklist("noTeamAssigned") : undefined}
+            max={peopleNeeded ?? undefined}
+            title={noPeopleNeeded ? tChecklist("noPeopleNeeded") : undefined}
           />
           <NumCard label={t("bugetAlocat")} value={executionData?.buget_alocat_eur ?? null} name="buget_alocat_eur" canMutate={canMutate} formId={formId} suffix="EUR" revision={executionData?.updated_at} />
           <InfoCard label={t("costTotalManopera")}>

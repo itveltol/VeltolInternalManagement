@@ -13,7 +13,6 @@ import { cn } from "@/shared/utils/cn";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
-import type { Team } from "@/features/teams/types";
 
 function DetailSection({ title, first, children }: { title: string; first?: boolean; children: React.ReactNode }) {
   return (
@@ -51,11 +50,9 @@ interface Props {
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
   currentAssignment: ProjectSubcontractorAssignment | null;
-  teams: Team[];
-  canAssignTeam: boolean;
 }
 
-export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, subcontractorRefs, currentAssignment, teams, canAssignTeam }: Props) {
+export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, subcontractorRefs, currentAssignment }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -89,6 +86,10 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
     ? [project.manager.first_name, project.manager.last_name].filter(Boolean).join(" ") || "—"
     : "—";
 
+  const salesName = project.sales
+    ? [project.sales.first_name, project.sales.last_name].filter(Boolean).join(" ") || "—"
+    : "—";
+
   const isSubcontracted = project.execution_mode === "subcontracted";
 
   const identityFields: Array<{ label: string; value: React.ReactNode }> = [
@@ -108,7 +109,8 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
 
   const peopleFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.manager"), value: managerName },
-    ...(isSubcontracted ? [] : [{ label: t("fields.team"), value: project.team?.name ?? "—" }]),
+    { label: t("fields.sales"), value: salesName },
+    ...(isSubcontracted ? [] : [{ label: t("fields.peopleNeeded"), value: project.people_needed ?? "—" }]),
     { label: t("fields.client"), value: project.client?.name ?? "—" },
   ];
 
@@ -189,7 +191,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         <FieldGrid items={capacityFields} />
       </DetailSection>
 
-      <DetailSection title={t("sections.peopleTeam")}>
+      <DetailSection title={t("sections.people")}>
         <FieldGrid items={peopleFields} />
       </DetailSection>
 
@@ -216,8 +218,6 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
           clientRefs={clientRefs}
           subcontractorRefs={subcontractorRefs}
           currentAssignment={currentAssignment}
-          teams={teams}
-          canAssignTeam={canAssignTeam}
           onClose={() => setIsEditOpen(false)}
         />
       )}
