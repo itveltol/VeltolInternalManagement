@@ -116,7 +116,14 @@ export async function getAllOutfieldWorkers(): Promise<OutfieldWorkerRow[]> {
     teamService.getTeams(api),
   ]);
   const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
-  return workers.map((w) => ({ ...w, team_name: teamNameById.get(w.team_id) ?? "" }));
+  return workers.map((w) => ({ ...w, team_name: (w.team_id !== null ? teamNameById.get(w.team_id) : null) ?? "" }));
+}
+
+export async function getTeamsForWorkerForm(): Promise<{ id: number; name: string }[]> {
+  const { supabase } = await requireAdmin();
+  const api = createSupabaseTeamsClient(supabase);
+  const teams = await teamService.getTeams(api);
+  return teams.map((t) => ({ id: t.id, name: t.name }));
 }
 
 export async function updateUser(

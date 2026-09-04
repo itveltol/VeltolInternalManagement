@@ -32,7 +32,7 @@ export interface TeamMember {
 
 export interface TeamWorker {
   id: number;
-  team_id: number;
+  team_id: number | null;
   first_name: string;
   last_name: string | null;
   phone: string | null;

@@ -14,12 +14,13 @@ interface Props {
   profile: Profile | null;
   allUsers: Profile[];
   outfieldWorkers: OutfieldWorkerRow[];
+  workerTeams: { id: number; name: string }[];
   currentUserId: string;
   isAdmin: boolean;
   balance: VacationBalance | null;
 }
 
-export function ProfileShell({ profile, allUsers, outfieldWorkers, currentUserId, isAdmin, balance }: Props) {
+export function ProfileShell({ profile, allUsers, outfieldWorkers, workerTeams, currentUserId, isAdmin, balance }: Props) {
   const t = useTranslations("vacationBalance");
   return (
     <>
@@ -27,7 +28,7 @@ export function ProfileShell({ profile, allUsers, outfieldWorkers, currentUserId
       <VacationBalanceCard balance={balance} label={t("title")} />
       <PasswordForm />
       {isAdmin && <UserTable users={allUsers} currentUserId={currentUserId} />}
-      {isAdmin && <OutfieldWorkersTable workers={outfieldWorkers} />}
+      {isAdmin && <OutfieldWorkersTable workers={outfieldWorkers} teams={workerTeams} />}
     </>
   );
 }

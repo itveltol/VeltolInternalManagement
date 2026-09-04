@@ -31,8 +31,10 @@ import {
   searchProjectManagersAction,
 } from "@/app/[locale]/(app)/schedule/actions";
 import { AssignmentDayRow } from "./AssignmentDayRow";
+import { DoubleBookingDialog } from "./DoubleBookingDialog";
 import type { ScheduleAssignment, ScheduleAssignee, ScheduleProjectOption } from "../types";
 import type { AssignmentMemberInput } from "../api/types";
+import type { DoubleBookingConflictView, DoubleBookingResolution } from "@/app/[locale]/(app)/schedule/actions";
 
 function toMemberInput(a: ScheduleAssignee): AssignmentMemberInput {
   return a.kind === "worker"
@@ -73,6 +75,7 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
   const [items, setItems] = useState<ScheduleAssignee[]>([]);
   const [isSearching, startSearch] = useTransition();
   const [isPending, startTransition] = useTransition();
+  const [doubleBooking, setDoubleBooking] = useState<DoubleBookingConflictView[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const projectDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pmDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,7 +140,7 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
   const resolvedProjectId = project?.id ?? null;
   const canSave = assignees.length > 0 && !!startDate && !!endDate && (!!resolvedProjectId || !!label.trim());
 
-  function handleSave() {
+  function handleSave(resolutions?: DoubleBookingResolution[]) {
     if (!canSave) return;
     startTransition(async () => {
       const members = assignees.map(toMemberInput);
@@ -153,11 +156,15 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
       };
 
       const result = assignment
-        ? await updateAssignmentAction(assignment.id, members, shared)
-        : await createAssignmentAction({ ...shared, members });
+        ? await updateAssignmentAction(assignment.id, members, shared, resolutions)
+        : await createAssignmentAction({ ...shared, members }, resolutions);
 
       if (result?.error) {
         toast.error(t(result.error as "errorGeneric" | "errorNotAllowed" | "errorProjectOrLabelRequired"));
+        return;
+      }
+      if (result?.doubleBooking) {
+        setDoubleBooking(result.doubleBooking);
         return;
       }
       if (result?.warning) {
@@ -170,6 +177,7 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
       } else if (result?.success) {
         toast.success(t(result.success as "entrySaved"));
       }
+      setDoubleBooking(null);
       onClose();
     });
   }
@@ -409,7 +417,7 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
               )}
               <div className="flex gap-3">
                 <Dialog.Close render={<Button type="button" variant="outline">{t("cancel")}</Button>} />
-                <Button type="button" disabled={isPending || !canSave} onClick={handleSave}>
+                <Button type="button" disabled={isPending || !canSave} onClick={() => handleSave()}>
                   {isPending ? t("saving") : t("save")}
                 </Button>
               </div>
@@ -417,6 +425,13 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
           </div>
         </Dialog.Popup>
       </Dialog.Portal>
+
+      <DoubleBookingDialog
+        open={!!doubleBooking}
+        conflicts={doubleBooking ?? []}
+        onResolve={(resolutions) => handleSave(resolutions)}
+        onCancel={() => setDoubleBooking(null)}
+      />
     </Dialog.Root>
   );
 }

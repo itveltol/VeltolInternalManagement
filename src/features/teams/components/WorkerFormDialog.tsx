@@ -12,20 +12,35 @@ import type { TeamWorker } from "../types";
 const TEXTAREA_CLASS =
   "w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-2 font-sans text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 resize-none";
 
+const SELECT_CLASS =
+  "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20";
+
+interface TeamOption {
+  id: number;
+  name: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
-  teamId: number;
+  teams: TeamOption[];
+  /** When set, the team is implied by page context (e.g. a team's own detail page) — the team field is hidden and this value is submitted as-is instead. */
+  lockedTeamId?: number | null;
   worker?: TeamWorker | null;
 }
 
-export function WorkerFormDialog({ open, onClose, teamId, worker }: Props) {
+export function WorkerFormDialog({ open, onClose, teams, lockedTeamId, worker }: Props) {
   const t = useTranslations("teams");
   const mode = worker ? "edit" : "add";
+  const teamLocked = lockedTeamId !== undefined;
+  const defaultTeamId = lockedTeamId ?? null;
   const [firstName, setFirstName] = useState(worker?.first_name ?? "");
   const [lastName, setLastName] = useState(worker?.last_name ?? "");
   const [phone, setPhone] = useState(worker?.phone ?? "");
   const [notes, setNotes] = useState(worker?.notes ?? "");
+  const [teamId, setTeamId] = useState<string>(
+    worker ? (worker.team_id !== null ? String(worker.team_id) : "") : defaultTeamId ? String(defaultTeamId) : "",
+  );
   const action = mode === "edit" ? updateWorkerAction : addWorkerAction;
   const [state, formAction, pending] = useActionState(action, null);
 
@@ -35,7 +50,8 @@ export function WorkerFormDialog({ open, onClose, teamId, worker }: Props) {
     setLastName(worker?.last_name ?? "");
     setPhone(worker?.phone ?? "");
     setNotes(worker?.notes ?? "");
-  }, [open, worker]);
+    setTeamId(worker ? (worker.team_id !== null ? String(worker.team_id) : "") : defaultTeamId ? String(defaultTeamId) : "");
+  }, [open, worker, defaultTeamId]);
 
   useEffect(() => {
     if (state?.success) onClose();
@@ -51,7 +67,6 @@ export function WorkerFormDialog({ open, onClose, teamId, worker }: Props) {
           </Dialog.Title>
 
           <form action={formAction} className="mt-6 space-y-4">
-            <input type="hidden" name="teamId" value={teamId} />
             {mode === "edit" && worker && <input type="hidden" name="workerId" value={worker.id} />}
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -74,6 +89,27 @@ export function WorkerFormDialog({ open, onClose, teamId, worker }: Props) {
                 />
               </div>
             </div>
+
+            {teamLocked ? (
+              <input type="hidden" name="team_id" value={teamId} />
+            ) : (
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.team")}</Label>
+                <select
+                  name="team_id"
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className={SELECT_CLASS}
+                >
+                  <option value="" className="bg-card">{t("fields.noTeam")}</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id} className="bg-card">
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.phone")}</Label>

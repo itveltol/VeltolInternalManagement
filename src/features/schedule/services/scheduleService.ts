@@ -334,6 +334,67 @@ export function summarizeWorkerHours(cards: ScheduleProjectCard[]): WorkerHoursS
   return summaries.sort((a, b) => a.assignee.name.localeCompare(b.assignee.name));
 }
 
+export interface DoubleBookingConflict {
+  subject: ConflictSubject;
+  assigneeName: string;
+  assignmentId: number;
+  projectId: number | null;
+  projectName: string;
+  start_date: string;
+  end_date: string;
+}
+
+function subjectsEqual(a: ConflictSubject, b: ConflictSubject): boolean {
+  return (a.profileId !== null && a.profileId === b.profileId) || (a.teamWorkerId !== null && a.teamWorkerId === b.teamWorkerId);
+}
+
+/**
+ * Assignment-save-time check: is any of these subjects already a member of a
+ * *different* schedule assignment whose date range overlaps [start, end]?
+ * Unlike findAssignmentConflicts (used at vacation-approval time), this
+ * excludes the assignment currently being edited so saving it against itself
+ * never counts as a conflict.
+ */
+export async function findDoubleBookingConflicts(
+  scheduleClient: ScheduleApiClient,
+  subjects: ConflictSubject[],
+  start: string,
+  end: string,
+  excludeAssignmentId: number | null,
+): Promise<DoubleBookingConflict[]> {
+  const raw = await scheduleClient.getAssignmentsForRange(start, end);
+  const conflicts: DoubleBookingConflict[] = [];
+
+  for (const a of raw) {
+    if (a.id === excludeAssignmentId) continue;
+    if (!rangesOverlap(start, end, a.start_date, a.end_date)) continue;
+
+    for (const member of a.members) {
+      const memberSubject: ConflictSubject = { profileId: member.profile_id, teamWorkerId: member.team_worker_id };
+      const matchedSubject = subjects.find((s) => subjectsEqual(s, memberSubject));
+      if (!matchedSubject) continue;
+
+      const assigneeName = member.profile
+        ? fullName(member.profile) || member.profile.email
+        : member.team_worker
+          ? `${member.team_worker.first_name} ${member.team_worker.last_name ?? ""}`.trim()
+          : "";
+
+      conflicts.push({
+        subject: matchedSubject,
+        assigneeName,
+        assignmentId: a.id,
+        projectId: a.project_id,
+        projectName: a.project?.name ?? a.label,
+        start_date: a.start_date,
+        end_date: a.end_date,
+      });
+    }
+  }
+
+  return conflicts;
+}
+
 /** Vacation-approval-time check: does this subject have any schedule assignments overlapping [start, end]? */
 export async function findAssignmentConflicts(
   scheduleClient: ScheduleApiClient,

@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getTeam, getTeamMembers, getTeamWorkers } from "./actions";
-import { getProfileRefs } from "../actions";
+import { getTeam, getTeamMembers, getTeamWorkers, getAllTeamWorkers } from "./actions";
+import { getProfileRefs, getTeams } from "../actions";
 import { TeamDetailShell } from "@/features/teams/components/TeamDetailShell";
 
 interface Props {
@@ -24,11 +24,13 @@ export default async function TeamDetailPage({ params }: Props) {
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
 
-  const [team, members, workers, allProfiles] = await Promise.all([
+  const [team, members, workers, allWorkers, allProfiles, allTeams] = await Promise.all([
     getTeam(teamId),
     getTeamMembers(teamId),
     getTeamWorkers(teamId),
+    getAllTeamWorkers(),
     getProfileRefs(),
+    getTeams(),
   ]);
 
   if (!team) notFound();
@@ -51,7 +53,9 @@ export default async function TeamDetailPage({ params }: Props) {
         team={team}
         members={members}
         workers={workers}
+        allWorkers={allWorkers}
         allProfiles={allProfiles}
+        allTeams={allTeams.map((t) => ({ id: t.id, name: t.name }))}
         canMutate={canMutate}
       />
     </div>

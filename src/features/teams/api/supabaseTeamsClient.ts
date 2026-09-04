@@ -127,10 +127,10 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
     return (data ?? []) as unknown as TeamWorker[];
   },
 
-  async addTeamWorker(teamId, payload: TeamWorkerPayload, userId) {
+  async addTeamWorker(payload: TeamWorkerPayload, userId) {
     const { data, error } = await supabase
       .from("team_workers")
-      .insert({ team_id: teamId, ...payload, created_by: userId, updated_by: userId })
+      .insert({ ...payload, created_by: userId, updated_by: userId })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -147,6 +147,14 @@ export const createSupabaseTeamsClient = (supabase: SupabaseClient): TeamsApiCli
 
   async removeTeamWorker(id) {
     const { error } = await supabase.from("team_workers").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  },
+
+  async setWorkerTeam(id, teamId, userId) {
+    const { error } = await supabase
+      .from("team_workers")
+      .update({ team_id: teamId, updated_by: userId })
+      .eq("id", id);
     if (error) throw new Error(error.message);
   },
 });

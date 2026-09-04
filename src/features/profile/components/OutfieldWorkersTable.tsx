@@ -30,15 +30,17 @@ function workerInitials(w: OutfieldWorkerRow): string {
 
 interface Props {
   workers: OutfieldWorkerRow[];
+  teams: { id: number; name: string }[];
 }
 
-export function OutfieldWorkersTable({ workers }: Props) {
+export function OutfieldWorkersTable({ workers, teams }: Props) {
   const t = useTranslations("teams");
   const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [removingWorkerId, setRemovingWorkerId] = useState<number | null>(null);
   const [editingWorker, setEditingWorker] = useState<OutfieldWorkerRow | null>(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const pageCount = Math.max(1, Math.ceil(workers.length / PAGE_SIZE));
@@ -61,6 +63,7 @@ export function OutfieldWorkersTable({ workers }: Props) {
 
   function closeDialog() {
     setEditingWorker(null);
+    setAddDialogOpen(false);
     router.refresh();
   }
 
@@ -72,6 +75,9 @@ export function OutfieldWorkersTable({ workers }: Props) {
             <div className="text-[11px] font-medium text-veltol-fgMute">{t("outfieldWorkersEyebrow")}</div>
             <h2 className="mt-0.5 text-lg font-semibold text-veltol-fg">{t("outfieldWorkersTitle")}</h2>
           </div>
+          <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+            {t("addWorker")}
+          </Button>
         </TableToolbar>
 
         <TableDesktopView>
@@ -185,10 +191,17 @@ export function OutfieldWorkersTable({ workers }: Props) {
           key={editingWorker.id}
           open={!!editingWorker}
           onClose={closeDialog}
-          teamId={editingWorker.team_id}
+          teams={teams}
           worker={editingWorker}
         />
       )}
+
+      <WorkerFormDialog
+        open={addDialogOpen}
+        onClose={closeDialog}
+        teams={teams}
+        worker={null}
+      />
     </>
   );
 }

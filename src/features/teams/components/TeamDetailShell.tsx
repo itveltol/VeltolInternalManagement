@@ -15,12 +15,14 @@ import {
   DataCardBadgeSlot, DataCardField, DataCardFooter,
 } from "@/shared/components/ui/data-card";
 import { TeamMemberPicker } from "./TeamMemberPicker";
+import { WorkerPicker } from "./WorkerPicker";
 import { WorkerFormDialog } from "./WorkerFormDialog";
 import { LogWorkerAbsenceDialog } from "./LogWorkerAbsenceDialog";
 import {
   addTeamMemberAction,
   removeTeamMemberAction,
-  removeWorkerAction,
+  assignWorkerToTeamAction,
+  unassignWorkerFromTeamAction,
 } from "@/app/[locale]/(app)/teams/[id]/actions";
 import { deleteTeamAction, updateTeamAction } from "@/app/[locale]/(app)/teams/actions";
 import { useConfirm } from "@/shared/components/ui/confirm-dialog";
@@ -37,7 +39,9 @@ interface Props {
   team: Team;
   members: TeamMember[];
   workers: TeamWorker[];
+  allWorkers: TeamWorker[];
   allProfiles: ProfileRef[];
+  allTeams: { id: number; name: string }[];
   canMutate: boolean;
 }
 
@@ -58,7 +62,7 @@ function workerInitials(w: TeamWorker): string {
   return (f + l || "?").toUpperCase();
 }
 
-export function TeamDetailShell({ team, members, workers, allProfiles, canMutate }: Props) {
+export function TeamDetailShell({ team, members, workers, allWorkers, allProfiles, allTeams, canMutate }: Props) {
   const t = useTranslations("teams");
   const router = useRouter();
   const confirm = useConfirm();
@@ -91,6 +95,7 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
 
   const memberIds = members.map((m) => m.user_id);
   const availableProfiles = allProfiles.filter((p) => !memberIds.includes(p.id));
+  const pickableWorkers = allWorkers.filter((w) => w.team_id !== team.id);
 
   function handleAdd(ids: string[]) {
     const newIds = ids.filter((id) => !memberIds.includes(id));
@@ -146,15 +151,24 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
     router.refresh();
   }
 
-  async function handleRemoveWorker(worker: TeamWorker) {
-    const ok = await confirm({ title: t("confirmRemoveWorker"), confirmLabel: t("removeWorker") });
+  async function handleUnassignWorker(worker: TeamWorker) {
+    const ok = await confirm({ title: t("confirmUnassignWorker"), confirmLabel: t("unassignWorker") });
     if (!ok) return;
     setRemovingWorkerId(worker.id);
     startTransition(async () => {
-      const result = await removeWorkerAction(worker.id, team.id);
+      const result = await unassignWorkerFromTeamAction(worker.id, team.id);
       if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
-      else if (result?.success) toast.success(t(result.success as "workerRemoved"));
+      else if (result?.success) toast.success(t(result.success as "workerUnassigned"));
       setRemovingWorkerId(null);
+      router.refresh();
+    });
+  }
+
+  function handleAssignWorker(workerId: number) {
+    startTransition(async () => {
+      const result = await assignWorkerToTeamAction(workerId, team.id);
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      else if (result?.success) toast.success(t(result.success as "workerAdded"));
       router.refresh();
     });
   }
@@ -349,6 +363,12 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
           </DataCardList>
         )}
 
+        {canMutate && (
+          <div className="border-b border-border px-4 py-4 md:px-6">
+            <WorkerPicker pickableWorkers={pickableWorkers} allTeams={allTeams} onSelect={handleAssignWorker} />
+          </div>
+        )}
+
         <TableToolbar>
           <h2 className="text-lg font-semibold text-veltol-fg">
             {t("workerCount", { count: workers.length })}
@@ -404,11 +424,11 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
+                            variant="outline"
                             disabled={isPending && removingWorkerId === w.id}
-                            onClick={() => handleRemoveWorker(w)}
+                            onClick={() => handleUnassignWorker(w)}
                           >
-                            {isPending && removingWorkerId === w.id ? "..." : t("removeWorker")}
+                            {isPending && removingWorkerId === w.id ? "..." : t("unassignWorker")}
                           </Button>
                         </div>
                       )}
@@ -450,12 +470,12 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
                     </Button>
                     <Button
                       size="sm"
-                      variant="destructive"
+                      variant="outline"
                       className="flex-1"
                       disabled={isPending && removingWorkerId === w.id}
-                      onClick={() => handleRemoveWorker(w)}
+                      onClick={() => handleUnassignWorker(w)}
                     >
-                      {isPending && removingWorkerId === w.id ? "..." : t("removeWorker")}
+                      {isPending && removingWorkerId === w.id ? "..." : t("unassignWorker")}
                     </Button>
                   </DataCardFooter>
                 )}
@@ -470,7 +490,8 @@ export function TeamDetailShell({ team, members, workers, allProfiles, canMutate
           key={editingWorker?.id ?? "add"}
           open={workerDialogOpen}
           onClose={closeWorkerDialog}
-          teamId={team.id}
+          teams={allTeams}
+          lockedTeamId={team.id}
           worker={editingWorker}
         />
       )}

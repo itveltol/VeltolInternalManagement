@@ -690,7 +690,7 @@
     "addTeam": "Add team",
     "editTeam": "Edit team",
     "deleteTeam": "Delete team",
-    "confirmDelete": "Delete this team? Membership records will be removed.",
+    "confirmDelete": "Delete this team? Membership records will be removed. Outfield workers on this team are kept and simply unlinked from it.",
     "teamSaved": "Team saved.",
     "teamCreated": "Team created.",
     "teamDeleted": "Team deleted.",
@@ -731,6 +731,8 @@
       "noLead": "No lead",
       "firstName": "First name",
       "lastName": "Last name",
+      "team": "Team",
+      "noTeam": "No team",
       "phone": "Phone",
       "notes": "Notes"
     },
@@ -741,14 +743,23 @@
       "noResults": "No matches.",
       "remove": "Remove {name}"
     },
+    "workerPicker": {
+      "label": "Add existing worker",
+      "placeholder": "Search workers...",
+      "empty": "No other workers available.",
+      "noResults": "No matches."
+    },
     "workerCount": "{count} outfield workers",
     "addWorker": "Add worker",
     "editWorker": "Edit worker",
-    "removeWorker": "Remove",
-    "confirmRemoveWorker": "Remove this worker from the team?",
+    "removeWorker": "Delete",
+    "confirmRemoveWorker": "Permanently delete this worker? This cannot be undone.",
+    "unassignWorker": "Unassign",
+    "confirmUnassignWorker": "Remove this worker from the team? They will stay in the system, just unassigned.",
     "workerAdded": "Worker added.",
     "workerSaved": "Worker saved.",
-    "workerRemoved": "Worker removed.",
+    "workerRemoved": "Worker deleted.",
+    "workerUnassigned": "Worker unassigned from the team.",
     "emptyWorkers": "No outfield workers yet.",
     "outfieldWorkersEyebrow": "ALL TEAMS · OUTFIELD WORKERS",
     "outfieldWorkersTitle": "Outfield workers"
@@ -1521,6 +1532,13 @@
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving...",
+    "doubleBooking": {
+      "title": "Double-booked worker",
+      "description": "Some of the people you picked are already scheduled elsewhere for an overlapping period. Choose where each of them should be.",
+      "conflictLine": "{name} is already assigned to {project} from {start} to {end}.",
+      "keepHere": "Keep here",
+      "keepOther": "Keep there"
+    },
     "columns": {
       "team": "Team",
       "members": "Members"
