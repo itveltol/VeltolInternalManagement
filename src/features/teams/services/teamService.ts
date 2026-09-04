@@ -47,11 +47,10 @@ export async function getAllTeamWorkers(api: TeamsApiClient): Promise<TeamWorker
 
 export async function addTeamWorker(
   api: TeamsApiClient,
-  teamId: number,
   payload: TeamWorkerPayload,
   userId: string,
 ): Promise<{ id: number }> {
-  return api.addTeamWorker(teamId, payload, userId);
+  return api.addTeamWorker(payload, userId);
 }
 
 export async function updateTeamWorker(
@@ -65,4 +64,8 @@ export async function updateTeamWorker(
 
 export async function removeTeamWorker(api: TeamsApiClient, id: number): Promise<void> {
   return api.removeTeamWorker(id);
+}
+
+export async function setWorkerTeam(api: TeamsApiClient, id: number, teamId: number | null, userId: string): Promise<void> {
+  return api.setWorkerTeam(id, teamId, userId);
 }

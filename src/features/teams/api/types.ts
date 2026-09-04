@@ -7,6 +7,7 @@ export interface CreateTeamPayload {
 }
 
 export interface TeamWorkerPayload {
+  team_id: number | null;
   first_name: string;
   last_name: string | null;
   phone: string | null;
@@ -25,7 +26,8 @@ export interface TeamsApiClient {
   removeTeamMember(teamId: number, userId: string): Promise<void>;
   getTeamWorkers(teamId: number): Promise<TeamWorker[]>;
   getAllTeamWorkers(): Promise<TeamWorker[]>;
-  addTeamWorker(teamId: number, payload: TeamWorkerPayload, userId: string): Promise<{ id: number }>;
+  addTeamWorker(payload: TeamWorkerPayload, userId: string): Promise<{ id: number }>;
   updateTeamWorker(id: number, payload: TeamWorkerPayload, userId: string): Promise<void>;
   removeTeamWorker(id: number): Promise<void>;
+  setWorkerTeam(id: number, teamId: number | null, userId: string): Promise<void>;
 }

@@ -690,7 +690,7 @@
     "addTeam": "Csapat hozzáadása",
     "editTeam": "Csapat szerkesztése",
     "deleteTeam": "Csapat törlése",
-    "confirmDelete": "Törli ezt a csapatot? A tagsági adatok is törlődnek.",
+    "confirmDelete": "Törli ezt a csapatot? A tagsági adatok törlődnek. A csapat helyszíni munkásai megmaradnak, csak leválasztjuk őket a csapatról.",
     "teamSaved": "Csapat mentve.",
     "teamCreated": "Csapat létrehozva.",
     "teamDeleted": "Csapat törölve.",
@@ -731,6 +731,8 @@
       "noLead": "Nincs vezető",
       "firstName": "Keresztnév",
       "lastName": "Vezetéknév",
+      "team": "Csapat",
+      "noTeam": "Nincs csapat",
       "phone": "Telefon",
       "notes": "Megjegyzés"
     },
@@ -741,14 +743,23 @@
       "noResults": "Nincs találat.",
       "remove": "{name} eltávolítása"
     },
+    "workerPicker": {
+      "label": "Meglévő munkás hozzáadása",
+      "placeholder": "Munkások keresése...",
+      "empty": "Nincs más elérhető munkás.",
+      "noResults": "Nincs találat."
+    },
     "workerCount": "{count} helyszíni munkás",
     "addWorker": "Munkás hozzáadása",
     "editWorker": "Munkás szerkesztése",
-    "removeWorker": "Eltávolítás",
-    "confirmRemoveWorker": "Eltávolítod ezt a munkást a csapatból?",
+    "removeWorker": "Törlés",
+    "confirmRemoveWorker": "Véglegesen törlöd ezt a munkást? Ez nem vonható vissza.",
+    "unassignWorker": "Leválasztás",
+    "confirmUnassignWorker": "Leválasztod ezt a munkást a csapatról? A munkás megmarad a rendszerben, csak csapat nélkülivé válik.",
     "workerAdded": "Munkás hozzáadva.",
     "workerSaved": "Munkás mentve.",
-    "workerRemoved": "Munkás eltávolítva.",
+    "workerRemoved": "Munkás törölve.",
+    "workerUnassigned": "Munkás leválasztva a csapatról.",
     "emptyWorkers": "Még nincs helyszíni munkás.",
     "outfieldWorkersEyebrow": "ÖSSZES CSAPAT · HELYSZÍNI MUNKÁSOK",
     "outfieldWorkersTitle": "Helyszíni munkások"
@@ -1521,6 +1532,13 @@
     "cancel": "Mégse",
     "save": "Mentés",
     "saving": "Mentés...",
+    "doubleBooking": {
+      "title": "Kettős beosztás",
+      "description": "Néhány kiválasztott ember már be van osztva máshova az átfedő időszakban. Válaszd ki, hogy melyikük hol legyen jelen.",
+      "conflictLine": "{name} már be van osztva ide: {project}, ekkor: {start} – {end}.",
+      "keepHere": "Maradjon itt",
+      "keepOther": "Maradjon ott"
+    },
     "columns": {
       "team": "Csapat",
       "members": "Tagok"

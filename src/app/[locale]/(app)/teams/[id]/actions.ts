@@ -15,6 +15,11 @@ async function getTeamPath(teamId: number) {
   return `/${locale}/teams/${teamId}`;
 }
 
+async function getProfilePath() {
+  const locale = await getLocale();
+  return `/${locale}/profile`;
+}
+
 async function requireAuth() {
   const { supabase, user } = await getSessionUser();
   if (!user) throw new Error("Unauthenticated");
@@ -74,12 +79,20 @@ export async function getTeamWorkers(teamId: number): Promise<TeamWorker[]> {
   return teamService.getTeamWorkers(api, teamId);
 }
 
+export async function getAllTeamWorkers(): Promise<TeamWorker[]> {
+  const { supabase } = await requireAuth();
+  const api = createSupabaseTeamsClient(supabase);
+  return teamService.getAllTeamWorkers(api);
+}
+
 function workerPayloadFromForm(formData: FormData): TeamWorkerPayload {
   const firstName = String(formData.get("first_name") ?? "").trim();
   const lastName = String(formData.get("last_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
+  const teamIdRaw = String(formData.get("team_id") ?? "").trim();
   return {
+    team_id: teamIdRaw ? Number(teamIdRaw) : null,
     first_name: firstName,
     last_name: lastName || null,
     phone: phone || null,
@@ -87,15 +100,19 @@ function workerPayloadFromForm(formData: FormData): TeamWorkerPayload {
   };
 }
 
+async function revalidateWorkerPaths(teamId: number | null) {
+  if (teamId !== null) revalidatePath(await getTeamPath(teamId));
+  revalidatePath(await getProfilePath());
+}
+
 export async function addWorkerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   try {
     const { supabase, user } = await requireMutator();
     const api = createSupabaseTeamsClient(supabase);
-    const teamId = Number(formData.get("teamId"));
     const payload = workerPayloadFromForm(formData);
     if (!payload.first_name) return { error: "errorGeneric" };
-    await teamService.addTeamWorker(api, teamId, payload, user.id);
-    revalidatePath(await getTeamPath(teamId));
+    await teamService.addTeamWorker(api, payload, user.id);
+    await revalidateWorkerPaths(payload.team_id);
     return { success: "workerAdded" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -108,11 +125,10 @@ export async function updateWorkerAction(_prev: ActionState, formData: FormData)
     const { supabase, user } = await requireMutator();
     const api = createSupabaseTeamsClient(supabase);
     const workerId = Number(formData.get("workerId"));
-    const teamId = Number(formData.get("teamId"));
     const payload = workerPayloadFromForm(formData);
     if (!payload.first_name) return { error: "errorGeneric" };
     await teamService.updateTeamWorker(api, workerId, payload, user.id);
-    revalidatePath(await getTeamPath(teamId));
+    await revalidateWorkerPaths(payload.team_id);
     return { success: "workerSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
@@ -120,13 +136,39 @@ export async function updateWorkerAction(_prev: ActionState, formData: FormData)
   }
 }
 
-export async function removeWorkerAction(workerId: number, teamId: number): Promise<ActionState> {
+export async function removeWorkerAction(workerId: number, teamId: number | null): Promise<ActionState> {
   try {
     const { supabase } = await requireMutator();
     const api = createSupabaseTeamsClient(supabase);
     await teamService.removeTeamWorker(api, workerId);
-    revalidatePath(await getTeamPath(teamId));
+    await revalidateWorkerPaths(teamId);
     return { success: "workerRemoved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function assignWorkerToTeamAction(workerId: number, teamId: number): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const api = createSupabaseTeamsClient(supabase);
+    await teamService.setWorkerTeam(api, workerId, teamId, user.id);
+    await revalidateWorkerPaths(teamId);
+    return { success: "workerAdded" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function unassignWorkerFromTeamAction(workerId: number, teamId: number): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireMutator();
+    const api = createSupabaseTeamsClient(supabase);
+    await teamService.setWorkerTeam(api, workerId, null, user.id);
+    await revalidateWorkerPaths(teamId);
+    return { success: "workerUnassigned" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };

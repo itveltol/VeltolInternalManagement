@@ -16,7 +16,27 @@ import type { WeekGrid, ScheduleProjectOption, ScheduleAssignee, PmColorEntry } 
 import type { CreateAssignmentPayload, UpdateAssignmentPayload, AssignmentDayPayload, AssignmentMemberInput, RawAssignmentMember } from "@/features/schedule/api/types";
 import type { RosterRow } from "@/features/schedule/components/TeamRosterTable";
 
-export type ActionState = { error?: string; success?: string; warning?: { conflictStart: string; conflictEnd: string } } | null;
+export type ActionState = {
+  error?: string;
+  success?: string;
+  warning?: { conflictStart: string; conflictEnd: string };
+  doubleBooking?: DoubleBookingConflictView[];
+} | null;
+
+export interface DoubleBookingConflictView {
+  subjectKey: string; // profile uuid, or `worker:<id>` — matches ScheduleAssignee.id
+  assigneeName: string;
+  assignmentId: number;
+  projectName: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface DoubleBookingResolution {
+  subjectKey: string;
+  assignmentId: number;
+  choice: "keepHere" | "keepOther";
+}
 
 async function getSchedulePath() {
   const locale = await getLocale();
@@ -183,6 +203,7 @@ export async function getTeamRoster(): Promise<RosterRow[]> {
     membersByTeam.set(member.team_id, list);
   }
   for (const worker of allWorkers) {
+    if (worker.team_id === null) continue;
     const list = membersByTeam.get(worker.team_id) ?? [];
     list.push({ id: `worker:${worker.id}`, name: `${worker.first_name} ${worker.last_name ?? ""}`.trim(), kind: "worker" });
     membersByTeam.set(worker.team_id, list);
@@ -250,6 +271,113 @@ function parseSubjects(members: AssignmentMemberInput[]) {
   return members.map((m) => ({ profileId: m.profile_id, teamWorkerId: m.team_worker_id }));
 }
 
+function subjectKeyOf(m: { profileId: string | null; teamWorkerId: number | null }): string {
+  return m.profileId ?? `worker:${m.teamWorkerId}`;
+}
+
+function toDoubleBookingView(conflicts: Awaited<ReturnType<typeof scheduleService.findDoubleBookingConflicts>>): DoubleBookingConflictView[] {
+  return conflicts.map((c) => ({
+    subjectKey: subjectKeyOf(c.subject),
+    assigneeName: c.assigneeName,
+    assignmentId: c.assignmentId,
+    projectName: c.projectName,
+    start_date: c.start_date,
+    end_date: c.end_date,
+  }));
+}
+
+/**
+ * Removes one member from an assignment for the given overlapping date range,
+ * while every *other* member stays assigned for the assignment's full original
+ * range — used when a double-booking is resolved by keeping the worker on the
+ * *new* assignment instead. Since membership isn't tracked per-day, the only
+ * way to drop one member for a sub-range is to split the assignment: the
+ * portion outside the conflicting range keeps the original full member list,
+ * and a new sibling assignment covers the conflicting range with that member
+ * excluded (dropped entirely if they were the only member there).
+ */
+async function removeMemberFromAssignmentForRange(
+  supabase: SupabaseClient,
+  userId: string,
+  assignmentId: number,
+  subject: AssignmentMemberInput,
+  rangeStart: string,
+  rangeEnd: string,
+) {
+  const client = createSupabaseScheduleClient(supabase);
+  const assignment = await client.getAssignmentById(assignmentId);
+  if (!assignment) return;
+
+  const clippedStart = rangeStart > assignment.start_date ? rangeStart : assignment.start_date;
+  const clippedEnd = rangeEnd < assignment.end_date ? rangeEnd : assignment.end_date;
+  if (clippedStart > clippedEnd) return;
+
+  const baseFields = {
+    project_id: assignment.project_id,
+    pm_id: assignment.pm_id,
+    sales_id: assignment.sales_id,
+    label: assignment.label,
+    color: assignment.color,
+  };
+  const allMembers = assignment.members.map((m) => ({ profile_id: m.profile_id, team_worker_id: m.team_worker_id }));
+  const membersWithoutSubject = allMembers.filter(
+    (m) => !(m.profile_id === subject.profile_id && m.team_worker_id === subject.team_worker_id),
+  );
+
+  async function createConflictPiece(start: string, end: string) {
+    if (membersWithoutSubject.length === 0) return; // nothing left to schedule for these days
+    const days = await client.getAssignmentDaysForAssignments([assignmentId], start, end);
+    const { id } = await client.createAssignment({ members: membersWithoutSubject, start_date: start, end_date: end, ...baseFields }, userId);
+    for (const day of days) {
+      await client.upsertAssignmentDay(id, day.work_date, { delegated: day.delegated, plus_hours: day.plus_hours }, userId);
+    }
+  }
+
+  if (clippedStart === assignment.start_date && clippedEnd === assignment.end_date) {
+    // The conflicting range covers the whole assignment — just drop the member from it (all days shared its dates).
+    if (membersWithoutSubject.length === 0) await client.deleteAssignment(assignmentId);
+    else await client.replaceAssignmentMembers(assignmentId, membersWithoutSubject);
+    return;
+  }
+
+  if (clippedStart === assignment.start_date) {
+    // Conflict eats the head: shrink the original to the tail (full roster kept), spin off a head piece without the subject.
+    const newStart = scheduleService.addDays(clippedEnd, 1);
+    await client.updateAssignment(assignmentId, { ...baseFields, start_date: newStart, end_date: assignment.end_date }, userId);
+    await client.pruneAssignmentDaysOutsideRange(assignmentId, newStart, assignment.end_date);
+    await createConflictPiece(clippedStart, clippedEnd);
+    return;
+  }
+
+  if (clippedEnd === assignment.end_date) {
+    // Conflict eats the tail: shrink the original to the head (full roster kept), spin off a tail piece without the subject.
+    const newEnd = scheduleService.addDays(clippedStart, -1);
+    await client.updateAssignment(assignmentId, { ...baseFields, start_date: assignment.start_date, end_date: newEnd }, userId);
+    await client.pruneAssignmentDaysOutsideRange(assignmentId, assignment.start_date, newEnd);
+    await createConflictPiece(clippedStart, clippedEnd);
+    return;
+  }
+
+  // Conflict is strictly inside the range: shrink the original to the head (full roster kept),
+  // spin off a middle piece without the subject, and a tail piece with the full roster restored.
+  const beforeEnd = scheduleService.addDays(clippedStart, -1);
+  const afterStart = scheduleService.addDays(clippedEnd, 1);
+  const tailDays = await client.getAssignmentDaysForAssignments([assignmentId], afterStart, assignment.end_date);
+
+  await client.updateAssignment(assignmentId, { ...baseFields, start_date: assignment.start_date, end_date: beforeEnd }, userId);
+  await client.pruneAssignmentDaysOutsideRange(assignmentId, assignment.start_date, beforeEnd);
+
+  await createConflictPiece(clippedStart, clippedEnd);
+
+  const { id: tailId } = await client.createAssignment(
+    { members: allMembers, start_date: afterStart, end_date: assignment.end_date, ...baseFields },
+    userId,
+  );
+  for (const day of tailDays) {
+    await client.upsertAssignmentDay(tailId, day.work_date, { delegated: day.delegated, plus_hours: day.plus_hours }, userId);
+  }
+}
+
 /**
  * Resolves member display names straight off the assignment's own joined
  * profile/team_worker rows — unlike searchAssigneesAction, this doesn't drop
@@ -266,7 +394,34 @@ function resolveMemberNames(members: RawAssignmentMember[]): string {
     .join(", ");
 }
 
-export async function createAssignmentAction(payload: CreateAssignmentPayload): Promise<ActionState> {
+/** Applies user-chosen resolutions: drops "keepOther" members from the new payload, and trims the other assignment's range for "keepHere" members. Returns the possibly-narrowed member list to save. */
+async function applyDoubleBookingResolutions(
+  supabase: SupabaseClient,
+  userId: string,
+  members: AssignmentMemberInput[],
+  start: string,
+  end: string,
+  resolutions: DoubleBookingResolution[],
+): Promise<AssignmentMemberInput[]> {
+  let nextMembers = members;
+  for (const resolution of resolutions) {
+    if (resolution.choice === "keepHere") {
+      const subject = members.find((m) => subjectKeyOf({ profileId: m.profile_id, teamWorkerId: m.team_worker_id }) === resolution.subjectKey);
+      if (!subject) continue;
+      await removeMemberFromAssignmentForRange(supabase, userId, resolution.assignmentId, subject, start, end);
+    } else {
+      nextMembers = nextMembers.filter(
+        (m) => subjectKeyOf({ profileId: m.profile_id, teamWorkerId: m.team_worker_id }) !== resolution.subjectKey,
+      );
+    }
+  }
+  return nextMembers;
+}
+
+export async function createAssignmentAction(
+  payload: CreateAssignmentPayload,
+  resolutions?: DoubleBookingResolution[],
+): Promise<ActionState> {
   try {
     if (!payload.project_id && !payload.label.trim()) return { error: "errorProjectOrLabelRequired" };
 
@@ -274,14 +429,31 @@ export async function createAssignmentAction(payload: CreateAssignmentPayload): 
     const scheduleClient = createSupabaseScheduleClient(supabase);
     const vacationClient = createSupabaseVacationClient(supabase);
 
+    if (!resolutions) {
+      const doubleBooking = await scheduleService.findDoubleBookingConflicts(
+        scheduleClient,
+        parseSubjects(payload.members),
+        payload.start_date,
+        payload.end_date,
+        null,
+      );
+      if (doubleBooking.length > 0) {
+        return { doubleBooking: toDoubleBookingView(doubleBooking) };
+      }
+    }
+
+    const members = resolutions
+      ? await applyDoubleBookingResolutions(supabase, user.id, payload.members, payload.start_date, payload.end_date, resolutions)
+      : payload.members;
+
     const conflict = await scheduleService.findAnyVacationConflict(
       vacationClient,
-      parseSubjects(payload.members),
+      parseSubjects(members),
       payload.start_date,
       payload.end_date,
     );
 
-    const { id } = await scheduleClient.createAssignment(payload, user.id);
+    const { id } = await scheduleClient.createAssignment({ ...payload, members }, user.id);
     revalidatePath(await getSchedulePath());
 
     if (conflict) {
@@ -310,6 +482,7 @@ export async function updateAssignmentAction(
   id: number,
   members: AssignmentMemberInput[],
   payload: UpdateAssignmentPayload,
+  resolutions?: DoubleBookingResolution[],
 ): Promise<ActionState> {
   try {
     if (!payload.project_id && !payload.label.trim()) return { error: "errorProjectOrLabelRequired" };
@@ -318,15 +491,32 @@ export async function updateAssignmentAction(
     const scheduleClient = createSupabaseScheduleClient(supabase);
     const vacationClient = createSupabaseVacationClient(supabase);
 
+    if (!resolutions) {
+      const doubleBooking = await scheduleService.findDoubleBookingConflicts(
+        scheduleClient,
+        parseSubjects(members),
+        payload.start_date,
+        payload.end_date,
+        id,
+      );
+      if (doubleBooking.length > 0) {
+        return { doubleBooking: toDoubleBookingView(doubleBooking) };
+      }
+    }
+
+    const resolvedMembers = resolutions
+      ? await applyDoubleBookingResolutions(supabase, user.id, members, payload.start_date, payload.end_date, resolutions)
+      : members;
+
     const conflict = await scheduleService.findAnyVacationConflict(
       vacationClient,
-      parseSubjects(members),
+      parseSubjects(resolvedMembers),
       payload.start_date,
       payload.end_date,
     );
 
     await scheduleClient.updateAssignment(id, payload, user.id);
-    await scheduleClient.replaceAssignmentMembers(id, members);
+    await scheduleClient.replaceAssignmentMembers(id, resolvedMembers);
     await scheduleClient.pruneAssignmentDaysOutsideRange(id, payload.start_date, payload.end_date);
     revalidatePath(await getSchedulePath());
 

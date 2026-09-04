@@ -690,7 +690,7 @@
     "addTeam": "Adaugă echipă",
     "editTeam": "Editează echipa",
     "deleteTeam": "Șterge echipa",
-    "confirmDelete": "Ștergeți această echipă? Înregistrările de apartenență vor fi eliminate.",
+    "confirmDelete": "Ștergeți această echipă? Înregistrările de apartenență vor fi eliminate. Muncitorii de teren ai echipei rămân, doar sunt deconectați de la echipă.",
     "teamSaved": "Echipă salvată.",
     "teamCreated": "Echipă creată.",
     "teamDeleted": "Echipă ștearsă.",
@@ -731,6 +731,8 @@
       "noLead": "Fără lider",
       "firstName": "Prenume",
       "lastName": "Nume",
+      "team": "Echipă",
+      "noTeam": "Fără echipă",
       "phone": "Telefon",
       "notes": "Note"
     },
@@ -741,14 +743,23 @@
       "noResults": "Niciun rezultat.",
       "remove": "Elimină {name}"
     },
+    "workerPicker": {
+      "label": "Adaugă un lucrător existent",
+      "placeholder": "Caută lucrători...",
+      "empty": "Niciun alt lucrător disponibil.",
+      "noResults": "Niciun rezultat."
+    },
     "workerCount": "{count} lucrători de teren",
     "addWorker": "Adaugă lucrător",
     "editWorker": "Editează lucrătorul",
-    "removeWorker": "Elimină",
-    "confirmRemoveWorker": "Elimini acest lucrător din echipă?",
+    "removeWorker": "Șterge",
+    "confirmRemoveWorker": "Ștergi definitiv acest lucrător? Această acțiune nu poate fi anulată.",
+    "unassignWorker": "Elimină din echipă",
+    "confirmUnassignWorker": "Elimini acest lucrător din echipă? Lucrătorul rămâne în sistem, doar fără echipă.",
     "workerAdded": "Lucrător adăugat.",
     "workerSaved": "Lucrător salvat.",
-    "workerRemoved": "Lucrător eliminat.",
+    "workerRemoved": "Lucrător șters.",
+    "workerUnassigned": "Lucrător eliminat din echipă.",
     "emptyWorkers": "Niciun lucrător de teren încă.",
     "outfieldWorkersEyebrow": "TOATE ECHIPELE · LUCRĂTORI DE TEREN",
     "outfieldWorkersTitle": "Lucrători de teren"
@@ -1521,6 +1532,13 @@
     "cancel": "Anulează",
     "save": "Salvează",
     "saving": "Se salvează...",
+    "doubleBooking": {
+      "title": "Muncitor programat dublu",
+      "description": "Unele persoane selectate sunt deja programate în altă parte pentru o perioadă suprapusă. Alege unde ar trebui să fie fiecare dintre ele.",
+      "conflictLine": "{name} este deja alocat(ă) la {project} din {start} până în {end}.",
+      "keepHere": "Păstrează aici",
+      "keepOther": "Păstrează acolo"
+    },
     "columns": {
       "team": "Echipă",
       "members": "Membri"
