@@ -1,11 +1,78 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProjectsApiClient, CreateProjectPayload, ProjectListParams, ProjectListResult } from "./types";
-import type { Project, ProjectManager, Currency } from "../types";
+import type { Project, ProjectManager, Currency, ContractType } from "../types";
 
 const DEFAULT_PAGE_SIZE = 20;
 
 const PROJECT_SELECT =
   "*, manager:profiles!manager_id(first_name, last_name), sales:profiles!sales_id(first_name, last_name), client:clients!client_id(id, name), updated_by_user:profiles!updated_by(first_name, last_name)";
+
+interface ContractPassthroughRow {
+  id: number;
+  project_id: number;
+  contract_number: string | null;
+  contract_date: string | null;
+  value_eur: number | null;
+  value_lei: number | null;
+  currency: Currency;
+  conversion_rate: number | null;
+  vat_rate: number;
+  contract_type: ContractType[];
+}
+
+/**
+ * Contract facts (contract_number/date, value_eur/lei, currency,
+ * conversion_rate, vat_rate, contract_type) moved off `projects` onto a
+ * separate `contracts` table (a project can now have several contracts —
+ * see supabase/migrations/20260908000127_create_contracts.sql). Every
+ * existing read consumer of these fields on `Project` (dashboard, search,
+ * list/detail pages) is left unchanged by re-attaching them here as a
+ * denormalized passthrough:
+ *   - contract_type becomes the UNION across all of the project's contracts
+ *     (same shape/semantics as the old single array column).
+ *   - The money/number fields (contract_number, value_eur, etc.) come from
+ *     the project's PRIMARY contract (its earliest-created one) — the
+ *     common case of one contract per project makes this a direct 1:1
+ *     passthrough; a project with several contracts shows its first
+ *     contract's figures here for anything not yet contract-aware.
+ * Money-precise, per-contract consumers (situations, the centralizer) do NOT
+ * use this passthrough — they read `contracts` rows directly.
+ */
+function withContracts(projects: Project[], contractsByProjectId: Map<number, ContractPassthroughRow[]>): Project[] {
+  return projects.map((project) => {
+    const contracts = (contractsByProjectId.get(project.id) ?? []).slice().sort((a, b) => a.id - b.id);
+    const primary = contracts[0];
+    const contract_type = Array.from(new Set(contracts.flatMap((c) => c.contract_type)));
+    return {
+      ...project,
+      contract_type,
+      contract_number: primary?.contract_number ?? null,
+      contract_date: primary?.contract_date ?? null,
+      value_eur: primary?.value_eur ?? null,
+      value_lei: primary?.value_lei ?? null,
+      currency: primary?.currency ?? "EUR",
+      conversion_rate: primary?.conversion_rate ?? null,
+      vat_rate: primary?.vat_rate ?? 21,
+    };
+  });
+}
+
+async function attachContracts(supabase: SupabaseClient, projects: Project[]): Promise<Project[]> {
+  if (projects.length === 0) return projects;
+  const { data, error } = await supabase
+    .from("contracts")
+    .select("id, project_id, contract_number, contract_date, value_eur, value_lei, currency, conversion_rate, vat_rate, contract_type")
+    .in("project_id", projects.map((p) => p.id));
+  if (error) throw new Error(error.message);
+
+  const byProjectId = new Map<number, ContractPassthroughRow[]>();
+  for (const row of (data ?? []) as ContractPassthroughRow[]) {
+    const list = byProjectId.get(row.project_id) ?? [];
+    list.push(row);
+    byProjectId.set(row.project_id, list);
+  }
+  return withContracts(projects, byProjectId);
+}
 
 interface CurrentAssignmentRow {
   project_id: number;
@@ -78,23 +145,38 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     if (filters?.category) {
       query = query.eq("project_category", filters.category);
     }
+
+    // contract_type/value_eur_equiv no longer live on `projects` (moved to
+    // `contracts`, which can now hold several rows per project — see
+    // supabase/migrations/20260908000127_create_contracts.sql), so these
+    // filters resolve matching project_ids from `contracts` first, then
+    // constrain the main query by id. Two round trips, same pattern already
+    // used by withCurrentAssignments() below for project_subcontractors.
     if (filters?.contractType && filters.contractType.length > 0) {
-      // ProjectsShell's original client-side filter matched the exact set of
-      // contract types (same members, not merely "includes these") —
-      // contains + containedBy together express that same set-equality
-      // regardless of stored array order.
-      query = query.contains("contract_type", filters.contractType).containedBy("contract_type", filters.contractType);
+      // Matches "this project has a contract covering (at least) these
+      // types" — i.e. any of its contracts' contract_type arrays overlaps
+      // the filter set. (The old single-array-per-project exact-set-match
+      // semantics don't carry over cleanly to multiple contracts; overlap
+      // is the closest faithful equivalent — revisit if this undershoots.)
+      const { data: matches, error: matchError } = await supabase
+        .from("contracts")
+        .select("project_id")
+        .overlaps("contract_type", filters.contractType);
+      if (matchError) throw new Error(matchError.message);
+      const projectIds = Array.from(new Set((matches ?? []).map((r) => (r as { project_id: number }).project_id)));
+      query = query.in("id", projectIds.length > 0 ? projectIds : [-1]);
     }
-    if (filters?.minValue != null) {
-      query = query.gte("value_eur", filters.minValue);
-    }
-    if (filters?.maxValue != null) {
-      query = query.lte("value_eur", filters.maxValue);
+    if (filters?.minValue != null || filters?.maxValue != null) {
+      let valueQuery = supabase.from("contracts").select("project_id, value_eur_equiv");
+      if (filters.minValue != null) valueQuery = valueQuery.gte("value_eur_equiv", filters.minValue);
+      if (filters.maxValue != null) valueQuery = valueQuery.lte("value_eur_equiv", filters.maxValue);
+      const { data: matches, error: matchError } = await valueQuery;
+      if (matchError) throw new Error(matchError.message);
+      const projectIds = Array.from(new Set((matches ?? []).map((r) => (r as { project_id: number }).project_id)));
+      query = query.in("id", projectIds.length > 0 ? projectIds : [-1]);
     }
 
-    query = sortByValue
-      ? query.order("value_eur", { ascending: sortByValue === "asc", nullsFirst: false })
-      : query.order("id");
+    query = query.order("id");
 
     if (page != null) {
       query = query.range((page - 1) * pageSize, page * pageSize - 1);
@@ -102,7 +184,24 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
 
     const { data, count, error } = await query;
     if (error) throw new Error(error.message);
-    const projects = await withCurrentAssignments(supabase, (data ?? []) as Project[]);
+    let projects = await attachContracts(supabase, (data ?? []) as Project[]);
+    projects = await withCurrentAssignments(supabase, projects);
+    // sortByValue used to be expressed as a DB-level order() on the
+    // generated value_eur_equiv column; now that the column lives on
+    // contracts (attached above as a passthrough), sort in memory on the
+    // already-fetched page instead of adding a third contracts round trip.
+    if (sortByValue) {
+      const withValue = projects.map((p) => ({
+        p,
+        v: p.currency === "EUR" ? p.value_eur : p.value_lei != null && p.conversion_rate ? p.value_lei / p.conversion_rate : null,
+      }));
+      withValue.sort((a, b) => {
+        if (a.v == null) return 1;
+        if (b.v == null) return -1;
+        return sortByValue === "asc" ? a.v - b.v : b.v - a.v;
+      });
+      projects = withValue.map((w) => w.p);
+    }
     return { projects, totalCount: count ?? projects.length };
   },
 
@@ -124,7 +223,8 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .single();
     if (error) return null;
     if (!data) return null;
-    const [project] = await withCurrentAssignments(supabase, [data as Project]);
+    let [project] = await attachContracts(supabase, [data as Project]);
+    [project] = await withCurrentAssignments(supabase, [project]);
     return project ?? null;
   },
 
@@ -135,7 +235,8 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .eq("client_id", clientId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return withCurrentAssignments(supabase, (data ?? []) as Project[]);
+    const projects = await attachContracts(supabase, (data ?? []) as Project[]);
+    return withCurrentAssignments(supabase, projects);
   },
 
   async getProjectManagers() {

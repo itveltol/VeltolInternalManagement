@@ -5,26 +5,48 @@ import type {
   UpdateSituationPayload,
   FinalizeSituationPayload,
 } from "./types";
-import type { Situation, SituationWithProject } from "../types";
+import type { Situation, SituationWithProject, SituationContractRef } from "../types";
 
-const PROJECT_SELECT =
-  "project:projects(id, name, value_eur, value_lei, currency, conversion_rate, progress_pct, contract_number, contract_date, current_phase, vat_rate, client:clients(id, name))";
+const CONTRACT_SELECT =
+  "contract:contracts(id, project_id, value_eur, value_lei, currency, conversion_rate, contract_number, contract_date, contract_type, vat_rate, project:projects(id, name, project_category, current_phase, client:clients(id, name)))";
+
+/** contract.progress_pct isn't a stored column (see contract_progress_pct()
+ * in supabase/migrations/20260908000128_situations_contract_id.sql) —
+ * computed on demand per contract and merged in here after the main select. */
+async function attachContractProgress(
+  supabase: SupabaseClient,
+  rows: (Omit<SituationWithProject, "contract"> & { contract: Omit<SituationContractRef, "progress_pct"> })[],
+): Promise<SituationWithProject[]> {
+  const contractIds = Array.from(new Set(rows.map((r) => r.contract.id)));
+  const progressByContractId = new Map<number, number>();
+  await Promise.all(
+    contractIds.map(async (id) => {
+      const { data, error } = await supabase.rpc("contract_progress_pct", { p_contract_id: id });
+      if (error) throw new Error(error.message);
+      progressByContractId.set(id, (data as number) ?? 0);
+    }),
+  );
+  return rows.map((row) => ({
+    ...row,
+    contract: { ...row.contract, progress_pct: progressByContractId.get(row.contract.id) ?? 0 },
+  })) as SituationWithProject[];
+}
 
 export const createSupabaseSituationsClient = (supabase: SupabaseClient): SituationsApiClient => ({
   async getAllSituationsWithProjects() {
     const { data, error } = await supabase
       .from("situations")
-      .select(`*, ${PROJECT_SELECT}`)
+      .select(`*, ${CONTRACT_SELECT}`)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown as SituationWithProject[];
+    return attachContractProgress(supabase, (data ?? []) as unknown as (Omit<SituationWithProject, "contract"> & { contract: Omit<SituationContractRef, "progress_pct"> })[]);
   },
 
-  async getSituationsForProject(projectId) {
+  async getSituationsForContract(contractId) {
     const { data, error } = await supabase
       .from("situations")
       .select("*")
-      .eq("project_id", projectId)
+      .eq("contract_id", contractId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return (data ?? []) as Situation[];
@@ -42,7 +64,7 @@ export const createSupabaseSituationsClient = (supabase: SupabaseClient): Situat
   async createSituation(payload: CreateSituationPayload) {
     const { data, error } = await supabase
       .from("situations")
-      .insert({ project_id: payload.projectId, name: payload.name, status: "draft" })
+      .insert({ project_id: payload.projectId, contract_id: payload.contractId, name: payload.name, status: "draft" })
       .select("id")
       .single();
     if (error) throw new Error(error.message);

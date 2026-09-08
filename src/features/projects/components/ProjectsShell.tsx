@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { ProjectsTable } from "./ProjectsTable";
 import { getProjectsPage } from "@/app/[locale]/(app)/projects/actions";
-import type { Project, ProjectManager, ProjectPhase, ProjectCategory, ContractType } from "../types";
+import type { Project, ProjectManager, ProjectPhase, ContractType } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
 
@@ -32,7 +32,6 @@ export function ProjectsShell({
   const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [page, setPage] = useState(1);
   const [filterPhase, setFilterPhase] = useState<ProjectPhase[]>([]);
-  const [filterCategory, setFilterCategory] = useState<ProjectCategory | "">("");
   const [filterContractType, setFilterContractType] = useState<ContractType[]>([]);
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
@@ -47,7 +46,10 @@ export function ProjectsShell({
         page,
         filters: {
           phase: filterPhase,
-          category: filterCategory || null,
+          // The /projects page manages industrial projects only —
+          // residential contracts are lightweight records tracked on the
+          // Contract Centralizer (/situations) instead.
+          category: "industrial",
           contractType: filterContractType,
           minValue: min,
           maxValue: max,
@@ -57,7 +59,7 @@ export function ProjectsShell({
       setProjects(result.projects);
       setTotalCount(result.totalCount);
     });
-  }, [page, filterPhase, filterCategory, filterContractType, minValue, maxValue, sortDir]);
+  }, [page, filterPhase, filterContractType, minValue, maxValue, sortDir]);
 
   // Skip the fetch that would otherwise fire on first render — the server
   // already gave us page 1 with no filters via initialProjects/initialTotalCount.
@@ -70,7 +72,7 @@ export function ProjectsShell({
     }
     fetchProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filterPhase, filterCategory, filterContractType, minValue, maxValue, sortDir]);
+  }, [page, filterPhase, filterContractType, minValue, maxValue, sortDir]);
 
   // Any filter/sort change should jump back to page 1 — wrap each setter so
   // the reset happens as part of the same state update, not derived in render.
@@ -81,7 +83,6 @@ export function ProjectsShell({
     };
   }
   const handleFilterPhase = resettingPage(setFilterPhase);
-  const handleFilterCategory = resettingPage(setFilterCategory);
   const handleFilterContractType = resettingPage(setFilterContractType);
   const handleMinValue = resettingPage(setMinValue);
   const handleMaxValue = resettingPage(setMaxValue);
@@ -102,8 +103,6 @@ export function ProjectsShell({
       exchangeRate={exchangeRate}
       filterPhase={filterPhase}
       onFilterPhase={handleFilterPhase}
-      filterCategory={filterCategory}
-      onFilterCategory={handleFilterCategory}
       filterContractType={filterContractType}
       onFilterContractType={handleFilterContractType}
       minValue={minValue}

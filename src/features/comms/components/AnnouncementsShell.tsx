@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { formatDate } from "@/shared/utils/formatDate";
 import { AnnouncementComposer } from "./AnnouncementComposer";
 import type { AnnouncementListMeta } from "@/app/[locale]/(app)/announcements/actions";
 import type { Note } from "../types";
@@ -106,7 +107,7 @@ function AnnouncementRow({
           <p className="line-clamp-2 text-[13px] text-veltol-fgDim">{note.body}</p>
           <span className="text-[11px] font-medium text-veltol-fgMute">
             {authorName}
-            {note.ack_deadline && ` · ${t("announcements.deadline", { date: note.ack_deadline })}`}
+            {note.ack_deadline && ` · ${t("announcements.deadline", { date: formatDate(note.ack_deadline) })}`}
           </span>
         </div>
         {showRatio && ackCount && (

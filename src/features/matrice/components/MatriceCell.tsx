@@ -13,6 +13,7 @@ import {
 import { ACTIVITY_STATUS_VALUES, STATUS_COLOR, STATUS_DOT_COLOR, type ActivityStatus } from "../types";
 import { AvizExpiryDialog } from "./AvizExpiryDialog";
 import { cn } from "@/shared/utils/cn";
+import { formatDate } from "@/shared/utils/formatDate";
 
 interface Props {
   status: ActivityStatus;
@@ -99,7 +100,7 @@ export const MatriceCell = memo(function MatriceCell({ status, projectId, activi
     </DropdownMenu>
     {expiresRequired && status === "finalizat" && expiresAt && (
       <span className="text-[10px] font-medium tabular-nums text-veltol-fgMute">
-        {t("grid.expiresOn", { date: expiresAt })}
+        {t("grid.expiresOn", { date: formatDate(expiresAt) })}
       </span>
     )}
     </div>

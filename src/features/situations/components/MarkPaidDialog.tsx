@@ -10,19 +10,19 @@ import { markSituationPaidAction } from "@/app/[locale]/(app)/situations/actions
 
 interface Props {
   situationId: number;
-  projectId: number;
+  contractId: number;
   open: boolean;
   onClose: () => void;
   onPaid: () => void;
 }
 
-export function MarkPaidDialog({ situationId, projectId, open, onClose, onPaid }: Props) {
+export function MarkPaidDialog({ situationId, contractId, open, onClose, onPaid }: Props) {
   const t = useTranslations("situations");
   const [isPending, startTransition] = useTransition();
 
   function handleConfirm() {
     startTransition(async () => {
-      const result = await markSituationPaidAction(situationId, projectId);
+      const result = await markSituationPaidAction(situationId, contractId);
       if (result?.error) toast.error(t(result.error as "errorNotAllowed" | "errorGeneric"));
       else onPaid();
     });

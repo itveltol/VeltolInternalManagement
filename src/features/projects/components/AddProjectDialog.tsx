@@ -210,7 +210,7 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
 
                 <div className="flex justify-end gap-3 pt-2">
                   <Dialog.Close render={<Button type="button" variant="outline">{t("cancel")}</Button>} />
-                  <Button type="submit" disabled={pending}>{pending ? t("saving") : t("save")}</Button>
+                  <Button type="submit" disabled={pending || !selectedClient}>{pending ? t("saving") : t("save")}</Button>
                 </div>
               </form>
             </>

@@ -28,9 +28,16 @@ const clientSchema = z.object({
     (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
     z.string().regex(/^RO\d{7,10}$/).nullable(),
   ),
+  // ONRC switched to a new unique registration number format in 2024
+  // (J AAAA XXXXXX JJ C, e.g. J2024000123005 — no slashes). Existing
+  // companies keep their old J40/1234/2020-style number until they file a
+  // mention change, so both formats must validate.
   j_number: z.preprocess(
-    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null),
-    z.string().regex(/^J\d{1,2}\/\d+\/\d{4}$/).nullable(),
+    (v) => (typeof v === "string" && v.trim() !== "" ? v.trim().toUpperCase() : null),
+    z
+      .string()
+      .regex(/^(?:J\d{1,2}\/\d+\/\d{4}|J\d{4}\d{6}\d{2}\d)$/)
+      .nullable(),
   ),
   legal_rep: optionalTrimmed(),
   cnp: z.preprocess(

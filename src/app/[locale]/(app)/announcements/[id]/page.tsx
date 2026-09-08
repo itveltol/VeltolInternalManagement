@@ -7,6 +7,7 @@ import { AcknowledgeButton } from "@/features/comms/components/AcknowledgeButton
 import { Badge } from "@/shared/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { summarizeAcks } from "@/features/comms/services/notes";
+import { formatDate } from "@/shared/utils/formatDate";
 import { getAnnouncement, getAckReceipts, getOwnReceipt } from "../actions";
 
 interface Props {
@@ -48,7 +49,7 @@ export default async function AnnouncementDetailPage({ params }: Props) {
           <Badge>{t("kind.announcement")}</Badge>
           {note.ack_deadline && (
             <span className="text-[12px] font-medium text-veltol-fgMute">
-              {t("announcements.deadline", { date: note.ack_deadline })}
+              {t("announcements.deadline", { date: formatDate(note.ack_deadline) })}
             </span>
           )}
         </div>

@@ -6,12 +6,14 @@ interface SituationsStore {
   isAddWithProjectDialogOpen: boolean;
   editingSituation: Situation | null;
   deletingId: number | null;
-  /** The contract centralizer row currently drilled into — its project's
+  /** The contract centralizer row currently drilled into — its contract's
    * situations list is level 2 of the centralizer → situations → detail
-   * drill-down. Null means we're at the centralizer (level 1). */
-  openProjectId: number | null;
+   * drill-down. Null means we're at the centralizer (level 1). A project can
+   * now have several contracts, so this addresses one specific contract, not
+   * the project as a whole. */
+  openContractId: number | null;
   openSituationId: number | null;
-  editingBillingProjectId: number | null;
+  editingBillingContractId: number | null;
   openAddDialog: () => void;
   closeAddDialog: () => void;
   openAddWithProjectDialog: () => void;
@@ -19,11 +21,11 @@ interface SituationsStore {
   openEditDialog: (situation: Situation) => void;
   closeEditDialog: () => void;
   setDeletingId: (id: number | null) => void;
-  openProject: (id: number) => void;
-  closeProject: () => void;
+  openContract: (id: number) => void;
+  closeContract: () => void;
   openSituation: (id: number) => void;
   closeSituation: () => void;
-  openBillingDialog: (projectId: number) => void;
+  openBillingDialog: (contractId: number) => void;
   closeBillingDialog: () => void;
 }
 
@@ -32,9 +34,9 @@ export const useSituationsStore = create<SituationsStore>()((set) => ({
   isAddWithProjectDialogOpen: false,
   editingSituation: null,
   deletingId: null,
-  openProjectId: null,
+  openContractId: null,
   openSituationId: null,
-  editingBillingProjectId: null,
+  editingBillingContractId: null,
   openAddDialog: () => set({ isAddDialogOpen: true }),
   closeAddDialog: () => set({ isAddDialogOpen: false }),
   openAddWithProjectDialog: () => set({ isAddWithProjectDialogOpen: true }),
@@ -42,10 +44,10 @@ export const useSituationsStore = create<SituationsStore>()((set) => ({
   openEditDialog: (situation) => set({ editingSituation: situation }),
   closeEditDialog: () => set({ editingSituation: null }),
   setDeletingId: (id) => set({ deletingId: id }),
-  openProject: (id) => set({ openProjectId: id, openSituationId: null }),
-  closeProject: () => set({ openProjectId: null, openSituationId: null }),
+  openContract: (id) => set({ openContractId: id, openSituationId: null }),
+  closeContract: () => set({ openContractId: null, openSituationId: null }),
   openSituation: (id) => set({ openSituationId: id }),
   closeSituation: () => set({ openSituationId: null }),
-  openBillingDialog: (projectId) => set({ editingBillingProjectId: projectId }),
-  closeBillingDialog: () => set({ editingBillingProjectId: null }),
+  openBillingDialog: (contractId) => set({ editingBillingContractId: contractId }),
+  closeBillingDialog: () => set({ editingBillingContractId: null }),
 }));

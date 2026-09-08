@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { getProject, getChecklistRecords, getProjectDocuments, getProjectFolderChildren, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig, getCefData, getBessData } from "./actions";
+import { getProjectContracts, getNextContractNumberSuggestion } from "@/app/[locale]/(app)/projects/actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
@@ -38,26 +39,29 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   if (!project) notFound();
 
   const isSubcontracted = project.execution_mode === "subcontracted";
+  const isResidential = project.project_category === "residential";
   const hasMaintenance = project.contract_type.includes("mentenanta");
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
+  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts, nextContractNumber] =
     await Promise.all([
-      isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
-      isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
-      isDocumentsTab && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]),
+      isSubcontracted || isResidential ? Promise.resolve([]) : getChecklistRecords(projectId),
+      isDocumentsTab || isResidential ? getProjectDocuments(projectId) : Promise.resolve([]),
+      (isDocumentsTab || isResidential) && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]),
       canMutate ? getProjectManagers() : Promise.resolve([]),
       canMutate ? getClientRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorRefs() : Promise.resolve([]),
       canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
-      isGanttTab || isSubcontracted ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], phases: [], cells: [], checklistRecordsByProjectId: {} }),
-      hasMaintenance && isMaintenanceTab ? getMaintenanceChecks(projectId) : Promise.resolve([]),
-      isComunicareTab ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
-      isSubcontracted ? Promise.resolve(null) : getExecutionData(projectId),
-      isSubcontracted ? Promise.resolve([]) : getStructureConfig(projectId),
+      !isResidential && (isGanttTab || isSubcontracted) ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], phases: [], cells: [], checklistRecordsByProjectId: {} }),
+      hasMaintenance && isMaintenanceTab && !isResidential ? getMaintenanceChecks(projectId) : Promise.resolve([]),
+      isComunicareTab && !isResidential ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
+      isSubcontracted || isResidential ? Promise.resolve(null) : getExecutionData(projectId),
+      isSubcontracted || isResidential ? Promise.resolve([]) : getStructureConfig(projectId),
       hasCef ? getCefData(projectId) : Promise.resolve(null),
       hasBess ? getBessData(projectId) : Promise.resolve(null),
+      getProjectContracts(projectId),
+      canMutate ? getNextContractNumberSuggestion() : Promise.resolve(""),
     ]);
   const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -71,9 +75,13 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
 
   const overallPct = computeOverallPct(rows);
 
-  const initialTab = isDocumentsTab ? "documents" : isGanttTab ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
+  const initialTab = isResidential
+    ? "documents"
+    : isDocumentsTab ? "documents" : isGanttTab ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
 
-  const activeTabLabel = isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
+  const activeTabLabel = isResidential
+    ? tDocs("breadcrumb")
+    : isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
 
   return (
     <ProjectDetailView
@@ -83,11 +91,14 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
         { label: activeTabLabel },
       ]}
       project={project}
+      contracts={contracts}
+      nextContractNumber={nextContractNumber}
       initialTab={initialTab}
       isSubcontracted={isSubcontracted}
       hasMaintenance={hasMaintenance}
       hasBess={hasBess}
       canMutate={canMutate}
+      isAdmin={role === "admin"}
       todayMs={todayMs}
       overallPct={overallPct}
       records={records}

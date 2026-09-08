@@ -7,7 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Plus, Trash2 } from "lucide-r
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { FilterField, FilterDropdown, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
+import { FilterField, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
 import {
   DataCardList, DataCard, DataCardHeader, DataCardTitle, DataCardSubtitle,
@@ -20,8 +20,8 @@ import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { phaseVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
-import { PROJECT_PHASES, PROJECT_CATEGORIES, CONTRACT_TYPES } from "../types";
-import type { Project, ProjectManager, ProjectType, ProjectPhase, ProjectCategory, ContractType } from "../types";
+import { PROJECT_PHASES, CONTRACT_TYPES } from "../types";
+import type { Project, ProjectManager, ProjectType, ProjectPhase, ContractType } from "../types";
 import type { SortDir } from "./ProjectsShell";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
@@ -50,8 +50,6 @@ interface Props {
   exchangeRate: number | null;
   filterPhase: ProjectPhase[];
   onFilterPhase: (v: ProjectPhase[]) => void;
-  filterCategory: ProjectCategory | "";
-  onFilterCategory: (v: ProjectCategory | "") => void;
   filterContractType: ContractType[];
   onFilterContractType: (v: ContractType[]) => void;
   minValue: string;
@@ -76,8 +74,6 @@ export function ProjectsTable({
   exchangeRate,
   filterPhase,
   onFilterPhase,
-  filterCategory,
-  onFilterCategory,
   filterContractType,
   onFilterContractType,
   minValue,
@@ -193,16 +189,6 @@ export function ProjectsTable({
               onChange={(v) => onFilterPhase(v as ProjectPhase[])}
               allLabel={t("filterAllPhases")}
               options={PROJECT_PHASES.map((p) => ({ value: p, label: tPhase(p) }))}
-            />
-          </FilterField>
-
-          <FilterField label={t("filters.category")} htmlFor="filter-category">
-            <FilterDropdown
-              id="filter-category"
-              value={filterCategory}
-              onChange={(v) => onFilterCategory(v as ProjectCategory | "")}
-              allLabel={t("filterAllCategories")}
-              options={PROJECT_CATEGORIES.map((c) => ({ value: c, label: tCategory(c) }))}
             />
           </FilterField>
 

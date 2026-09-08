@@ -3,6 +3,7 @@ import { Resend } from "resend";
 import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/core/supabase/admin";
 import { buildAvizReminders } from "@/features/matrice/services/avizReminderService";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { Activity, MatrixCell, MatrixProject } from "@/features/matrice/types";
 
 type ProjectRow = { id: number; name: string; project_type: MatrixProject["project_type"]; contract_type: MatrixProject["contract_type"]; manager_id: string | null };
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   const [{ data: activities, error: activitiesError }, { data: projects, error: projectsError }] = await Promise.all([
     supabase.from("activities").select("*").eq("is_aviz", true),
-    supabase.from("projects").select("id, name, project_type, contract_type, manager_id"),
+    supabase.from("projects").select("id, name, project_type, manager_id"),
   ]);
   if (activitiesError) {
     return NextResponse.json({ error: activitiesError.message }, { status: 500 });
@@ -33,10 +34,32 @@ export async function GET(request: NextRequest) {
   }
 
   const avizActivities = (activities ?? []) as Activity[];
-  const allProjects = (projects ?? []) as ProjectRow[];
-  if (avizActivities.length === 0 || allProjects.length === 0) {
+  const rawProjects = (projects ?? []) as Omit<ProjectRow, "contract_type">[];
+  if (avizActivities.length === 0 || rawProjects.length === 0) {
     return NextResponse.json({ sent: 0, notified: 0, managers: [] });
   }
+
+  // contract_type moved off projects onto `contracts` (a project can now
+  // have several) — buildAvizReminders() takes MatrixProject[], which still
+  // declares this field (even though its own logic never reads it), so it's
+  // reattached here as the union across each project's contracts, mirroring
+  // supabaseMatriceClient.ts's attachUnionedContractTypes().
+  const { data: contractRows, error: contractsError } = await supabase
+    .from("contracts")
+    .select("project_id, contract_type")
+    .in("project_id", rawProjects.map((p) => p.id));
+  if (contractsError) {
+    return NextResponse.json({ error: contractsError.message }, { status: 500 });
+  }
+  const contractTypesByProjectId = new Map<number, MatrixProject["contract_type"]>();
+  for (const row of contractRows ?? []) {
+    const existing = contractTypesByProjectId.get(row.project_id) ?? [];
+    contractTypesByProjectId.set(row.project_id, Array.from(new Set([...existing, ...row.contract_type])));
+  }
+  const allProjects: ProjectRow[] = rawProjects.map((p) => ({
+    ...p,
+    contract_type: contractTypesByProjectId.get(p.id) ?? [],
+  }));
 
   const { data: cells, error: cellsError } = await supabase
     .from("project_activity_status")
@@ -120,7 +143,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (resend && fromEmail) {
-      const listHtml = items.map((item) => `<li>${t("item", { project: item.projectName, activity: item.activityName, date: item.expiresAt })}</li>`).join("");
+      const listHtml = items.map((item) => `<li>${t("item", { project: item.projectName, activity: item.activityName, date: formatDate(item.expiresAt) })}</li>`).join("");
       const { error: sendError } = await resend.emails.send({
         from: fromEmail,
         to: manager.email,

@@ -3,6 +3,8 @@
 import { requireAuth } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
 import type { ProjectPhase, ContractType, ProjectCategory, ProjectStatus } from "@/features/projects/types";
+import type { Currency } from "@/shared/utils/currency";
+import { contractValueEur } from "@/shared/utils/currency";
 import { buildMaintenanceCycles } from "@/features/projects/maintenance/services/maintenanceService";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import { buildAvizReminders } from "@/features/matrice/services/avizReminderService";
@@ -23,6 +25,9 @@ export type DashboardProject = {
   project_type: string | null;
   status: ProjectStatus;
   value_eur: number | null;
+  value_lei: number | null;
+  currency: Currency;
+  conversion_rate: number | null;
   contract_date: string | null;
   deadline: string | null;
   created_at: string;
@@ -43,6 +48,59 @@ export type DashboardStats = {
   industrial: CategoryStats;
 };
 
+/** contract_type/value_eur/value_lei/currency/conversion_rate/contract_date
+ * moved off `projects` onto `contracts` (a project can now have several —
+ * see supabase/migrations/20260908000127_create_contracts.sql). Mirrors the
+ * passthrough supabaseProjectsClient.attachContracts() already does for the
+ * projects feature: contract_type is the UNION across all of a project's
+ * contracts, and the rest come from its PRIMARY (earliest-created) contract
+ * — same semantics, reimplemented here since the dashboard reads via the
+ * admin client directly rather than through that client. */
+interface DashboardContractRow {
+  id: number;
+  project_id: number;
+  value_eur: number | null;
+  value_lei: number | null;
+  currency: Currency;
+  conversion_rate: number | null;
+  contract_date: string | null;
+  contract_type: ContractType[];
+}
+
+async function attachDashboardContracts(
+  supabase: ReturnType<typeof createAdminClient>,
+  projects: Omit<DashboardProject, "contract_type" | "value_eur" | "value_lei" | "currency" | "conversion_rate" | "contract_date">[],
+): Promise<DashboardProject[]> {
+  if (projects.length === 0) return [];
+  const { data, error } = await supabase
+    .from("contracts")
+    .select("id, project_id, value_eur, value_lei, currency, conversion_rate, contract_date, contract_type")
+    .in("project_id", projects.map((p) => p.id));
+  if (error) console.error("[dashboard debug] contracts query error:", error);
+
+  const byProjectId = new Map<number, DashboardContractRow[]>();
+  for (const row of (data ?? []) as DashboardContractRow[]) {
+    const list = byProjectId.get(row.project_id) ?? [];
+    list.push(row);
+    byProjectId.set(row.project_id, list);
+  }
+
+  return projects.map((project) => {
+    const contracts = (byProjectId.get(project.id) ?? []).slice().sort((a, b) => a.id - b.id);
+    const primary = contracts[0];
+    const contract_type = Array.from(new Set(contracts.flatMap((c) => c.contract_type)));
+    return {
+      ...project,
+      contract_type,
+      value_eur: primary?.value_eur ?? null,
+      value_lei: primary?.value_lei ?? null,
+      currency: primary?.currency ?? "EUR",
+      conversion_rate: primary?.conversion_rate ?? null,
+      contract_date: primary?.contract_date ?? null,
+    };
+  });
+}
+
 export async function getProjects(): Promise<DashboardProject[]> {
   await requireAuth();
   // Dashboard is a portfolio-wide overview and should show every project to
@@ -52,25 +110,29 @@ export async function getProjects(): Promise<DashboardProject[]> {
   const supabase = createAdminClient();
   const { data: projects, error } = await supabase
     .from("projects")
-    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, contract_type, project_category, project_type, status, deadline, value_eur, contract_date, created_at")
+    .select("id, name, county, site_location, mw_solar, mw_bess, current_phase, project_category, project_type, status, deadline, created_at")
     .order("created_at", { ascending: true });
   if (error) console.error("[dashboard debug] projects query error:", error);
-  return projects ?? [];
+  return attachDashboardContracts(supabase, projects ?? []);
+}
+
+function totalCapacityOf(projects: DashboardProject[]): number {
+  return projects.reduce((acc, p) => acc + (p.mw_solar ?? 0) + (p.mw_bess ?? 0), 0);
 }
 
 function getCategoryStats(projects: DashboardProject[], category: ProjectCategory): CategoryStats {
   const categoryProjects = projects.filter((p) => p.project_category === category);
   return {
-    totalValue: categoryProjects.reduce((acc, p) => acc + (p.value_eur ?? 0), 0),
-    totalCapacity: categoryProjects.reduce((acc, p) => acc + (p.mw_solar ?? 0), 0),
+    totalValue: categoryProjects.reduce((acc, p) => acc + (contractValueEur(p.currency, p.value_eur, p.value_lei, p.conversion_rate) ?? 0), 0),
+    totalCapacity: totalCapacityOf(categoryProjects),
     totalProjects: categoryProjects.length,
   };
 }
 
 export async function getDashboardStats(projects: DashboardProject[]): Promise<DashboardStats> {
   return {
-    totalPortfolioValue: projects.reduce((acc, p) => acc + (p.value_eur ?? 0), 0),
-    totalCapacity: projects.reduce((acc, p) => acc + (p.mw_solar ?? 0), 0),
+    totalPortfolioValue: projects.reduce((acc, p) => acc + (contractValueEur(p.currency, p.value_eur, p.value_lei, p.conversion_rate) ?? 0), 0),
+    totalCapacity: totalCapacityOf(projects),
     totalProjects: projects.length,
     totalFinishedProjects: projects.filter((p) => p.status === "completed").length,
     residential: getCategoryStats(projects, "residential"),

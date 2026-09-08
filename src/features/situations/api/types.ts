@@ -2,6 +2,7 @@ import type { Situation, SituationWithProject } from "../types";
 
 export interface CreateSituationPayload {
   projectId: number;
+  contractId: number;
   name: string;
 }
 
@@ -18,8 +19,8 @@ export interface FinalizeSituationPayload {
 
 export interface SituationsApiClient {
   getAllSituationsWithProjects(): Promise<SituationWithProject[]>;
-  getSituationsForProject(projectId: number): Promise<Situation[]>;
-  /** Every final-or-paid situation across every project the caller can see —
+  getSituationsForContract(contractId: number): Promise<Situation[]>;
+  /** Every final-or-paid situation across every contract the caller can see —
    * the source for the centralizer's Executată/Facturată/Încasată roll-ups. */
   getAllBillableSituations(): Promise<Situation[]>;
   createSituation(payload: CreateSituationPayload): Promise<{ id: number }>;

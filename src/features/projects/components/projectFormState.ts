@@ -95,6 +95,9 @@ export function useProjectFormState(project?: Project) {
       ...f,
       project_category,
       project_type: project_category === "residential" ? "" : f.project_type,
+      // Residential contracts have no site build-out to subcontract or crew
+      // — execution mode/people-needed only apply to industrial.
+      execution_mode: project_category === "residential" ? "internal" : f.execution_mode,
     }));
   }, []);
 

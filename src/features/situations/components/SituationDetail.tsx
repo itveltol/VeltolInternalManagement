@@ -31,9 +31,9 @@ export function SituationDetail({ situation, situations, canMutate, canMutateBil
   const isFinal = situation.status === "final" || situation.status === "paid";
   const isPaid = situation.status === "paid";
 
-  const siblings = situations.filter((s) => s.project_id === situation.project_id);
+  const siblings = situations.filter((s) => s.contract_id === situation.contract_id);
   const previous = findPreviousFinalized(siblings, situation.id);
-  const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
+  const figures = computeSituationFigures(situation, situation.contract, previous?.pct_snapshot ?? 0);
 
   return (
     <div className="space-y-4">
@@ -46,10 +46,10 @@ export function SituationDetail({ situation, situations, canMutate, canMutateBil
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border px-6 py-4">
           <div>
             <Link
-              href={`/projects/${situation.project.id}`}
+              href={`/projects/${situation.contract.project.id}`}
               className="text-sm font-medium text-veltol-accent hover:underline"
             >
-              {situation.project.name}
+              {situation.contract.project.name}
             </Link>
             <div className="mt-1 flex items-center gap-3">
               <h2 className="text-lg font-semibold text-veltol-fg">{situation.name}</h2>
@@ -98,7 +98,7 @@ export function SituationDetail({ situation, situations, canMutate, canMutateBil
 
       <FinalizeSituationDialog
         situationId={situation.id}
-        projectId={situation.project.id}
+        contractId={situation.contract.id}
         open={isFinalizeOpen}
         onClose={() => setFinalizeOpen(false)}
         onFinalized={() => {
@@ -109,7 +109,7 @@ export function SituationDetail({ situation, situations, canMutate, canMutateBil
 
       <MarkPaidDialog
         situationId={situation.id}
-        projectId={situation.project.id}
+        contractId={situation.contract.id}
         open={isMarkPaidOpen}
         onClose={() => setMarkPaidOpen(false)}
         onPaid={() => {

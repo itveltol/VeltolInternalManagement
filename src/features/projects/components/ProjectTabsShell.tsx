@@ -70,6 +70,8 @@ export function ProjectTabsShell({
   const tComms = useTranslations("comms");
   const [, startTransition] = useTransition();
 
+  const isResidential = project.project_category === "residential";
+
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [loadedTabs, setLoadedTabs] = useState<Set<TabKey>>(new Set([initialTab]));
 
@@ -85,7 +87,9 @@ export function ProjectTabsShell({
   function switchTab(key: TabKey) {
     setTab(key);
     const url = new URL(window.location.href);
-    const isDefaultTab = key === "checklist" || (key === "gantt" && isSubcontracted);
+    const isDefaultTab = isResidential
+      ? key === "documents"
+      : key === "checklist" || (key === "gantt" && isSubcontracted);
     if (isDefaultTab) url.searchParams.delete("tab");
     else url.searchParams.set("tab", key);
     window.history.pushState(null, "", url.pathname + url.search);
@@ -139,19 +143,21 @@ export function ProjectTabsShell({
     });
   }
 
-  const isGanttActive = tab === "gantt" || isSubcontracted;
-  const isDocumentsActive = tab === "documents" && !isSubcontracted;
-  const isMaintenanceActive = tab === "maintenance" && hasMaintenance && !isSubcontracted;
-  const isComunicareActive = tab === "comunicare" && !isSubcontracted;
-  const isChecklistActive = !isGanttActive && !isDocumentsActive && !isMaintenanceActive && !isComunicareActive;
+  const isGanttActive = !isResidential && (tab === "gantt" || isSubcontracted);
+  const isDocumentsActive = isResidential || (tab === "documents" && !isSubcontracted);
+  const isMaintenanceActive = tab === "maintenance" && hasMaintenance && !isSubcontracted && !isResidential;
+  const isComunicareActive = tab === "comunicare" && !isSubcontracted && !isResidential;
+  const isChecklistActive = !isResidential && !isGanttActive && !isDocumentsActive && !isMaintenanceActive && !isComunicareActive;
 
-  const tabs = [
-    ...(isSubcontracted ? [] : [{ key: "checklist" as const, label: tDocs("tab.checklist") }]),
-    { key: "gantt" as const, label: t("gantt.tabLabel") },
-    ...(isSubcontracted ? [] : [{ key: "documents" as const, label: tDocs("tab.documents") }]),
-    ...(hasMaintenance && !isSubcontracted ? [{ key: "maintenance" as const, label: tMaintenance("tabLabel") }] : []),
-    ...(isSubcontracted ? [] : [{ key: "comunicare" as const, label: tComms("tabLabel") }]),
-  ];
+  const tabs = isResidential
+    ? [{ key: "documents" as const, label: tDocs("tab.documents") }]
+    : [
+        ...(isSubcontracted ? [] : [{ key: "checklist" as const, label: tDocs("tab.checklist") }]),
+        { key: "gantt" as const, label: t("gantt.tabLabel") },
+        ...(isSubcontracted ? [] : [{ key: "documents" as const, label: tDocs("tab.documents") }]),
+        ...(hasMaintenance && !isSubcontracted ? [{ key: "maintenance" as const, label: tMaintenance("tabLabel") }] : []),
+        ...(isSubcontracted ? [] : [{ key: "comunicare" as const, label: tComms("tabLabel") }]),
+      ];
 
   return (
     <>

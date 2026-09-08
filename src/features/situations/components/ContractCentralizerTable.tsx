@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { useRouter, Link } from "@/i18n/navigation";
+import { Plus, Pencil, ArrowUp, ArrowDown, ArrowUpDown, ArrowUpRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
 import { FilterField, FilterInput } from "@/shared/components/ui/filter-field";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
@@ -14,6 +15,7 @@ import {
 } from "@/shared/components/ui/data-card";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
+import { categoryVariant } from "@/shared/utils/status-variant";
 import { parseContractNumber } from "@/shared/utils/contractNumber";
 import { useSituationsStore } from "../hooks/useSituationsStore";
 import { CreateSituationWithProjectDialog } from "./CreateSituationWithProjectDialog";
@@ -34,7 +36,8 @@ interface Props {
   canMutateBilling: boolean;
 }
 
-function Money({ value }: { value: number }) {
+function Money({ value }: { value: number | null }) {
+  if (value === null) return <span className="text-veltol-fgMute">—</span>;
   return (
     <span className={cn(value < 0 && "text-veltol-red")}>
       {formatCurrency(value, "EUR")}
@@ -44,9 +47,11 @@ function Money({ value }: { value: number }) {
 
 export function ContractCentralizerTable({ rows, managers, clientRefs, nextContractNumber, canMutate, canMutateBilling }: Props) {
   const t = useTranslations("situations.centralizer");
+  const tSituations = useTranslations("situations");
+  const tCategory = useTranslations("projectCategory");
   const router = useRouter();
   const {
-    openProject,
+    openContract,
     openBillingDialog,
     openAddWithProjectDialog,
     isAddWithProjectDialogOpen,
@@ -101,10 +106,10 @@ export function ContractCentralizerTable({ rows, managers, clientRefs, nextContr
     return filtered.reduce(
       (acc, row) => ({
         eurContractValue: acc.eurContractValue + row.eur.contractValue.gross,
-        eurExecuted: acc.eurExecuted + row.eur.executed.gross,
+        eurExecuted: acc.eurExecuted + (row.eur.executed?.gross ?? 0),
         eurInvoiced: acc.eurInvoiced + row.eur.invoiced.gross,
         eurCollected: acc.eurCollected + row.eur.collected.gross,
-        eurRemainingToExecute: acc.eurRemainingToExecute + row.eur.remainingToExecute,
+        eurRemainingToExecute: acc.eurRemainingToExecute + (row.eur.remainingToExecute ?? 0),
         eurRemainingToInvoice: acc.eurRemainingToInvoice + row.eur.remainingToInvoice,
       }),
       {
@@ -243,33 +248,49 @@ export function ContractCentralizerTable({ rows, managers, clientRefs, nextContr
               ) : (
                 pagedRows.map((row) => (
                   <tr
-                    key={row.projectId}
+                    key={row.contractId}
                     className="group cursor-pointer transition-colors hover:bg-veltol-surface/50"
-                    onClick={() => openProject(row.projectId)}
+                    onClick={() => openContract(row.contractId)}
                   >
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-medium text-veltol-fg">
-                      {row.contractNumber ?? "—"}
+                      <div className="flex items-center gap-2">
+                        {row.contractNumber ?? "—"}
+                        <Badge variant={categoryVariant(row.projectCategory)}>
+                          {tCategory(row.projectCategory)}
+                        </Badge>
+                      </div>
                     </td>
                     <td className="max-w-[12rem] truncate px-4 py-3.5 align-top text-veltol-fgDim">
                       {row.beneficiar ?? "—"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim"><Money value={row.eur.contractValue.gross} /></td>
-                    <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim"><Money value={row.eur.executed.gross} /></td>
+                    <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim"><Money value={row.eur.executed?.gross ?? null} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim"><Money value={row.eur.invoiced.gross} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim"><Money value={row.eur.collected.gross} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px]"><Money value={row.eur.remainingToExecute} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top font-mono text-[12px]"><Money value={row.eur.remainingToInvoice} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5 align-top" onClick={(e) => e.stopPropagation()}>
-                      {canMutateBilling && (
+                      <div className="flex items-center gap-1.5">
                         <Button
                           size="icon-sm"
                           variant="outline"
-                          title={t("editContract")}
-                          onClick={() => openBillingDialog(row.projectId)}
+                          title={tSituations("viewProject")}
+                          nativeButton={false}
+                          render={<Link href={`/projects/${row.projectId}`} />}
                         >
-                          <Pencil />
+                          <ArrowUpRight />
                         </Button>
-                      )}
+                        {canMutateBilling && (
+                          <Button
+                            size="icon-sm"
+                            variant="outline"
+                            title={t("editContract")}
+                            onClick={() => openBillingDialog(row.contractId)}
+                          >
+                            <Pencil />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -299,34 +320,47 @@ export function ContractCentralizerTable({ rows, managers, clientRefs, nextContr
         ) : (
           <DataCardList>
             {pagedRows.map((row) => (
-              <DataCard key={row.projectId} onClick={() => openProject(row.projectId)}>
+              <DataCard key={row.contractId} onClick={() => openContract(row.contractId)}>
                 <DataCardHeader>
                   <div className="min-w-0">
-                    <DataCardTitle>{row.contractNumber ?? row.projectName}</DataCardTitle>
+                    <DataCardTitle className="flex items-center gap-2">
+                      {row.contractNumber ?? row.projectName}
+                      <Badge variant={categoryVariant(row.projectCategory)}>
+                        {tCategory(row.projectCategory)}
+                      </Badge>
+                    </DataCardTitle>
                     <DataCardSubtitle>{row.beneficiar ?? "—"}</DataCardSubtitle>
                   </div>
                 </DataCardHeader>
 
                 <DataCardBody>
                   <DataCardField label={t("columns.contractValueEur")}><Money value={row.eur.contractValue.gross} /></DataCardField>
-                  <DataCardField label={t("columns.executedEur")}><Money value={row.eur.executed.gross} /></DataCardField>
+                  <DataCardField label={t("columns.executedEur")}><Money value={row.eur.executed?.gross ?? null} /></DataCardField>
                   <DataCardField label={t("columns.invoicedEur")}><Money value={row.eur.invoiced.gross} /></DataCardField>
                   <DataCardField label={t("columns.collectedEur")}><Money value={row.eur.collected.gross} /></DataCardField>
                   <DataCardField label={t("columns.remainingToExecuteEur")}><Money value={row.eur.remainingToExecute} /></DataCardField>
                   <DataCardField label={t("columns.remainingToInvoiceEur")} full><Money value={row.eur.remainingToInvoice} /></DataCardField>
                 </DataCardBody>
 
-                {canMutateBilling && (
-                  <DataCardFooter>
+                <DataCardFooter>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    nativeButton={false}
+                    render={<Link href={`/projects/${row.projectId}`} />}
+                  >
+                    <ArrowUpRight data-icon="inline-start" /> {tSituations("viewProject")}
+                  </Button>
+                  {canMutateBilling && (
                     <Button
                       variant="outline"
                       className="flex-1"
-                      onClick={() => openBillingDialog(row.projectId)}
+                      onClick={() => openBillingDialog(row.contractId)}
                     >
                       <Pencil data-icon="inline-start" /> {t("editContract")}
                     </Button>
-                  </DataCardFooter>
-                )}
+                  )}
+                </DataCardFooter>
               </DataCard>
             ))}
           </DataCardList>

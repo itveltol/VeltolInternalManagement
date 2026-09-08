@@ -15,7 +15,7 @@ export default async function ProjectsPage() {
 
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
   const [{ projects, totalCount }, managers, clientRefs, subcontractorRefs, exchangeRate] = await Promise.all([
-    getProjectsPage({ page: 1 }),
+    getProjectsPage({ page: 1, filters: { category: "industrial" } }),
     canMutate ? getProjectManagers() : Promise.resolve([]),
     canMutate ? getClientRefs() : Promise.resolve([]),
     canMutate ? getSubcontractorRefs() : Promise.resolve([]),

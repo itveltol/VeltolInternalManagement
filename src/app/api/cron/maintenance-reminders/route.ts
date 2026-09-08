@@ -21,10 +21,25 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
 
+  // contract_type moved off projects onto `contracts` (a project can now
+  // have several — see supabase/migrations/20260908000127_create_contracts.sql)
+  // — find mentenanta-covered project ids via that table first.
+  const { data: maintenanceContracts, error: contractsError } = await supabase
+    .from("contracts")
+    .select("project_id")
+    .contains("contract_type", ["mentenanta"]);
+  if (contractsError) {
+    return NextResponse.json({ error: contractsError.message }, { status: 500 });
+  }
+  const maintenanceProjectIds = Array.from(new Set((maintenanceContracts ?? []).map((c) => c.project_id)));
+  if (maintenanceProjectIds.length === 0) {
+    return NextResponse.json({ sent: 0, notified: 0, managers: [] });
+  }
+
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
     .select("id, name, manager_id")
-    .contains("contract_type", ["mentenanta"]);
+    .in("id", maintenanceProjectIds);
   if (projectsError) {
     return NextResponse.json({ error: projectsError.message }, { status: 500 });
   }
