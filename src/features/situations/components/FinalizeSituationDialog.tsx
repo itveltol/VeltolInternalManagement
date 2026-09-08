@@ -10,19 +10,19 @@ import { finalizeSituationAction } from "@/app/[locale]/(app)/situations/actions
 
 interface Props {
   situationId: number;
-  projectId: number;
+  contractId: number;
   open: boolean;
   onClose: () => void;
   onFinalized: () => void;
 }
 
-export function FinalizeSituationDialog({ situationId, projectId, open, onClose, onFinalized }: Props) {
+export function FinalizeSituationDialog({ situationId, contractId, open, onClose, onFinalized }: Props) {
   const t = useTranslations("situations");
   const [isPending, startTransition] = useTransition();
 
   function handleConfirm() {
     startTransition(async () => {
-      const result = await finalizeSituationAction(situationId, projectId);
+      const result = await finalizeSituationAction(situationId, contractId);
       if (result?.error) toast.error(t(result.error as "errorNotAllowed" | "errorGeneric"));
       else onFinalized();
     });

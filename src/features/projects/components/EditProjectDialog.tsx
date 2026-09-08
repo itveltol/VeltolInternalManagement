@@ -125,7 +125,10 @@ export function EditProjectDialog(props: Props) {
               defaultStatus={project.status}
               defaultAssignmentStartDate={currentAssignment?.start_date ?? undefined}
               defaultAssignmentDeadline={currentAssignment?.deadline ?? undefined}
-              progressReadout={project.progress_pct}
+              // Residential contracts have no Matrice coverage, so
+              // progress_pct never moves off 0 — omit the misleading
+              // permanent 0% readout.
+              progressReadout={project.project_category === "residential" ? undefined : project.progress_pct}
               fieldErrors={state?.fieldErrors}
             />
 

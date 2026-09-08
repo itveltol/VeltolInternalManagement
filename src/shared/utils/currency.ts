@@ -42,3 +42,20 @@ export function formatConvertedCurrency(
   const unit = targetCurrency === "RON" ? "lei" : "EUR";
   return `≈ ${formatCurrency(converted, unit)}`;
 }
+
+/** Converts a value_eur/value_lei + currency + conversion_rate tuple (the
+ * pinned-rate convention used by projects, subcontractor assignments, and
+ * budget lines) into a single EUR figure. Returns null when there's no sound
+ * conversion available (e.g. a RON value with no pinned rate) — callers that
+ * need a null-safe running total should coalesce at the call site (`?? 0`),
+ * not here, since 0 and "unknown" mean different things. */
+export function contractValueEur(
+  currency: Currency,
+  valueEur: number | null,
+  valueLei: number | null,
+  conversionRate: number | null,
+): number | null {
+  if (currency === "EUR") return valueEur;
+  if (valueLei == null || conversionRate == null || conversionRate === 0) return null;
+  return valueLei / conversionRate;
+}

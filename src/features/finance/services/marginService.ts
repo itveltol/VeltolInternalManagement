@@ -46,21 +46,6 @@ export function groupBudgetLinesByCategory(
     });
 }
 
-/** Converts a project's own value_eur/value_lei + currency + conversion_rate
- * (the same pinned-rate convention as budget lines) into a single EUR figure
- * for the "Valoare contract" KPI. Returns null when there's no sound
- * conversion available (e.g. RON value with no pinned rate). */
-export function contractValueEur(
-  currency: "EUR" | "RON",
-  valueEur: number | null,
-  valueLei: number | null,
-  conversionRate: number | null,
-): number | null {
-  if (currency === "EUR") return valueEur;
-  if (valueLei == null || conversionRate == null || conversionRate === 0) return null;
-  return valueLei / conversionRate;
-}
-
 export function computeMarginSummary(
   contractValue: number | null,
   budgetLines: ProjectBudgetLine[],

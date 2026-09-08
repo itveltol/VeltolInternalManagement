@@ -118,6 +118,9 @@ export async function searchProjectsAction(query: string): Promise<ScheduleProje
     .select(
       "id, name, manager_id, manager:profiles!manager_id(id, first_name, last_name), sales_id, sales:profiles!sales_id(id, first_name, last_name)",
     )
+    // Residential contracts are lightweight records with no worker/team
+    // scheduling — exclude them so they don't show up as noise here.
+    .eq("project_category", "industrial")
     .order("name")
     .limit(20);
   if (query.trim() !== "") {

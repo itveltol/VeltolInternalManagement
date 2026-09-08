@@ -8,6 +8,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
 import { FilterField, FilterDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { Link } from "@/i18n/navigation";
+import { formatDate } from "@/shared/utils/formatDate";
 import type { AvizReminder, AvizState } from "@/features/matrice/types";
 
 const PAGE_SIZE = 5;
@@ -122,7 +123,7 @@ export function AvizRemindersCard({ reminders }: Props) {
                   <span className="truncate text-[14px] font-semibold text-veltol-fg">{reminder.projectName}</span>
                   <div className="truncate text-[12px] text-veltol-fgMute">{reminder.activityName}</div>
                 </div>
-                <Badge variant={BADGE_VARIANT[reminder.state]}>{t("avizReminders.expiresOn", { date: reminder.expiresAt })}</Badge>
+                <Badge variant={BADGE_VARIANT[reminder.state]}>{t("avizReminders.expiresOn", { date: formatDate(reminder.expiresAt) })}</Badge>
               </Link>
             ))}
           </div>

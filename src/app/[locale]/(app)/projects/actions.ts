@@ -9,13 +9,16 @@ import { getLocale } from "next-intl/server";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import * as projectService from "@/features/projects/services/projectService";
 import type { ProjectListParams, ProjectListResult, ProjectOption } from "@/features/projects/api/types";
+import { createSupabaseContractsClient } from "@/features/projects/contracts/supabaseContractsClient";
+import * as contractService from "@/features/projects/contracts/contractService";
+import type { CreateContractPayload } from "@/features/projects/contracts/types";
 import {
   createProjectFolder,
   grantProjectFolderAccess,
   listOneDriveFolderContents,
 } from "@/core/microsoft/folderProvider";
 import type { FolderItem } from "@/core/microsoft/folderProvider";
-import type { Project, ProjectManager } from "@/features/projects/types";
+import type { Project, ProjectManager, ContractType } from "@/features/projects/types";
 import {
   CONTRACT_TYPES,
   PROJECT_CATEGORIES,
@@ -36,7 +39,7 @@ import * as matriceService from "@/features/matrice/services/matriceService";
 import { buildDerivedActivityIds } from "@/features/matrice/services/checklistActivityMapping";
 import type { ActivityStatus } from "@/features/matrice/types";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
-import { getTodaysRate } from "@/features/exchangeRates/services/exchangeRateService";
+import { getTodaysRate, getRateForDate } from "@/features/exchangeRates/services/exchangeRateService";
 import { parseFormData } from "@/shared/utils/parseFormData";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 
@@ -160,7 +163,7 @@ const projectSchema = z.object({
   financial_type: z.enum(FINANCIAL_TYPES),
   project_type: optionalTrimmed(),
   manager_id: optionalTrimmed(),
-  sales_id: optionalTrimmed(),
+  sales_id: requiredTrimmed(),
   client_id: requiredNumber({ min: 1 }),
   execution_mode: z.enum(EXECUTION_MODES),
   current_phase: z.enum(PROJECT_PHASES).optional(),
@@ -181,6 +184,9 @@ const projectSchema = z.object({
   if (data.execution_mode === "internal") {
     if (!data.manager_id) {
       ctx.addIssue({ code: "custom", path: ["manager_id"], message: "Manager is required" });
+    }
+    if (data.project_category !== "residential" && data.people_needed == null) {
+      ctx.addIssue({ code: "custom", path: ["people_needed"], message: "People needed is required" });
     }
     if (!data.deadline) {
       ctx.addIssue({ code: "custom", path: ["deadline"], message: "Deadline is required" });
@@ -218,36 +224,48 @@ const projectSchema = z.object({
 
 // Quick-create path used from the situations centralizer's "add situation +
 // new project" flow — only the fields needed to start a contract now, with
-// everything else (county, coordinates, MW, contract dates...) left null to
-// be filled in later via the normal Edit project flow. Deliberately a
-// separate schema from projectSchema rather than making its many required
-// fields optional, since that would weaken validation for the full form too.
+// everything else (county, coordinates, execution mode...) left null to be
+// filled in later via the normal Edit project flow. Deliberately a separate
+// schema from projectSchema rather than making its many required fields
+// optional, since that would weaken validation for the full form too.
+// Capacity/value are only shown in the dialog for residential contracts —
+// industrial contracts fill them in later via the full Edit project flow —
+// so those fields must tolerate being entirely absent from the FormData for
+// industrial, but are required (via superRefine below) for residential.
 const minimalProjectSchema = z.object({
   name: z.preprocess((v) => (typeof v === "string" ? v.trim() : v), z.string().min(5)),
   client_id: requiredNumber({ min: 1 }),
-  manager_id: optionalTrimmed(),
-  contract_number: optionalTrimmed(),
+  manager_id: requiredTrimmed(),
+  contract_number: requiredTrimmed(),
   contract_date: optionalDate(),
+  project_category: z.enum(PROJECT_CATEGORIES),
+  mw_solar: optionalNumber({ min: 0, max: 9999 }),
+  mw_bess: optionalNumber({ min: 0, max: 9999 }),
+  value_amount: optionalNumber({ min: 0 }),
+  currency: z.enum(["EUR", "RON"]).optional().default("EUR"),
+}).superRefine((data, ctx) => {
+  if (data.project_category === "residential") {
+    if (data.mw_solar == null) {
+      ctx.addIssue({ code: "custom", path: ["mw_solar"], message: "MW Solar is required" });
+    }
+    if (data.mw_bess == null) {
+      ctx.addIssue({ code: "custom", path: ["mw_bess"], message: "MW BESS is required" });
+    }
+    if (data.value_amount == null) {
+      ctx.addIssue({ code: "custom", path: ["value_amount"], message: "Value is required" });
+    }
+  }
 });
 
 function extractProjectPayload(
   data: z.infer<typeof projectSchema>,
   formData: FormData,
   existing: Project | undefined,
-  conversionRate: number | null,
 ) {
   // paid_by is omitted from FormData entirely when its form control is
   // disabled/not rendered — fall back to the existing DB value instead of
   // sending null and clobbering it.
   const paid_by = formData.has("paid_by") ? data.paid_by : existing?.paid_by ?? null;
-
-  // Contract-type checkboxes are all-or-nothing on the form — if none were
-  // submitted at all, fall back to the existing value instead of clobbering
-  // it with an empty array.
-  const hasAnyContractTypeField = CONTRACT_TYPES.some((c) => formData.has(`contract_type_${c}`));
-  const contract_type = hasAnyContractTypeField
-    ? CONTRACT_TYPES.filter((c) => formData.get(`contract_type_${c}`) === "true")
-    : existing?.contract_type ?? [];
 
   return {
     name: data.name,
@@ -261,24 +279,54 @@ function extractProjectPayload(
     project_category: data.project_category,
     financial_type: data.financial_type,
     project_type: data.project_category === "residential" ? null : data.project_type,
-    contract_type,
     manager_id: data.manager_id,
     sales_id: data.sales_id,
     client_id: data.client_id,
     execution_mode: data.execution_mode,
     current_phase: data.current_phase ?? existing?.current_phase ?? "planning",
     progress_pct: existing?.progress_pct ?? 0,
-    contract_number: data.contract_number,
-    contract_date: data.contract_date,
     deadline: data.deadline,
-    value_eur: data.currency === "EUR" ? data.value_amount : null,
-    value_lei: data.currency === "RON" ? data.value_amount : null,
-    currency: data.currency,
-    conversion_rate: conversionRate,
     status: data.status ?? existing?.status ?? "on_schedule",
     status_manual: data.status_manual,
     notes: data.notes,
     paid_by,
+  };
+}
+
+/**
+ * The project's PRIMARY contract's fields, extracted from the same form
+ * submission — contract_number/date/value/currency/contract_type moved off
+ * `projects` onto `contracts` (see supabase/migrations/20260908000127_
+ * create_contracts.sql). The project form still shows exactly one set of
+ * these fields (v1: every project gets one implicit contract on creation;
+ * adding a second/later contract, e.g. a separate racordare contract, is a
+ * follow-up UI not part of this change) — this just routes them to the
+ * right table instead of the projects row.
+ */
+function extractContractPayload(
+  data: z.infer<typeof projectSchema>,
+  formData: FormData,
+  existingContractType: ContractType[] | undefined,
+  conversionRate: number | null,
+): Omit<CreateContractPayload, "project_id"> {
+  // Contract-type checkboxes are all-or-nothing on the form — if none were
+  // submitted at all, fall back to the existing value instead of clobbering
+  // it with an empty array.
+  const hasAnyContractTypeField = CONTRACT_TYPES.some((c) => formData.has(`contract_type_${c}`));
+  const contract_type = hasAnyContractTypeField
+    ? CONTRACT_TYPES.filter((c) => formData.get(`contract_type_${c}`) === "true")
+    : existingContractType ?? [];
+
+  return {
+    contract_number: data.contract_number,
+    contract_date: data.contract_date,
+    value_eur: data.currency === "EUR" ? data.value_amount : null,
+    value_lei: data.currency === "RON" ? data.value_amount : null,
+    currency: data.currency,
+    conversion_rate: conversionRate,
+    vat_rate: 21,
+    contract_type,
+    notes: null,
   };
 }
 
@@ -330,12 +378,13 @@ async function upsertAssignmentIfSubcontracted(
   // A genuinely new assignment row (new project, or reassignment to a
   // different subcontractor) always locks in today's rate. An in-place edit
   // of the existing assignment keeps its own rate frozen unless the user
-  // explicitly hit "refresh to today's rate".
+  // explicitly hit "refresh to today's rate". If no rate was ever pinned,
+  // pin one now for the assignment's start date instead of leaving it null.
   const isNewRow = !currentAssignment || currentAssignment.subcontractor_id !== data.subcontractor_id;
   const explicitRefresh = formData.get("assignment_price_refresh_rate") === "true";
   const conversionRate = isNewRow || explicitRefresh
     ? (await getExchangeRate()) ?? currentAssignment?.conversion_rate ?? null
-    : currentAssignment?.conversion_rate ?? null;
+    : currentAssignment?.conversion_rate ?? (await getExchangeRateForDate(data.assignment_start_date ?? null));
 
   const assignmentPayload = extractAssignmentPayload(data, formData, conversionRate);
   if (!assignmentPayload) return;
@@ -435,6 +484,23 @@ export async function getExchangeRate(): Promise<number | null> {
   }
 }
 
+/** The EUR→RON rate for a given date (e.g. a contract or assignment date) if
+ * BNR's feed already has that date cached, else today's rate — see
+ * getRateForDate. Used to pin a real rate the first time a value is entered
+ * on a record that was created before any rate existed for it, instead of
+ * leaving conversion_rate null forever. */
+async function getExchangeRateForDate(date: string | null): Promise<number | null> {
+  try {
+    const { supabase } = await requireAuth();
+    const client = createSupabaseExchangeRatesClient(supabase);
+    const rate = await getRateForDate(client, date);
+    return rate?.eurRon ?? null;
+  } catch (e: unknown) {
+    console.error("getExchangeRateForDate failed", e);
+    return null;
+  }
+}
+
 export async function createProject(
   _prev: ActionState,
   formData: FormData,
@@ -443,11 +509,23 @@ export async function createProject(
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(projectSchema, formData);
     if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
+    // Contract-type checkboxes live outside the zod schema (extractProjectPayload
+    // reads them straight from FormData) — at least one must be checked on
+    // creation, except for residential contracts, which never render them.
+    if (
+      parsed.data.project_category !== "residential" &&
+      !CONTRACT_TYPES.some((c) => formData.get(`contract_type_${c}`) === "true")
+    ) {
+      return { error: "errorValidation", fieldErrors: { contract_type: "invalid" } };
+    }
     const client = createSupabaseProjectsClient(supabase);
+    const contractsClient = createSupabaseContractsClient(supabase);
     const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
     const rate = await getTodaysRate(exchangeRateClient);
-    const payload = extractProjectPayload(parsed.data, formData, undefined, rate?.eurRon ?? null);
+    const payload = extractProjectPayload(parsed.data, formData, undefined);
     const { id: newId } = await projectService.createProject(client, payload, user.id);
+    const contractPayload = extractContractPayload(parsed.data, formData, undefined, rate?.eurRon ?? null);
+    await contractService.createContract(contractsClient, { ...contractPayload, project_id: newId });
     await upsertAssignmentIfSubcontracted(supabase, newId, parsed.data, formData);
     revalidatePath(await getProjectsPath());
 
@@ -456,7 +534,7 @@ export async function createProject(
     }
 
     try {
-      const folder = await createProjectFolder(payload.name, payload.contract_number);
+      const folder = await createProjectFolder(payload.name, contractPayload.contract_number);
       await client.linkOneDriveFolder(newId, folder.id, folder.url, user.id);
       await grantFolderAccessToAllUsers(folder.id);
       return { success: "projectCreated", folderCreated: true, projectId: newId };
@@ -478,41 +556,60 @@ export async function createMinimalProjectAction(
     const { supabase, user } = await requireMutator();
     const parsed = parseFormData(minimalProjectSchema, formData);
     if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
-    const { name, client_id, manager_id, contract_number, contract_date } = parsed.data;
+    const {
+      name,
+      client_id,
+      manager_id,
+      contract_number,
+      contract_date,
+      project_category,
+      mw_solar,
+      mw_bess,
+      value_amount,
+      currency,
+    } = parsed.data;
 
     const client = createSupabaseProjectsClient(supabase);
+    const contractsClient = createSupabaseContractsClient(supabase);
+    const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
+    const rate = value_amount != null ? await getTodaysRate(exchangeRateClient) : null;
     const payload = {
       name,
       county: null,
       site_location: null,
       site_lat: null,
       site_lng: null,
-      mw_solar: null,
-      mw_bess: null,
+      mw_solar,
+      mw_bess,
       people_needed: null,
-      project_category: "industrial" as const,
+      project_category,
       financial_type: "proprii" as const,
       project_type: null,
-      contract_type: [],
       manager_id,
       sales_id: null,
       client_id,
       execution_mode: "internal" as const,
       current_phase: "planning",
       progress_pct: 0,
-      contract_number,
-      contract_date,
       deadline: null,
-      value_eur: null,
-      value_lei: null,
-      currency: "EUR" as const,
-      conversion_rate: null,
       status: "on_schedule",
       status_manual: false,
       notes: null,
       paid_by: null,
     };
     const { id: newId } = await projectService.createProject(client, payload, user.id);
+    await contractService.createContract(contractsClient, {
+      project_id: newId,
+      contract_number,
+      contract_date,
+      value_eur: currency === "EUR" ? value_amount : null,
+      value_lei: currency === "RON" ? value_amount : null,
+      currency,
+      conversion_rate: value_amount != null ? rate?.eurRon ?? null : null,
+      vat_rate: 21,
+      contract_type: [],
+      notes: null,
+    });
     revalidatePath(await getProjectsPath());
 
     if (manager_id && manager_id !== user.id) {
@@ -520,7 +617,7 @@ export async function createMinimalProjectAction(
     }
 
     try {
-      const folder = await createProjectFolder(payload.name, payload.contract_number);
+      const folder = await createProjectFolder(payload.name, contract_number);
       await client.linkOneDriveFolder(newId, folder.id, folder.url, user.id);
       await grantFolderAccessToAllUsers(folder.id);
       return { success: "projectCreated", folderCreated: true, projectId: newId };
@@ -565,15 +662,32 @@ export async function updateProject(
     const parsed = parseFormData(projectSchema, formData);
     if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
     const client = createSupabaseProjectsClient(supabase);
+    const contractsClient = createSupabaseContractsClient(supabase);
     const projectId = Number(formData.get("projectId"));
     const existing = await projectService.getProjectById(client, projectId);
     // conversion_rate stays frozen on edit unless the user explicitly hit
-    // "refresh to today's rate" (CurrencyAmountInput's hidden flag).
+    // "refresh to today's rate" (CurrencyAmountInput's hidden flag). If no
+    // rate was ever pinned (e.g. a quick-created contract that had no value
+    // yet), pin one now for the contract date instead of leaving it null.
     const conversionRate = formData.get("value_amount_refresh_rate") === "true"
       ? (await getExchangeRate()) ?? existing?.conversion_rate ?? null
-      : existing?.conversion_rate ?? null;
-    const payload = extractProjectPayload(parsed.data, formData, existing ?? undefined, conversionRate);
+      : existing?.conversion_rate ?? (await getExchangeRateForDate(existing?.contract_date ?? null));
+    const payload = extractProjectPayload(parsed.data, formData, existing ?? undefined);
     await projectService.updateProject(client, projectId, payload, user.id);
+
+    // The form still edits one implicit "primary" contract per project (see
+    // extractContractPayload) — find it (existing.contract_* is already that
+    // contract's passthrough data) and update it in place, or create one if
+    // this project somehow has none yet.
+    const existingContracts = await contractService.getContractsForProject(contractsClient, projectId);
+    const primaryContract = existingContracts[0];
+    const contractPayload = extractContractPayload(parsed.data, formData, existing?.contract_type, conversionRate);
+    if (primaryContract) {
+      await contractService.updateContract(contractsClient, primaryContract.id, contractPayload);
+    } else {
+      await contractService.createContract(contractsClient, { ...contractPayload, project_id: projectId });
+    }
+
     await upsertAssignmentIfSubcontracted(supabase, projectId, parsed.data, formData);
 
     if (payload.manager_id && payload.manager_id !== existing?.manager_id && payload.manager_id !== user.id) {
@@ -676,6 +790,164 @@ export async function applyFolderScanSuggestions(
     return { success: "scanApplied" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+// --- Contract management (a project's "Contract & Financials" section can
+// now hold several contracts — e.g. a proiectare+executie contract signed
+// now, a separate racordare contract signed later — see the `contracts`
+// table, supabase/migrations/20260908000127_create_contracts.sql) ---
+
+const contractFormSchema = z.object({
+  contract_number: optionalTrimmed(),
+  contract_date: optionalDate(),
+  value_amount: optionalNumber({ min: 0 }),
+  currency: z.enum(["EUR", "RON"]),
+});
+
+export type ContractActionState = {
+  error?: string;
+  errorMessage?: string;
+  success?: string;
+  fieldErrors?: Record<string, string>;
+} | null;
+
+export async function getProjectContracts(projectId: number) {
+  const { supabase } = await requireAuth();
+  const contractsApi = createSupabaseContractsClient(supabase);
+  return contractService.getContractsForProject(contractsApi, projectId);
+}
+
+/** Suggested next contract number for "Add contract" on an existing
+ * project — same global (system-wide, not project-scoped) counter already
+ * used when creating a brand-new project, see suggestNextContractNumber(). */
+export async function getNextContractNumberSuggestion(): Promise<string> {
+  const { supabase } = await requireAuth();
+  const contractsApi = createSupabaseContractsClient(supabase);
+  const contracts = await contractService.getAllContractNumbers(contractsApi);
+  return contractService.suggestNextContractNumber(contracts);
+}
+
+async function getProjectContractsPath(projectId: number) {
+  const locale = await getLocale();
+  return `/${locale}/projects/${projectId}`;
+}
+
+export async function createContractForProjectAction(
+  _prev: ContractActionState,
+  formData: FormData,
+): Promise<ContractActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const parsed = parseFormData(contractFormSchema, formData);
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
+
+    const projectId = Number(formData.get("project_id"));
+    if (!projectId) return { error: "errorGeneric" };
+
+    const contract_type = CONTRACT_TYPES.filter((c) => formData.get(`contract_type_${c}`) === "true");
+    if (contract_type.length === 0) {
+      return { error: "errorValidation", fieldErrors: { contract_type: "invalid" } };
+    }
+
+    const { contract_number, contract_date, value_amount, currency } = parsed.data;
+    const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
+    const rate = value_amount != null ? await getTodaysRate(exchangeRateClient) : null;
+
+    const contractsApi = createSupabaseContractsClient(supabase);
+    const payload: CreateContractPayload = {
+      project_id: projectId,
+      contract_number,
+      contract_date,
+      value_eur: currency === "EUR" ? value_amount : null,
+      value_lei: currency === "RON" ? value_amount : null,
+      currency,
+      conversion_rate: value_amount != null ? rate?.eurRon ?? null : null,
+      vat_rate: 21,
+      contract_type,
+      notes: null,
+    };
+    await contractService.createContract(contractsApi, payload);
+
+    revalidatePath(await getProjectContractsPath(projectId));
+    return { success: "contractCreated" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    // Unique-violation on contract_claimed_types_exclusive_idx (see
+    // 20260908000127_create_contracts.sql) — a contract_type in this
+    // submission is already claimed by another contract on this project.
+    if (e instanceof Error && e.message.includes("contract_claimed_types_exclusive_idx")) {
+      return { error: "errorContractTypeClaimed" };
+    }
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function updateContractForProjectAction(
+  _prev: ContractActionState,
+  formData: FormData,
+): Promise<ContractActionState> {
+  try {
+    const { supabase } = await requireMutator();
+    const parsed = parseFormData(contractFormSchema, formData);
+    if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
+
+    const contractId = Number(formData.get("contract_id"));
+    const projectId = Number(formData.get("project_id"));
+    if (!contractId || !projectId) return { error: "errorGeneric" };
+
+    const contract_type = CONTRACT_TYPES.filter((c) => formData.get(`contract_type_${c}`) === "true");
+    if (contract_type.length === 0) {
+      return { error: "errorValidation", fieldErrors: { contract_type: "invalid" } };
+    }
+
+    const contractsApi = createSupabaseContractsClient(supabase);
+    const existing = await contractService.getContractById(contractsApi, contractId);
+    if (!existing) return { error: "errorGeneric" };
+
+    const { contract_number, contract_date, value_amount, currency } = parsed.data;
+    const refreshRate = formData.get("value_amount_refresh_rate") === "true";
+    const conversionRate = refreshRate
+      ? (await getExchangeRate()) ?? existing.conversion_rate
+      : existing.conversion_rate ?? (await getExchangeRateForDate(contract_date));
+
+    await contractService.updateContract(contractsApi, contractId, {
+      contract_number,
+      contract_date,
+      value_eur: currency === "EUR" ? value_amount : null,
+      value_lei: currency === "RON" ? value_amount : null,
+      currency,
+      conversion_rate: conversionRate,
+      contract_type,
+    });
+
+    revalidatePath(await getProjectContractsPath(projectId));
+    return { success: "contractSaved" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message.includes("contract_claimed_types_exclusive_idx")) {
+      return { error: "errorContractTypeClaimed" };
+    }
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function deleteContractForProjectAction(contractId: number, projectId: number): Promise<ContractActionState> {
+  try {
+    const { supabase, role } = await getUserProfileRole();
+    if (role !== "admin") return { error: "errorNotAllowed" };
+    const contractsApi = createSupabaseContractsClient(supabase);
+    await contractService.deleteContract(contractsApi, contractId);
+    revalidatePath(await getProjectContractsPath(projectId));
+    return { success: "contractDeleted" };
+  } catch (e: unknown) {
+    // situations.contract_id references contracts(id) on delete restrict
+    // (20260908000128_situations_contract_id.sql) — a contract with billed
+    // situations against it can't be deleted.
+    if (e instanceof Error && e.message.toLowerCase().includes("foreign key")) {
+      return { error: "errorContractHasSituations" };
+    }
     return { error: "errorGeneric" };
   }
 }

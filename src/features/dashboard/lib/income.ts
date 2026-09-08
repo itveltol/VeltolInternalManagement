@@ -1,4 +1,5 @@
 import type { DashboardProject } from "@/app/[locale]/(app)/dashboard/action";
+import { contractValueEur } from "@/shared/utils/currency";
 
 export interface MonthlyIncomePoint {
   month: number;
@@ -39,7 +40,7 @@ export function getMonthlyIncomeForYear(
     const d = new Date(p.deadline!);
     if (d.getUTCFullYear() !== year) continue;
     const bucket = buckets[d.getUTCMonth()];
-    bucket.totalEur += p.value_eur ?? 0;
+    bucket.totalEur += contractValueEur(p.currency, p.value_eur, p.value_lei, p.conversion_rate) ?? 0;
     bucket.projectCount += 1;
   }
 
@@ -57,7 +58,7 @@ export function getIncomeForMonths(
     for (const p of withDeadline) {
       const d = new Date(p.deadline!);
       if (d.getUTCFullYear() === year && d.getUTCMonth() === month) {
-        totalEur += p.value_eur ?? 0;
+        totalEur += contractValueEur(p.currency, p.value_eur, p.value_lei, p.conversion_rate) ?? 0;
         projectCount += 1;
       }
     }

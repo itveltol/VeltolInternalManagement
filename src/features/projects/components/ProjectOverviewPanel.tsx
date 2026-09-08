@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { EditProjectDialog } from "./EditProjectDialog";
+import { ContractsSection } from "./ContractsSection";
 import { phaseVariant, projectStatusVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
 import { formatConvertedCurrency } from "@/shared/utils/currency";
@@ -13,6 +14,7 @@ import { cn } from "@/shared/utils/cn";
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
+import type { Contract } from "@/features/projects/contracts/types";
 
 function DetailSection({ title, first, children }: { title: string; first?: boolean; children: React.ReactNode }) {
   return (
@@ -43,40 +45,44 @@ function FieldGrid({ items, wide }: { items: Array<{ label: string; value: React
   );
 }
 
+function formatValue(v: number | null, currency: string) {
+  if (v == null) return "—";
+  return `${new Intl.NumberFormat("hu-HU").format(v)} ${currency}`;
+}
+
+function formatSourceValueWithConversion(v: number | null, currency: "EUR" | "RON", conversionRate: number | null) {
+  if (v == null) return "—";
+  const converted = formatConvertedCurrency(v, currency, conversionRate);
+  return (
+    <>
+      {formatValue(v, currency === "EUR" ? "€" : "Lei")}
+      <span className="ml-1.5 text-veltol-fgMute">{converted}</span>
+    </>
+  );
+}
+
+export { DetailSection, FieldGrid, formatSourceValueWithConversion };
+
 interface Props {
   project: Project;
+  contracts: Contract[];
+  nextContractNumber: string;
   canMutate: boolean;
+  isAdmin: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
   currentAssignment: ProjectSubcontractorAssignment | null;
 }
 
-export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs, subcontractorRefs, currentAssignment }: Props) {
+export function ProjectOverviewPanel({ project, contracts, nextContractNumber, canMutate, isAdmin, managers, clientRefs, subcontractorRefs, currentAssignment }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
-  const tContractType = useTranslations("contractType");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editSession, setEditSession] = useState(0);
-
-  function formatValue(v: number | null, currency: string) {
-    if (v == null) return "—";
-    return `${new Intl.NumberFormat("hu-HU").format(v)} ${currency}`;
-  }
-
-  function formatSourceValueWithConversion(v: number | null, currency: "EUR" | "RON", conversionRate: number | null) {
-    if (v == null) return "—";
-    const converted = formatConvertedCurrency(v, currency, conversionRate);
-    return (
-      <>
-        {formatValue(v, currency === "EUR" ? "€" : "Lei")}
-        <span className="ml-1.5 text-veltol-fgMute">{converted}</span>
-      </>
-    );
-  }
 
   function formatMw(v: number | null) {
     return v != null ? `${v} MW` : "—";
@@ -91,6 +97,7 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
     : "—";
 
   const isSubcontracted = project.execution_mode === "subcontracted";
+  const isResidential = project.project_category === "residential";
 
   const identityFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.projectCategory"), value: tCategory(project.project_category) },
@@ -110,27 +117,8 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
   const peopleFields: Array<{ label: string; value: React.ReactNode }> = [
     { label: t("fields.manager"), value: managerName },
     { label: t("fields.sales"), value: salesName },
-    ...(isSubcontracted ? [] : [{ label: t("fields.peopleNeeded"), value: project.people_needed ?? "—" }]),
+    ...(isSubcontracted || isResidential ? [] : [{ label: t("fields.peopleNeeded"), value: project.people_needed ?? "—" }]),
     { label: t("fields.client"), value: project.client?.name ?? "—" },
-  ];
-
-  const contractFields: Array<{ label: string; value: React.ReactNode }> = [
-    {
-      label: t("fields.contractType"),
-      value: project.contract_type.length > 0
-        ? project.contract_type.map((c) => tContractType(c)).join(", ")
-        : "—",
-    },
-    { label: t("fields.contractNumber"), value: project.contract_number ?? "—" },
-    { label: t("fields.contractDate"), value: formatDate(project.contract_date) || "—" },
-    {
-      label: t("fields.value"),
-      value: formatSourceValueWithConversion(
-        project.currency === "EUR" ? project.value_eur : project.value_lei,
-        project.currency,
-        project.conversion_rate,
-      ),
-    },
   ];
 
   const executionFields: Array<{ label: string; value: React.ReactNode }> = isSubcontracted
@@ -152,7 +140,10 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         { label: t("fields.subcontractorDeadline"), value: formatDate(project.subcontractor?.deadline ?? null) || "—" },
       ]
     : [
-        { label: t("fields.progress"), value: `${project.progress_pct}%` },
+        // Residential contracts have no Matrice coverage, so progress_pct
+        // never moves off 0 — omit the field rather than show a misleading
+        // permanent 0%.
+        ...(isResidential ? [] : [{ label: t("fields.progress"), value: `${project.progress_pct}%` }]),
         { label: t("fields.deadline"), value: formatDate(project.deadline) || "—" },
       ];
 
@@ -161,7 +152,9 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={phaseVariant(project.current_phase)}>{tPhase(project.current_phase)}</Badge>
-          <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
+          {!isResidential && (
+            <Badge variant={projectStatusVariant(project.status)}>{tStatus(project.status)}</Badge>
+          )}
           {isSubcontracted && <Badge variant="secondary">{t("subcontracted")}</Badge>}
         </div>
         {canMutate && (
@@ -195,9 +188,13 @@ export function ProjectOverviewPanel({ project, canMutate, managers, clientRefs,
         <FieldGrid items={peopleFields} />
       </DetailSection>
 
-      <DetailSection title={t("sections.contractFinancials")}>
-        <FieldGrid items={contractFields} wide />
-      </DetailSection>
+      <ContractsSection
+        projectId={project.id}
+        contracts={contracts}
+        nextContractNumber={nextContractNumber}
+        canMutate={canMutate}
+        isAdmin={isAdmin}
+      />
 
       <DetailSection title={t("sections.executionStatus")}>
         <FieldGrid items={executionFields} />

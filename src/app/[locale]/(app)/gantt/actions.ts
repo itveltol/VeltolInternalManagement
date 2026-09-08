@@ -39,7 +39,10 @@ async function requireMutator() {
 export async function getGanttProjects(): Promise<Project[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseProjectsClient(supabase);
-  return projectService.getProjects(client);
+  // Residential contracts have no Matrice coverage — excluded so the
+  // portfolio Gantt doesn't show empty/all-N/A rows for them.
+  const { projects } = await client.getProjects({ filters: { category: "industrial" } });
+  return projects;
 }
 
 export async function getShownGanttProjectIds(): Promise<number[]> {

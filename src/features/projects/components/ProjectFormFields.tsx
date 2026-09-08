@@ -153,13 +153,17 @@ export function ProjectFormFields({
           />
         </FormField>
 
-        <FormField label={t("fields.executionMode")}>
-          <Select name="execution_mode" value={fields.execution_mode} onChange={onExecutionModeChange}>
-            {EXECUTION_MODES.map((m) => (
-              <option key={m} value={m} className="bg-card">{tExecutionMode(m)}</option>
-            ))}
-          </Select>
-        </FormField>
+        {fields.project_category === "residential" ? (
+          <input type="hidden" name="execution_mode" value="internal" />
+        ) : (
+          <FormField label={t("fields.executionMode")}>
+            <Select name="execution_mode" value={fields.execution_mode} onChange={onExecutionModeChange}>
+              {EXECUTION_MODES.map((m) => (
+                <option key={m} value={m} className="bg-card">{tExecutionMode(m)}</option>
+              ))}
+            </Select>
+          </FormField>
+        )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label={t("fields.projectCategory")}>
@@ -289,11 +293,13 @@ export function ProjectFormFields({
           </FormField>
         )}
 
-        <FormField label={t("fields.sales")}>
+        <FormField label={t("fields.sales")} required>
           <Select
             name="sales_id"
             value={fields.sales_id}
             onChange={onFieldChange("sales_id")}
+            required
+            aria-invalid={isInvalid("sales_id")}
           >
             <option value="" className="bg-card">—</option>
             {managers.map((m) => (
@@ -304,18 +310,21 @@ export function ProjectFormFields({
           </Select>
         </FormField>
 
-        <FormField label={t("fields.peopleNeeded")}>
-          <Input
-            name="people_needed"
-            type="number"
-            step="1"
-            min="0"
-            value={fields.people_needed}
-            onChange={onFieldChange("people_needed")}
-            className={aiClass("people_needed")}
-            aria-invalid={isInvalid("people_needed")}
-          />
-        </FormField>
+        {fields.execution_mode === "internal" && fields.project_category !== "residential" && (
+          <FormField label={t("fields.peopleNeeded")} required>
+            <Input
+              name="people_needed"
+              type="number"
+              step="1"
+              min="0"
+              required
+              value={fields.people_needed}
+              onChange={onFieldChange("people_needed")}
+              className={aiClass("people_needed")}
+              aria-invalid={isInvalid("people_needed")}
+            />
+          </FormField>
+        )}
 
         <FormField
           required
@@ -357,22 +366,27 @@ export function ProjectFormFields({
           </FormField>
         </div>
 
-        <FormField label={t("fields.contractType")}>
-          <div className="flex gap-6">
-            {CONTRACT_TYPES.map((c) => (
-              <label key={c} className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  name={`contract_type_${c}`}
-                  value="true"
-                  defaultChecked={contractTypeDefaults ? contractTypeDefaults.includes(c) : true}
-                  className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                />
-                <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
-              </label>
-            ))}
-          </div>
-        </FormField>
+        {fields.project_category !== "residential" && (
+          <FormField label={t("fields.contractType")} required>
+            <div className="flex gap-6">
+              {CONTRACT_TYPES.map((c) => (
+                <label key={c} className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name={`contract_type_${c}`}
+                    value="true"
+                    defaultChecked={contractTypeDefaults ? contractTypeDefaults.includes(c) : true}
+                    className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                  />
+                  <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                </label>
+              ))}
+            </div>
+            {isInvalid("contract_type") && (
+              <p className="text-xs text-destructive">{t("fields.contractTypeRequired")}</p>
+            )}
+          </FormField>
+        )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label={t("fields.contractNumber")} required={fields.execution_mode === "internal"}>
@@ -508,30 +522,32 @@ export function ProjectFormFields({
               </FormField>
             </div>
 
-            <FormField
-              label={
-                <div className="flex w-full items-center justify-between">
-                  <span>{t("fields.status")}</span>
-                  <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
-                    <input
-                      type="checkbox"
-                      checked={statusManual}
-                      onChange={(e) => onStatusManualChange(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                    />
-                    <span className="font-mono text-[10px] text-veltol-fgDim">
-                      {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
-                    </span>
-                  </label>
-                </div>
-              }
-            >
-              <Select name="status" defaultValue={defaultStatus} disabled={!statusManual}>
-                {PROJECT_STATUSES.map((s) => (
-                  <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
-                ))}
-              </Select>
-            </FormField>
+            {fields.project_category !== "residential" && (
+              <FormField
+                label={
+                  <div className="flex w-full items-center justify-between">
+                    <span>{t("fields.status")}</span>
+                    <label className="flex cursor-pointer items-center gap-1.5" title={t("autoManual.autoHint")}>
+                      <input
+                        type="checkbox"
+                        checked={statusManual}
+                        onChange={(e) => onStatusManualChange(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border border-border bg-veltol-surface accent-veltol-accent"
+                      />
+                      <span className="font-mono text-[10px] text-veltol-fgDim">
+                        {statusManual ? t("autoManual.manual") : t("autoManual.auto")}
+                      </span>
+                    </label>
+                  </div>
+                }
+              >
+                <Select name="status" defaultValue={defaultStatus} disabled={!statusManual}>
+                  {PROJECT_STATUSES.map((s) => (
+                    <option key={s} value={s} className="bg-card">{tStatus(s)}</option>
+                  ))}
+                </Select>
+              </FormField>
+            )}
           </>
         )}
       </FormSection>

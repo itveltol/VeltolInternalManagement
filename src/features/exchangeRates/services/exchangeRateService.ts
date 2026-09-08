@@ -50,3 +50,18 @@ export async function getTodaysRate(client: ExchangeRatesApiClient): Promise<Exc
     return client.getLatestRate();
   }
 }
+
+/** Returns the EUR/RON rate for a specific date if BNR published one and it's
+ * cached, else falls back to today's rate (see getTodaysRate) — BNR's live
+ * feed only ever exposes the current day, so a historical date can only be
+ * satisfied when that date's row already exists in exchange_rates. */
+export async function getRateForDate(
+  client: ExchangeRatesApiClient,
+  date: string | null,
+): Promise<ExchangeRate | null> {
+  if (date) {
+    const cached = await client.getRateByDate(date);
+    if (cached) return cached;
+  }
+  return getTodaysRate(client);
+}

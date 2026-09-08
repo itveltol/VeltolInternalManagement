@@ -35,7 +35,6 @@ export interface Project {
   project_category: ProjectCategory;
   financial_type: FinancialType;
   project_type: string | null;
-  contract_type: ContractType[];
   manager_id: string | null;
   manager?: { first_name: string | null; last_name: string | null } | null;
   sales_id: string | null;
@@ -62,17 +61,28 @@ export interface Project {
   } | null;
   current_phase: ProjectPhase;
   progress_pct: number;
+  /**
+   * contract_number/date/value_eur/value_lei/currency/conversion_rate/
+   * vat_rate/contract_type no longer live directly on the `projects` table —
+   * a project can now have several contracts (see `contracts` table,
+   * supabase/migrations/20260908000127_create_contracts.sql). These fields
+   * are still present here as a READ-ONLY denormalized passthrough,
+   * attached server-side by supabaseProjectsClient's attachContracts():
+   * contract_type is the UNION across all of the project's contracts, and
+   * the rest come from the project's PRIMARY (earliest-created) contract.
+   * Money-precise, per-contract logic (situations, the centralizer) must
+   * read `Contract` rows directly instead of these fields — see
+   * src/features/projects/contracts/types.ts.
+   */
   contract_number: string | null;
   contract_date: string | null;
   deadline: string | null;
   value_eur: number | null;
   value_lei: number | null;
-  /** Which of value_eur/value_lei was actually entered; the other is derived from conversion_rate. */
   currency: Currency;
-  /** EUR->RON rate on the day this project was created; locked in permanently, never recomputed. */
   conversion_rate: number | null;
-  /** Percent VAT for this contract's centralizer figures; net values (value_eur/value_lei, situations, budget lines) are unaffected. Default 21; 0 allowed for reverse charge/export. */
   vat_rate: number;
+  contract_type: ContractType[];
   status: ProjectStatus;
   /** When false, `status` is recomputed from Matrice/checklist progress on the next relevant change. */
   status_manual: boolean;

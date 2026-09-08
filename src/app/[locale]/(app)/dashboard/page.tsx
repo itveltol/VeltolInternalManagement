@@ -48,8 +48,10 @@ export default async function DashboardPage() {
   const kpiCardsByCategory = [
     { label: t("residentialValue"), value: residential.totalValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: false },
     { label: t("residentialProjects"), value: residential.totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
+    { label: t("residentialCapacity"), value: residential.totalCapacity.toLocaleString("hu-HU"), unit: "MW", delta: "", deltaPositive: true, featured: false },
     { label: t("industrialValue"), value: industrial.totalValue.toLocaleString("hu-HU"), unit: "EUR", delta: "", deltaPositive: true, featured: false },
     { label: t("industrialProjects"), value: industrial.totalProjects.toString(), unit: "", delta: "", deltaPositive: true, featured: false },
+    { label: t("industrialCapacity"), value: industrial.totalCapacity.toLocaleString("hu-HU"), unit: "MW", delta: "", deltaPositive: true, featured: false },
   ];
 
   return (

@@ -1,18 +1,26 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getAllSituationsWithProjects, getCentralizerRows, getProjectsForPicker } from "./actions";
+import { getAllSituationsWithProjects, getCentralizerRows, getProjectsForPicker, getContractRefs } from "./actions";
 import { getProjects as getDashboardProjects } from "@/app/[locale]/(app)/dashboard/action";
 import { getProjectManagers } from "@/app/[locale]/(app)/projects/actions";
 import { getClientRefs } from "@/app/[locale]/(app)/clients/actions";
-import { suggestNextContractNumber } from "@/features/projects/services/projectService";
+import { suggestNextContractNumber } from "@/features/projects/contracts/contractService";
 import { SituationsShell } from "@/features/situations/components/SituationsShell";
 import { IncomeByMonthChart, IncomeCompareChart } from "@/features/dashboard/components/DashboardCharts";
 import { ContractTypeBreakdown } from "@/features/dashboard/components/ContractTypeBreakdown";
 import { PhaseDistributionBar } from "@/features/dashboard/components/PhaseDistributionBar";
 import { getAvailableYears, countProjectsWithoutDeadline } from "@/features/dashboard/lib/income";
 
-export default async function SituationsPage() {
+interface Props {
+  searchParams: Promise<{ contract?: string }>;
+}
+
+export default async function SituationsPage({ searchParams }: Props) {
+  const { contract } = await searchParams;
+  const parsedContractId = contract ? Number(contract) : NaN;
+  const initialContractId = Number.isFinite(parsedContractId) && parsedContractId > 0 ? parsedContractId : null;
+
   const { user, role } = await getUserProfileRole();
 
   if (!user) {
@@ -23,15 +31,16 @@ export default async function SituationsPage() {
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
   const canMutateBilling = ["admin", "finance"].includes(role ?? "");
 
-  const [rows, situations, projects, dashboardProjects, managers, clientRefs] = await Promise.all([
+  const [rows, contracts, situations, projects, dashboardProjects, managers, clientRefs] = await Promise.all([
     getCentralizerRows(),
+    getContractRefs(),
     getAllSituationsWithProjects(),
     getProjectsForPicker(),
     getDashboardProjects(),
     getProjectManagers(),
     getClientRefs(),
   ]);
-  const nextContractNumber = suggestNextContractNumber(projects);
+  const nextContractNumber = suggestNextContractNumber(contracts);
   const t = await getTranslations("situations");
   const tDashboard = await getTranslations("dashboard");
   const tPhase = await getTranslations("projectPhase");
@@ -118,6 +127,7 @@ export default async function SituationsPage() {
 
       <SituationsShell
         rows={rows}
+        contracts={contracts}
         situations={situations}
         projects={projects}
         managers={managers}
@@ -125,6 +135,7 @@ export default async function SituationsPage() {
         nextContractNumber={nextContractNumber}
         canMutate={canMutate}
         canMutateBilling={canMutateBilling}
+        initialContractId={initialContractId}
       />
     </div>
   );

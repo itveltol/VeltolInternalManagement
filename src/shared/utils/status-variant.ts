@@ -1,4 +1,4 @@
-import type { ProjectStatus, ProjectPhase } from "@/features/projects/types";
+import type { ProjectStatus, ProjectPhase, ProjectCategory } from "@/features/projects/types";
 import type { VacationStatus } from "@/features/vacation/types";
 
 type BadgeVariant =
@@ -36,6 +36,10 @@ export function projectStatusVariant(status: ProjectStatus): BadgeVariant {
     on_hold:     "outline",
   };
   return map[status] ?? "secondary";
+}
+
+export function categoryVariant(category: ProjectCategory): BadgeVariant {
+  return category === "residential" ? "outline" : "secondary";
 }
 
 export function vacationStatusVariant(status: VacationStatus): BadgeVariant {

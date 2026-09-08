@@ -23,7 +23,7 @@ import { CreateSituationDialog } from "./CreateSituationDialog";
 import { RenameSituationDialog } from "./RenameSituationDialog";
 import { FinalizeSituationDialog } from "./FinalizeSituationDialog";
 import { MarkPaidDialog } from "./MarkPaidDialog";
-import type { Situation, SituationWithProject } from "../types";
+import type { Situation, SituationWithProject, SituationContractRef } from "../types";
 import type { Project } from "@/features/projects/types";
 
 const PAGE_SIZE = 20;
@@ -35,13 +35,13 @@ interface Props {
   canMutateBilling: boolean;
   /** Scopes the table to one contract — level 2 of the centralizer
    * drill-down. When set, the project-name search is hidden (redundant when
-   * already scoped to one project), new situations are created pre-bound to
-   * this project, and a back button returns to the centralizer. */
-  projectFilter?: Project | null;
+   * already scoped to one contract), new situations are created pre-bound to
+   * this contract, and a back button returns to the centralizer. */
+  contractFilter?: SituationContractRef | null;
   onBack?: () => void;
 }
 
-export function SituationsTable({ situations, projects, canMutate, canMutateBilling, projectFilter = null, onBack }: Props) {
+export function SituationsTable({ situations, projects, canMutate, canMutateBilling, contractFilter = null, onBack }: Props) {
   const t = useTranslations("situations");
   const router = useRouter();
   const confirm = useConfirm();
@@ -59,19 +59,19 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
     setDeletingId, openSituation,
   } = useSituationsStore();
 
-  const scoped = projectFilter ? situations.filter((s) => s.project_id === projectFilter.id) : situations;
+  const scoped = contractFilter ? situations.filter((s) => s.contract_id === contractFilter.id) : situations;
 
-  const contractSourceValue = projectFilter
-    ? (projectFilter.currency === "EUR" ? projectFilter.value_eur : projectFilter.value_lei)
+  const contractSourceValue = contractFilter
+    ? (contractFilter.currency === "EUR" ? contractFilter.value_eur : contractFilter.value_lei)
     : null;
-  const executedNet = projectFilter && contractSourceValue != null
-    ? (projectFilter.progress_pct / 100) * contractSourceValue
+  const executedNet = contractFilter && contractSourceValue != null
+    ? (contractFilter.progress_pct / 100) * contractSourceValue
     : null;
-  const executedGross = executedNet != null && projectFilter ? grossOf(executedNet, projectFilter.vat_rate) : null;
-  const executedUnit = projectFilter?.currency === "EUR" ? "EUR" : "lei";
-  const filtered = projectFilter
+  const executedGross = executedNet != null && contractFilter ? grossOf(executedNet, contractFilter.vat_rate) : null;
+  const executedUnit = contractFilter?.currency === "EUR" ? "EUR" : "lei";
+  const filtered = contractFilter
     ? scoped
-    : scoped.filter((s) => s.project.name.toLowerCase().includes(search.trim().toLowerCase()));
+    : scoped.filter((s) => s.contract.project.name.toLowerCase().includes(search.trim().toLowerCase()));
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -100,25 +100,27 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
   }
 
   function editableSituation(s: SituationWithProject): Situation {
-    const { project: _project, ...situation } = s;
+    const { contract: _contract, ...situation } = s;
     return situation;
   }
 
   return (
     <>
-      {projectFilter && onBack && (
-        <Button variant="outline" size="sm" onClick={onBack} className="mb-4">
-          <ArrowLeft data-icon="inline-start" />
-          {t("centralizer.title")}
-        </Button>
+      {contractFilter && onBack && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onBack}>
+            <ArrowLeft data-icon="inline-start" />
+            {t("centralizer.title")}
+          </Button>
+        </div>
       )}
       <TableShell>
         <TableToolbar>
           <div className="flex flex-col gap-0.5">
             <span className="text-xs font-medium text-veltol-fgMute">
-              {projectFilter ? (projectFilter.contract_number ?? projectFilter.name) : t("totalCount", { count: scoped.length })}
+              {contractFilter ? (contractFilter.contract_number ?? contractFilter.project.name) : t("totalCount", { count: scoped.length })}
             </span>
-            {projectFilter && executedGross != null && (
+            {contractFilter && executedGross != null && (
               <span className="text-xs text-veltol-fgMute">
                 {t("executed.label")}{" "}
                 <span className="font-medium text-veltol-fg">{formatCurrency(executedGross, executedUnit)}</span>
@@ -128,7 +130,7 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
             )}
           </div>
           <div className="flex items-center gap-3">
-            {!projectFilter && (
+            {!contractFilter && (
               <FilterField label={t("searchPlaceholder")} htmlFor="situations-search">
                 <FilterInput
                   id="situations-search"
@@ -176,9 +178,9 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
               ) : (
                 pagedSituations.map((situation) => {
                   const isFinal = situation.status === "final" || situation.status === "paid";
-                  const siblings = situations.filter((s) => s.project_id === situation.project_id);
+                  const siblings = situations.filter((s) => s.contract_id === situation.contract_id);
                   const previous = findPreviousFinalized(siblings, situation.id);
-                  const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
+                  const figures = computeSituationFigures(situation, situation.contract, previous?.pct_snapshot ?? 0);
                   return (
                     <tr
                       key={situation.id}
@@ -186,7 +188,7 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
                       onClick={() => openSituation(situation.id)}
                     >
                       <td className="px-5 py-3.5 align-top font-medium text-veltol-fg">
-                        {situation.project.name}
+                        {situation.contract.project.name}
                       </td>
                       <td className="px-5 py-3.5 align-top text-veltol-fgDim">
                         {situation.name}
@@ -206,13 +208,13 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
                         {formatCurrency(figures.amountEur, "EUR")}
                       </td>
                       <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
-                        {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.project.vat_rate) : null, "EUR")}
+                        {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.contract.vat_rate) : null, "EUR")}
                       </td>
                       <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
                         {formatCurrency(figures.amountLei, "lei")}
                       </td>
                       <td className="px-5 py-3.5 align-top font-mono text-[12px] text-veltol-fgDim">
-                        {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.project.vat_rate) : null, "lei")}
+                        {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.contract.vat_rate) : null, "lei")}
                       </td>
                       <td className="px-5 py-3.5 align-top" onClick={(e) => e.stopPropagation()}>
                         <div className="flex flex-col items-center gap-1">
@@ -278,14 +280,14 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
           <DataCardList>
             {pagedSituations.map((situation) => {
               const isFinal = situation.status === "final" || situation.status === "paid";
-              const siblings = situations.filter((s) => s.project_id === situation.project_id);
+              const siblings = situations.filter((s) => s.contract_id === situation.contract_id);
               const previous = findPreviousFinalized(siblings, situation.id);
-              const figures = computeSituationFigures(situation, situation.project, previous?.pct_snapshot ?? 0);
+              const figures = computeSituationFigures(situation, situation.contract, previous?.pct_snapshot ?? 0);
               return (
                 <DataCard key={situation.id} onClick={() => openSituation(situation.id)}>
                   <DataCardHeader>
                     <div className="min-w-0">
-                      <DataCardTitle>{situation.project.name}</DataCardTitle>
+                      <DataCardTitle>{situation.contract.project.name}</DataCardTitle>
                       <p className="mt-0.5 truncate text-[12px] text-veltol-fgDim">{situation.name}</p>
                     </div>
                     <DataCardBadgeSlot>
@@ -300,11 +302,11 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
                     </DataCardField>
                     <DataCardField label={t("columns.amountEur")}>{formatCurrency(figures.amountEur, "EUR")}</DataCardField>
                     <DataCardField label={t("columns.amountEurVat")}>
-                      {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.project.vat_rate) : null, "EUR")}
+                      {formatCurrency(figures.amountEur != null ? grossOf(figures.amountEur, situation.contract.vat_rate) : null, "EUR")}
                     </DataCardField>
                     <DataCardField label={t("columns.amountLei")}>{formatCurrency(figures.amountLei, "lei")}</DataCardField>
                     <DataCardField label={t("columns.amountLeiVat")}>
-                      {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.project.vat_rate) : null, "lei")}
+                      {formatCurrency(figures.amountLei != null ? grossOf(figures.amountLei, situation.contract.vat_rate) : null, "lei")}
                     </DataCardField>
                   </DataCardBody>
 
@@ -369,7 +371,7 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
 
       <CreateSituationDialog
         projects={projects}
-        defaultProject={projectFilter}
+        defaultProject={contractFilter ? projects.find((p) => p.id === contractFilter.project.id) ?? null : null}
         open={isAddDialogOpen}
         onClose={() => {
           closeAddDialog();
@@ -391,7 +393,7 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
       {finalizingSituation && (
         <FinalizeSituationDialog
           situationId={finalizingSituation.id}
-          projectId={finalizingSituation.project_id}
+          contractId={finalizingSituation.contract_id}
           open={!!finalizingSituation}
           onClose={() => setFinalizingSituation(null)}
           onFinalized={() => {
@@ -404,7 +406,7 @@ export function SituationsTable({ situations, projects, canMutate, canMutateBill
       {markingPaidSituation && (
         <MarkPaidDialog
           situationId={markingPaidSituation.id}
-          projectId={markingPaidSituation.project_id}
+          contractId={markingPaidSituation.contract_id}
           open={!!markingPaidSituation}
           onClose={() => setMarkingPaidSituation(null)}
           onPaid={() => {

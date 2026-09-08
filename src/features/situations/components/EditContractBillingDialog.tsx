@@ -8,22 +8,22 @@ import { Button } from "@/shared/components/ui/button";
 import { CurrencyAmountInput } from "@/shared/components/ui/currency-amount-input";
 import { ClientCombobox } from "@/features/clients/components/ClientCombobox";
 import { updateContractAction, getBillingExchangeRate } from "@/app/[locale]/(app)/situations/actions";
-import type { Project } from "@/features/projects/types";
+import type { SituationContractRef } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 
 interface Props {
-  project: Project;
+  contract: SituationContractRef;
   clientRefs: ClientRef[];
   open: boolean;
   onClose: () => void;
 }
 
-export function EditContractBillingDialog({ project, clientRefs, open, onClose }: Props) {
+export function EditContractBillingDialog({ contract, clientRefs, open, onClose }: Props) {
   const t = useTranslations("situations.centralizer");
   const tCommon = useTranslations("situations");
   const [state, action, pending] = useActionState(updateContractAction, null);
   const [client, setClient] = useState<ClientRef | null>(
-    project.client_id != null ? clientRefs.find((c) => c.id === project.client_id) ?? null : null,
+    contract.project.client != null ? clientRefs.find((c) => c.id === contract.project.client!.id) ?? null : null,
   );
 
   useEffect(() => {
@@ -38,10 +38,10 @@ export function EditContractBillingDialog({ project, clientRefs, open, onClose }
           <Dialog.Title className="text-xl font-semibold text-veltol-fg">
             {t("editContract")}
           </Dialog.Title>
-          <p className="mt-1 text-sm text-veltol-fgDim">{project.name}</p>
+          <p className="mt-1 text-sm text-veltol-fgDim">{contract.project.name}</p>
 
           <form action={action} className="mt-6 space-y-4">
-            <input type="hidden" name="project_id" value={project.id} />
+            <input type="hidden" name="contract_id" value={contract.id} />
 
             <div className="space-y-1.5">
               <Label className="text-[11px] font-medium text-veltol-fgMute">{t("columns.beneficiar")} *</Label>
@@ -60,9 +60,9 @@ export function EditContractBillingDialog({ project, clientRefs, open, onClose }
                 amountName="value_amount"
                 currencyName="value_currency"
                 required
-                defaultAmount={project.currency === "RON" ? project.value_lei : project.value_eur}
-                defaultCurrency={project.currency}
-                rate={project.conversion_rate}
+                defaultAmount={contract.currency === "RON" ? contract.value_lei : contract.value_eur}
+                defaultCurrency={contract.currency}
+                rate={contract.conversion_rate}
                 onRefreshRate={getBillingExchangeRate}
                 refreshLabel={t("fields.refreshRate")}
                 refreshErrorLabel={t("fields.refreshRateError")}

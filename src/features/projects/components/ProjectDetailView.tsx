@@ -21,6 +21,7 @@ import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import type { ProjectExecutionData, ProjectStructureConfigRow } from "@/features/projects/executionData/types";
 import type { FeedItem } from "@/features/comms/types";
 import type { DriveChildItem } from "@/core/microsoft/folderProvider";
+import type { Contract } from "@/features/projects/contracts/types";
 
 export interface BreadcrumbSegment {
   label: string;
@@ -30,11 +31,14 @@ export interface BreadcrumbSegment {
 interface Props {
   breadcrumb: BreadcrumbSegment[];
   project: Project;
+  contracts: Contract[];
+  nextContractNumber: string;
   initialTab: "checklist" | "gantt" | "documents" | "maintenance" | "comunicare";
   isSubcontracted: boolean;
   hasMaintenance: boolean;
   hasBess: boolean;
   canMutate: boolean;
+  isAdmin: boolean;
   todayMs: number;
   overallPct: number;
   records: ChecklistItemRecord[];
@@ -58,11 +62,14 @@ interface Props {
 export async function ProjectDetailView({
   breadcrumb,
   project,
+  contracts,
+  nextContractNumber,
   initialTab,
   isSubcontracted,
   hasMaintenance,
   hasBess,
   canMutate,
+  isAdmin,
   todayMs,
   overallPct,
   records,
@@ -86,6 +93,8 @@ export async function ProjectDetailView({
   const t = await getTranslations("checklist");
   const tPhase = await getTranslations("projectPhase");
   const tStatus = await getTranslations("projectStatus");
+  const tCategory = await getTranslations("projectCategory");
+  const isResidential = project.project_category === "residential";
 
   return (
     <div className="space-y-8">
@@ -120,11 +129,16 @@ export async function ProjectDetailView({
             <Badge variant={phaseVariant(project.current_phase)}>
               {tPhase(project.current_phase)}
             </Badge>
-            <Badge variant={projectStatusVariant(project.status)}>
-              {tStatus(project.status)}
-            </Badge>
+            {!isResidential && (
+              <Badge variant={projectStatusVariant(project.status)}>
+                {tStatus(project.status)}
+              </Badge>
+            )}
             {isSubcontracted && (
               <Badge variant="secondary">{tProjects("subcontracted")}</Badge>
+            )}
+            {isResidential && (
+              <Badge variant="outline">{tCategory("residential")}</Badge>
             )}
             {project.county && (
               <span className="font-mono text-[11px] text-veltol-fgMute">
@@ -152,7 +166,7 @@ export async function ProjectDetailView({
           </div>
         </div>
 
-        {!isSubcontracted && (
+        {!isSubcontracted && !isResidential && (
           <div className="shrink-0 text-right">
             <div className="font-mono text-[42px] font-bold leading-none tabular-nums text-veltol-accent">
               {overallPct}
@@ -167,7 +181,10 @@ export async function ProjectDetailView({
 
       <ProjectOverviewPanel
         project={project}
+        contracts={contracts}
+        nextContractNumber={nextContractNumber}
         canMutate={canMutate}
+        isAdmin={isAdmin}
         managers={managers}
         clientRefs={clientRefs}
         subcontractorRefs={subcontractorRefs}

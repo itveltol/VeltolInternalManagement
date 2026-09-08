@@ -2,16 +2,21 @@
 
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
+import { CuiLookupButton } from "@/shared/components/ui/cui-lookup-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
+import { useCuiLookup } from "@/shared/hooks/useCuiLookup";
 import { updateClientAction } from "@/app/[locale]/(app)/clients/actions";
 import { CLIENT_TYPES } from "../types";
 import type { Client, ClientType } from "../types";
 import { cn } from "@/shared/utils/cn";
+
+const CUI_LOOKUP_RE = /^RO?\d{7,10}$/i;
 
 const SELECT_CLASS =
   "h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40";
@@ -80,6 +85,8 @@ export function EditClientDialog({ client, open, onClose }: Props) {
     targetFields,
   });
 
+  const { lookupCui, loading: cuiLoading } = useCuiLookup();
+
   // Re-seed when the dialog opens for a different client
   useEffect(() => {
     setClientType(client.type);
@@ -123,7 +130,26 @@ export function EditClientDialog({ client, open, onClose }: Props) {
     }
   };
 
+  const handleCuiLookup = async () => {
+    try {
+      const company = await lookupCui(fields.cui);
+      if (!company) return;
+      setFields((f) => ({
+        ...f,
+        name: company.name,
+        reg_address: company.regAddress ?? f.reg_address,
+        j_number: company.jNumber ?? f.j_number,
+      }));
+      if (!company.isActive) {
+        toast.warning(t("cuiLookupInactive"));
+      }
+    } catch {
+      toast.error(t("cuiLookupFailed"));
+    }
+  };
+
   const nameHasContent = fields.name.trim().length >= 3;
+  const cuiLookupEnabled = CUI_LOOKUP_RE.test(fields.cui.trim());
 
   const aiClass = (fieldKey: keyof ClientFields) =>
     cn(hasSuggestions && fields[fieldKey] ? "ring-1 ring-veltol-accent/30" : "");
@@ -176,7 +202,10 @@ export function EditClientDialog({ client, open, onClose }: Props) {
             {clientType === "company" && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-medium text-veltol-fgMute">{t("fields.cui")}</Label>
+                    <CuiLookupButton onClick={handleCuiLookup} loading={cuiLoading} disabled={!cuiLookupEnabled} />
+                  </div>
                   <Input name="cui" value={fields.cui} onChange={setField("cui")} className={aiClass("cui")} aria-invalid={Boolean(state?.fieldErrors?.cui)} />
                 </div>
                 <div className="space-y-1.5">

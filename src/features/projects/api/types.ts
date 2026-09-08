@@ -1,4 +1,4 @@
-import type { Project, ProjectManager, ProjectCategory, ProjectPhase, ContractType, FinancialType, ExecutionMode, Currency } from "../types";
+import type { Project, ProjectManager, ProjectCategory, ProjectPhase, ContractType, FinancialType, ExecutionMode } from "../types";
 
 export interface CreateProjectPayload {
   name: string;
@@ -12,21 +12,13 @@ export interface CreateProjectPayload {
   project_category: ProjectCategory;
   financial_type: FinancialType;
   project_type: string | null;
-  contract_type: ContractType[];
   manager_id: string | null;
   sales_id: string | null;
   client_id: number | null;
   execution_mode: ExecutionMode;
   current_phase: string;
   progress_pct: number;
-  contract_number: string | null;
-  contract_date: string | null;
   deadline: string | null;
-  value_eur: number | null;
-  value_lei: number | null;
-  currency: Currency;
-  /** EUR->RON rate to lock in when this project is first created; ignored on update — see ProjectsApiClient.updateProject. */
-  conversion_rate: number | null;
   status: string;
   status_manual: boolean;
   notes: string | null;
