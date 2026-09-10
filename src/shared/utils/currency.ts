@@ -11,7 +11,11 @@ export function grossOf(net: number, vatRate: number): number {
 
 export function formatCurrency(value: number | null, unit: "EUR" | "lei"): string {
   if (value == null) return "—";
-  return `${new Intl.NumberFormat("hu-HU").format(Math.round(value))} ${unit}`;
+  const formatted = new Intl.NumberFormat("hu-HU", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+  return `${formatted} ${unit}`;
 }
 
 /** Converts an amount between EUR and RON using a given EUR→RON rate

@@ -82,6 +82,7 @@ export function CurrencyAmountInput({
           name={amountName}
           type="number"
           min="0"
+          step="0.01"
           required={required}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
