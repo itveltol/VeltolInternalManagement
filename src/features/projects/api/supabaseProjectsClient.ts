@@ -242,7 +242,7 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
   async getProjectManagers() {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, last_name")
+      .select("id, first_name, last_name, email")
       .in("role", ["admin", "project_manager"])
       .order("last_name");
     if (error) throw new Error(error.message);

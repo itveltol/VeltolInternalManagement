@@ -34,9 +34,8 @@ export async function getProjectManagers(client: ProjectsApiClient): Promise<Pro
 // so the session-scoped client above returns an incomplete list for
 // non-admins. This reads via the admin client to get the full manager list
 // for every caller, and is safe to cache globally since the result is the
-// same regardless of who's asking. There's no mutation path for profiles.role
-// today, so no updateTag/revalidateTag call site exists yet — add one
-// wherever a role-change action is introduced.
+// same regardless of who's asking. Busted by updateTag("project-managers")
+// in profile/actions.ts wherever a profile's name/role changes.
 export const getCachedProjectManagers = unstable_cache(
   async (): Promise<ProjectManager[]> => {
     const client = createSupabaseProjectsClient(createAdminClient());

@@ -12,8 +12,8 @@ import type {
 const ASSIGNMENT_SELECT = `
   id, project_id, pm_id, sales_id, start_date, end_date, label, color,
   project:projects!project_id(id, name),
-  pm:profiles!pm_id(id, first_name, last_name),
-  sales:profiles!sales_id(id, first_name, last_name),
+  pm:profiles!pm_id(id, first_name, last_name, email),
+  sales:profiles!sales_id(id, first_name, last_name, email),
   members:schedule_assignment_members(
     profile_id, team_worker_id,
     profile:profiles!profile_id(id, first_name, last_name, email),

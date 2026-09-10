@@ -46,8 +46,8 @@ export interface RawScheduleAssignment {
   label: string;
   color: string | null;
   project: { id: number; name: string } | null;
-  pm: { id: string; first_name: string | null; last_name: string | null } | null;
-  sales: { id: string; first_name: string | null; last_name: string | null } | null;
+  pm: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
+  sales: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
   members: RawAssignmentMember[];
 }
 

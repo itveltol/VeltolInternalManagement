@@ -56,7 +56,7 @@ interface Props {
   onLocationSelect: (lat: number, lng: number, label: string) => void;
   onMapChange: (lat: number, lng: number) => Promise<void>;
 
-  managers: { id: string; first_name: string | null; last_name: string | null }[];
+  managers: { id: string; first_name: string | null; last_name: string | null; email: string | null }[];
   contractTypeDefaults?: ContractType[];
 
   clientRefs: ClientRef[];
@@ -286,7 +286,7 @@ export function ProjectFormFields({
               <option value="" className="bg-card">—</option>
               {managers.map((m) => (
                 <option key={m.id} value={m.id} className="bg-card">
-                  {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+                  {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id}
                 </option>
               ))}
             </Select>
@@ -304,7 +304,7 @@ export function ProjectFormFields({
             <option value="" className="bg-card">—</option>
             {managers.map((m) => (
               <option key={m.id} value={m.id} className="bg-card">
-                {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+                {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id}
               </option>
             ))}
           </Select>

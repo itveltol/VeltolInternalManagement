@@ -40,9 +40,10 @@ export function addDays(date: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function fullName(p: { first_name: string | null; last_name: string | null } | null): string {
+function fullName(p: { first_name: string | null; last_name: string | null; email?: string } | null): string {
   if (!p) return "";
-  return `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim();
+  const name = `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim();
+  return name || p.email || "";
 }
 
 /** Key used to match a member against its vacation ranges and team lookup entry — same convention as ScheduleAssignee.id. */
