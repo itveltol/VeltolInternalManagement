@@ -189,7 +189,7 @@ export function CreateSituationWithProjectDialog({
                   <option value="" className="bg-card">—</option>
                   {managers.map((m) => (
                     <option key={m.id} value={m.id} className="bg-card">
-                      {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.id}
+                      {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id}
                     </option>
                   ))}
                 </Select>

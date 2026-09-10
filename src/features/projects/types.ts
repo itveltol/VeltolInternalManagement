@@ -106,6 +106,7 @@ export interface ProjectManager {
   id: string;
   first_name: string | null;
   last_name: string | null;
+  email: string | null;
 }
 
 export const PROJECT_PHASES: ProjectPhase[] = [

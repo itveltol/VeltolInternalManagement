@@ -116,7 +116,7 @@ export async function searchProjectsAction(query: string): Promise<ScheduleProje
   let request = supabase
     .from("projects")
     .select(
-      "id, name, manager_id, manager:profiles!manager_id(id, first_name, last_name), sales_id, sales:profiles!sales_id(id, first_name, last_name)",
+      "id, name, manager_id, manager:profiles!manager_id(id, first_name, last_name, email), sales_id, sales:profiles!sales_id(id, first_name, last_name, email)",
     )
     // Residential contracts are lightweight records with no worker/team
     // scheduling — exclude them so they don't show up as noise here.
@@ -132,18 +132,18 @@ export async function searchProjectsAction(query: string): Promise<ScheduleProje
     id: number;
     name: string;
     manager_id: string | null;
-    manager: { id: string; first_name: string | null; last_name: string | null } | null;
+    manager: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
     sales_id: string | null;
-    sales: { id: string; first_name: string | null; last_name: string | null } | null;
+    sales: { id: string; first_name: string | null; last_name: string | null; email: string } | null;
   };
   return ((data ?? []) as unknown as Row[]).map((p) => ({
     id: p.id,
     name: p.name,
     manager: p.manager_id && p.manager
-      ? { id: p.manager.id, name: [p.manager.first_name, p.manager.last_name].filter(Boolean).join(" ") || p.manager.id }
+      ? { id: p.manager.id, name: [p.manager.first_name, p.manager.last_name].filter(Boolean).join(" ") || p.manager.email }
       : null,
     sales: p.sales_id && p.sales
-      ? { id: p.sales.id, name: [p.sales.first_name, p.sales.last_name].filter(Boolean).join(" ") || p.sales.id }
+      ? { id: p.sales.id, name: [p.sales.first_name, p.sales.last_name].filter(Boolean).join(" ") || p.sales.email }
       : null,
   }));
 }
@@ -155,7 +155,7 @@ export async function searchProjectManagersAction(query: string): Promise<Schedu
   const needle = query.trim().toLowerCase();
   const all: ScheduleAssignee[] = managers.map((m) => ({
     id: m.id,
-    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.id,
+    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id,
     kind: "profile",
   }));
   if (!needle) return all;
@@ -174,7 +174,7 @@ export async function getPmColorsAction(): Promise<PmColorEntry[]> {
   const colorByPmId = new Map((colorRows ?? []).map((r) => [r.pm_id as string, r.color as string]));
   return managers.map((m) => ({
     pm_id: m.id,
-    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.id,
+    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id,
     color: colorByPmId.get(m.id) ?? null,
   }));
 }
@@ -254,7 +254,7 @@ export async function searchAssigneesAction(query: string): Promise<ScheduleAssi
 
   const profileAssignees: ScheduleAssignee[] = managers.map((m) => ({
     id: m.id,
-    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.id,
+    name: [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id,
     kind: "profile",
   }));
   const workerAssignees: ScheduleAssignee[] = workers

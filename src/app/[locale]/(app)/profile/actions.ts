@@ -2,7 +2,7 @@
 
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { createSupabaseProfileClient } from "@/features/profile/api/supabaseProfileClient";
 import * as profileService from "@/features/profile/services/profileService";
@@ -77,8 +77,10 @@ export async function updateProfile(
       phone: formData.get("phone") as string,
     });
     revalidatePath(await getProfilePath());
+    updateTag("project-managers");
     return { success: "profileSaved" };
-  } catch {
+  } catch (e: unknown) {
+    console.error("[updateProfile]", e);
     return { error: "errorGeneric" };
   }
 }
@@ -142,9 +144,11 @@ export async function updateUser(
       medical_exam_expires_at: medicalRaw || null,
     });
     revalidatePath(await getProfilePath());
+    updateTag("project-managers");
     return { success: "profileSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAdmin" };
+    console.error("[updateUser]", e);
     return { error: "errorGeneric" };
   }
 }
@@ -169,6 +173,7 @@ export async function inviteUser(
     });
     await grantAllExistingFolderAccessToUser(email);
     revalidatePath(await getProfilePath());
+    updateTag("project-managers");
     return { success: "inviteLinkTitle", actionLink };
   } catch (e: unknown) {
     console.error("[inviteUser]", e);
@@ -188,6 +193,7 @@ export async function deleteUser(userId: string): Promise<ActionState> {
     const client = createSupabaseProfileClient(supabase, adminClient as Parameters<typeof createSupabaseProfileClient>[1]);
     await profileService.deleteUser(client, userId);
     revalidatePath(await getProfilePath());
+    updateTag("project-managers");
     return { success: "userDeleted" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAdmin" };
