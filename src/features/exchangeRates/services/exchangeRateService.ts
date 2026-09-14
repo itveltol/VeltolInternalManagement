@@ -22,7 +22,10 @@ function parseEurRateFromBnrXml(xml: string): { rateDate: string; eurRon: number
 }
 
 async function fetchRateFromBnr(): Promise<ExchangeRate> {
-  const res = await fetch(BNR_FEED_URL, { cache: "no-store" });
+  // Bounded so a hung/slow BNR connection can't stall the page render that's
+  // awaiting getTodaysRate() — callers already fall back to the last cached
+  // rate on any failure, timeouts included.
+  const res = await fetch(BNR_FEED_URL, { cache: "no-store", signal: AbortSignal.timeout(3000) });
   if (!res.ok) throw new Error(`BNR feed request failed: ${res.status}`);
   const xml = await res.text();
   const { rateDate, eurRon } = parseEurRateFromBnrXml(xml);

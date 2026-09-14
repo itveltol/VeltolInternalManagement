@@ -66,7 +66,6 @@ export { DetailSection, FieldGrid, formatSourceValueWithConversion };
 interface Props {
   project: Project;
   contracts: Contract[];
-  nextContractNumber: string;
   canMutate: boolean;
   isAdmin: boolean;
   managers: ProjectManager[];
@@ -75,7 +74,7 @@ interface Props {
   currentAssignment: ProjectSubcontractorAssignment | null;
 }
 
-export function ProjectOverviewPanel({ project, contracts, nextContractNumber, canMutate, isAdmin, managers, clientRefs, subcontractorRefs, currentAssignment }: Props) {
+export function ProjectOverviewPanel({ project, contracts, canMutate, isAdmin, managers, clientRefs, subcontractorRefs, currentAssignment }: Props) {
   const t = useTranslations("projects");
   const tPhase = useTranslations("projectPhase");
   const tStatus = useTranslations("projectStatus");
@@ -191,7 +190,6 @@ export function ProjectOverviewPanel({ project, contracts, nextContractNumber, c
       <ContractsSection
         projectId={project.id}
         contracts={contracts}
-        nextContractNumber={nextContractNumber}
         canMutate={canMutate}
         isAdmin={isAdmin}
       />

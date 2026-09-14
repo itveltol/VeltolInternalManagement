@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
 import { getProject, getChecklistRecords, getProjectDocuments, getProjectFolderChildren, getProjectManagers, getClientRefs, getSubcontractorRefs, getSubcontractorAssignment, getMaintenanceChecks, getExecutionData, getStructureConfig, getCefData, getBessData } from "./actions";
-import { getProjectContracts, getNextContractNumberSuggestion } from "@/app/[locale]/(app)/projects/actions";
+import { getProjectContracts } from "@/app/[locale]/(app)/projects/actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
@@ -44,7 +44,7 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts, nextContractNumber] =
+  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts] =
     await Promise.all([
       isSubcontracted || isResidential ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab || isResidential ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -61,7 +61,6 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       hasCef ? getCefData(projectId) : Promise.resolve(null),
       hasBess ? getBessData(projectId) : Promise.resolve(null),
       getProjectContracts(projectId),
-      canMutate ? getNextContractNumberSuggestion() : Promise.resolve(""),
     ]);
   const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -92,7 +91,6 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
       ]}
       project={project}
       contracts={contracts}
-      nextContractNumber={nextContractNumber}
       initialTab={initialTab}
       isSubcontracted={isSubcontracted}
       hasMaintenance={hasMaintenance}

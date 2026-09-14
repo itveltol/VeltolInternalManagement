@@ -17,7 +17,7 @@ import {
   getCefData,
   getBessData,
 } from "@/app/[locale]/(app)/projects/[id]/actions";
-import { getProjectContracts, getNextContractNumberSuggestion } from "@/app/[locale]/(app)/projects/actions";
+import { getProjectContracts } from "@/app/[locale]/(app)/projects/actions";
 import { getGanttMatriceData } from "@/app/[locale]/(app)/gantt/actions";
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { mergeChecklistRows, computeOverallPct } from "@/features/projects/checklists/services/checklistTemplate";
@@ -57,7 +57,7 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts, nextContractNumber] =
+  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts] =
     await Promise.all([
       isSubcontracted ? Promise.resolve([]) : getChecklistRecords(projectId),
       isDocumentsTab ? getProjectDocuments(projectId) : Promise.resolve([]),
@@ -74,7 +74,6 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
       hasCef ? getCefData(projectId) : Promise.resolve(null),
       hasBess ? getBessData(projectId) : Promise.resolve(null),
       getProjectContracts(projectId),
-      canMutate ? getNextContractNumberSuggestion() : Promise.resolve(""),
     ]);
   const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
@@ -100,7 +99,6 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
       ]}
       project={project}
       contracts={contracts}
-      nextContractNumber={nextContractNumber}
       initialTab={initialTab}
       isSubcontracted={isSubcontracted}
       hasMaintenance={hasMaintenance}

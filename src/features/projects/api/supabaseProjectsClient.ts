@@ -184,8 +184,15 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
 
     const { data, count, error } = await query;
     if (error) throw new Error(error.message);
-    let projects = await attachContracts(supabase, (data ?? []) as Project[]);
-    projects = await withCurrentAssignments(supabase, projects);
+    const base = (data ?? []) as Project[];
+    // attachContracts and withCurrentAssignments each only add fields on top
+    // of `base` and don't depend on each other, so run them concurrently
+    // instead of as a 2-step waterfall, then merge their additions back in.
+    const [withContracts, withAssignments] = await Promise.all([
+      attachContracts(supabase, base),
+      withCurrentAssignments(supabase, base),
+    ]);
+    let projects = withContracts.map((p, i) => ({ ...p, ...withAssignments[i] }));
     // sortByValue used to be expressed as a DB-level order() on the
     // generated value_eur_equiv column; now that the column lives on
     // contracts (attached above as a passthrough), sort in memory on the
@@ -223,9 +230,12 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .single();
     if (error) return null;
     if (!data) return null;
-    let [project] = await attachContracts(supabase, [data as Project]);
-    [project] = await withCurrentAssignments(supabase, [project]);
-    return project ?? null;
+    const base = [data as Project];
+    const [[withContracts], [withAssignments]] = await Promise.all([
+      attachContracts(supabase, base),
+      withCurrentAssignments(supabase, base),
+    ]);
+    return { ...withContracts, ...withAssignments };
   },
 
   async getProjectsByClientId(clientId) {
@@ -235,8 +245,12 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
       .eq("client_id", clientId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    const projects = await attachContracts(supabase, (data ?? []) as Project[]);
-    return withCurrentAssignments(supabase, projects);
+    const base = (data ?? []) as Project[];
+    const [withContracts, withAssignments] = await Promise.all([
+      attachContracts(supabase, base),
+      withCurrentAssignments(supabase, base),
+    ]);
+    return withContracts.map((p, i) => ({ ...p, ...withAssignments[i] }));
   },
 
   async getProjectManagers() {

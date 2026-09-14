@@ -16,12 +16,11 @@ import type { Contract } from "@/features/projects/contracts/types";
 interface Props {
   projectId: number;
   contracts: Contract[];
-  nextContractNumber: string;
   canMutate: boolean;
   isAdmin: boolean;
 }
 
-export function ContractsSection({ projectId, contracts, nextContractNumber, canMutate, isAdmin }: Props) {
+export function ContractsSection({ projectId, contracts, canMutate, isAdmin }: Props) {
   const t = useTranslations("projects");
   const tContractType = useTranslations("contractType");
   const router = useRouter();
@@ -133,7 +132,6 @@ export function ContractsSection({ projectId, contracts, nextContractNumber, can
         <AddEditContractDialog
           projectId={projectId}
           contracts={contracts}
-          nextContractNumber={nextContractNumber}
           open={isAdding}
           onClose={() => {
             setIsAdding(false);
@@ -147,7 +145,6 @@ export function ContractsSection({ projectId, contracts, nextContractNumber, can
           projectId={projectId}
           contract={editingContract}
           contracts={contracts}
-          nextContractNumber={nextContractNumber}
           open={!!editingContract}
           onClose={() => {
             setEditingContract(null);

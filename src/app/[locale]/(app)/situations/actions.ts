@@ -75,19 +75,17 @@ export async function getProjectsForPicker(): Promise<Project[]> {
 }
 
 /** Every contract the caller can see gets a centralizer row (a project with
- * several contracts now gets several rows), so this fetches contracts (with
- * their project refs and per-contract progress) and final-or-paid
- * situations independently and joins them in buildCentralizerRows — each
- * table's own RLS applies naturally (no Postgres view / security_invoker
- * semantics to reason about). */
-export async function getCentralizerRows(): Promise<CentralizerRow[]> {
+ * several contracts now gets several rows), joining final-or-paid
+ * situations with the contracts the caller already fetched via
+ * getContractRefs() — the situations page fetches both in the same
+ * Promise.all, so contracts is passed in here rather than re-fetched (the
+ * contracts query + its per-contract progress batch is not cheap enough to
+ * run twice per page load). */
+export async function getCentralizerRows(contracts: SituationContractRef[]): Promise<CentralizerRow[]> {
   const { supabase } = await requireAuth();
   const situationsApi = createSupabaseSituationsClient(supabase);
 
-  const [contracts, billableSituations] = await Promise.all([
-    getContractRefs(),
-    situationService.getAllBillableSituations(situationsApi),
-  ]);
+  const billableSituations = await situationService.getAllBillableSituations(situationsApi);
 
   return buildCentralizerRows(contracts, billableSituations);
 }
@@ -96,29 +94,29 @@ export async function getCentralizerRows(): Promise<CentralizerRow[]> {
  * shell need (category/current_phase/client) plus its own
  * contract_progress_pct — the same per-contract-filtered-Matrice figure used
  * by computeSituationFigures/finalizeSituationAction, not the project's
- * blended progress_pct. Shared by getCentralizerRows and the situations page
- * (which needs the same contract list for the level-2 drilldown/billing
- * dialog) so the join only happens once per request. */
+ * blended progress_pct. Fetched once by the situations page and passed into
+ * getCentralizerRows (rather than each calling this independently) since the
+ * underlying query batches an RPC across every contract and isn't cheap
+ * enough to run twice per request. */
 export async function getContractRefs(): Promise<SituationContractRef[]> {
   const { supabase } = await requireAuth();
   return getContractRefsForCentralizer(supabase);
 }
 
 async function getContractRefsForCentralizer(supabase: SupabaseClient): Promise<SituationContractRef[]> {
-  const { data, error } = await supabase
-    .from("contracts")
-    .select("id, project_id, value_eur, value_lei, currency, conversion_rate, contract_number, contract_date, contract_type, vat_rate, project:projects(id, name, project_category, current_phase, client:clients(id, name))")
-    .order("id");
+  const [{ data, error }, { data: progressRows, error: progressError }] = await Promise.all([
+    supabase
+      .from("contracts")
+      .select("id, project_id, value_eur, value_lei, currency, conversion_rate, contract_number, contract_date, contract_type, vat_rate, project:projects(id, name, project_category, current_phase, client:clients(id, name))")
+      .order("id"),
+    supabase.rpc("contract_progress_pct_batch"),
+  ]);
   if (error) throw new Error(error.message);
+  if (progressError) throw new Error(progressError.message);
 
   const rows = (data ?? []) as unknown as Omit<SituationContractRef, "progress_pct">[];
-  const progressByContractId = new Map<number, number>();
-  await Promise.all(
-    rows.map(async (row) => {
-      const { data: pct, error: pctError } = await supabase.rpc("contract_progress_pct", { p_contract_id: row.id });
-      if (pctError) throw new Error(pctError.message);
-      progressByContractId.set(row.id, (pct as number) ?? 0);
-    }),
+  const progressByContractId = new Map<number, number>(
+    ((progressRows ?? []) as { contract_id: number; progress_pct: number }[]).map((r) => [r.contract_id, r.progress_pct]),
   );
   return rows.map((row) => ({ ...row, progress_pct: progressByContractId.get(row.id) ?? 0 }));
 }
