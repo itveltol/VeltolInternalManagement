@@ -14,7 +14,6 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
-  exchangeRate: number | null;
 }
 
 export type SortDir = "asc" | "desc" | null;
@@ -26,7 +25,6 @@ export function ProjectsShell({
   managers,
   clientRefs,
   subcontractorRefs,
-  exchangeRate,
 }: Props) {
   const [projects, setProjects] = useState(initialProjects);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
@@ -100,7 +98,6 @@ export function ProjectsShell({
       managers={managers}
       clientRefs={clientRefs}
       subcontractorRefs={subcontractorRefs}
-      exchangeRate={exchangeRate}
       filterPhase={filterPhase}
       onFilterPhase={handleFilterPhase}
       filterContractType={filterContractType}

@@ -47,7 +47,6 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
-  exchangeRate: number | null;
   filterPhase: ProjectPhase[];
   onFilterPhase: (v: ProjectPhase[]) => void;
   filterContractType: ContractType[];
@@ -71,7 +70,6 @@ export function ProjectsTable({
   managers,
   clientRefs,
   subcontractorRefs,
-  exchangeRate,
   filterPhase,
   onFilterPhase,
   filterContractType,
@@ -249,8 +247,8 @@ export function ProjectsTable({
                     key={i}
                     className={
                       i === 3 || i === 9
-                        ? "max-w-[90px] px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] whitespace-normal text-veltol-fgMute"
-                        : "px-3 py-3 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute"
+                        ? "max-w-[90px] px-3 py-2 text-left text-[11.5px] font-bold uppercase tracking-[.09em] whitespace-normal text-veltol-fgMute"
+                        : "px-3 py-2 text-left text-[11.5px] font-bold uppercase tracking-[.09em] text-veltol-fgMute"
                     }
                   >
                     {col}
@@ -272,9 +270,9 @@ export function ProjectsTable({
                     className="group cursor-pointer transition-colors hover:bg-veltol-hover"
                     onClick={() => router.push(`/${locale}/projects/${project.id}`)}
                   >
-                    <td className="px-3 py-3 tabular-nums whitespace-nowrap text-[12px] text-veltol-fgMute">{project.id}</td>
+                    <td className="px-3 py-2 tabular-nums whitespace-nowrap text-[12px] text-veltol-fgMute">{project.id}</td>
 
-                    <td className="min-w-[220px] px-3 py-3">
+                    <td className="min-w-[220px] px-3 py-2">
                       <div className="truncate font-semibold text-veltol-fg">{project.name}</div>
                       <div className="mt-0.5 truncate text-[12px] text-veltol-fgDim">
                         {project.project_category && tCategory(project.project_category)}
@@ -284,9 +282,9 @@ export function ProjectsTable({
                       </div>
                     </td>
 
-                    <td className="px-3 py-3 font-medium text-veltol-fgDim">{project.county ?? "—"}</td>
+                    <td className="px-3 py-2 font-medium text-veltol-fgDim">{project.county ?? "—"}</td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-1">
                         {project.contract_type.map((c) => (
                           <div
@@ -301,7 +299,7 @@ export function ProjectsTable({
                       </div>
                     </td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2">
                       {project.execution_mode === "subcontracted" ? (
                         <Badge variant="secondary" dot>{t("subcontracted")}</Badge>
                       ) : (
@@ -309,7 +307,7 @@ export function ProjectsTable({
                       )}
                     </td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2">
                       {project.execution_mode === "subcontracted" ? (
                         <span className="whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">
                           {project.subcontractor?.name ?? "—"}
@@ -331,7 +329,7 @@ export function ProjectsTable({
                       const { deadline, sourceValue, currency, conversionRate } = projectFigures(project);
                       return (
                         <>
-                          <td className="px-3 py-3">
+                          <td className="px-3 py-2">
                             <span className="block tabular-nums whitespace-nowrap text-[12px] font-medium text-veltol-fgDim">{formatDate(deadline) || "—"}</span>
                             {deadline && (() => {
                               const d = daysLeft(deadline);
@@ -346,7 +344,7 @@ export function ProjectsTable({
                             })()}
                           </td>
 
-                          <td className="px-3 py-3 whitespace-nowrap">
+                          <td className="px-3 py-2 whitespace-nowrap">
                             <div className="font-semibold tabular-nums text-veltol-fg">
                               {sourceValue != null ? new Intl.NumberFormat("hu-HU").format(sourceValue) : "—"}
                               {sourceValue != null && <span className="ml-1 text-[12px] font-medium text-veltol-fgMute">{currency === "EUR" ? "€" : "Lei"}</span>}
@@ -361,18 +359,18 @@ export function ProjectsTable({
                       );
                     })()}
 
-                    <td className="px-3 py-3 text-[13px] font-medium text-veltol-fgDim">{managerName(project)}</td>
+                    <td className="px-3 py-2 text-[13px] font-medium text-veltol-fgDim">{managerName(project)}</td>
 
-                    <td className="max-w-[110px] px-3 py-3 text-[13px] font-medium text-veltol-fgDim">
+                    <td className="max-w-[110px] px-3 py-2 text-[13px] font-medium text-veltol-fgDim">
                       {project.client?.name ?? "—"}
                     </td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2">
                       <div className="whitespace-nowrap text-[13px] font-medium text-veltol-fgDim">{updatedByName(project)}</div>
                       <div className="whitespace-nowrap text-[11px] font-medium text-veltol-fgMute">{formatDate(project.updated_at) || "—"}</div>
                     </td>
 
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2">
                       {canMutate && (
                         <div className="flex flex-col items-center gap-1">
                           <Button
@@ -517,7 +515,6 @@ export function ProjectsTable({
         managers={managers}
         clientRefs={clientRefs}
         subcontractorRefs={subcontractorRefs}
-        exchangeRate={exchangeRate}
         onClose={() => {
           closeAddDialog();
           onRefetch();

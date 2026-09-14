@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Input } from "@/shared/components/ui/input";
@@ -12,6 +12,7 @@ import {
   createContractForProjectAction,
   updateContractForProjectAction,
   getExchangeRate,
+  getNextContractNumberSuggestion,
 } from "@/app/[locale]/(app)/projects/actions";
 import type { ContractActionState } from "@/app/[locale]/(app)/projects/actions";
 import { CONTRACT_TYPES } from "@/features/projects/types";
@@ -27,22 +28,19 @@ interface Props {
    * DIFFERENT contract, mirroring the DB's contract_claimed_types_exclusive_idx
    * constraint client-side so the conflict is visible before submitting. */
   contracts: Contract[];
-  /** Suggested next contract number (see suggestNextContractNumber) — only
-   * used to prefill the field when adding; editing always shows the
-   * contract's own real number. */
-  nextContractNumber: string;
   open: boolean;
   onClose: () => void;
 }
 
 const emptyState: ContractActionState = null;
 
-export function AddEditContractDialog({ projectId, contract = null, contracts, nextContractNumber, open, onClose }: Props) {
+export function AddEditContractDialog({ projectId, contract = null, contracts, open, onClose }: Props) {
   const t = useTranslations("projects");
   const tContractType = useTranslations("contractType");
   const isEdit = contract != null;
   const action = isEdit ? updateContractForProjectAction : createContractForProjectAction;
   const [state, formAction, pending] = useActionState(action, emptyState);
+  const [nextContractNumber, setNextContractNumber] = useState("");
 
   const claimedByOtherContract = new Set<ContractType>(
     contracts
@@ -54,6 +52,12 @@ export function AddEditContractDialog({ projectId, contract = null, contracts, n
     if (state?.success) onClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.success]);
+
+  useEffect(() => {
+    if (open && !isEdit) {
+      getNextContractNumberSuggestion().then(setNextContractNumber);
+    }
+  }, [open, isEdit]);
 
   return (
     <Dialog.Root open={open} onOpenChange={(o: boolean) => !o && onClose()}>
@@ -102,6 +106,7 @@ export function AddEditContractDialog({ projectId, contract = null, contracts, n
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField label={t("fields.contractNumber")}>
                 <Input
+                  key={contract?.contract_number ?? nextContractNumber}
                   name="contract_number"
                   defaultValue={contract?.contract_number ?? (isEdit ? "" : nextContractNumber)}
                   aria-invalid={Boolean(state?.fieldErrors?.contract_number)}

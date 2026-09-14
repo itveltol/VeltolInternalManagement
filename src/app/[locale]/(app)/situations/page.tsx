@@ -31,8 +31,7 @@ export default async function SituationsPage({ searchParams }: Props) {
   const canMutate = ["admin", "project_manager"].includes(role ?? "");
   const canMutateBilling = ["admin", "finance"].includes(role ?? "");
 
-  const [rows, contracts, situations, projects, dashboardProjects, managers, clientRefs] = await Promise.all([
-    getCentralizerRows(),
+  const [contracts, situations, projects, dashboardProjects, managers, clientRefs] = await Promise.all([
     getContractRefs(),
     getAllSituationsWithProjects(),
     getProjectsForPicker(),
@@ -40,6 +39,7 @@ export default async function SituationsPage({ searchParams }: Props) {
     getProjectManagers(),
     getClientRefs(),
   ]);
+  const rows = await getCentralizerRows(contracts);
   const nextContractNumber = suggestNextContractNumber(contracts);
   const t = await getTranslations("situations");
   const tDashboard = await getTranslations("dashboard");

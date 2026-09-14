@@ -6,7 +6,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
 import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
-import { createProject } from "@/app/[locale]/(app)/projects/actions";
+import { createProject, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
 import type { ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
@@ -33,12 +33,16 @@ interface Props {
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   subcontractorRefs: SubcontractorRef[];
-  exchangeRate: number | null;
   onClose: () => void;
 }
 
-export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs, exchangeRate, onClose }: Props) {
+export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs, onClose }: Props) {
   const t = useTranslations("projects");
+
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  useEffect(() => {
+    if (open) getExchangeRate().then(setExchangeRate);
+  }, [open]);
 
   const [state, action, pending] = useActionState(createProject, null);
   // React 19 resets a form's fields (including controlled <select>s — a

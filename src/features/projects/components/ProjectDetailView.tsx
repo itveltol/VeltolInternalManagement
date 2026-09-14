@@ -32,7 +32,6 @@ interface Props {
   breadcrumb: BreadcrumbSegment[];
   project: Project;
   contracts: Contract[];
-  nextContractNumber: string;
   initialTab: "checklist" | "gantt" | "documents" | "maintenance" | "comunicare";
   isSubcontracted: boolean;
   hasMaintenance: boolean;
@@ -63,7 +62,6 @@ export async function ProjectDetailView({
   breadcrumb,
   project,
   contracts,
-  nextContractNumber,
   initialTab,
   isSubcontracted,
   hasMaintenance,
@@ -182,7 +180,6 @@ export async function ProjectDetailView({
       <ProjectOverviewPanel
         project={project}
         contracts={contracts}
-        nextContractNumber={nextContractNumber}
         canMutate={canMutate}
         isAdmin={isAdmin}
         managers={managers}
