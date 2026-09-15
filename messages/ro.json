@@ -91,6 +91,7 @@
     "editProject": "Editează proiect",
     "deleteProject": "Șterge",
     "confirmDelete": "Ștergeți acest proiect?",
+    "confirmDeleteResidentialWarning": "Aceasta va șterge definitiv și contractele, situațiile, documentele și datele checklist asociate.",
     "projectSaved": "Proiect salvat.",
     "projectCreated": "Proiect creat.",
     "projectDeleted": "Proiect șters.",

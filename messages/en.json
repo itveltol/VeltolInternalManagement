@@ -91,6 +91,7 @@
     "editProject": "Edit project",
     "deleteProject": "Delete",
     "confirmDelete": "Delete this project?",
+    "confirmDeleteResidentialWarning": "This will also permanently delete its contracts, situations, documents, and checklist data.",
     "projectSaved": "Project saved.",
     "projectCreated": "Project created.",
     "projectDeleted": "Project deleted.",
