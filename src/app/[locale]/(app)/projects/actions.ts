@@ -700,6 +700,9 @@ export async function updateProject(
     return { success: "projectSaved" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    if (e instanceof Error && e.message.includes("contract_claimed_types_exclusive_idx")) {
+      return { error: "errorContractTypeClaimed" };
+    }
     if (e instanceof Error && e.message) return { error: "errorDetail", errorMessage: e.message };
     return { error: "errorGeneric" };
   }

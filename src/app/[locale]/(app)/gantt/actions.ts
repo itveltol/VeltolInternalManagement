@@ -15,7 +15,7 @@ import * as subcontractorService from "@/features/subcontractors/services/subcon
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
 import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
-import type { Project } from "@/features/projects/types";
+import type { Project, ProjectManager } from "@/features/projects/types";
 import type { GanttPhaseKey } from "@/features/gantt/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 
@@ -43,6 +43,11 @@ export async function getGanttProjects(): Promise<Project[]> {
   // portfolio Gantt doesn't show empty/all-N/A rows for them.
   const { projects } = await client.getProjects({ filters: { category: "industrial" } });
   return projects;
+}
+
+export async function getGanttProjectManagers(): Promise<ProjectManager[]> {
+  await requireAuth();
+  return projectService.getCachedProjectManagers();
 }
 
 export async function getShownGanttProjectIds(): Promise<number[]> {

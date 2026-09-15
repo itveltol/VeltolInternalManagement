@@ -8,12 +8,18 @@ import { updateProject, getExchangeRate } from "@/app/[locale]/(app)/projects/ac
 import type { Project, ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
+import type { Contract } from "@/features/projects/contracts/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { ProjectFormFields } from "./ProjectFormFields";
 import { useProjectFormState } from "./projectFormState";
 
 interface Props {
   project: Project;
+  /** Every contract on this project — used to grey out a contract_type
+   * checkbox already claimed by a contract other than the "primary" one
+   * this form edits (mirrors AddEditContractDialog's client-side guard for
+   * the DB's contract_claimed_types_exclusive_idx constraint). */
+  contracts: Contract[];
   open: boolean;
   managers: ProjectManager[];
   clientRefs: ClientRef[];
@@ -28,8 +34,16 @@ export function EditProjectDialog(props: Props) {
   // change already-uncontrolled fields' defaultValue mid-flight.
   const [project] = useState(props.project);
   const [currentAssignment] = useState(props.currentAssignment);
-  const { open, managers, clientRefs, subcontractorRefs, onClose } = props;
+  const { open, contracts, managers, clientRefs, subcontractorRefs, onClose } = props;
   const t = useTranslations("projects");
+
+  // Matches updateProject()'s server-side notion of the "primary" contract
+  // this form edits (existingContracts[0]) so the claimed-elsewhere check
+  // excludes the right contract.
+  const primaryContractId = contracts[0]?.id;
+  const contractTypesClaimedElsewhere = new Set(
+    contracts.filter((c) => c.id !== primaryContractId).flatMap((c) => c.contract_type),
+  );
 
   const [state, action, pending] = useActionState(updateProject, null);
   // React 19 resets a form's fields (including controlled <select>s — a
@@ -99,6 +113,7 @@ export function EditProjectDialog(props: Props) {
               onMapChange={handleMapChange}
               managers={managers}
               contractTypeDefaults={project.contract_type}
+              contractTypesClaimedElsewhere={contractTypesClaimedElsewhere}
               clientRefs={clientRefs}
               selectedClient={selectedClient}
               onClientChange={setSelectedClient}

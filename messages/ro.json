@@ -123,6 +123,7 @@
     "filterAllPhases": "Toate fazele",
     "filterAllCategories": "Toate categoriile",
     "filterAllContractTypes": "Toate tipurile de contract",
+    "filterAllManagers": "Toți managerii",
     "filterMinValue": "Valoare minimă",
     "filterMaxValue": "Valoare maximă",
     "sortByValue": "Sortează după valoare",
@@ -130,6 +131,7 @@
       "phase": "Fază",
       "category": "Categorie",
       "contractType": "Tip de contract",
+      "manager": "Manager",
       "minValue": "Valoare min. (€)",
       "maxValue": "Valoare max. (€)"
     },
@@ -433,6 +435,14 @@
     "errorMaxProjects": "Maximum 5 proiecte — elimină unul pentru a adăuga altul.",
     "errorGeneric": "A apărut o eroare. Celula a fost revenită.",
     "cellSaved": "Salvat.",
+    "filters": {
+      "manager": "Manager",
+      "removeNonMatchingTitle": "Elimini proiectele altor manageri?",
+      "removeNonMatchingDescription": "{count, plural, one {1 proiect fixat nu aparține} other {# proiecte fixate nu aparțin}} managerului/managerilor selectat(i).",
+      "removeNonMatchingConfirm": "Elimină-le",
+      "removeNonMatchingCancel": "Păstrează-le"
+    },
+    "filterAllManagers": "Toți managerii",
     "picker": {
       "label": "PROIECTE",
       "shownCount": "{count} selectate",
@@ -1052,6 +1062,14 @@
     "errorGeneric": "A apărut o eroare. Încercați din nou.",
     "errorMaxProjects": "Maximum 5 proiecte — elimină unul pentru a adăuga altul.",
     "errorNotAllowed": "Nu aveți permisiunea pentru această acțiune.",
+    "filters": {
+      "manager": "Manager",
+      "removeNonMatchingTitle": "Elimini proiectele altor manageri?",
+      "removeNonMatchingDescription": "{count, plural, one {1 proiect fixat nu aparține} other {# proiecte fixate nu aparțin}} managerului/managerilor selectat(i).",
+      "removeNonMatchingConfirm": "Elimină-le",
+      "removeNonMatchingCancel": "Păstrează-le"
+    },
+    "filterAllManagers": "Toți managerii",
     "picker": {
       "label": "PROIECTE",
       "empty": "Niciun proiect disponibil.",

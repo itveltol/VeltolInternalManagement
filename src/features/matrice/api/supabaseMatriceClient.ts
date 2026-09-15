@@ -76,7 +76,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
     if (projectIds.length === 0) return [];
     const { data, error } = await supabase
       .from('projects')
-      .select('id, name, project_type')
+      .select('id, name, project_type, manager_id')
       .in('id', projectIds)
       .order('id');
     if (error) throw new Error(error.message);
@@ -88,7 +88,7 @@ export const createSupabaseMatriceClient = (supabase: SupabaseClient): MatriceAp
       .from('projects')
       // Residential contracts have no Matrice coverage — excluded so the
       // picker doesn't show empty/all-N/A rows for them.
-      .select('id, name, project_type')
+      .select('id, name, project_type, manager_id')
       .eq('project_category', 'industrial')
       .order('name');
     if (error) throw new Error(error.message);

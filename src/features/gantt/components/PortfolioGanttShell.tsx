@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import type { Project } from "@/features/projects/types";
+import type { Project, ProjectManager } from "@/features/projects/types";
 import type { Activity, MatricePhase, MatrixCell } from "@/features/matrice/types";
 import type { ChecklistItemRecord } from "@/features/projects/checklists/types";
 import type { GanttPhaseSegment } from "../types";
@@ -15,6 +15,8 @@ import { PortfolioGanttChart } from "./PortfolioGanttChart";
 import { GanttMobileView } from "./GanttMobileView";
 import { PhaseDateDialog } from "./PhaseDateDialog";
 import { Pagination } from "@/shared/components/ui/pagination";
+import { FilterField, FilterMultiDropdown } from "@/shared/components/ui/filter-field";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { getGanttMatriceData, showGanttProject, unshowGanttProject } from "@/app/[locale]/(app)/gantt/actions";
 import { pinMatriceProject } from "@/app/[locale]/(app)/matrice-status/actions";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
@@ -23,6 +25,7 @@ const PAGE_SIZE = 5;
 
 interface Props {
   allProjects: Project[];
+  managers: ProjectManager[];
   initialShownIds: number[];
   initialActivities: Activity[];
   initialPhases: MatricePhase[];
@@ -33,6 +36,7 @@ interface Props {
 
 export function PortfolioGanttShell({
   allProjects,
+  managers,
   initialShownIds,
   initialActivities,
   initialPhases,
@@ -42,9 +46,11 @@ export function PortfolioGanttShell({
 }: Props) {
   const t = useTranslations("gantt");
   const router = useRouter();
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const [shownIds, setShownIds] = useState<number[]>(initialShownIds);
+  const [filterManagerIds, setFilterManagerIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [phases, setPhases] = useState<MatricePhase[]>(initialPhases);
@@ -81,8 +87,13 @@ export function PortfolioGanttShell({
   );
 
   const pickableProjects = useMemo(
-    () => allProjects.filter((p) => !shownIds.includes(p.id)),
-    [allProjects, shownIds],
+    () =>
+      allProjects.filter(
+        (p) =>
+          !shownIds.includes(p.id) &&
+          (filterManagerIds.length === 0 || (p.manager_id && filterManagerIds.includes(p.manager_id))),
+      ),
+    [allProjects, shownIds, filterManagerIds],
   );
 
   const pageCount = Math.max(1, Math.ceil(visibleProjects.length / PAGE_SIZE));
@@ -114,6 +125,27 @@ export function PortfolioGanttShell({
     startTransition(async () => {
       await unshowGanttProject(projectId);
     });
+  }
+
+  async function handleFilterManagerIds(nextManagerIds: string[]) {
+    if (nextManagerIds.length > 0) {
+      const shownProjects = allProjects.filter((p) => shownIds.includes(p.id));
+      const nonMatching = shownProjects.filter(
+        (p) => !p.manager_id || !nextManagerIds.includes(p.manager_id),
+      );
+      if (nonMatching.length > 0) {
+        const remove = await confirm({
+          title: t("filters.removeNonMatchingTitle"),
+          description: t("filters.removeNonMatchingDescription", { count: nonMatching.length }),
+          confirmLabel: t("filters.removeNonMatchingConfirm"),
+          cancelLabel: t("filters.removeNonMatchingCancel"),
+        });
+        if (remove) {
+          for (const p of nonMatching) handleRemove(p.id);
+        }
+      }
+    }
+    setFilterManagerIds(nextManagerIds);
   }
 
   function handleAdd(projectId: number) {
@@ -152,14 +184,28 @@ export function PortfolioGanttShell({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-veltol-surface/30 p-4">
-        <GanttProjectPicker
-          pickableProjects={pickableProjects}
-          onAdd={handleAdd}
-          disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
-          maxProjects={MAX_VISIBLE_PROJECTS}
-          shownCount={shownIds.length}
-        />
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-veltol-surface/30 p-4 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1">
+          <GanttProjectPicker
+            pickableProjects={pickableProjects}
+            onAdd={handleAdd}
+            disabled={shownIds.length >= MAX_VISIBLE_PROJECTS}
+            maxProjects={MAX_VISIBLE_PROJECTS}
+            shownCount={shownIds.length}
+          />
+        </div>
+        <FilterField label={t("filters.manager")} htmlFor="gantt-filter-manager" className="shrink-0">
+          <FilterMultiDropdown
+            id="gantt-filter-manager"
+            value={filterManagerIds}
+            onChange={handleFilterManagerIds}
+            allLabel={t("filterAllManagers")}
+            options={managers.map((m) => ({
+              value: m.id,
+              label: `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
+            }))}
+          />
+        </FilterField>
       </div>
 
       <div className="flex items-center justify-between gap-4">

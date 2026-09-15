@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { MatrixData, MatrixProject, MatrixCell, ActivityStatus } from "../types";
+import type { ProjectManager } from "@/features/projects/types";
 import { MatriceProjectPicker } from "./MatriceProjectPicker";
 import { MatriceGrid } from "./MatriceGrid";
 import { MatriceMobileView } from "./MatriceMobileView";
@@ -20,18 +21,23 @@ import {
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import { getDocuments } from "@/app/[locale]/(app)/documents/actions";
 import { getNotes } from "@/app/[locale]/(app)/board/actions";
+import { FilterField, FilterMultiDropdown } from "@/shared/components/ui/filter-field";
+import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 
 interface Props {
   initialData: MatrixData;
   allProjects: MatrixProject[];
+  managers: ProjectManager[];
   initialShownIds: number[];
 }
 
-export function MatriceShell({ initialData, allProjects, initialShownIds }: Props) {
+export function MatriceShell({ initialData, allProjects, managers, initialShownIds }: Props) {
   const t = useTranslations("matrice");
+  const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   const [shownIds, setShownIds] = useState<number[]>(initialShownIds);
+  const [filterManagerIds, setFilterManagerIds] = useState<string[]>([]);
   const [data, setData] = useState<MatrixData>(initialData);
   const [docCounts, setDocCounts] = useState<Map<string, number>>(new Map());
   const [discussionCounts, setDiscussionCounts] = useState<Map<string, number>>(new Map());
@@ -50,8 +56,13 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
   );
 
   const pickableProjects = useMemo(
-    () => allProjects.filter((p) => !shownIds.includes(p.id)),
-    [allProjects, shownIds],
+    () =>
+      allProjects.filter(
+        (p) =>
+          !shownIds.includes(p.id) &&
+          (filterManagerIds.length === 0 || (p.manager_id && filterManagerIds.includes(p.manager_id))),
+      ),
+    [allProjects, shownIds, filterManagerIds],
   );
 
   // Reload matrix when the visible set changes (skip the very first run —
@@ -112,6 +123,27 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
     startTransition(async () => {
       await unshowMatriceProject(projectId);
     });
+  }
+
+  async function handleFilterManagerIds(nextManagerIds: string[]) {
+    if (nextManagerIds.length > 0) {
+      const shownProjects = allProjects.filter((p) => shownIds.includes(p.id));
+      const nonMatching = shownProjects.filter(
+        (p) => !p.manager_id || !nextManagerIds.includes(p.manager_id),
+      );
+      if (nonMatching.length > 0) {
+        const remove = await confirm({
+          title: t("filters.removeNonMatchingTitle"),
+          description: t("filters.removeNonMatchingDescription", { count: nonMatching.length }),
+          confirmLabel: t("filters.removeNonMatchingConfirm"),
+          cancelLabel: t("filters.removeNonMatchingCancel"),
+        });
+        if (remove) {
+          for (const p of nonMatching) handleRemoveProject(p.id);
+        }
+      }
+    }
+    setFilterManagerIds(nextManagerIds);
   }
 
   function handleAddProject(projectId: number) {
@@ -180,7 +212,7 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
     <div className="space-y-6">
       {/* Project picker + legend */}
       <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-        <div className="flex items-center justify-between gap-4 p-5">
+        <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
             <MatriceProjectPicker
               pickableProjects={pickableProjects}
@@ -190,7 +222,19 @@ export function MatriceShell({ initialData, allProjects, initialShownIds }: Prop
               shownCount={shownIds.length}
             />
           </div>
-          <span className="shrink-0 text-[13px] font-medium text-veltol-fgDim">
+          <FilterField label={t("filters.manager")} htmlFor="matrice-filter-manager" className="shrink-0">
+            <FilterMultiDropdown
+              id="matrice-filter-manager"
+              value={filterManagerIds}
+              onChange={handleFilterManagerIds}
+              allLabel={t("filterAllManagers")}
+              options={managers.map((m) => ({
+                value: m.id,
+                label: `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
+              }))}
+            />
+          </FilterField>
+          <span className="shrink-0 text-[13px] font-medium text-veltol-fgDim sm:pb-1.5">
             {t("picker.shownCount", { count: shownIds.length })}
           </span>
         </div>

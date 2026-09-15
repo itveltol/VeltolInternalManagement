@@ -8,7 +8,7 @@ import { contractValueEur } from "@/shared/utils/currency";
 import { buildMaintenanceCycles } from "@/features/projects/maintenance/services/maintenanceService";
 import type { MaintenanceCheck } from "@/features/projects/maintenance/types";
 import { buildAvizReminders } from "@/features/matrice/services/avizReminderService";
-import type { Activity, AvizReminder, MatrixCell, MatrixProject } from "@/features/matrice/types";
+import type { Activity, AvizReminder, MatrixCell } from "@/features/matrice/types";
 
 export type ActionState = { error?: string; success?: string } | null;
 
@@ -202,7 +202,7 @@ export async function getAvizReminders(projects: DashboardProject[]): Promise<Av
   return buildAvizReminders(
     (activities ?? []) as Activity[],
     (cells ?? []) as MatrixCell[],
-    projects as MatrixProject[],
+    projects,
     new Date(),
     { includeStates: ['overdue', 'dueSoon', 'notDue'] },
   );

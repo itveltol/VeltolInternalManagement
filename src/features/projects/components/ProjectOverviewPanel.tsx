@@ -208,6 +208,7 @@ export function ProjectOverviewPanel({ project, contracts, canMutate, isAdmin, m
         <EditProjectDialog
           key={`${project.id}-${editSession}`}
           project={project}
+          contracts={contracts}
           open={isEditOpen}
           managers={managers}
           clientRefs={clientRefs}
