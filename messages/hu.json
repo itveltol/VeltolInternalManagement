@@ -91,6 +91,7 @@
     "editProject": "Projekt szerkesztése",
     "deleteProject": "Törlés",
     "confirmDelete": "Törli ezt a projektet?",
+    "confirmDeleteResidentialWarning": "Ezzel véglegesen törlődnek a hozzá tartozó szerződések, szituációk, dokumentumok és checklist adatok is.",
     "projectSaved": "Projekt mentve.",
     "projectCreated": "Projekt létrehozva.",
     "projectDeleted": "Projekt törölve.",

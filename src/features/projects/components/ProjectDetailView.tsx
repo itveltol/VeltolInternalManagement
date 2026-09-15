@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { ProjectTabsShell } from "@/features/projects/components/ProjectTabsShell";
 import { CreateFolderButton } from "@/features/projects/components/CreateFolderButton";
 import { ProjectOverviewPanel } from "@/features/projects/components/ProjectOverviewPanel";
+import { ProjectDeleteButton } from "@/features/projects/components/ProjectDeleteButton";
 import { ProjectLocationMap } from "@/features/projects/components/ProjectLocationMap";
 import { ProjectCefDataPanel } from "@/features/projects/cefBessData/components/ProjectCefDataPanel";
 import { ProjectBessDataPanel } from "@/features/projects/cefBessData/components/ProjectBessDataPanel";
@@ -173,6 +174,12 @@ export async function ProjectDetailView({
             <div className="mt-1 text-xs font-medium text-veltol-fgMute">
               {t("overallCompletion")}
             </div>
+          </div>
+        )}
+
+        {isResidential && isAdmin && (
+          <div className="shrink-0">
+            <ProjectDeleteButton projectId={project.id} />
           </div>
         )}
       </div>
