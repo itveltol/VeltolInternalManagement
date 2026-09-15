@@ -50,6 +50,7 @@ export interface MatrixProject {
   name: string;
   project_type: ProjectType | null;
   contract_type: ContractType[];
+  manager_id: string | null;
 }
 
 /** Resolved cell for the matrix grid (missing DB row → 'neinceput') */

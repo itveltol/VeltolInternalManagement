@@ -123,6 +123,7 @@
     "filterAllPhases": "Minden fázis",
     "filterAllCategories": "Minden kategória",
     "filterAllContractTypes": "Minden szerződéstípus",
+    "filterAllManagers": "Minden menedzser",
     "filterMinValue": "Min. érték",
     "filterMaxValue": "Max. érték",
     "sortByValue": "Rendezés érték szerint",
@@ -130,6 +131,7 @@
       "phase": "Fázis",
       "category": "Kategória",
       "contractType": "Szerződéstípus",
+      "manager": "Menedzser",
       "minValue": "Min. érték (€)",
       "maxValue": "Max. érték (€)"
     },
@@ -433,6 +435,14 @@
     "errorMaxProjects": "Legfeljebb 5 projekt jeleníthető meg — távolíts el egyet, hogy másikat adhass hozzá.",
     "errorGeneric": "Valami hiba történt. A cella visszaállt.",
     "cellSaved": "Mentve.",
+    "filters": {
+      "manager": "Menedzser",
+      "removeNonMatchingTitle": "Eltávolítod a többi menedzser projektjeit?",
+      "removeNonMatchingDescription": "{count, plural, one {1 rögzített projekt nem tartozik} other {# rögzített projekt nem tartozik}} a kiválasztott menedzser(ek)hez.",
+      "removeNonMatchingConfirm": "Eltávolítás",
+      "removeNonMatchingCancel": "Megtartás"
+    },
+    "filterAllManagers": "Minden menedzser",
     "picker": {
       "label": "PROJEKTEK",
       "shownCount": "{count} kiválasztva",
@@ -1052,6 +1062,14 @@
     "errorGeneric": "Hiba történt. Kérjük, próbáld újra.",
     "errorMaxProjects": "Legfeljebb 5 projekt jeleníthető meg — távolíts el egyet, hogy másikat adhass hozzá.",
     "errorNotAllowed": "Nincs jogosultságod ehhez a művelethez.",
+    "filters": {
+      "manager": "Menedzser",
+      "removeNonMatchingTitle": "Eltávolítod a többi menedzser projektjeit?",
+      "removeNonMatchingDescription": "{count, plural, one {1 rögzített projekt nem tartozik} other {# rögzített projekt nem tartozik}} a kiválasztott menedzser(ek)hez.",
+      "removeNonMatchingConfirm": "Eltávolítás",
+      "removeNonMatchingCancel": "Megtartás"
+    },
+    "filterAllManagers": "Minden menedzser",
     "picker": {
       "label": "PROJEKTEK",
       "empty": "Nincs elérhető projekt.",

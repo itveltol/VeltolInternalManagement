@@ -34,6 +34,7 @@ export interface ProjectListFilters {
   phase?: ProjectPhase[];
   category?: ProjectCategory | null;
   contractType?: ContractType[];
+  managerId?: string[];
   minValue?: number | null;
   maxValue?: number | null;
 }

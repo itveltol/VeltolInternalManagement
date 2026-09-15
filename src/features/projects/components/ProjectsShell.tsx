@@ -31,6 +31,7 @@ export function ProjectsShell({
   const [page, setPage] = useState(1);
   const [filterPhase, setFilterPhase] = useState<ProjectPhase[]>([]);
   const [filterContractType, setFilterContractType] = useState<ContractType[]>([]);
+  const [filterManagerIds, setFilterManagerIds] = useState<string[]>([]);
   const [minValue, setMinValue] = useState("");
   const [maxValue, setMaxValue] = useState("");
   const [sortDir, setSortDir] = useState<SortDir>(null);
@@ -49,6 +50,7 @@ export function ProjectsShell({
           // Contract Centralizer (/situations) instead.
           category: "industrial",
           contractType: filterContractType,
+          managerId: filterManagerIds,
           minValue: min,
           maxValue: max,
         },
@@ -57,7 +59,7 @@ export function ProjectsShell({
       setProjects(result.projects);
       setTotalCount(result.totalCount);
     });
-  }, [page, filterPhase, filterContractType, minValue, maxValue, sortDir]);
+  }, [page, filterPhase, filterContractType, filterManagerIds, minValue, maxValue, sortDir]);
 
   // Skip the fetch that would otherwise fire on first render — the server
   // already gave us page 1 with no filters via initialProjects/initialTotalCount.
@@ -70,7 +72,7 @@ export function ProjectsShell({
     }
     fetchProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filterPhase, filterContractType, minValue, maxValue, sortDir]);
+  }, [page, filterPhase, filterContractType, filterManagerIds, minValue, maxValue, sortDir]);
 
   // Any filter/sort change should jump back to page 1 — wrap each setter so
   // the reset happens as part of the same state update, not derived in render.
@@ -82,6 +84,7 @@ export function ProjectsShell({
   }
   const handleFilterPhase = resettingPage(setFilterPhase);
   const handleFilterContractType = resettingPage(setFilterContractType);
+  const handleFilterManagerIds = resettingPage(setFilterManagerIds);
   const handleMinValue = resettingPage(setMinValue);
   const handleMaxValue = resettingPage(setMaxValue);
   const handleSortDir = resettingPage(setSortDir);
@@ -102,6 +105,8 @@ export function ProjectsShell({
       onFilterPhase={handleFilterPhase}
       filterContractType={filterContractType}
       onFilterContractType={handleFilterContractType}
+      filterManagerIds={filterManagerIds}
+      onFilterManagerIds={handleFilterManagerIds}
       minValue={minValue}
       onMinValue={handleMinValue}
       maxValue={maxValue}

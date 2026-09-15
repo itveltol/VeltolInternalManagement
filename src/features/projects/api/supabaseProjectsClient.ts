@@ -145,6 +145,9 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     if (filters?.category) {
       query = query.eq("project_category", filters.category);
     }
+    if (filters?.managerId && filters.managerId.length > 0) {
+      query = query.in("manager_id", filters.managerId);
+    }
 
     // contract_type/value_eur_equiv no longer live on `projects` (moved to
     // `contracts`, which can now hold several rows per project — see

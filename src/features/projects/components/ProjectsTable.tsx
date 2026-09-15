@@ -51,6 +51,8 @@ interface Props {
   onFilterPhase: (v: ProjectPhase[]) => void;
   filterContractType: ContractType[];
   onFilterContractType: (v: ContractType[]) => void;
+  filterManagerIds: string[];
+  onFilterManagerIds: (v: string[]) => void;
   minValue: string;
   onMinValue: (v: string) => void;
   maxValue: string;
@@ -74,6 +76,8 @@ export function ProjectsTable({
   onFilterPhase,
   filterContractType,
   onFilterContractType,
+  filterManagerIds,
+  onFilterManagerIds,
   minValue,
   onMinValue,
   maxValue,
@@ -187,6 +191,19 @@ export function ProjectsTable({
               onChange={(v) => onFilterPhase(v as ProjectPhase[])}
               allLabel={t("filterAllPhases")}
               options={PROJECT_PHASES.map((p) => ({ value: p, label: tPhase(p) }))}
+            />
+          </FilterField>
+
+          <FilterField label={t("filters.manager")} htmlFor="filter-manager">
+            <FilterMultiDropdown
+              id="filter-manager"
+              value={filterManagerIds}
+              onChange={(v) => onFilterManagerIds(v)}
+              allLabel={t("filterAllManagers")}
+              options={managers.map((m) => ({
+                value: m.id,
+                label: `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim(),
+              }))}
             />
           </FilterField>
 

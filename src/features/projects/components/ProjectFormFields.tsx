@@ -58,6 +58,8 @@ interface Props {
 
   managers: { id: string; first_name: string | null; last_name: string | null; email: string | null }[];
   contractTypeDefaults?: ContractType[];
+  /** Add dialog has no sibling contracts yet, so this is Edit-only. */
+  contractTypesClaimedElsewhere?: Set<ContractType>;
 
   clientRefs: ClientRef[];
   selectedClient: ClientRef | null;
@@ -108,6 +110,7 @@ export function ProjectFormFields({
   onMapChange,
   managers,
   contractTypeDefaults,
+  contractTypesClaimedElsewhere,
   clientRefs,
   selectedClient,
   onClientChange,
@@ -369,18 +372,31 @@ export function ProjectFormFields({
         {fields.project_category !== "residential" && (
           <FormField label={t("fields.contractType")} required>
             <div className="flex gap-6">
-              {CONTRACT_TYPES.map((c) => (
-                <label key={c} className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name={`contract_type_${c}`}
-                    value="true"
-                    defaultChecked={contractTypeDefaults ? contractTypeDefaults.includes(c) : true}
-                    className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent"
-                  />
-                  <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
-                </label>
-              ))}
+              {CONTRACT_TYPES.map((c) => {
+                const isClaimedElsewhere = contractTypesClaimedElsewhere?.has(c) ?? false;
+                return (
+                  <label
+                    key={c}
+                    className={
+                      isClaimedElsewhere
+                        ? "flex cursor-not-allowed items-center gap-2 opacity-50"
+                        : "flex cursor-pointer items-center gap-2"
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      name={`contract_type_${c}`}
+                      value="true"
+                      disabled={isClaimedElsewhere}
+                      defaultChecked={
+                        !isClaimedElsewhere && (contractTypeDefaults ? contractTypeDefaults.includes(c) : true)
+                      }
+                      className="h-4 w-4 rounded border border-border bg-veltol-surface accent-veltol-accent disabled:cursor-not-allowed"
+                    />
+                    <span className="font-mono text-[11px] text-veltol-fgDim">{tContractType(c)}</span>
+                  </label>
+                );
+              })}
             </div>
             {isInvalid("contract_type") && (
               <p className="text-xs text-destructive">{t("fields.contractTypeRequired")}</p>

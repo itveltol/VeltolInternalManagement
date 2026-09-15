@@ -123,6 +123,7 @@
     "filterAllPhases": "All phases",
     "filterAllCategories": "All categories",
     "filterAllContractTypes": "All contract types",
+    "filterAllManagers": "All managers",
     "filterMinValue": "Min value",
     "filterMaxValue": "Max value",
     "sortByValue": "Sort by value",
@@ -130,6 +131,7 @@
       "phase": "Phase",
       "category": "Category",
       "contractType": "Contract type",
+      "manager": "Manager",
       "minValue": "Min value (€)",
       "maxValue": "Max value (€)"
     },
@@ -433,6 +435,14 @@
     "errorMaxProjects": "Maximum of 5 projects — remove one to add another.",
     "errorGeneric": "Something went wrong. The cell was reverted.",
     "cellSaved": "Saved.",
+    "filters": {
+      "manager": "Manager",
+      "removeNonMatchingTitle": "Remove projects from other managers?",
+      "removeNonMatchingDescription": "{count, plural, one {1 pinned project doesn't} other {# pinned projects don't}} belong to the selected manager(s).",
+      "removeNonMatchingConfirm": "Remove them",
+      "removeNonMatchingCancel": "Keep them"
+    },
+    "filterAllManagers": "All managers",
     "picker": {
       "label": "PROJECTS",
       "shownCount": "{count} selected",
@@ -1052,6 +1062,14 @@
     "errorGeneric": "Something went wrong. Please try again.",
     "errorNotAllowed": "You don't have permission to do this.",
     "errorMaxProjects": "Maximum of 5 projects — remove one to add another.",
+    "filters": {
+      "manager": "Manager",
+      "removeNonMatchingTitle": "Remove projects from other managers?",
+      "removeNonMatchingDescription": "{count, plural, one {1 pinned project doesn't} other {# pinned projects don't}} belong to the selected manager(s).",
+      "removeNonMatchingConfirm": "Remove them",
+      "removeNonMatchingCancel": "Keep them"
+    },
+    "filterAllManagers": "All managers",
     "picker": {
       "label": "PROJECTS",
       "empty": "No projects available.",

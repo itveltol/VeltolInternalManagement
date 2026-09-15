@@ -22,7 +22,7 @@ const DEFAULT_INCLUDE_STATES: AvizState[] = ['overdue', 'dueSoon'];
 export function buildAvizReminders(
   activities: Activity[],
   cells: MatrixCell[],
-  projects: MatrixProject[],
+  projects: Pick<MatrixProject, "id" | "name">[],
   today: Date,
   options?: { includeStates?: AvizState[] },
 ): AvizReminder[] {

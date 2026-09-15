@@ -6,9 +6,11 @@ import { getLocale } from "next-intl/server";
 import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
 import { DependencyError } from "@/features/matrice/api/types";
 import * as matriceService from "@/features/matrice/services/matriceService";
+import * as projectService from "@/features/projects/services/projectService";
 import * as shownProjectsService from "@/features/hiddenProjects/services/shownProjectsService";
 import { MAX_VISIBLE_PROJECTS } from "@/features/hiddenProjects/constants";
 import type { Activity, MatricePhase, MatrixData, MatrixProject, ActivityStatus } from "@/features/matrice/types";
+import type { ProjectManager } from "@/features/projects/types";
 import { resolveItemNumberForActivity } from "@/features/matrice/services/checklistActivityMapping";
 import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
 import * as checklistService from "@/features/projects/checklists/services/checklistService";
@@ -40,6 +42,11 @@ export async function getAvailableProjects(): Promise<MatrixProject[]> {
   const { supabase } = await requireAuth();
   const client = createSupabaseMatriceClient(supabase);
   return matriceService.getAllProjects(client);
+}
+
+export async function getMatriceProjectManagers(): Promise<ProjectManager[]> {
+  await requireAuth();
+  return projectService.getCachedProjectManagers();
 }
 
 export async function getShownMatriceProjectIds(): Promise<number[]> {

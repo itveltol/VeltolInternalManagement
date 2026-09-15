@@ -1,7 +1,7 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/core/supabase/session";
-import { getMatrixData, getAvailableProjects, getShownMatriceProjectIds } from "./actions";
+import { getMatrixData, getAvailableProjects, getShownMatriceProjectIds, getMatriceProjectManagers } from "./actions";
 import { MatriceShell } from "@/features/matrice/components/MatriceShell";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -15,9 +15,10 @@ export default async function MatriceStatusPage() {
 
   const t = await getTranslations("matrice");
 
-  const [allProjects, initialShownIds] = await Promise.all([
+  const [allProjects, initialShownIds, managers] = await Promise.all([
     getAvailableProjects(),
     getShownMatriceProjectIds(),
+    getMatriceProjectManagers(),
   ]);
   // Nothing is shown by default (portfolio can run into the hundreds of
   // projects) — the user picks a handful to view, persisted server-side.
@@ -30,7 +31,12 @@ export default async function MatriceStatusPage() {
         title={t("title")}
       />
 
-      <MatriceShell initialData={initialData} allProjects={allProjects} initialShownIds={initialShownIds} />
+      <MatriceShell
+        initialData={initialData}
+        allProjects={allProjects}
+        managers={managers}
+        initialShownIds={initialShownIds}
+      />
     </div>
   );
 }
