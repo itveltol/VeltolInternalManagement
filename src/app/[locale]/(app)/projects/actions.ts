@@ -188,9 +188,6 @@ const projectSchema = z.object({
     if (data.project_category !== "residential" && data.people_needed == null) {
       ctx.addIssue({ code: "custom", path: ["people_needed"], message: "People needed is required" });
     }
-    if (!data.deadline) {
-      ctx.addIssue({ code: "custom", path: ["deadline"], message: "Deadline is required" });
-    }
     if (!data.contract_number) {
       ctx.addIssue({ code: "custom", path: ["contract_number"], message: "Contract number is required" });
     }
