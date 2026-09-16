@@ -525,11 +525,10 @@ export function ProjectFormFields({
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField label={t("fields.deadline")} required>
+              <FormField label={t("fields.deadline")}>
                 <input
                   name="deadline"
                   type="date"
-                  required
                   value={fields.deadline}
                   onChange={onFieldChange("deadline")}
                   className={SELECT_CLASS}
