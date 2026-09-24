@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils/cn";
 import { formatConvertedCurrency, type Currency } from "@/shared/utils/currency";
 
 const SELECT_CLASS =
@@ -29,6 +30,8 @@ interface Props {
   refreshErrorLabel?: string;
   required?: boolean;
   "aria-invalid"?: boolean;
+  /** Extra classes for the amount input (e.g. an AI-fill highlight ring). */
+  className?: string;
 }
 
 /** Single amount input + EUR/RON currency select, with a live "≈ converted"
@@ -45,6 +48,7 @@ export function CurrencyAmountInput({
   refreshErrorLabel,
   required,
   "aria-invalid": invalid,
+  className,
 }: Props) {
   const [amount, setAmount] = useState<string>(defaultAmount != null ? String(defaultAmount) : "");
   const [currency, setCurrency] = useState<Currency>(defaultCurrency);
@@ -86,7 +90,7 @@ export function CurrencyAmountInput({
           required={required}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="flex-1"
+          className={cn("flex-1", className)}
           aria-invalid={invalid}
         />
         <select

@@ -78,6 +78,12 @@ interface Props {
   exchangeRate: number | null;
   /** Prefill + refresh-rate wiring for the project value field (edit-mode only). */
   valueDefaults?: CurrencyFieldDefaults;
+  /** Changing this remounts the uncontrolled value input and contract-type
+   * checkboxes so they re-read valueDefaults / contractTypeDefaults — used
+   * when AI fill replaces them. */
+  aiInputKey?: string | number;
+  valueClassName?: string;
+  contractTypeClassName?: string;
 
   defaultPhase?: string;
   defaultStatus?: string;
@@ -122,6 +128,9 @@ export function ProjectFormFields({
   assignmentPriceDefaults,
   exchangeRate,
   valueDefaults,
+  aiInputKey,
+  valueClassName,
+  contractTypeClassName,
   defaultPhase = "planning",
   defaultStatus = "on_schedule",
   defaultAssignmentStartDate,
@@ -371,7 +380,7 @@ export function ProjectFormFields({
 
         {fields.project_category !== "residential" && (
           <FormField label={t("fields.contractType")} required>
-            <div className="flex gap-6">
+            <div key={aiInputKey} className={cn("flex gap-6 rounded-lg", contractTypeClassName)}>
               {CONTRACT_TYPES.map((c) => {
                 const isClaimedElsewhere = contractTypesClaimedElsewhere?.has(c) ?? false;
                 return (
@@ -422,7 +431,7 @@ export function ProjectFormFields({
               required={fields.execution_mode === "internal"}
               value={fields.contract_date}
               onChange={onFieldChange("contract_date")}
-              className={SELECT_CLASS}
+              className={cn(SELECT_CLASS, aiClass("contract_date"))}
               aria-invalid={isInvalid("contract_date")}
             />
           </FormField>
@@ -430,9 +439,11 @@ export function ProjectFormFields({
 
         <FormField label={t("fields.value")} required>
           <CurrencyAmountInput
+            key={aiInputKey}
             amountName="value_amount"
             currencyName="currency"
             required
+            className={valueClassName}
             defaultAmount={valueDefaults?.amount}
             defaultCurrency={valueDefaults?.currency}
             rate={valueDefaults?.rate ?? exchangeRate}
@@ -531,7 +542,7 @@ export function ProjectFormFields({
                   type="date"
                   value={fields.deadline}
                   onChange={onFieldChange("deadline")}
-                  className={SELECT_CLASS}
+                  className={cn(SELECT_CLASS, aiClass("deadline"))}
                   aria-invalid={isInvalid("deadline")}
                 />
               </FormField>

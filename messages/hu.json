@@ -250,6 +250,17 @@
       "manual": "Manuális",
       "autoHint": "A Matrice/checklist haladásból számítva"
     },
+    "contractFill": {
+      "button": "Kitöltés szerződésből",
+      "loading": "Szerződés olvasása…",
+      "undo": "AI kitöltés visszavonása",
+      "noContractHint": "Tölts fel szerződést a Dokumentumok fülön az AI kitöltéshez",
+      "noContract": "Nincs feltöltött szerződés a Dokumentumok fülön.",
+      "unsupported": "A szerződés fájltípusa nem támogatott — tölts fel PDF-et, DOCX-et vagy képet.",
+      "tooLarge": "A szerződésfájl túl nagy (max. 10 MB).",
+      "nothingFound": "Nem sikerült adatot kinyerni a szerződésből.",
+      "failed": "Nem sikerült beolvasni a szerződést. Próbáld újra."
+    },
     "folderScan": {
       "stepTitle": "AI mappaelemzés",
       "stepSubtitle": "Elemezze a csatolt OneDrive mappát, és hagyja, hogy az AI javaslatokat tegyen az ellenőrzőlista és a tevékenységek frissítésére.",

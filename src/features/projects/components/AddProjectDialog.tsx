@@ -1,11 +1,9 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { AiFillButton } from "@/shared/components/ui/ai-fill-button";
-import { useAiFormFill } from "@/shared/hooks/useAiFormFill";
 import { createProject, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
 import type { ProjectManager } from "../types";
 import type { ClientRef } from "@/features/clients/types";
@@ -14,19 +12,7 @@ import type { SubcontractorRef } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
 import { FolderScanStep } from "./FolderScanStep";
 import { ProjectFormFields } from "./ProjectFormFields";
-import { useProjectFormState, EMPTY_FIELDS, type ProjectFieldsState } from "./projectFormState";
-import { cn } from "@/shared/utils/cn";
-
-const AI_TARGET_FIELDS: (keyof ProjectFieldsState)[] = [
-  "name",
-  "county",
-  "site_location",
-  "project_type",
-  "contract_number",
-  "mw_solar",
-  "mw_bess",
-  "notes",
-];
+import { useProjectFormState, EMPTY_FIELDS } from "./projectFormState";
 
 interface Props {
   open: boolean;
@@ -73,7 +59,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
     handleMapChange,
   } = useProjectFormState();
 
-  const [snapshot, setSnapshot] = useState<ProjectFieldsState | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientRef | null>(null);
   const [localClientRefs, setLocalClientRefs] = useState<ClientRef[]>(clientRefs);
   const [showAddClient, setShowAddClient] = useState(false);
@@ -89,14 +74,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
     setLocalSubcontractorRefs(subcontractorRefs);
   }, [subcontractorRefs]);
 
-  const getContext = useCallback(() => ({ name: fields.name }), [fields.name]);
-
-  const { fillWithAi, loading, hasSuggestions, reset } = useAiFormFill({
-    formType: "project",
-    getContext,
-    targetFields: AI_TARGET_FIELDS,
-  });
-
   useEffect(() => {
     if (state?.success && state.projectId) {
       setCreatedProjectId(state.projectId);
@@ -108,41 +85,12 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
   useEffect(() => {
     if (!open) {
       setFields(EMPTY_FIELDS);
-      setSnapshot(null);
       setStep("form");
       setCreatedProjectId(null);
       setSelectedClient(null);
       setSelectedSubcontractor(null);
-      reset();
     }
   }, [open]);
-
-  const handleFill = async () => {
-    setSnapshot({ ...fields });
-    const suggestions = await fillWithAi();
-    if (Object.keys(suggestions).length > 0) {
-      setFields((f) => ({ ...f, ...(suggestions as Partial<ProjectFieldsState>) }));
-    }
-  };
-
-  const handleFileSelect = async (file: File) => {
-    setSnapshot({ ...fields });
-    const suggestions = await fillWithAi(file);
-    if (Object.keys(suggestions).length > 0) {
-      setFields((f) => ({ ...f, ...(suggestions as Partial<ProjectFieldsState>) }));
-    }
-  };
-
-  const handleUndo = () => {
-    if (snapshot) {
-      setFields(snapshot);
-      setSnapshot(null);
-      reset();
-    }
-  };
-
-  const aiClass = (key: keyof ProjectFieldsState) =>
-    cn(hasSuggestions && fields[key] ? "ring-1 ring-veltol-accent/30" : "");
 
   return (
     <>
@@ -165,18 +113,9 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between">
-                <Dialog.Title className="text-xl font-semibold text-veltol-fg">
-                  {t("addProject")}
-                </Dialog.Title>
-                <AiFillButton
-                  onFill={handleFill}
-                  onFileSelect={handleFileSelect}
-                  onUndo={handleUndo}
-                  loading={loading}
-                  hasSuggestions={hasSuggestions}
-                />
-              </div>
+              <Dialog.Title className="text-xl font-semibold text-veltol-fg">
+                {t("addProject")}
+              </Dialog.Title>
 
               <form action={action} className="mt-6 space-y-4">
                 <ProjectFormFields
@@ -203,7 +142,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
                   onSubcontractorChange={setSelectedSubcontractor}
                   onNewSubcontractor={() => setShowAddSubcontractor(true)}
                   exchangeRate={exchangeRate}
-                  aiClass={aiClass}
                   fieldErrors={state?.fieldErrors}
                 />
 

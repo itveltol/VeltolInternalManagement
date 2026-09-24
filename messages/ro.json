@@ -250,6 +250,17 @@
       "manual": "Manual",
       "autoHint": "Calculat din progresul Matrice/checklist"
     },
+    "contractFill": {
+      "button": "Completează din contract",
+      "loading": "Se citește contractul…",
+      "undo": "Anulează completarea AI",
+      "noContractHint": "Încarcă un contract în tabul Documente pentru completare cu AI",
+      "noContract": "Nu există contract încărcat în tabul Documente.",
+      "unsupported": "Tipul fișierului de contract nu este suportat — încarcă PDF, DOCX sau imagine.",
+      "tooLarge": "Fișierul contractului este prea mare (max. 10 MB).",
+      "nothingFound": "Nu s-a putut extrage nimic din contract.",
+      "failed": "Contractul nu a putut fi citit. Încearcă din nou."
+    },
     "folderScan": {
       "stepTitle": "Scanare folder AI",
       "stepSubtitle": "Scanați folderul OneDrive asociat și lăsați AI-ul să sugereze actualizări pentru lista de verificare și activități.",

@@ -176,7 +176,7 @@ async function getOneDriveFileContent(itemId: string): Promise<FileContent> {
   const token = await getGraphToken();
 
   const metaRes = await fetch(
-    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}?$select=name,file`,
+    `https://graph.microsoft.com/v1.0/drives/${driveId}/items/${itemId}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!metaRes.ok) {
