@@ -12,8 +12,18 @@ import * as holidayService from "@/features/holidays/services/holidayService";
 import { createSupabaseScheduleClient } from "@/features/schedule/api/supabaseScheduleClient";
 import * as scheduleService from "@/features/schedule/services/scheduleService";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
-import type { VacationRequest, VacationBalance, VacationLeaveType } from "@/features/vacation/types";
-import { VACATION_LEAVE_TYPES, workingDaysCount } from "@/features/vacation/types";
+import { createSupabaseProfileClient } from "@/features/profile/api/supabaseProfileClient";
+import * as profileService from "@/features/profile/services/profileService";
+import { createSupabaseTeamsClient } from "@/features/teams/api/supabaseTeamsClient";
+import * as teamService from "@/features/teams/services/teamService";
+import type {
+  VacationRequest,
+  VacationBalance,
+  VacationLeaveType,
+  VacationSubject,
+  VacationOverviewRow,
+} from "@/features/vacation/types";
+import { COUNTED_LEAVE_TYPES, VACATION_LEAVE_TYPES, vacationDays, workingDaysCount } from "@/features/vacation/types";
 import type { Holiday } from "@/features/holidays/types";
 
 export type ActionState = { error?: string; success?: string } | null;
@@ -21,6 +31,12 @@ export type ActionState = { error?: string; success?: string } | null;
 async function getVacationPath() {
   const locale = await getLocale();
   return `/${locale}/vacation`;
+}
+
+async function revalidateBalancePaths() {
+  const locale = await getLocale();
+  revalidatePath(`/${locale}/vacation`);
+  revalidatePath(`/${locale}/profile`);
 }
 
 async function requireAuth() {
@@ -105,22 +121,162 @@ async function getHolidayDates(): Promise<string[]> {
   return holidays.map((h) => h.date);
 }
 
-export async function getVacationBalance(userId?: string): Promise<VacationBalance | null> {
+/** Balance for the current year. Defaults to the signed-in user; anyone else requires admin. */
+export async function getVacationBalance(subject?: VacationSubject): Promise<VacationBalance | null> {
   try {
     const { supabase, user } = await requireAuth();
-    const targetUserId = userId ?? user.id;
-    if (targetUserId !== user.id) await requireAdmin();
+    const target: VacationSubject = subject ?? { kind: "user", id: user.id };
+    if (target.kind !== "user" || target.id !== user.id) await requireAdmin();
     const client = createSupabaseVacationClient(supabase);
-    const requests = await client.getRequestsForUser(targetUserId);
-    const holidayDates = await getHolidayDates();
+    const [requests, allowances, adjustments, holidayDates] = await Promise.all([
+      target.kind === "user" ? client.getRequestsForUser(target.id) : client.getBalanceRows(),
+      client.getAllowances(target),
+      client.getAdjustments(target),
+      getHolidayDates(),
+    ]);
     return vacationBalanceService.computeBalance(
-      requests,
-      targetUserId,
+      { requests, allowances, adjustments, holidays: new Set(holidayDates) },
+      target,
       new Date().getFullYear(),
-      new Set(holidayDates),
     );
   } catch {
     return null;
+  }
+}
+
+function parseYear(value: FormDataEntryValue | null): number | null {
+  const year = Number(value);
+  return Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : null;
+}
+
+function parseSubject(formData: FormData): VacationSubject | null {
+  const kind = formData.get("subject_kind");
+  const id = (formData.get("subject_id") as string | null)?.trim();
+  if (!id) return null;
+  if (kind === "user") return { kind, id };
+  if (kind === "team_worker" && Number.isInteger(Number(id))) return { kind, id: Number(id) };
+  return null;
+}
+
+// Half-day granularity to match numeric(5,1).
+function parseDays(value: FormDataEntryValue | null): number | null {
+  const raw = String(value ?? "").trim().replace(",", ".");
+  if (raw === "") return null;
+  const days = Number(raw);
+  return Number.isFinite(days) && Math.abs(days) < 1000 ? Math.round(days * 2) / 2 : null;
+}
+
+/** Every app user and active team worker with their balance for `year`. Admin only. */
+export async function getVacationOverview(year: number): Promise<VacationOverviewRow[]> {
+  const { supabase } = await requireAdmin();
+  const client = createSupabaseVacationClient(supabase);
+  const [users, workers, teams, requests, allowances, adjustments, holidayDates] = await Promise.all([
+    profileService.getAllUsers(createSupabaseProfileClient(supabase)),
+    teamService.getAllTeamWorkers(createSupabaseTeamsClient(supabase)),
+    teamService.getTeams(createSupabaseTeamsClient(supabase)),
+    client.getBalanceRows(),
+    client.getAllowances(),
+    client.getAdjustments(),
+    getHolidayDates(),
+  ]);
+  const holidays = new Set(holidayDates);
+  const inputs = { requests, allowances, adjustments, holidays };
+  const teamNameById = new Map(teams.map((t) => [t.id, t.name]));
+
+  function row(subject: VacationSubject, name: string, detail: string): VacationOverviewRow {
+    const own = (r: { user_id: string | null; team_worker_id: number | null }) =>
+      vacationBalanceService.matchesSubject(r, subject);
+    return {
+      subject,
+      name,
+      detail,
+      balance: vacationBalanceService.computeBalance(inputs, subject, year),
+      pendingDays: requests
+        .filter(
+          (r) =>
+            own(r) &&
+            r.status === "pending" &&
+            COUNTED_LEAVE_TYPES.includes(r.leave_type) &&
+            r.start_date.startsWith(`${year}-`),
+        )
+        .reduce((sum, r) => sum + vacationDays(r.start_date, r.end_date, holidays), 0),
+      hasExplicitAllowance: allowances.some((a) => own(a) && a.year === year),
+      adjustments: adjustments.filter((a) => own(a) && a.year === year),
+    };
+  }
+
+  return [
+    ...users.map((u) =>
+      row({ kind: "user", id: u.id }, fullName(u) || u.email, u.email),
+    ),
+    ...workers
+      .filter((w) => w.active)
+      .map((w) =>
+        row(
+          { kind: "team_worker", id: w.id },
+          fullName(w),
+          (w.team_id !== null ? teamNameById.get(w.team_id) : null) ?? "",
+        ),
+      ),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function setVacationAllowance(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase } = await requireAdmin();
+    const subject = parseSubject(formData);
+    const year = parseYear(formData.get("year"));
+    const baseDays = parseDays(formData.get("base_days"));
+    if (!subject || !year || baseDays === null || baseDays < 0) return { error: "errorInvalidAllowance" };
+    await createSupabaseVacationClient(supabase).upsertAllowance(subject, year, baseDays);
+    await revalidateBalancePaths();
+    return { success: "allowanceSaved" };
+  } catch (e: unknown) {
+    console.error("setVacationAllowance failed:", e);
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function addVacationAdjustment(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const { supabase, user } = await requireAdmin();
+    const subject = parseSubject(formData);
+    const year = parseYear(formData.get("year"));
+    const days = parseDays(formData.get("days"));
+    const note = (formData.get("note") as string | null)?.trim() ?? "";
+    if (!subject || !year || days === null || days === 0 || !note) return { error: "errorInvalidAdjustment" };
+    await createSupabaseVacationClient(supabase).createAdjustment({
+      subject,
+      year,
+      days,
+      note,
+      created_by: user.id,
+    });
+    await revalidateBalancePaths();
+    return { success: "adjustmentAdded" };
+  } catch (e: unknown) {
+    console.error("addVacationAdjustment failed:", e);
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
+  }
+}
+
+export async function deleteVacationAdjustment(id: number): Promise<ActionState> {
+  try {
+    const { supabase } = await requireAdmin();
+    await createSupabaseVacationClient(supabase).deleteAdjustment(id);
+    await revalidateBalancePaths();
+    return { success: "adjustmentDeleted" };
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
+    return { error: "errorGeneric" };
   }
 }
 
@@ -151,6 +307,7 @@ export async function createVacationRequest(
     const superior_name = (formData.get("superior_name") as string | null)?.trim() || null;
     const substitute_name = (formData.get("substitute_name") as string | null)?.trim() || null;
 
+    if (!start_date || !end_date || end_date < start_date) return { error: "errorInvalidRange" };
     const holidayDates = await getHolidayDates();
     if (workingDaysCount(start_date, end_date, new Set(holidayDates)) < 1) {
       return { error: "errorNoWorkingDays" };
@@ -174,6 +331,7 @@ export async function createVacationRequest(
     revalidatePath(await getVacationPath());
     return { success: "requestCreated" };
   } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Overlap") return { error: "errorOverlap" };
     console.error("createVacationRequest failed:", e);
     return { error: "errorGeneric" };
   }
@@ -202,6 +360,7 @@ export async function updateVacationRequest(
       return { error: "errorNotAllowed" };
     }
 
+    if (!start_date || !end_date || end_date < start_date) return { error: "errorInvalidRange" };
     const holidayDates = await getHolidayDates();
     if (workingDaysCount(start_date, end_date, new Set(holidayDates)) < 1) {
       return { error: "errorNoWorkingDays" };
@@ -218,7 +377,8 @@ export async function updateVacationRequest(
     });
     revalidatePath(await getVacationPath());
     return { success: "requestSaved" };
-  } catch {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Overlap") return { error: "errorOverlap" };
     return { error: "errorGeneric" };
   }
 }
@@ -245,6 +405,7 @@ export async function approveVacationRequest(id: number): Promise<ActionState> {
     if (request) await notifyScheduleConflictOnApprove(request);
     return { success: "requestApproved" };
   } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Overlap") return { error: "errorOverlap" };
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };
   }
@@ -262,17 +423,26 @@ export async function logWorkerAbsenceAction(
     const end_date = formData.get("end_date") as string;
     const reason = (formData.get("reason") as string | null)?.trim() || null;
 
+    if (!start_date || !end_date || end_date < start_date) return { error: "errorInvalidRange" };
     const holidayDates = await getHolidayDates();
     if (workingDaysCount(start_date, end_date, new Set(holidayDates)) < 1) {
       return { error: "errorNoWorkingDays" };
     }
 
-    const { id } = await client.logWorkerAbsence({ team_worker_id, start_date, end_date, reason, approved_by: user.id });
+    const { id } = await client.logWorkerAbsence({
+      team_worker_id,
+      start_date,
+      end_date,
+      reason,
+      leave_type: parseLeaveType(formData),
+      approved_by: user.id,
+    });
     revalidatePath(await getVacationPath());
     const created = await client.getById(id);
     if (created) await notifyScheduleConflictOnApprove(created);
     return { success: "requestCreated" };
   } catch (e: unknown) {
+    if (e instanceof Error && e.message === "Overlap") return { error: "errorOverlap" };
     console.error("logWorkerAbsenceAction failed:", e);
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
     return { error: "errorGeneric" };

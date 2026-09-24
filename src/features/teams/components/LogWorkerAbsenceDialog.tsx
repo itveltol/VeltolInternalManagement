@@ -8,12 +8,13 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { logWorkerAbsenceAction } from "@/app/[locale]/(app)/vacation/actions";
+import { VACATION_LEAVE_TYPES } from "@/features/vacation/types";
 import type { TeamWorker } from "../types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  worker: TeamWorker;
+  worker: Pick<TeamWorker, "id" | "first_name" | "last_name">;
 }
 
 export function LogWorkerAbsenceDialog({ open, onClose, worker }: Props) {
@@ -26,7 +27,7 @@ export function LogWorkerAbsenceDialog({ open, onClose, worker }: Props) {
       toast.success(tv(state.success as "requestCreated"));
       onClose();
     } else if (state?.error) {
-      toast.error(tv(state.error as "errorGeneric" | "errorNoWorkingDays" | "errorNotAllowed"));
+      toast.error(tv(state.error as "errorGeneric" | "errorNoWorkingDays" | "errorNotAllowed" | "errorOverlap" | "errorInvalidRange"));
     }
   }, [state]);
 
@@ -51,6 +52,22 @@ export function LogWorkerAbsenceDialog({ open, onClose, worker }: Props) {
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("absenceEnd")}</Label>
                 <Input name="end_date" type="date" required />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-medium text-veltol-fgMute">{tv("leaveType")}</Label>
+              <select
+                name="leave_type"
+                required
+                defaultValue="rest"
+                className="h-8 w-full rounded-lg border border-border bg-veltol-surface/60 px-2.5 py-1 font-mono text-sm text-veltol-fg outline-none focus:border-veltol-accent/50 focus:ring-2 focus:ring-veltol-accent/20"
+              >
+                {VACATION_LEAVE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {tv(`leaveType_${type}` as Parameters<typeof tv>[0])}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">

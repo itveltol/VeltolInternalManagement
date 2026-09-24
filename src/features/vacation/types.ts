@@ -70,10 +70,58 @@ export function vacationDays(
 export const ANNUAL_VACATION_DAYS = 21;
 export const MAX_CARRYOVER_DAYS = 5;
 
+/** Only these leave types are deducted from the annual allowance. */
+export const COUNTED_LEAVE_TYPES: readonly VacationLeaveType[] = ["rest"];
+
+/** Whose balance: an app user (profile) or a no-login team worker. */
+export type VacationSubject =
+  | { kind: "user"; id: string }
+  | { kind: "team_worker"; id: number };
+
+export interface VacationAllowance {
+  id: number;
+  user_id: string | null;
+  team_worker_id: number | null;
+  year: number;
+  base_days: number;
+}
+
+export interface VacationAdjustment {
+  id: number;
+  user_id: string | null;
+  team_worker_id: number | null;
+  year: number;
+  days: number;
+  note: string;
+  created_by: string | null;
+  created_at: string;
+  author?: { first_name: string | null; last_name: string | null } | null;
+}
+
 export interface VacationBalance {
   year: number;
   baseDays: number;
   carriedOverDays: number;
+  adjustmentDays: number;
   usedDays: number;
+  /** Approved personal/medical leave this year — informational, not deducted. */
+  otherLeaveDays: number;
   remainingDays: number;
+}
+
+export function balanceTotal(balance: VacationBalance): number {
+  return balance.baseDays + balance.carriedOverDays + balance.adjustmentDays;
+}
+
+export interface VacationOverviewRow {
+  subject: VacationSubject;
+  name: string;
+  /** Email for users, team name for team workers. */
+  detail: string;
+  balance: VacationBalance;
+  /** Pending counted-leave days starting in the year — would come off the balance if approved. */
+  pendingDays: number;
+  /** Whether base_days was set explicitly for this year (vs inherited / company default). */
+  hasExplicitAllowance: boolean;
+  adjustments: VacationAdjustment[];
 }

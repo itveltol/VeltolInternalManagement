@@ -47,9 +47,9 @@ export default async function SchedulePage({ searchParams }: Props) {
         <ScheduleShell initialGrid={grid} teamLookup={teamLookup} roster={roster} pmColors={pmColors} canMutate={canMutate} />
 
         <TeamRosterTable rows={roster} />
-
-        <WorkerHoursSummaryTable rows={hoursSummary} />
       </div>
+
+      <WorkerHoursSummaryTable rows={hoursSummary} />
 
       <PmColorManager pmColors={pmColors} canMutate={canMutate} />
     </div>

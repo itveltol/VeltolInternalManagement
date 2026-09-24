@@ -6,7 +6,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { createVacationRequest, updateVacationRequest } from "@/app/[locale]/(app)/vacation/actions";
-import { VACATION_LEAVE_TYPES, workingDaysCount } from "../types";
+import { VACATION_LEAVE_TYPES, balanceTotal, workingDaysCount } from "../types";
 import type { VacationRequest, VacationBalance } from "../types";
 import type { Profile } from "@/features/profile/types";
 import type { Holiday } from "@/features/holidays/types";
@@ -24,6 +24,8 @@ interface Props {
   isAdmin?: boolean;
   currentUserId?: string;
   employees?: Profile[];
+  /** Preselected employee for admin-assigned requests; defaults to the current user. */
+  defaultUserId?: string;
   holidays?: Holiday[];
   onClose: () => void;
 }
@@ -35,6 +37,7 @@ export function RequestVacationDialog({
   isAdmin,
   currentUserId,
   employees,
+  defaultUserId,
   holidays = [],
   onClose,
 }: Props) {
@@ -68,7 +71,7 @@ export function RequestVacationDialog({
 
           {balance && (
             <p className="mt-3 font-mono text-[12px] text-veltol-fgMute">
-              {t("yourBalance")}: {balance.remainingDays} / {balance.baseDays + balance.carriedOverDays}
+              {t("yourBalance")}: {balance.remainingDays} / {balanceTotal(balance)}
             </p>
           )}
 
@@ -80,7 +83,7 @@ export function RequestVacationDialog({
                 <Label className="text-[11px] font-medium text-veltol-fgMute">{t("assignTo")}</Label>
                 <select
                   name="user_id"
-                  defaultValue={currentUserId}
+                  defaultValue={defaultUserId ?? currentUserId}
                   className={INPUT_CLASS}
                 >
                   {employees.map((employee) => (

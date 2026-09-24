@@ -34,6 +34,7 @@ import { AssignmentDayRow } from "./AssignmentDayRow";
 import { DoubleBookingDialog } from "./DoubleBookingDialog";
 import type { ScheduleAssignment, ScheduleAssignee, ScheduleProjectOption } from "../types";
 import type { AssignmentMemberInput } from "../api/types";
+import type { TeamLookupEntry } from "../services/scheduleService";
 import type { DoubleBookingConflictView, DoubleBookingResolution } from "@/app/[locale]/(app)/schedule/actions";
 
 function toMemberInput(a: ScheduleAssignee): AssignmentMemberInput {
@@ -41,6 +42,8 @@ function toMemberInput(a: ScheduleAssignee): AssignmentMemberInput {
     ? { profile_id: null, team_worker_id: Number(a.id.replace("worker:", "")) }
     : { profile_id: a.id, team_worker_id: null };
 }
+
+const NO_CONFLICTS: DoubleBookingConflictView[] = [];
 
 interface PersonOption {
   id: string;
@@ -58,9 +61,11 @@ interface Props {
   initialAssignees?: ScheduleAssignee[];
   /** Team rows have a fixed roster — show the assignees read-only instead of an editable combobox. */
   lockAssignees?: boolean;
+  /** Assignee id -> team, so double-booking conflicts can be asked once per team instead of per member. */
+  teamByAssigneeId?: Record<string, TeamLookupEntry>;
 }
 
-export function AssigneePicker({ open, onClose, assignment, initialStartDate, initialEndDate, initialAssignees, lockAssignees }: Props) {
+export function AssigneePicker({ open, onClose, assignment, initialStartDate, initialEndDate, initialAssignees, lockAssignees, teamByAssigneeId }: Props) {
   const t = useTranslations("schedule");
   const [project, setProject] = useState<ScheduleProjectOption | null>(null);
   const [projectItems, setProjectItems] = useState<ScheduleProjectOption[]>([]);
@@ -174,6 +179,8 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
             end: result.warning.conflictEnd,
           }),
         );
+      } else if (result?.resolvedSummary) {
+        toast.success(t("doubleBooking.resolvedToast", { ...result.resolvedSummary }));
       } else if (result?.success) {
         toast.success(t(result.success as "entrySaved"));
       }
@@ -428,7 +435,9 @@ export function AssigneePicker({ open, onClose, assignment, initialStartDate, in
 
       <DoubleBookingDialog
         open={!!doubleBooking}
-        conflicts={doubleBooking ?? []}
+        conflicts={doubleBooking ?? NO_CONFLICTS}
+        isPending={isPending}
+        teamByAssigneeId={teamByAssigneeId}
         onResolve={(resolutions) => handleSave(resolutions)}
         onCancel={() => setDoubleBooking(null)}
       />
