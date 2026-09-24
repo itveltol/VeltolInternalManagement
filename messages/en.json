@@ -250,6 +250,17 @@
       "manual": "Manual",
       "autoHint": "Computed from Matrice/checklist progress"
     },
+    "contractFill": {
+      "button": "Fill from contract",
+      "loading": "Reading contract…",
+      "undo": "Undo AI fill",
+      "noContractHint": "Upload a contract in the Documents tab to fill with AI",
+      "noContract": "No contract uploaded in the Documents tab.",
+      "unsupported": "The contract file type isn't supported — upload a PDF, DOCX or image.",
+      "tooLarge": "The contract file is too large (max 10 MB).",
+      "nothingFound": "Nothing could be extracted from the contract.",
+      "failed": "Couldn't read the contract. Try again."
+    },
     "folderScan": {
       "stepTitle": "AI Folder Scan",
       "stepSubtitle": "Scan the linked OneDrive folder and let AI suggest checklist and activity updates.",

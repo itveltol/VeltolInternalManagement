@@ -49,7 +49,7 @@ function DocumentRow({
       )}
       <div className="flex shrink-0 items-center gap-2">
         {doc.onedrive_item_id && (
-          <Button size="sm" variant="outline" render={<a href={`/api/onedrive/${doc.onedrive_item_id}/content`} download />}>
+          <Button size="sm" variant="outline" nativeButton={false} render={<a href={`/api/onedrive/${doc.onedrive_item_id}/content`} download />}>
             {t("files.download")}
           </Button>
         )}
