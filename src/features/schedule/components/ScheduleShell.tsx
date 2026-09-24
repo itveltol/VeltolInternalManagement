@@ -117,17 +117,17 @@ export function ScheduleShell({ initialGrid, teamLookup, roster, pmColors, canMu
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon-sm" onClick={() => goToWeek(shiftWeek(initialGrid.weekStart, -1))}>
+          <Button variant="outline" size="icon-sm" data-export-exclude onClick={() => goToWeek(shiftWeek(initialGrid.weekStart, -1))}>
             <ChevronLeft />
           </Button>
           <span className="min-w-[13rem] text-center text-sm font-medium text-veltol-fg">
             {formatDate(initialGrid.weekStart, { year: undefined })} – {formatDate(initialGrid.weekEnd, { year: undefined })}
           </span>
-          <Button variant="outline" size="icon-sm" onClick={() => goToWeek(shiftWeek(initialGrid.weekStart, 1))}>
+          <Button variant="outline" size="icon-sm" data-export-exclude onClick={() => goToWeek(shiftWeek(initialGrid.weekStart, 1))}>
             <ChevronRight />
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-export-exclude>
           {canMutate && (
             <Button onClick={() => setEditTarget({ assignment: null })}>
               <Plus data-icon="inline-start" />
@@ -290,6 +290,7 @@ export function ScheduleShell({ initialGrid, teamLookup, roster, pmColors, canMu
           initialEndDate={editTarget.initialEndDate}
           initialAssignees={editTarget.initialAssignees}
           lockAssignees={editTarget.lockAssignees}
+          teamByAssigneeId={teamLookup.byAssigneeId}
         />
       )}
     </div>

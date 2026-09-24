@@ -21,7 +21,14 @@ export type ActionState = {
   success?: string;
   warning?: { conflictStart: string; conflictEnd: string };
   doubleBooking?: DoubleBookingConflictView[];
+  resolvedSummary?: DoubleBookingSummary;
 } | null;
+
+export interface DoubleBookingSummary {
+  movedHere: number;
+  keptThere: number;
+  both: number;
+}
 
 export interface DoubleBookingConflictView {
   subjectKey: string; // profile uuid, or `worker:<id>` — matches ScheduleAssignee.id
@@ -35,7 +42,16 @@ export interface DoubleBookingConflictView {
 export interface DoubleBookingResolution {
   subjectKey: string;
   assignmentId: number;
-  choice: "keepHere" | "keepOther";
+  choice: "keepHere" | "keepOther" | "keepBoth";
+}
+
+function summarizeResolutions(resolutions: DoubleBookingResolution[] | undefined): DoubleBookingSummary | undefined {
+  if (!resolutions?.length) return undefined;
+  return {
+    movedHere: resolutions.filter((r) => r.choice === "keepHere").length,
+    keptThere: resolutions.filter((r) => r.choice === "keepOther").length,
+    both: resolutions.filter((r) => r.choice === "keepBoth").length,
+  };
 }
 
 async function getSchedulePath() {
@@ -397,7 +413,7 @@ function resolveMemberNames(members: RawAssignmentMember[]): string {
     .join(", ");
 }
 
-/** Applies user-chosen resolutions: drops "keepOther" members from the new payload, and trims the other assignment's range for "keepHere" members. Returns the possibly-narrowed member list to save. */
+/** Applies user-chosen resolutions: drops "keepOther" members from the new payload, trims the other assignment's range for "keepHere" members, and leaves "keepBoth" members on both (intentional multi-site day). Returns the possibly-narrowed member list to save. */
 async function applyDoubleBookingResolutions(
   supabase: SupabaseClient,
   userId: string,
@@ -412,7 +428,7 @@ async function applyDoubleBookingResolutions(
       const subject = members.find((m) => subjectKeyOf({ profileId: m.profile_id, teamWorkerId: m.team_worker_id }) === resolution.subjectKey);
       if (!subject) continue;
       await removeMemberFromAssignmentForRange(supabase, userId, resolution.assignmentId, subject, start, end);
-    } else {
+    } else if (resolution.choice === "keepOther") {
       nextMembers = nextMembers.filter(
         (m) => subjectKeyOf({ profileId: m.profile_id, teamWorkerId: m.team_worker_id }) !== resolution.subjectKey,
       );
@@ -472,10 +488,10 @@ export async function createAssignmentAction(
         resolveMemberNames(created?.members ?? []),
         conflict,
       );
-      return { success: "entrySaved", warning: { conflictStart: conflict.start_date, conflictEnd: conflict.end_date } };
+      return { success: "entrySaved", warning: { conflictStart: conflict.start_date, conflictEnd: conflict.end_date }, resolvedSummary: summarizeResolutions(resolutions) };
     }
 
-    return { success: "entrySaved" };
+    return { success: "entrySaved", resolvedSummary: summarizeResolutions(resolutions) };
   } catch (e: unknown) {
     return mapError(e);
   }
@@ -524,9 +540,9 @@ export async function updateAssignmentAction(
     revalidatePath(await getSchedulePath());
 
     if (conflict) {
-      return { success: "entrySaved", warning: { conflictStart: conflict.start_date, conflictEnd: conflict.end_date } };
+      return { success: "entrySaved", warning: { conflictStart: conflict.start_date, conflictEnd: conflict.end_date }, resolvedSummary: summarizeResolutions(resolutions) };
     }
-    return { success: "entrySaved" };
+    return { success: "entrySaved", resolvedSummary: summarizeResolutions(resolutions) };
   } catch (e: unknown) {
     return mapError(e);
   }

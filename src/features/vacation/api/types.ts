@@ -1,4 +1,11 @@
-import type { VacationRequest, VacationLeaveType, VacationStatus } from "../types";
+import type {
+  VacationRequest,
+  VacationLeaveType,
+  VacationStatus,
+  VacationAllowance,
+  VacationAdjustment,
+  VacationSubject,
+} from "../types";
 
 export interface CreateVacationPayload {
   user_id: string;
@@ -30,12 +37,35 @@ export interface LogWorkerAbsencePayload {
   start_date: string;
   end_date: string;
   reason: string | null;
+  leave_type: VacationLeaveType;
   approved_by: string;
 }
+
+export interface CreateAdjustmentPayload {
+  subject: VacationSubject;
+  year: number;
+  days: number;
+  note: string;
+  created_by: string;
+}
+
+export type BalanceRequestRow = Pick<
+  VacationRequest,
+  "user_id" | "team_worker_id" | "start_date" | "end_date" | "status" | "leave_type"
+>;
 
 export interface VacationApiClient {
   getRequests(userId: string, isAdmin: boolean): Promise<VacationRequest[]>;
   getRequestsForUser(userId: string): Promise<VacationRequest[]>;
+  /** Slim approved + pending rows for every subject, for the admin balance overview. */
+  getBalanceRows(): Promise<BalanceRequestRow[]>;
+  /** Allowances for one subject, or everyone when omitted. */
+  getAllowances(subject?: VacationSubject): Promise<VacationAllowance[]>;
+  upsertAllowance(subject: VacationSubject, year: number, baseDays: number): Promise<void>;
+  /** Adjustments for one subject, or everyone when omitted. */
+  getAdjustments(subject?: VacationSubject): Promise<VacationAdjustment[]>;
+  createAdjustment(payload: CreateAdjustmentPayload): Promise<void>;
+  deleteAdjustment(id: number): Promise<void>;
   getById(id: number): Promise<VacationRequest | null>;
   createRequest(payload: CreateVacationPayload): Promise<{ id: number }>;
   updateRequest(id: number, payload: UpdateVacationPayload): Promise<void>;

@@ -27,6 +27,7 @@ export function ExportScheduleButton({ weekStart }: Props) {
         pixelRatio: 2,
         backgroundColor: "#FFFFFF",
         cacheBust: true,
+        filter: (node) => !(node instanceof HTMLElement && node.dataset.exportExclude !== undefined),
       });
       const link = document.createElement("a");
       link.href = dataUrl;

@@ -1,11 +1,15 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getUserProfileRole } from "@/core/supabase/session";
-import { getVacationRequests, getVacationBalance, getHolidays } from "./actions";
+import { getVacationRequests, getVacationBalance, getHolidays, getVacationOverview } from "./actions";
 import { getAllUsers } from "@/app/[locale]/(app)/profile/actions";
 import { VacationShell } from "@/features/vacation/components/VacationShell";
 
-export default async function VacationPage() {
+interface Props {
+  searchParams: Promise<{ tab?: string; year?: string }>;
+}
+
+export default async function VacationPage({ searchParams }: Props) {
   const { user, role } = await getUserProfileRole();
 
   if (!user) {
@@ -14,11 +18,19 @@ export default async function VacationPage() {
   }
 
   const isAdmin = role === "admin";
-  const [requests, balance, employees, holidays] = await Promise.all([
+  const { tab, year: yearParam } = await searchParams;
+  const parsedYear = Number(yearParam);
+  const overviewYear =
+    Number.isInteger(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100
+      ? parsedYear
+      : new Date().getFullYear();
+
+  const [requests, balance, employees, holidays, overviewRows] = await Promise.all([
     getVacationRequests(),
     getVacationBalance(),
     isAdmin ? getAllUsers() : Promise.resolve([]),
     getHolidays(),
+    isAdmin ? getVacationOverview(overviewYear) : Promise.resolve(null),
   ]);
 
   const t = await getTranslations("vacation");
@@ -39,6 +51,8 @@ export default async function VacationPage() {
         balance={balance}
         employees={employees}
         holidays={holidays}
+        overview={overviewRows ? { year: overviewYear, rows: overviewRows } : null}
+        initialTab={tab === "overview" ? "overview" : "requests"}
       />
     </div>
   );

@@ -14,7 +14,7 @@ import {
 } from "@/app/[locale]/(app)/vacation/actions";
 import { vacationStatusVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
-import { vacationDays } from "../types";
+import { balanceTotal, vacationDays } from "../types";
 import type { VacationRequest, VacationBalance } from "../types";
 import type { Holiday } from "@/features/holidays/types";
 
@@ -33,9 +33,9 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
   const holidaySet = useMemo(() => new Set(holidays.map((h) => h.date)), [holidays]);
 
   useEffect(() => {
-    if (!request.user_id) return;
-    getVacationBalance(request.user_id).then(setBalance);
-  }, [request.user_id]);
+    if (request.user_id) getVacationBalance({ kind: "user", id: request.user_id }).then(setBalance);
+    else if (request.team_worker_id) getVacationBalance({ kind: "team_worker", id: request.team_worker_id }).then(setBalance);
+  }, [request.user_id, request.team_worker_id]);
 
   function personName(p: { first_name: string | null; last_name: string | null } | null | undefined) {
     if (!p) return "—";
@@ -50,7 +50,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
     setAction("approve");
     startTransition(async () => {
       const result = await approveVacationRequest(request.id);
-      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed"));
+      if (result?.error) toast.error(t(result.error as "errorGeneric" | "errorNotAllowed" | "errorOverlap"));
       else if (result?.success) toast.success(t(result.success as "requestApproved"));
       onClose();
     });
@@ -108,7 +108,7 @@ export function ApprovalDialog({ open, request, holidays, onClose }: Props) {
               <div className="flex items-center justify-between border-t border-border pt-3">
                 <span className="text-[11px] font-medium text-veltol-fgMute">{t("requesterBalance")}</span>
                 <span className="font-mono tabular-nums text-sm text-veltol-fg">
-                  {balance.remainingDays} / {balance.baseDays + balance.carriedOverDays}
+                  {balance.remainingDays} / {balanceTotal(balance)}
                 </span>
               </div>
             )}
