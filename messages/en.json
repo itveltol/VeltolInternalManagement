@@ -124,6 +124,7 @@
     "filterAllPhases": "All phases",
     "filterAllCategories": "All categories",
     "filterAllContractTypes": "All contract types",
+    "filterAllExecutionModes": "All",
     "filterAllManagers": "All managers",
     "filterMinValue": "Min value",
     "filterMaxValue": "Max value",
@@ -132,6 +133,7 @@
       "phase": "Phase",
       "category": "Category",
       "contractType": "Contract type",
+      "executionMode": "Execution",
       "manager": "Manager",
       "minValue": "Min value (€)",
       "maxValue": "Max value (€)"

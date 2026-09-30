@@ -145,6 +145,9 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     if (filters?.category) {
       query = query.eq("project_category", filters.category);
     }
+    if (filters?.executionMode) {
+      query = query.eq("execution_mode", filters.executionMode);
+    }
     if (filters?.managerId && filters.managerId.length > 0) {
       query = query.in("manager_id", filters.managerId);
     }

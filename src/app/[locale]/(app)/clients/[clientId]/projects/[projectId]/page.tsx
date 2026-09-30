@@ -87,9 +87,9 @@ export default async function ClientProjectDetailPage({ params, searchParams }: 
 
   const overallPct = computeOverallPct(rows);
 
-  const initialTab = isDocumentsTab ? "documents" : isGanttTab ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
+  const initialTab = isDocumentsTab ? "documents" : isGanttTab || (isSubcontracted && !isMaintenanceTab && !isComunicareTab) ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
 
-  const activeTabLabel = isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
+  const activeTabLabel = isDocumentsTab ? tDocs("breadcrumb") : initialTab === "gantt" ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
 
   return (
     <ProjectDetailView

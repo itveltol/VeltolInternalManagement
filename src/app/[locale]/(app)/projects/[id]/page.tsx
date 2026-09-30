@@ -76,11 +76,11 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
 
   const initialTab = isResidential
     ? "documents"
-    : isDocumentsTab ? "documents" : isGanttTab ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
+    : isDocumentsTab ? "documents" : isGanttTab || (isSubcontracted && !isMaintenanceTab && !isComunicareTab) ? "gantt" : isMaintenanceTab && hasMaintenance ? "maintenance" : isComunicareTab ? "comunicare" : "checklist";
 
   const activeTabLabel = isResidential
     ? tDocs("breadcrumb")
-    : isDocumentsTab ? tDocs("breadcrumb") : isGanttTab ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
+    : isDocumentsTab ? tDocs("breadcrumb") : initialTab === "gantt" ? t("gantt.breadcrumb") : isMaintenanceTab ? tMaintenance("breadcrumb") : isComunicareTab ? tComms("breadcrumb") : t("breadcrumbChecklist");
 
   return (
     <ProjectDetailView
