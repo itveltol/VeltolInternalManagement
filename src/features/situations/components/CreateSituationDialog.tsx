@@ -8,22 +8,22 @@ import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
 import { createSituationAction } from "@/app/[locale]/(app)/situations/actions";
 import { SituationProjectCombobox } from "./SituationProjectCombobox";
-import type { Project } from "@/features/projects/types";
+import type { ProjectOption } from "@/features/projects/api/types";
 
 interface Props {
-  projects: Project[];
+  projects: ProjectOption[];
   open: boolean;
   onClose: () => void;
   /** Preselects and locks the project — used when creating a situation from
    * a project's drill-down, where the project is already known. The global
    * "Adăugare situație" button on the centralizer toolbar omits this and
    * keeps the picker. */
-  defaultProject?: Project | null;
+  defaultProject?: ProjectOption | null;
 }
 
 export function CreateSituationDialog({ projects, open, onClose, defaultProject = null }: Props) {
   const t = useTranslations("situations");
-  const [project, setProject] = useState<Project | null>(defaultProject);
+  const [project, setProject] = useState<ProjectOption | null>(defaultProject);
   const [name, setName] = useState("");
   const [state, action, pending] = useActionState(createSituationAction, null);
 

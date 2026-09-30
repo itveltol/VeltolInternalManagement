@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
-import type { Project } from "@/features/projects/types";
+import type { ProjectOption } from "@/features/projects/api/types";
 import {
   Combobox,
   ComboboxInputGroup,
@@ -19,9 +19,9 @@ import {
 } from "@/shared/components/ui/combobox";
 
 interface Props {
-  projects: Project[];
-  value: Project | null;
-  onValueChange: (project: Project | null) => void;
+  projects: ProjectOption[];
+  value: ProjectOption | null;
+  onValueChange: (project: ProjectOption | null) => void;
   name?: string;
 }
 
@@ -33,7 +33,7 @@ export function SituationProjectCombobox({ projects, value, onValueChange, name 
     <Combobox
       items={projects}
       value={value}
-      onValueChange={(next: Project | null) => onValueChange(next)}
+      onValueChange={(next: ProjectOption | null) => onValueChange(next)}
       itemToStringLabel={(p) => p?.name ?? ""}
       itemToStringValue={(p) => (p ? String(p.id) : "")}
       filter={filter.contains}
@@ -51,7 +51,7 @@ export function SituationProjectCombobox({ projects, value, onValueChange, name 
           <ComboboxPopup>
             <ComboboxEmpty>{t("selectProjectNoResults")}</ComboboxEmpty>
             <ComboboxList>
-              {(p: Project) => (
+              {(p: ProjectOption) => (
                 <ComboboxItem key={p.id} value={p}>
                   <ComboboxItemIndicator />
                   {p.name}

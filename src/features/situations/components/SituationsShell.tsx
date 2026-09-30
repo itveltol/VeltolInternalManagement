@@ -7,14 +7,15 @@ import { SituationsTable } from "./SituationsTable";
 import { SituationDetail } from "./SituationDetail";
 import { EditContractBillingDialog } from "./EditContractBillingDialog";
 import type { CentralizerRow, SituationWithProject, SituationContractRef } from "../types";
-import type { Project, ProjectManager } from "@/features/projects/types";
+import type { ProjectManager } from "@/features/projects/types";
+import type { ProjectOption } from "@/features/projects/api/types";
 import type { ClientRef } from "@/features/clients/types";
 
 interface Props {
   rows: CentralizerRow[];
   contracts: SituationContractRef[];
   situations: SituationWithProject[];
-  projects: Project[];
+  projects: ProjectOption[];
   managers: ProjectManager[];
   clientRefs: ClientRef[];
   nextContractNumber: string;

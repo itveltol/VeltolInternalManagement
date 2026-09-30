@@ -60,6 +60,7 @@ export interface ProjectOption {
 export interface ProjectsApiClient {
   getProjects(params?: ProjectListParams): Promise<ProjectListResult>;
   searchProjects(query: string): Promise<ProjectOption[]>;
+  getProjectOptions(): Promise<ProjectOption[]>;
   getProjectById(id: number): Promise<Project | null>;
   getProjectsByClientId(clientId: number): Promise<Project[]>;
   getProjectManagers(): Promise<ProjectManager[]>;

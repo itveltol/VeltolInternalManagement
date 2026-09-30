@@ -228,6 +228,12 @@ export const createSupabaseProjectsClient = (supabase: SupabaseClient): Projects
     return (data ?? []) as { id: number; name: string }[];
   },
 
+  async getProjectOptions() {
+    const { data, error } = await supabase.from("projects").select("id, name").order("name");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as { id: number; name: string }[];
+  },
+
   async getProjectById(id) {
     const { data, error } = await supabase
       .from("projects")
