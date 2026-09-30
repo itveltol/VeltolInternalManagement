@@ -24,13 +24,13 @@ import { RenameSituationDialog } from "./RenameSituationDialog";
 import { FinalizeSituationDialog } from "./FinalizeSituationDialog";
 import { MarkPaidDialog } from "./MarkPaidDialog";
 import type { Situation, SituationWithProject, SituationContractRef } from "../types";
-import type { Project } from "@/features/projects/types";
+import type { ProjectOption } from "@/features/projects/api/types";
 
 const PAGE_SIZE = 20;
 
 interface Props {
   situations: SituationWithProject[];
-  projects: Project[];
+  projects: ProjectOption[];
   canMutate: boolean;
   canMutateBilling: boolean;
   /** Scopes the table to one contract — level 2 of the centralizer

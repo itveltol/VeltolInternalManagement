@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/core/supabase/admin";
 import { parseContractNumber } from "@/shared/utils/contractNumber";
 import { createSupabaseProjectsClient } from "../api/supabaseProjectsClient";
-import type { ProjectsApiClient, CreateProjectPayload, ProjectListParams, ProjectListResult } from "../api/types";
+import type { ProjectsApiClient, CreateProjectPayload, ProjectListParams, ProjectListResult, ProjectOption } from "../api/types";
 import type { Project, ProjectManager } from "../types";
 
 export { parseContractNumber };
@@ -16,6 +16,10 @@ export async function getProjects(client: ProjectsApiClient): Promise<Project[]>
 
 export async function getProjectsPage(client: ProjectsApiClient, params: ProjectListParams): Promise<ProjectListResult> {
   return client.getProjects(params);
+}
+
+export async function getProjectOptions(client: ProjectsApiClient): Promise<ProjectOption[]> {
+  return client.getProjectOptions();
 }
 
 export async function getProjectById(client: ProjectsApiClient, id: number): Promise<Project | null> {

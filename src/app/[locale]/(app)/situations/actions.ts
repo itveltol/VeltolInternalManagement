@@ -13,7 +13,7 @@ import * as projectService from "@/features/projects/services/projectService";
 import { createSupabaseContractsClient } from "@/features/projects/contracts/supabaseContractsClient";
 import * as contractService from "@/features/projects/contracts/contractService";
 import type { SituationWithProject, CentralizerRow, SituationContractRef } from "@/features/situations/types";
-import type { Project } from "@/features/projects/types";
+import type { ProjectOption } from "@/features/projects/api/types";
 import { convertCurrency } from "@/shared/utils/currency";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
 import { getTodaysRate, getRateForDate } from "@/features/exchangeRates/services/exchangeRateService";
@@ -68,10 +68,10 @@ export async function getAllSituationsWithProjects(): Promise<SituationWithProje
   return situationService.getAllSituationsWithProjects(api);
 }
 
-export async function getProjectsForPicker(): Promise<Project[]> {
+export async function getProjectsForPicker(): Promise<ProjectOption[]> {
   const { supabase } = await requireAuth();
   const api = createSupabaseProjectsClient(supabase);
-  return projectService.getProjects(api);
+  return projectService.getProjectOptions(api);
 }
 
 /** Every contract the caller can see gets a centralizer row (a project with
