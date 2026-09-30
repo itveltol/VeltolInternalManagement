@@ -181,10 +181,10 @@ const projectSchema = z.object({
   assignment_start_date: optionalDate(),
   assignment_deadline: optionalDate(),
 }).superRefine((data, ctx) => {
+  if (!data.manager_id) {
+    ctx.addIssue({ code: "custom", path: ["manager_id"], message: "Manager is required" });
+  }
   if (data.execution_mode === "internal") {
-    if (!data.manager_id) {
-      ctx.addIssue({ code: "custom", path: ["manager_id"], message: "Manager is required" });
-    }
     if (data.project_category !== "residential" && data.people_needed == null) {
       ctx.addIssue({ code: "custom", path: ["people_needed"], message: "People needed is required" });
     }

@@ -286,24 +286,22 @@ export function ProjectFormFields({
       </FormSection>
 
       <FormSection title={t("sections.people")}>
-        {fields.execution_mode === "internal" && (
-          <FormField label={t("fields.manager")} required>
-            <Select
-              name="manager_id"
-              value={fields.manager_id}
-              onChange={onFieldChange("manager_id")}
-              required
-              aria-invalid={isInvalid("manager_id")}
-            >
-              <option value="" className="bg-card">—</option>
-              {managers.map((m) => (
-                <option key={m.id} value={m.id} className="bg-card">
-                  {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id}
-                </option>
-              ))}
-            </Select>
-          </FormField>
-        )}
+        <FormField label={t("fields.manager")} required>
+          <Select
+            name="manager_id"
+            value={fields.manager_id}
+            onChange={onFieldChange("manager_id")}
+            required
+            aria-invalid={isInvalid("manager_id")}
+          >
+            <option value="" className="bg-card">—</option>
+            {managers.map((m) => (
+              <option key={m.id} value={m.id} className="bg-card">
+                {[m.first_name, m.last_name].filter(Boolean).join(" ") || m.email || m.id}
+              </option>
+            ))}
+          </Select>
+        </FormField>
 
         <FormField label={t("fields.sales")} required>
           <Select
