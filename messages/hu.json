@@ -124,6 +124,7 @@
     "filterAllPhases": "Minden fázis",
     "filterAllCategories": "Minden kategória",
     "filterAllContractTypes": "Minden szerződéstípus",
+    "filterAllExecutionModes": "Mind",
     "filterAllManagers": "Minden menedzser",
     "filterMinValue": "Min. érték",
     "filterMaxValue": "Max. érték",
@@ -132,6 +133,7 @@
       "phase": "Fázis",
       "category": "Kategória",
       "contractType": "Szerződéstípus",
+      "executionMode": "Kivitelezés",
       "manager": "Menedzser",
       "minValue": "Min. érték (€)",
       "maxValue": "Max. érték (€)"

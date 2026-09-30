@@ -7,7 +7,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Plus, Trash2 } from "lucide-r
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Pagination } from "@/shared/components/ui/pagination";
-import { FilterField, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
+import { FilterField, FilterDropdown, FilterMultiDropdown, FilterInput } from "@/shared/components/ui/filter-field";
 import { TableShell, TableToolbar, TableDesktopView } from "@/shared/components/ui/table-shell";
 import {
   DataCardList, DataCard, DataCardHeader, DataCardTitle, DataCardSubtitle,
@@ -20,8 +20,8 @@ import { useConfirm } from "@/shared/components/ui/confirm-dialog";
 import { useProjectsStore } from "../hooks/useProjectsStore";
 import { phaseVariant } from "@/shared/utils/status-variant";
 import { formatDate } from "@/shared/utils/formatDate";
-import { PROJECT_PHASES, CONTRACT_TYPES } from "../types";
-import type { Project, ProjectManager, ProjectType, ProjectPhase, ContractType } from "../types";
+import { PROJECT_PHASES, CONTRACT_TYPES, EXECUTION_MODES } from "../types";
+import type { Project, ProjectManager, ProjectType, ProjectPhase, ContractType, ExecutionMode } from "../types";
 import type { SortDir } from "./ProjectsShell";
 import type { ClientRef } from "@/features/clients/types";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
@@ -51,6 +51,8 @@ interface Props {
   onFilterPhase: (v: ProjectPhase[]) => void;
   filterContractType: ContractType[];
   onFilterContractType: (v: ContractType[]) => void;
+  filterExecutionMode: ExecutionMode | "";
+  onFilterExecutionMode: (v: ExecutionMode | "") => void;
   filterManagerIds: string[];
   onFilterManagerIds: (v: string[]) => void;
   minValue: string;
@@ -76,6 +78,8 @@ export function ProjectsTable({
   onFilterPhase,
   filterContractType,
   onFilterContractType,
+  filterExecutionMode,
+  onFilterExecutionMode,
   filterManagerIds,
   onFilterManagerIds,
   minValue,
@@ -90,6 +94,7 @@ export function ProjectsTable({
   const tType = useTranslations("projectType");
   const tCategory = useTranslations("projectCategory");
   const tContractType = useTranslations("contractType");
+  const tExecutionMode = useTranslations("executionMode");
   const locale = useLocale();
   const router = useRouter();
   const confirm = useConfirm();
@@ -214,6 +219,16 @@ export function ProjectsTable({
               onChange={(v) => onFilterContractType(v as ContractType[])}
               allLabel={t("filterAllContractTypes")}
               options={CONTRACT_TYPES.map((c) => ({ value: c, label: tContractType(c) }))}
+            />
+          </FilterField>
+
+          <FilterField label={t("filters.executionMode")} htmlFor="filter-execution-mode">
+            <FilterDropdown
+              id="filter-execution-mode"
+              value={filterExecutionMode}
+              onChange={(v) => onFilterExecutionMode(v as ExecutionMode | "")}
+              allLabel={t("filterAllExecutionModes")}
+              options={EXECUTION_MODES.map((m) => ({ value: m, label: tExecutionMode(m) }))}
             />
           </FilterField>
 

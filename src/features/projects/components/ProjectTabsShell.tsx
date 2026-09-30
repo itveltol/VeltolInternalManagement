@@ -143,10 +143,11 @@ export function ProjectTabsShell({
     });
   }
 
-  const isGanttActive = !isResidential && (tab === "gantt" || isSubcontracted);
-  const isDocumentsActive = isResidential || (tab === "documents" && !isSubcontracted);
-  const isMaintenanceActive = tab === "maintenance" && hasMaintenance && !isSubcontracted && !isResidential;
-  const isComunicareActive = tab === "comunicare" && !isSubcontracted && !isResidential;
+  // Subcontracted projects have no checklist — Gantt stands in as their default tab.
+  const isGanttActive = !isResidential && (tab === "gantt" || (isSubcontracted && tab === "checklist"));
+  const isDocumentsActive = isResidential || tab === "documents";
+  const isMaintenanceActive = tab === "maintenance" && hasMaintenance && !isResidential;
+  const isComunicareActive = tab === "comunicare" && !isResidential;
   const isChecklistActive = !isResidential && !isGanttActive && !isDocumentsActive && !isMaintenanceActive && !isComunicareActive;
 
   const tabs = isResidential
@@ -154,9 +155,9 @@ export function ProjectTabsShell({
     : [
         ...(isSubcontracted ? [] : [{ key: "checklist" as const, label: tDocs("tab.checklist") }]),
         { key: "gantt" as const, label: t("gantt.tabLabel") },
-        ...(isSubcontracted ? [] : [{ key: "documents" as const, label: tDocs("tab.documents") }]),
-        ...(hasMaintenance && !isSubcontracted ? [{ key: "maintenance" as const, label: tMaintenance("tabLabel") }] : []),
-        ...(isSubcontracted ? [] : [{ key: "comunicare" as const, label: tComms("tabLabel") }]),
+        { key: "documents" as const, label: tDocs("tab.documents") },
+        ...(hasMaintenance ? [{ key: "maintenance" as const, label: tMaintenance("tabLabel") }] : []),
+        { key: "comunicare" as const, label: tComms("tabLabel") },
       ];
 
   return (

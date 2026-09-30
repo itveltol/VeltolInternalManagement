@@ -114,7 +114,7 @@ export function ProjectOverviewPanel({ project, contracts, canMutate, isAdmin, m
   ];
 
   const peopleFields: Array<{ label: string; value: React.ReactNode }> = [
-    { label: t("fields.manager"), value: managerName },
+    ...(isSubcontracted ? [] : [{ label: t("fields.manager"), value: managerName }]),
     { label: t("fields.sales"), value: salesName },
     ...(isSubcontracted || isResidential ? [] : [{ label: t("fields.peopleNeeded"), value: project.people_needed ?? "—" }]),
     { label: t("fields.client"), value: project.client?.name ?? "—" },

@@ -124,6 +124,7 @@
     "filterAllPhases": "Toate fazele",
     "filterAllCategories": "Toate categoriile",
     "filterAllContractTypes": "Toate tipurile de contract",
+    "filterAllExecutionModes": "Toate",
     "filterAllManagers": "Toți managerii",
     "filterMinValue": "Valoare minimă",
     "filterMaxValue": "Valoare maximă",
@@ -132,6 +133,7 @@
       "phase": "Fază",
       "category": "Categorie",
       "contractType": "Tip de contract",
+      "executionMode": "Execuție",
       "manager": "Manager",
       "minValue": "Valoare min. (€)",
       "maxValue": "Valoare max. (€)"
