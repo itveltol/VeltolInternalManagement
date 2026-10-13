@@ -17,9 +17,7 @@ import type { CreateContractPayload } from "@/features/projects/contracts/types"
 import {
   createProjectFolder,
   grantProjectFolderAccess,
-  listOneDriveFolderContents,
 } from "@/core/microsoft/folderProvider";
-import type { FolderItem } from "@/core/microsoft/folderProvider";
 import type { Project, ProjectManager, ContractType } from "@/features/projects/types";
 import {
   CONTRACT_TYPES,
@@ -35,11 +33,6 @@ import * as clientService from "@/features/clients/services/clientService";
 import type { SubcontractorRef, ProjectSubcontractorAssignment } from "@/features/subcontractors/types";
 import { createSupabaseSubcontractorsClient } from "@/features/subcontractors/api/supabaseSubcontractorsClient";
 import * as subcontractorService from "@/features/subcontractors/services/subcontractorService";
-import { createSupabaseChecklistClient } from "@/features/projects/checklists/api/supabaseChecklistClient";
-import { createSupabaseMatriceClient } from "@/features/matrice/api/supabaseMatriceClient";
-import * as matriceService from "@/features/matrice/services/matriceService";
-import { buildDerivedActivityIds } from "@/features/matrice/services/checklistActivityMapping";
-import type { ActivityStatus } from "@/features/matrice/types";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
 import { getTodaysRate, getRateForDate } from "@/features/exchangeRates/services/exchangeRateService";
 import { parseFormData } from "@/shared/utils/parseFormData";
@@ -773,66 +766,6 @@ export async function getSubcontractorAssignment(projectId: number): Promise<Pro
   const { supabase } = await requireAuth();
   const api = createSupabaseSubcontractorsClient(supabase);
   return subcontractorService.getCurrentAssignment(api, projectId);
-}
-
-export async function scanProjectFolder(
-  projectId: number,
-): Promise<{ files: FolderItem[]; error?: string }> {
-  try {
-    const { supabase } = await requireAuth();
-    const client = createSupabaseProjectsClient(supabase);
-    const project = await projectService.getProjectById(client, projectId);
-    if (!project?.onedrive_folder_id) {
-      return { files: [], error: "noFolderLinked" };
-    }
-    const files = await listOneDriveFolderContents(project.onedrive_folder_id);
-    return { files };
-  } catch {
-    return { files: [], error: "errorGeneric" };
-  }
-}
-
-export async function applyFolderScanSuggestions(
-  projectId: number,
-  checklistUpdates: Array<{ itemNumber: number; plan_total: number }>,
-  matriceUpdates: Array<{ activityId: number; status: ActivityStatus }>,
-): Promise<ActionState> {
-  try {
-    const { supabase, user } = await requireMutator();
-    const checklistClient = createSupabaseChecklistClient(supabase);
-    const matriceClient = createSupabaseMatriceClient(supabase);
-
-    for (const { itemNumber, plan_total } of checklistUpdates) {
-      await checklistClient.upsertChecklistItem({
-        projectId,
-        itemNumber,
-        plan_total,
-        zile: null,
-        persons_allocated: null,
-        units_per_person_day: null,
-        notes: null,
-      });
-    }
-
-    // Mapped activities (phase_no 9/10 items also tracked in the checklist)
-    // are driven by checklist progress via a DB trigger — a folder-scan
-    // suggestion for one of these would just be silently overwritten on the
-    // next checklist edit, so skip them here rather than apply-then-clobber.
-    const activities = await matriceService.getCachedActivities();
-    const derivedActivityIds = buildDerivedActivityIds(activities);
-    for (const { activityId, status } of matriceUpdates) {
-      if (derivedActivityIds.has(activityId)) continue;
-      await matriceService.setCellStatus(matriceClient, projectId, activityId, status, user.id);
-    }
-
-    const locale = await getLocale();
-    revalidatePath(`/${locale}/projects/${projectId}`);
-    revalidatePath(`/${locale}/matrice-status`);
-    return { success: "scanApplied" };
-  } catch (e: unknown) {
-    if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };
-    return { error: "errorGeneric" };
-  }
 }
 
 // --- Contract management (a project's "Contract & Financials" section can

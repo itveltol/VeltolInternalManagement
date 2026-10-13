@@ -262,29 +262,6 @@
       "tooLarge": "Fișierul contractului este prea mare (max. 10 MB).",
       "nothingFound": "Nu s-a putut extrage nimic din contract.",
       "failed": "Contractul nu a putut fi citit. Încearcă din nou."
-    },
-    "folderScan": {
-      "stepTitle": "Scanare folder AI",
-      "stepSubtitle": "Scanați folderul OneDrive asociat și lăsați AI-ul să sugereze actualizări pentru lista de verificare și activități.",
-      "scanButton": "Scanează folderul OneDrive",
-      "scanning": "Se scanează folderul...",
-      "analyzeButton": "Analizează cu AI",
-      "analyzing": "Se analizează...",
-      "applyButton": "Aplică {count} modificări",
-      "discard": "Renunță",
-      "skip": "Sari peste",
-      "noFiles": "Nu s-au găsit fișiere în folderul asociat.",
-      "noFolder": "Acest proiect nu are un folder OneDrive asociat.",
-      "checklistTitle": "Sugestii listă de verificare",
-      "matriceTitle": "Sugestii activități",
-      "accepted": "Acceptă",
-      "rejected": "Respinge",
-      "noSuggestions": "AI-ul nu a generat sugestii.",
-      "done": "Modificările au fost aplicate cu succes.",
-      "applyError": "Nu s-au putut aplica modificările.",
-      "selectAll": "Selectează toate",
-      "deselectAll": "Deselectează toate",
-      "filesSelected": "{count} fișiere selectate"
     }
   },
   "checklist": {
