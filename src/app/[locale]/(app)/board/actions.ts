@@ -43,7 +43,12 @@ const noteSchema = z
     parentId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
     dueDate: optionalTrimmed(),
     isPersonal: z.preprocess((v) => v === "true" || v === "on", z.boolean()).default(false),
-    assigneeId: z.preprocess((v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null), z.string().uuid().nullable()),
+    // Sent as one comma-separated hidden field: parseFormData collapses
+    // repeated FormData keys to a single value.
+    assigneeIds: z.preprocess(
+      (v) => (typeof v === "string" ? v.split(",").map((s) => s.trim()).filter(Boolean) : []),
+      z.array(z.string().uuid()),
+    ),
     projectId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
     activityId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
     situationId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
@@ -53,12 +58,12 @@ const noteSchema = z
     documentId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
     teamId: z.preprocess((v) => (v ? Number(v) : null), z.number().nullable()),
   })
-  // A private task (no project/team anchor) must be handed to someone —
-  // that's the whole point of a personal task. Only enforced for free-form
-  // root notes: replies and pre-anchored composers (matrice cell, project
-  // tab) never reach this branch since parentId/isPersonal rule it out.
-  .refine((data) => !(data.kind === "task" && data.isPersonal && data.parentId === null) || data.assigneeId !== null, {
-    path: ["assigneeId"],
+  // A private task (no project/team anchor) must be handed to at least one
+  // person — that's the whole point of a personal task. Only enforced for
+  // free-form root notes: replies and pre-anchored composers (matrice cell,
+  // project tab) never reach this branch since parentId/isPersonal rule it out.
+  .refine((data) => !(data.kind === "task" && data.isPersonal && data.parentId === null) || data.assigneeIds.length > 0, {
+    path: ["assigneeIds"],
     message: "invalid",
   });
 
@@ -117,7 +122,7 @@ export async function createNoteAction(_prev: ActionState, formData: FormData): 
       dueDate: parsed.data.dueDate,
       anchor: {
         isPersonal: parsed.data.isPersonal,
-        assigneeId: parsed.data.assigneeId,
+        assigneeIds: parsed.data.assigneeIds,
         projectId: parsed.data.projectId,
         activityId: parsed.data.activityId,
         situationId: parsed.data.situationId,

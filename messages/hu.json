@@ -1459,7 +1459,9 @@
       "assignee": "Kiosztva",
       "selectProject": "Válassz egy projektet",
       "selectTeam": "Válassz egy csapatot",
-      "selectAssignee": "Válassz egy személyt",
+      "selectAssignee": "Válassz személyeket",
+      "assigneeNoResults": "Nincs találat",
+      "assigneeRemove": "{name} eltávolítása",
       "titleOptional": "Cím (opcionális)",
       "ackDeadline": "Visszaigazolási határidő"
     },
@@ -1716,6 +1718,15 @@
       "plusHoursPlaceholder": "+óra",
       "onVacation": "Jóváhagyott szabadságon",
       "vacationConflict": "Ennek a munkásnak jóváhagyott szabadsága van {start} és {end} között — mégis beosztva."
+    }
+  },
+  "emails": {
+    "projectAssigned": {
+      "subject": "Projektvezető lettél: {project}",
+      "greeting": "Szia {name}!",
+      "body": "{actor} kinevezett a(z) {project} projekt vezetőjének.",
+      "openProject": "Projekt megnyitása",
+      "footer": "Ez egy automatikus üzenet a Veltoltól."
     }
   }
 }

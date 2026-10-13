@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActivityEventFilter, CommsApiClient, CreateNotificationPayload, MentionScope, NotesFilter, NotesPageFilter } from "./types";
-import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteStatus, Notification } from "../types";
+import type { ActivityEvent, AckReceipt, CreateNotePayload, MentionCandidate, Note, NoteAuthor, NoteStatus, Notification } from "../types";
 
 const ACTIVITY_EVENT_SELECT =
   "*, actor:profiles!actor_id(id, first_name, last_name), project:projects!project_id(name)";
@@ -20,21 +20,21 @@ function toActivityEvent(row: ActivityEventRow): ActivityEvent {
 }
 
 const NOTE_SELECT =
-  "*, author:profiles!author_id(id, first_name, last_name, avatar_url), assignee:profiles!assignee_id(id, first_name, last_name, avatar_url), project:projects!project_id(name), activity:activities!activity_id(name)";
+  "*, author:profiles!author_id(id, first_name, last_name, avatar_url), assignees:note_assignees(profile:profiles!profile_id(id, first_name, last_name, avatar_url)), project:projects!project_id(name), activity:activities!activity_id(name)";
 
 type NoteRow = Record<string, unknown> & {
   project?: { name: string | null } | null;
   activity?: { name: string | null } | null;
   author?: { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null } | null;
-  assignee?: { id: string; first_name: string | null; last_name: string | null; avatar_url: string | null } | null;
+  assignees?: { profile: NoteAuthor | null }[] | null;
 };
 
 function toNote(row: NoteRow): Note {
-  const { project, activity, author, assignee, ...rest } = row;
+  const { project, activity, author, assignees, ...rest } = row;
   return {
     ...rest,
     author: author ?? null,
-    assignee: assignee ?? null,
+    assignees: (assignees ?? []).flatMap((a) => (a.profile ? [a.profile] : [])),
     project_name: project?.name ?? null,
     activity_name: activity?.name ?? null,
     reply_count: 0,
@@ -88,7 +88,7 @@ export const createSupabaseCommsClient = (supabase: SupabaseClient): CommsApiCli
       p_supplier_id: payload.anchor.supplierId ?? null,
       p_document_id: payload.anchor.documentId ?? null,
       p_team_id: payload.anchor.teamId ?? null,
-      p_assignee_id: payload.anchor.assigneeId ?? null,
+      p_assignee_ids: payload.anchor.assigneeIds ?? [],
     });
     if (error) throw new Error(error.message);
     return { id: data as number };

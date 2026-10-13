@@ -5,7 +5,9 @@ import { z } from "zod";
 import { getSessionUser, getUserProfileRole } from "@/core/supabase/session";
 import { createAdminClient } from "@/core/supabase/admin";
 import { revalidatePath } from "next/cache";
-import { getLocale } from "next-intl/server";
+import { after } from "next/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { escapeHtml, sendEmail } from "@/core/email/sendEmail";
 import { createSupabaseProjectsClient } from "@/features/projects/api/supabaseProjectsClient";
 import * as projectService from "@/features/projects/services/projectService";
 import type { ProjectListParams, ProjectListResult, ProjectOption } from "@/features/projects/api/types";
@@ -41,6 +43,7 @@ import type { ActivityStatus } from "@/features/matrice/types";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
 import { getTodaysRate, getRateForDate } from "@/features/exchangeRates/services/exchangeRateService";
 import { parseFormData } from "@/shared/utils/parseFormData";
+import { timed } from "@/shared/utils/perfTimer";
 import { createSupabaseCommsClient } from "@/features/comms/api/supabaseCommsClient";
 
 export type ActionState = {
@@ -61,18 +64,56 @@ async function getProjectsPath() {
 // from trigger functions or the service-role key — see
 // 20260813000078_comms_rls.sql), so this must go through the admin client.
 // Never let a notification failure block the project save it's attached to.
-async function notifyProjectManagerAssigned(managerId: string, projectId: number, projectName: string) {
+async function notifyProjectManagerAssigned(managerId: string, projectId: number, projectName: string, actorId: string) {
   try {
     const commsClient = createSupabaseCommsClient(createAdminClient());
     await commsClient.createNotification({
       profileId: managerId,
       type: "project_assigned",
       projectId,
-      payload: { projectName },
+      // snippet: the daily digest lists notifications by payload.snippet.
+      payload: { projectName, snippet: projectName },
       href: `/projects/${projectId}`,
     });
   } catch (e) {
     console.error("notifyProjectManagerAssigned failed:", e);
+  }
+
+  // Sent after the response so the save never waits on Resend.
+  after(() => emailProjectManagerAssigned(managerId, projectId, projectName, actorId));
+}
+
+type EmailProfileRow = { id: string; email: string; first_name: string | null; last_name: string | null; locale: string };
+
+async function emailProjectManagerAssigned(managerId: string, projectId: number, projectName: string, actorId: string) {
+  try {
+    const { data, error } = await createAdminClient()
+      .from("profiles")
+      .select("id, email, first_name, last_name, locale")
+      .in("id", [managerId, actorId]);
+    if (error) throw new Error(error.message);
+    const profiles = (data ?? []) as EmailProfileRow[];
+    const recipient = profiles.find((p) => p.id === managerId);
+    if (!recipient?.email) return;
+    const actor = profiles.find((p) => p.id === actorId);
+
+    const fullName = (p: EmailProfileRow | undefined) =>
+      p ? [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email : "";
+    const t = await getTranslations({ locale: recipient.locale, namespace: "emails.projectAssigned" });
+    const project = escapeHtml(projectName);
+    const link = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/projects/${projectId}`;
+
+    await sendEmail({
+      to: recipient.email,
+      subject: t("subject", { project: projectName }),
+      html:
+        `<p>${t("greeting", { name: escapeHtml(fullName(recipient)) })}</p>` +
+        `<p>${t("body", { actor: escapeHtml(fullName(actor)), project: `<strong>${project}</strong>` })}</p>` +
+        `<p><a href="${link}">${t("openProject")}</a></p>` +
+        `<p>${t("footer")}</p>`,
+    });
+  } catch (e) {
+    console.error("emailProjectManagerAssigned failed:", e);
   }
 }
 
@@ -527,7 +568,7 @@ export async function createProject(
     revalidatePath(await getProjectsPath());
 
     if (payload.manager_id && payload.manager_id !== user.id) {
-      await notifyProjectManagerAssigned(payload.manager_id, newId, payload.name);
+      await notifyProjectManagerAssigned(payload.manager_id, newId, payload.name, user.id);
     }
 
     try {
@@ -610,7 +651,7 @@ export async function createMinimalProjectAction(
     revalidatePath(await getProjectsPath());
 
     if (manager_id && manager_id !== user.id) {
-      await notifyProjectManagerAssigned(manager_id, newId, name);
+      await notifyProjectManagerAssigned(manager_id, newId, name, user.id);
     }
 
     try {
@@ -688,7 +729,7 @@ export async function updateProject(
     await upsertAssignmentIfSubcontracted(supabase, projectId, parsed.data, formData);
 
     if (payload.manager_id && payload.manager_id !== existing?.manager_id && payload.manager_id !== user.id) {
-      await notifyProjectManagerAssigned(payload.manager_id, projectId, payload.name);
+      await notifyProjectManagerAssigned(payload.manager_id, projectId, payload.name, user.id);
     }
 
     const locale = await getLocale();
@@ -838,8 +879,9 @@ export async function createContractForProjectAction(
   _prev: ContractActionState,
   formData: FormData,
 ): Promise<ContractActionState> {
+  const actionStart = performance.now();
   try {
-    const { supabase } = await requireMutator();
+    const { supabase } = await timed("action.requireMutator", requireMutator());
     const parsed = parseFormData(contractFormSchema, formData);
     if (!parsed.success) return { error: parsed.error, fieldErrors: parsed.fieldErrors };
 
@@ -853,7 +895,7 @@ export async function createContractForProjectAction(
 
     const { contract_number, contract_date, value_amount, currency } = parsed.data;
     const exchangeRateClient = createSupabaseExchangeRatesClient(supabase);
-    const rate = value_amount != null ? await getTodaysRate(exchangeRateClient) : null;
+    const rate = value_amount != null ? await timed("action.getTodaysRate", getTodaysRate(exchangeRateClient)) : null;
 
     const contractsApi = createSupabaseContractsClient(supabase);
     const payload: CreateContractPayload = {
@@ -868,9 +910,10 @@ export async function createContractForProjectAction(
       contract_type,
       notes: null,
     };
-    await contractService.createContract(contractsApi, payload);
+    await timed("action.insertContract", contractService.createContract(contractsApi, payload));
 
     revalidatePath(await getProjectContractsPath(projectId));
+    console.log(`[perf] action total (before page re-render) ${Math.round(performance.now() - actionStart)}ms`);
     return { success: "contractCreated" };
   } catch (e: unknown) {
     if (e instanceof Error && e.message === "Forbidden") return { error: "errorNotAllowed" };

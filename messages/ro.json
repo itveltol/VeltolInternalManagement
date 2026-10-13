@@ -1459,7 +1459,9 @@
       "assignee": "Atribuie lui",
       "selectProject": "Selectați un proiect",
       "selectTeam": "Selectați o echipă",
-      "selectAssignee": "Selectați o persoană",
+      "selectAssignee": "Selectați persoane",
+      "assigneeNoResults": "Nicio persoană găsită",
+      "assigneeRemove": "Elimină {name}",
       "titleOptional": "Titlu (opțional)",
       "ackDeadline": "Termen de confirmare"
     },
@@ -1716,6 +1718,15 @@
       "plusHoursPlaceholder": "+ore",
       "onVacation": "În concediu aprobat",
       "vacationConflict": "Acest muncitor are concediu aprobat între {start} și {end} — alocat oricum."
+    }
+  },
+  "emails": {
+    "projectAssigned": {
+      "subject": "Ați fost desemnat manager de proiect: {project}",
+      "greeting": "Bună {name},",
+      "body": "{actor} v-a desemnat manager de proiect pentru {project}.",
+      "openProject": "Deschide proiectul",
+      "footer": "Acesta este un mesaj automat de la Veltol."
     }
   }
 }

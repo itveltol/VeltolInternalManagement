@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -23,7 +22,6 @@ interface Props {
 export function ContractsSection({ projectId, contracts, canMutate, isAdmin }: Props) {
   const t = useTranslations("projects");
   const tContractType = useTranslations("contractType");
-  const router = useRouter();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -43,7 +41,6 @@ export function ContractsSection({ projectId, contracts, canMutate, isAdmin }: P
         setDeleteError({ id: contractId, message: t(result.error as Parameters<typeof t>[0]) });
         return;
       }
-      router.refresh();
     });
   }
 
@@ -133,10 +130,7 @@ export function ContractsSection({ projectId, contracts, canMutate, isAdmin }: P
           projectId={projectId}
           contracts={contracts}
           open={isAdding}
-          onClose={() => {
-            setIsAdding(false);
-            router.refresh();
-          }}
+          onClose={() => setIsAdding(false)}
         />
       )}
 
@@ -146,10 +140,7 @@ export function ContractsSection({ projectId, contracts, canMutate, isAdmin }: P
           contract={editingContract}
           contracts={contracts}
           open={!!editingContract}
-          onClose={() => {
-            setEditingContract(null);
-            router.refresh();
-          }}
+          onClose={() => setEditingContract(null)}
         />
       )}
     </div>

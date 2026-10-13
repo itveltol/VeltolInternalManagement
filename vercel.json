@@ -11,7 +11,7 @@
     },
     {
       "path": "/api/cron/exchange-rate",
-      "schedule": "0 9 * * *"
+      "schedule": "30 11 * * 1-5"
     },
     {
       "path": "/api/cron/note-reminders",

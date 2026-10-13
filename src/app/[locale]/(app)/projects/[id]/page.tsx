@@ -9,6 +9,7 @@ import { mergeChecklistRows, computeOverallPct } from "@/features/projects/check
 import { ProjectDetailView } from "@/features/projects/components/ProjectDetailView";
 import { getProjectTimelinePage } from "@/app/[locale]/(app)/board/actions";
 import { isBessProjectType, isCefProjectType } from "@/features/projects/types";
+import { timed } from "@/shared/utils/perfTimer";
 
 interface Props {
   params: Promise<{ locale: string; id: string }>;
@@ -21,7 +22,8 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const projectId = Number(id);
   if (isNaN(projectId)) notFound();
 
-  const { user, role } = await getUserProfileRole();
+  const renderStart = performance.now();
+  const { user, role } = await timed("page.getUserProfileRole", getUserProfileRole());
 
   if (!user) {
     const locale = await getLocale();
@@ -35,7 +37,18 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const isMaintenanceTab = tab === "maintenance";
   const isComunicareTab = tab === "comunicare";
 
-  const project = await getProject(projectId);
+  // These don't depend on the project row, so fetch them alongside it rather
+  // than waiting for it — saves a sequential round trip on every render,
+  // including the re-render after each contract/project save.
+  const [project, managers, clientRefs, subcontractorRefs, currentAssignment, contracts] = await Promise.all([
+    timed("page.getProject", getProject(projectId)),
+    timed("page.managers", canMutate ? getProjectManagers() : Promise.resolve([])),
+    timed("page.clientRefs", canMutate ? getClientRefs() : Promise.resolve([])),
+    timed("page.subcontractorRefs", canMutate ? getSubcontractorRefs() : Promise.resolve([])),
+    timed("page.assignment", canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null)),
+    timed("page.contracts", getProjectContracts(projectId)),
+  
+  ]);
   if (!project) notFound();
 
   const isSubcontracted = project.execution_mode === "subcontracted";
@@ -44,24 +57,20 @@ export default async function ProjectChecklistPage({ params, searchParams }: Pro
   const hasBess = isBessProjectType(project.project_type);
   const hasCef = isCefProjectType(project.project_type);
 
-  const [records, projectDocuments, folderChildren, managers, clientRefs, subcontractorRefs, currentAssignment, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData, contracts] =
+  const [records, projectDocuments, folderChildren, ganttMatriceData, maintenanceChecks, timelinePage, executionData, structureConfig, cefData, bessData] =
     await Promise.all([
-      isSubcontracted || isResidential ? Promise.resolve([]) : getChecklistRecords(projectId),
-      isDocumentsTab || isResidential ? getProjectDocuments(projectId) : Promise.resolve([]),
-      (isDocumentsTab || isResidential) && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]),
-      canMutate ? getProjectManagers() : Promise.resolve([]),
-      canMutate ? getClientRefs() : Promise.resolve([]),
-      canMutate ? getSubcontractorRefs() : Promise.resolve([]),
-      canMutate ? getSubcontractorAssignment(projectId) : Promise.resolve(null),
-      !isResidential && (isGanttTab || isSubcontracted) ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], phases: [], cells: [], checklistRecordsByProjectId: {} }),
-      hasMaintenance && isMaintenanceTab && !isResidential ? getMaintenanceChecks(projectId) : Promise.resolve([]),
-      isComunicareTab && !isResidential ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }),
-      isSubcontracted || isResidential ? Promise.resolve(null) : getExecutionData(projectId),
-      isSubcontracted || isResidential ? Promise.resolve([]) : getStructureConfig(projectId),
-      hasCef ? getCefData(projectId) : Promise.resolve(null),
-      hasBess ? getBessData(projectId) : Promise.resolve(null),
-      getProjectContracts(projectId),
+      timed("page.checklistRecords", Promise.resolve(isSubcontracted || isResidential ? Promise.resolve([]) : getChecklistRecords(projectId))),
+      timed("page.documents", Promise.resolve(isDocumentsTab || isResidential ? getProjectDocuments(projectId) : Promise.resolve([]))),
+      timed("page.folderChildren", Promise.resolve((isDocumentsTab || isResidential) && project.onedrive_folder_id ? getProjectFolderChildren(project.onedrive_folder_id) : Promise.resolve([]))),
+      timed("page.ganttMatrice", Promise.resolve(!isResidential && (isGanttTab || isSubcontracted) ? getGanttMatriceData([projectId]) : Promise.resolve({ activities: [], phases: [], cells: [], checklistRecordsByProjectId: {} }))),
+      timed("page.maintenanceChecks", Promise.resolve(hasMaintenance && isMaintenanceTab && !isResidential ? getMaintenanceChecks(projectId) : Promise.resolve([]))),
+      timed("page.timeline", Promise.resolve(isComunicareTab && !isResidential ? getProjectTimelinePage(projectId, 0) : Promise.resolve({ items: [], hasMore: false }))),
+      timed("page.executionData", Promise.resolve(isSubcontracted || isResidential ? Promise.resolve(null) : getExecutionData(projectId))),
+      timed("page.structureConfig", Promise.resolve(isSubcontracted || isResidential ? Promise.resolve([]) : getStructureConfig(projectId))),
+      timed("page.cefData", Promise.resolve(hasCef ? getCefData(projectId) : Promise.resolve(null))),
+      timed("page.bessData", Promise.resolve(hasBess ? getBessData(projectId) : Promise.resolve(null))),
     ]);
+  console.log(`[perf] page data total ${Math.round(performance.now() - renderStart)}ms`);
   const { activities, phases, cells } = ganttMatriceData;
   const todayMs = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00").getTime();
 

@@ -1459,7 +1459,9 @@
       "assignee": "Assign to",
       "selectProject": "Select a project",
       "selectTeam": "Select a team",
-      "selectAssignee": "Select a person",
+      "selectAssignee": "Select people",
+      "assigneeNoResults": "No people found",
+      "assigneeRemove": "Remove {name}",
       "titleOptional": "Title (optional)",
       "ackDeadline": "Acknowledgement deadline"
     },
@@ -1716,6 +1718,15 @@
       "plusHoursPlaceholder": "+h",
       "onVacation": "On approved leave",
       "vacationConflict": "This worker has approved leave from {start} to {end} — assigned anyway."
+    }
+  },
+  "emails": {
+    "projectAssigned": {
+      "subject": "You are the project manager of {project}",
+      "greeting": "Hi {name},",
+      "body": "{actor} assigned you as project manager of {project}.",
+      "openProject": "Open project",
+      "footer": "This is an automatic message from Veltol."
     }
   }
 }
