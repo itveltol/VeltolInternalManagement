@@ -262,29 +262,6 @@
       "tooLarge": "A szerződésfájl túl nagy (max. 10 MB).",
       "nothingFound": "Nem sikerült adatot kinyerni a szerződésből.",
       "failed": "Nem sikerült beolvasni a szerződést. Próbáld újra."
-    },
-    "folderScan": {
-      "stepTitle": "AI mappaelemzés",
-      "stepSubtitle": "Elemezze a csatolt OneDrive mappát, és hagyja, hogy az AI javaslatokat tegyen az ellenőrzőlista és a tevékenységek frissítésére.",
-      "scanButton": "OneDrive mappa beolvasása",
-      "scanning": "Mappa beolvasása...",
-      "analyzeButton": "Elemzés AI-val",
-      "analyzing": "Elemzés folyamatban...",
-      "applyButton": "{count} módosítás alkalmazása",
-      "discard": "Elvetés",
-      "skip": "Kihagyás",
-      "noFiles": "Nem találhatók fájlok a csatolt mappában.",
-      "noFolder": "Ehhez a projekthez nincs csatolt OneDrive mappa.",
-      "checklistTitle": "Ellenőrzőlista javaslatok",
-      "matriceTitle": "Tevékenység javaslatok",
-      "accepted": "Elfogadás",
-      "rejected": "Elutasítás",
-      "noSuggestions": "Az AI nem tett javaslatokat.",
-      "done": "Módosítások sikeresen alkalmazva.",
-      "applyError": "Nem sikerült alkalmazni a módosításokat.",
-      "selectAll": "Összes kijelölése",
-      "deselectAll": "Kijelölés megszüntetése",
-      "filesSelected": "{count} fájl kijelölve"
     }
   },
   "checklist": {

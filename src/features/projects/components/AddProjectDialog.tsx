@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Dialog } from "@base-ui/react/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { createProject, getExchangeRate } from "@/app/[locale]/(app)/projects/actions";
@@ -10,7 +11,6 @@ import type { ClientRef } from "@/features/clients/types";
 import { AddClientDialog } from "@/features/clients/components/AddClientDialog";
 import type { SubcontractorRef } from "@/features/subcontractors/types";
 import { AddSubcontractorDialog } from "@/features/subcontractors/components/AddSubcontractorDialog";
-import { FolderScanStep } from "./FolderScanStep";
 import { ProjectFormFields } from "./ProjectFormFields";
 import { useProjectFormState, EMPTY_FIELDS } from "./projectFormState";
 
@@ -40,9 +40,6 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
   useEffect(() => {
     if (state) setSubmitCount((n) => n + 1);
   }, [state]);
-  const [step, setStep] = useState<"form" | "scan">("form");
-  const [createdProjectId, setCreatedProjectId] = useState<number | null>(null);
-  const [folderLinked, setFolderLinked] = useState(false);
 
   const {
     fields,
@@ -76,17 +73,15 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
 
   useEffect(() => {
     if (state?.success && state.projectId) {
-      setCreatedProjectId(state.projectId);
-      setFolderLinked(state.folderCreated !== false);
-      setStep("scan");
+      if (state.folderCreated === false) toast.warning(t("folderFailed"));
+      else toast.success(t("projectCreated"));
+      onClose();
     }
   }, [state?.success, state?.projectId]);
 
   useEffect(() => {
     if (!open) {
       setFields(EMPTY_FIELDS);
-      setStep("form");
-      setCreatedProjectId(null);
       setSelectedClient(null);
       setSelectedSubcontractor(null);
     }
@@ -98,65 +93,45 @@ export function AddProjectDialog({ open, managers, clientRefs, subcontractorRefs
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <Dialog.Popup className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto max-h-[90dvh] rounded-xl border border-border bg-card p-5 shadow-2xl sm:p-8">
-          {step === "scan" && createdProjectId !== null ? (
-            <>
-              <Dialog.Title className="text-xl font-semibold text-veltol-fg">
-                {t("folderScan.stepTitle")}
-              </Dialog.Title>
-              <div className="mt-6">
-                <FolderScanStep
-                  projectId={createdProjectId}
-                  folderLinked={folderLinked}
-                  onClose={onClose}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <Dialog.Title className="text-xl font-semibold text-veltol-fg">
-                {t("addProject")}
-              </Dialog.Title>
+        <Dialog.Title className="text-xl font-semibold text-veltol-fg">
+          {t("addProject")}
+        </Dialog.Title>
 
-              <form action={action} className="mt-6 space-y-4">
-                <ProjectFormFields
-                  key={submitCount}
-                  fields={fields}
-                  onFieldChange={setField}
-                  onCategoryChange={handleCategoryChange}
-                  onCountyChange={handleCountyChange}
-                  mapFocus={mapFocus}
-                  onExecutionModeChange={handleExecutionModeChange}
-                  onFinancialTypeChange={handleFinancialTypeChange}
-                  statusManual={fields.status_manual}
-                  onStatusManualChange={setStatusManual}
-                  onSiteLocationChange={setSiteLocation}
-                  onLocationSelect={setLocationSelect}
-                  onMapChange={handleMapChange}
-                  managers={managers}
-                  clientRefs={localClientRefs}
-                  selectedClient={selectedClient}
-                  onClientChange={setSelectedClient}
-                  onNewClient={() => setShowAddClient(true)}
-                  subcontractorRefs={localSubcontractorRefs}
-                  selectedSubcontractor={selectedSubcontractor}
-                  onSubcontractorChange={setSelectedSubcontractor}
-                  onNewSubcontractor={() => setShowAddSubcontractor(true)}
-                  exchangeRate={exchangeRate}
-                  fieldErrors={state?.fieldErrors}
-                />
+        <form action={action} className="mt-6 space-y-4">
+          <ProjectFormFields
+            key={submitCount}
+            fields={fields}
+            onFieldChange={setField}
+            onCategoryChange={handleCategoryChange}
+            onCountyChange={handleCountyChange}
+            mapFocus={mapFocus}
+            onExecutionModeChange={handleExecutionModeChange}
+            onFinancialTypeChange={handleFinancialTypeChange}
+            statusManual={fields.status_manual}
+            onStatusManualChange={setStatusManual}
+            onSiteLocationChange={setSiteLocation}
+            onLocationSelect={setLocationSelect}
+            onMapChange={handleMapChange}
+            managers={managers}
+            clientRefs={localClientRefs}
+            selectedClient={selectedClient}
+            onClientChange={setSelectedClient}
+            onNewClient={() => setShowAddClient(true)}
+            subcontractorRefs={localSubcontractorRefs}
+            selectedSubcontractor={selectedSubcontractor}
+            onSubcontractorChange={setSelectedSubcontractor}
+            onNewSubcontractor={() => setShowAddSubcontractor(true)}
+            exchangeRate={exchangeRate}
+            fieldErrors={state?.fieldErrors}
+          />
 
-                {state?.error && <p className="text-sm text-veltol-red">{t(state.error as Parameters<typeof t>[0])}</p>}
-                {state?.success && state.folderCreated === false && (
-                  <p className="text-sm text-veltol-orange">{t("folderFailed")}</p>
-                )}
+          {state?.error && <p className="text-sm text-veltol-red">{t(state.error as Parameters<typeof t>[0])}</p>}
 
-                <div className="flex justify-end gap-3 pt-2">
-                  <Dialog.Close render={<Button type="button" variant="outline">{t("cancel")}</Button>} />
-                  <Button type="submit" disabled={pending || !selectedClient}>{pending ? t("saving") : t("save")}</Button>
-                </div>
-              </form>
-            </>
-          )}
+          <div className="flex justify-end gap-3 pt-2">
+            <Dialog.Close render={<Button type="button" variant="outline">{t("cancel")}</Button>} />
+            <Button type="submit" disabled={pending || !selectedClient}>{pending ? t("saving") : t("save")}</Button>
+          </div>
+        </form>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

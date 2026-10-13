@@ -17,7 +17,13 @@ export const createSupabaseSubcontractorsClient = (supabase: SupabaseClient): Su
       .select(`*, ${ASSIGNMENTS_SELECT}`)
       .order("name");
     if (error) throw new Error(error.message);
-    return (data ?? []) as unknown as SubcontractorWithProjects[];
+    // project_subcontractors is readable by everyone, but projects RLS only
+    // exposes projects the user manages (or all, for admins) — so the embed
+    // comes back null for the rest. Drop those assignments.
+    return ((data ?? []) as unknown as SubcontractorWithProjects[]).map((sub) => ({
+      ...sub,
+      assignments: sub.assignments.filter((a) => a.project !== null),
+    }));
   },
 
   async getSubcontractorRefs() {
