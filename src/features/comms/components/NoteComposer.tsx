@@ -7,6 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Select } from "@/shared/components/ui/select";
 import { createNoteAction, getMentionCandidatesAction, type ActionState } from "@/app/[locale]/(app)/board/actions";
 import { MentionTextarea } from "./MentionTextarea";
+import { NoteAssigneePicker } from "./NoteAssigneePicker";
 import type { MentionCandidate, NoteAnchor, NoteKind, NoteVisibility } from "../types";
 
 interface Props {
@@ -41,7 +42,7 @@ export function NoteComposer({
   const [visibility, setVisibility] = useState<NoteVisibility>(fixedAnchor ? "project" : "private");
   const [projectId, setProjectId] = useState<number | null>(null);
   const [teamId, setTeamId] = useState<number | null>(null);
-  const [assigneeId, setAssigneeId] = useState<string | null>(null);
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [mentionCandidates, setMentionCandidates] = useState<MentionCandidate[]>([]);
 
   const requiresAssignee = !isReply && !fixedAnchor && kind === "task" && visibility === "private";
@@ -83,7 +84,7 @@ export function NoteComposer({
       setVisibility(fixedAnchor ? "project" : "private");
       setProjectId(null);
       setTeamId(null);
-      setAssigneeId(null);
+      setAssigneeIds([]);
     }
   }
 
@@ -186,22 +187,13 @@ export function NoteComposer({
           <label className="mb-1 block text-[11px] font-semibold uppercase tracking-[.06em] text-veltol-fgMute">
             {t("fields.assignee")}
           </label>
-          <Select
-            name="assigneeId"
-            required
-            value={assigneeId ?? ""}
-            onChange={(e) => setAssigneeId(e.target.value || null)}
-            aria-invalid={Boolean(state?.fieldErrors?.assigneeId)}
-          >
-            <option value="" disabled>
-              {t("fields.selectAssignee")}
-            </option>
-            {assigneeOptions.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
+          <input type="hidden" name="assigneeIds" value={assigneeIds.join(",")} />
+          <NoteAssigneePicker
+            options={assigneeOptions}
+            selectedIds={assigneeIds}
+            onChange={setAssigneeIds}
+            invalid={Boolean(state?.fieldErrors?.assigneeIds)}
+          />
         </div>
       )}
 
@@ -216,7 +208,7 @@ export function NoteComposer({
       />
 
       <div className="flex justify-end">
-        <Button type="submit" size="sm" disabled={pending}>
+        <Button type="submit" size="sm" disabled={pending || (requiresAssignee && assigneeIds.length === 0)}>
           {pending ? t("composer.saving") : isReply ? t("composer.reply") : t("composer.publish")}
         </Button>
       </div>

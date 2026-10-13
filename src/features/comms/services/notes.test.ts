@@ -21,8 +21,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     color: null,
     author_id: "user-1",
     author: null,
-    assignee_id: null,
-    assignee: null,
+    assignees: [],
     visibility: "project",
     status: "open",
     parent_id: null,
@@ -195,6 +194,19 @@ describe("anchorLabel", () => {
   it("labels a personal note with no anchor text", () => {
     const note = makeNote({ project_id: null, activity_id: null, is_personal: true });
     expect(anchorLabel(note)).toEqual({ scope: "personal", text: null });
+  });
+
+  it("labels a personal task with all assignee names", () => {
+    const note = makeNote({
+      project_id: null,
+      activity_id: null,
+      is_personal: true,
+      assignees: [
+        { id: "u1", first_name: "Ana", last_name: "Pop", avatar_url: null },
+        { id: "u2", first_name: "Ion", last_name: null, avatar_url: null },
+      ],
+    });
+    expect(anchorLabel(note)).toEqual({ scope: "personal", text: "Ana Pop, Ion" });
   });
 });
 

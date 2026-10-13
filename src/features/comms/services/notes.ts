@@ -115,7 +115,7 @@ export function canSendReminder(lastReminderAt: string | null, now: Date): boole
 }
 
 export function anchorLabel(
-  note: Pick<Note, "project_id" | "project_name" | "activity_id" | "activity_name" | "is_personal" | "assignee">,
+  note: Pick<Note, "project_id" | "project_name" | "activity_id" | "activity_name" | "is_personal" | "assignees">,
 ): { scope: "project" | "matrice" | "personal"; text: string | null } {
   if (note.activity_id !== null && note.project_id !== null) {
     const text = note.project_name ? `${note.project_name} · ${note.activity_name}` : note.activity_name;
@@ -124,9 +124,12 @@ export function anchorLabel(
   if (note.project_id !== null) {
     return { scope: "project", text: note.project_name };
   }
-  if (note.assignee) {
-    const assigneeName = [note.assignee.first_name, note.assignee.last_name].filter(Boolean).join(" ");
-    return { scope: "personal", text: assigneeName || null };
+  if (note.assignees.length > 0) {
+    const assigneeNames = note.assignees
+      .map((a) => [a.first_name, a.last_name].filter(Boolean).join(" "))
+      .filter(Boolean)
+      .join(", ");
+    return { scope: "personal", text: assigneeNames || null };
   }
   return { scope: "personal", text: null };
 }

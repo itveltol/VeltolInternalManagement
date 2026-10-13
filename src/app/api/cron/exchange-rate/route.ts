@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/core/supabase/admin";
 import { createSupabaseExchangeRatesClient } from "@/features/exchangeRates/api/supabaseExchangeRatesClient";
-import { getTodaysRate } from "@/features/exchangeRates/services/exchangeRateService";
+import { refreshRateFromBnr } from "@/features/exchangeRates/services/exchangeRateService";
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient();
   const client = createSupabaseExchangeRatesClient(supabase);
-  const rate = await getTodaysRate(client);
-
-  return NextResponse.json({ rate });
+  try {
+    const rate = await refreshRateFromBnr(client);
+    return NextResponse.json({ rate });
+  } catch (e) {
+    console.error("exchange-rate: BNR refresh failed", e);
+    return NextResponse.json({ error: "BNR refresh failed" }, { status: 502 });
+  }
 }

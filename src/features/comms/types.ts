@@ -26,7 +26,7 @@ export interface NoteAnchor {
   documentId?: number | null;
   teamId?: number | null;
   isPersonal?: boolean;
-  assigneeId?: string | null;
+  assigneeIds?: string[];
 }
 
 export interface NoteAuthor {
@@ -44,8 +44,7 @@ export interface Note {
   color: NoteColor | null;
   author_id: string | null;
   author: NoteAuthor | null;
-  assignee_id: string | null;
-  assignee: NoteAuthor | null;
+  assignees: NoteAuthor[];
   visibility: NoteVisibility;
   status: NoteStatus;
   parent_id: number | null;

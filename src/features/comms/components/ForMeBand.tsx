@@ -24,7 +24,7 @@ export function ForMeBand({ notes, notifications, now, currentUserId, onSelect }
     (n) => n.kind === "question" && n.status === "open" && unreadMentionNoteIds.has(n.id),
   );
   const mentioned = notes.filter((n) => unreadMentionNoteIds.has(n.id));
-  const assignedToMe = notes.filter((n) => n.assignee_id === currentUserId && n.status === "open");
+  const assignedToMe = notes.filter((n) => n.assignees.some((a) => a.id === currentUserId) &&n.status === "open");
 
   const items = Array.from(
     new Map([...mentioned, ...dueSoon, ...openQuestionsForMe, ...assignedToMe].map((n) => [n.id, n])).values(),
