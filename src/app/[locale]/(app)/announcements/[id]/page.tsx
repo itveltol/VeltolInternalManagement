@@ -29,9 +29,11 @@ export default async function AnnouncementDetailPage({ params }: Props) {
   if (!note) notFound();
 
   const isAuthorOrAdmin = role === "admin" || note.author_id === user!.id;
+  // Admins are part of the materialized audience too (only the author is
+  // excluded), so they may owe an acknowledgement alongside seeing the table.
   const [receipts, ownReceipt] = await Promise.all([
     isAuthorOrAdmin ? getAckReceipts(noteId) : Promise.resolve([]),
-    isAuthorOrAdmin ? Promise.resolve(null) : getOwnReceipt(noteId),
+    getOwnReceipt(noteId),
   ]);
 
   const t = await getTranslations("comms");
@@ -58,21 +60,20 @@ export default async function AnnouncementDetailPage({ params }: Props) {
         <p className="mt-4 whitespace-pre-wrap text-[14px] text-veltol-fgDim">{note.body}</p>
       </div>
 
-      {isAuthorOrAdmin ? (
+      {/* ownReceipt is null for a reader who owes no acknowledgement — not
+          part of the materialized audience (e.g. the author, hired after
+          publication, or reading via a broader visibility than the audience
+          computation covers). Nothing to confirm, so no button. */}
+      {note.requires_ack && ownReceipt !== null && (
+        <div className="rounded-card border border-border bg-card p-5 shadow-card">
+          <AcknowledgeButton noteId={note.id} initiallyAcknowledged={ownReceipt.acknowledgedAt != null} />
+        </div>
+      )}
+
+      {isAuthorOrAdmin && (
         <div className="rounded-card border border-border bg-card p-5 shadow-card">
           <AckTable noteId={note.id} summary={summarizeAcks(receipts)} lastReminderAt={note.last_reminder_at} />
         </div>
-      ) : (
-        // ownReceipt is null for a reader who owes no acknowledgement — not
-        // part of the materialized audience (e.g. hired after publication,
-        // or reading via a broader visibility than the audience computation
-        // covers). Nothing to confirm, so no button.
-        note.requires_ack &&
-        ownReceipt !== null && (
-          <div className="rounded-card border border-border bg-card p-5 shadow-card">
-            <AcknowledgeButton noteId={note.id} initiallyAcknowledged={ownReceipt.acknowledgedAt != null} />
-          </div>
-        )
       )}
     </div>
   );
